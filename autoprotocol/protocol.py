@@ -9,7 +9,8 @@ class Ref(object):
 
     Example
     -------
-        Ref("plate_name", {"new": "96-pcr", "store": {"where": "cold_4"}}, Container(None, "96-pcr"))
+        Ref("plate_name", {"new": "96-pcr", "store": {"where": "cold_4"}},
+            Container(None, "96-pcr"))
 
     becomes:
 
@@ -162,8 +163,7 @@ class Protocol(object):
             raise ValueError("You a container type must always be specified")
         else:
             container = Container(id, cont_type)
-        if storage and storage in ["ambient", "cold_20", "cold_4", "warm_37"]
-            and not discard:
+        if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and not discard:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
@@ -687,9 +687,9 @@ class Protocol(object):
         containers = {}
         for k,v in refs.items():
             if isinstance(v, Container):
-                containers[k] = v
+                containers[str(k)] = v
             else:
-                containers[k] = self.ref(k, v["id"], v["type"], storage=v["storage"],
+                containers[str(k)] = self.ref(k, v["id"], v["type"], storage=v["storage"],
                                         discard=v["discard"])
         return containers
 

@@ -2,6 +2,7 @@ from autoprotocol.util import make_dottable_dict
 from autoprotocol.unit import Unit
 
 
+
 def bead_separation(protocol, refs, params):
     params = make_dottable_dict(params)
     refs = make_dottable_dict(refs)

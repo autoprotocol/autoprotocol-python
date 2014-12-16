@@ -295,7 +295,7 @@ class Protocol(object):
         opts = {}
         if isinstance(volume, Unit):
             volume = str(volume)
-        elif type(volume) != str:
+        elif not isinstance(volume, basestring):
             raise RuntimeError("volume for transfer must be expressed in as a \
                                 string with the format 'value:unit' or as a \
                                 Unit")

@@ -20,8 +20,6 @@ def kunkel_complete(protocol, refs, params):
 
     kunkel_polymerize(protocol, refs, params.polymerize_parameters)
 
-    print json.dumps(protocol.as_dict(), indent=4)
-
 if __name__ == '__main__':
     from autoprotocol.harness import run
     run(kunkel_complete)

@@ -13,9 +13,6 @@ def kunkel_polymerize(protocol, refs, params):
 
     protocol.incubate("reaction_plate", "ambient", "1.5:hour")
 
-    if __name__ == '__main__':
-        print json.dumps(protocol.as_dict(), indent=4)
-
 if __name__ == '__main__':
     from autoprotocol.harness import run
     run(kunkel_polymerize)

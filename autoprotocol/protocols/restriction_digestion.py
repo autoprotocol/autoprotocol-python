@@ -35,8 +35,6 @@ def restriction_digest(protocol, refs, params):
         ]},
     ])
 
-    print json.dumps(protocol.as_dict(), indent=4)
-
 if __name__ == '__main__':
     from autoprotocol.harness import run
     run(restriction_digest)

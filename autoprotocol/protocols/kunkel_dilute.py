@@ -15,9 +15,6 @@ def kunkel_dilute(protocol, refs, params):
             protocol.transfer(olig,dilute_wells.wells[idx],params.oligo_vol,
                                 mix_after = True)
 
-    if __name__ == '__main__':
-        print json.dumps(protocol.as_dict(), indent=4)
-
 if __name__ == '__main__':
     from autoprotocol.harness import run
     run(kunkel_dilute)

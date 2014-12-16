@@ -56,8 +56,6 @@ def bradford(protocol, refs, params):
     protocol.absorbance(refs.bradford_plate, wells_to_measure, "595:nanometer",
                         dataref="bradford")
 
-    print json.dumps(protocol.as_dict(),indent=4)
-
 if __name__ == '__main__':
     from autoprotocol.harness import run
     run(bradford)

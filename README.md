@@ -73,14 +73,16 @@ Each protocol has an accompanying .json config file with the following format:
 ```
 protocols are then called from the command-line as follows with the config file following the script module call:
 
-```$ python -m autoprotocol.protocols.example_script example_script_config.json
+```
+$ python -m autoprotocol.protocols.example_script example_script_config.json
 ```
 calling the above from the command line will simply output the protocol object as JSON
 
 To submit a protocol to Transcriptic.com to be automated or analyzed, download the transcriptic command-line tool at https://github.com/transcriptic/runner.
 
 You can then pipe protocol modules to transcriptic by doing the following, for example:
-```$ python -m autoprotocol.protocols.example_script example_script_config.json | transcriptic analyze
+```
+$ python -m autoprotocol.protocols.example_script example_script_config.json | transcriptic analyze
 ```
 
 ## Contributing

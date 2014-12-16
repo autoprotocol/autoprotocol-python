@@ -1,6 +1,13 @@
 from .unit import Unit
 
+
 class Well(object):
+
+    """A Well object describes a single location within a container.
+
+    Do not construct a Well directly -- retrieve it from the related Container
+    object.
+    """
 
     def __init__(self, container, idx):
         self.container = container
@@ -8,6 +15,9 @@ class Well(object):
         self.volume = None
 
     def set_volume(self, vol):
+        """Set the theoretical volume of liquid in this well.
+
+        Used by Protocol.fill_wells."""
         self.volume = Unit.fromstring(vol)
         return self
 
@@ -21,20 +31,30 @@ class Well(object):
 
 class WellGroup(object):
 
+    """A logical grouping of Wells.
+
+    Wells in a WellGroup do not necessarily need to be in the same container.
+    """
+
     def __init__(self, wells):
         self.wells = wells
 
     def set_volume(self, vol):
+        """Set the volume of every well in the group to vol."""
         for w in self.wells:
             w.set_volume(vol)
         return self
 
     def indices(self):
+        """
+        Return the indices of the wells in the group, given that all the wells
+        belong to the same container.
+        """
         indices = []
         for w in self.wells:
-            assert w.container == self.wells[
-                0].container, "All wells in WellGroup must belong to the same \
-                               container to get their indices"
+            assert w.container == self.wells[0].container, \
+                "All wells in WellGroup must belong to the same container to " \
+                "get their indices"
             indices.append(str(w.idx))
         return indices
 
@@ -55,6 +75,30 @@ class WellGroup(object):
 
 
 class Container(object):
+
+    """
+    A reference to a specific physical container (e.g. a tube or 96-well
+    microplate).
+
+    Every Container has an associated ContainerType, which defines the well
+    count and arrangement, amongst other properties.
+
+    WellGroup generators
+    --------------------
+    There are several methods on Container which present a convenient interface
+    for defining subsets of wells on which to operate. These methods return a
+    WellGroup.
+
+    container.wells(i1, i2, i3, ...):
+      the i1'th, i2'th, i3'th, ... wells
+
+    container.all_wells(columnwise=False):
+      all the wells in the container, optionally arranged columnwise
+
+    container.wells_from(start, num, columnwise=False):
+      num wells, starting at well start, and proceeding along the row (or
+      column, if columnwise is specified)
+    """
 
     def __init__(self, id, container_type):
         self.id = id
@@ -78,6 +122,10 @@ class Container(object):
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):
+        """
+        Return all the wells belonging to this container, optionally in
+        columnwise order.
+        """
         if columnwise:
             num_cols = self.container_type.col_count
             num_rows = self.container_type.well_count / num_cols
@@ -88,10 +136,13 @@ class Container(object):
             return WellGroup(self._wells)
 
     def wells_from(self, start, num, columnwise=False):
+        """
+        Return num wells, starting at start and proceeding rowwise (or
+        columnwise if specified).
+        """
         start = self.robotize(start)
         if columnwise:
             row, col = self.decompose(start)
-            num_rows = self.container_type.well_count / \
-                self.container_type.col_count
+            num_rows = self.container_type.row_count()
             start = col * num_rows + row
         return WellGroup(self.all_wells(columnwise).wells[start:start + num])

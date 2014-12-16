@@ -2,22 +2,23 @@ import re
 from collections import namedtuple
 from .container import Well
 
+
 class ContainerType(namedtuple("ContainerType",
                     ["name", "is_tube", "well_count", "well_type",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count"])):
     """
-        The ContainerType class holds the capabilities and properties
-        of a particular container type.
+    The ContainerType class holds the capabilities and properties of a
+    particular container type.
     """
 
     def robotize(self, well_ref):
-        '''
-        Converts a well reference (int, "A1" or int-in-a-string "23") to a
-        robot-friendly rowwise integer (left-to-right, top-to-bottom, starting at
-        0 = A1).
-        '''
+        """
+        Convert a well reference (int, "A1" or int-in-a-string "23") to a
+        robot-friendly rowwise integer (left-to-right, top-to-bottom, starting
+        at 0 = A1).
+        """
         if isinstance(well_ref, Well):
             well_ref = well_ref.idx
         well_ref = str(well_ref)
@@ -39,11 +40,14 @@ class ContainerType(namedtuple("ContainerType",
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):
-        '''
-        Returns the (col, row) corresponding to the given idx.
-        '''
+        """
+        Return the (col, row) corresponding to the given idx.
+        """
         idx = self.robotize(idx)
         return (idx / self.col_count, idx % self.col_count)
+
+    def row_count(self):
+        return self.well_count / self.col_count
 
 
 _CONTAINER_TYPES = {
@@ -105,25 +109,25 @@ _CONTAINER_TYPES = {
                              is_tube=False,
                              col_count=12),
     "micro-2.0": ContainerType(name="2mL Microcentrifuge tube",
-                             well_count=1,
-                             well_type=None,
-                             well_depth_mm=None,
-                             well_volume_ul=2000.0,
-                             well_coating=None,
-                             sterile=False,
-                             capabilities=["spin", "incubate"],
-                             shortname="micro-2.0",
-                             is_tube=True,
-                             col_count=1),
+                               well_count=1,
+                               well_type=None,
+                               well_depth_mm=None,
+                               well_volume_ul=2000.0,
+                               well_coating=None,
+                               sterile=False,
+                               capabilities=["spin", "incubate"],
+                               shortname="micro-2.0",
+                               is_tube=True,
+                               col_count=1),
     "micro-1.5": ContainerType(name="1.5mL Microcentrifuge tube",
-                             well_count=1,
-                             well_type=None,
-                             well_depth_mm=None,
-                             well_volume_ul=1500.0,
-                             well_coating=None,
-                             sterile=False,
-                             capabilities=["spin", "incubate"],
-                             shortname="micro-1.5",
-                             is_tube=True,
-                             col_count=1),
+                               well_count=1,
+                               well_type=None,
+                               well_depth_mm=None,
+                               well_volume_ul=1500.0,
+                               well_coating=None,
+                               sterile=False,
+                               capabilities=["spin", "incubate"],
+                               shortname="micro-1.5",
+                               is_tube=True,
+                               col_count=1),
 }

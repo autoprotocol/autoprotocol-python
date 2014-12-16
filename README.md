@@ -44,11 +44,44 @@ p.transfer(bacteria.well("A1"), bacteria.well("A2"), "15:microliter")
 
 Both are equivalent.  The first style is a bit more functional since it allows you to pass around instructions and write functions that return blocks of instructions, whereas the protocol helper methods are all side-effects.
 
-Protocols can be outputted as JSON using the Protocol.as_dict() function
 
-## Submitting Protocols
+## Running and Submitting Protocols
+Each protocol has an accompanying .json config file with the following format:
+```
+  {
+      "refs":{
+          "container1_name": {
+              "id": null,
+              "type": "",
+              "storage": "",
+              "discard": false
+          },
+          "container2_name": {
+              "id": null,
+              "type": "",
+              "storage": "",
+              "discard": false
+          },
+          { ... }
+      },
+      "parameters":{
+        "parameter1": "value:1",
+        ...
+
+      }
+  }
+```
+protocols are then called from the command-line as follows with the config file following the script module call:
+
+```$ python -m autoprotocol.protocols.example_script example_script_config.json
+```
+calling the above from the command line will simply output the protocol object as JSON
 
 To submit a protocol to Transcriptic.com to be automated or analyzed, download the transcriptic command-line tool at https://github.com/transcriptic/runner.
+
+You can then pipe protocol modules to transcriptic by doing the following, for example:
+```$ python -m autoprotocol.protocols.example_script example_script_config.json | transcriptic analyze
+```
 
 ## Contributing
 

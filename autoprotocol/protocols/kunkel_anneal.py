@@ -1,7 +1,5 @@
 import json
-from autoprotocol.container import WellGroup
 from autoprotocol.util import make_dottable_dict
-from autoprotocol.protocol import Protocol
 
 def kunkel_anneal(protocol, refs, params):
     params = make_dottable_dict(params)

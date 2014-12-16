@@ -1,5 +1,4 @@
 import json
-from autoprotocol.container import WellGroup
 from autoprotocol.util import make_dottable_dict
 
 def kunkel_dilute(protocol, refs, params):

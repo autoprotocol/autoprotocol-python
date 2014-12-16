@@ -1,8 +1,6 @@
 from autoprotocol.util import make_dottable_dict
 from autoprotocol.unit import Unit
 
-
-
 def bead_separation(protocol, refs, params):
     params = make_dottable_dict(params)
     refs = make_dottable_dict(refs)
@@ -85,7 +83,6 @@ def bead_separation(protocol, refs, params):
 
     # Pipette 20ul to clean well
     protocol.transfer(samples, destinations, params.resuspension_vol)
-
 
 if __name__ == '__main__':
     from autoprotocol.harness import run

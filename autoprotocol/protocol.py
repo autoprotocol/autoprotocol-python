@@ -689,14 +689,18 @@ class Protocol(object):
             if isinstance(v, Container):
                 containers[str(k)] = v
             else:
-                containers[str(k)] = self.ref(k, v["id"], v["type"], storage=v["storage"],
-                                        discard=v["discard"])
+                containers[str(k)] = self.ref(k, v["id"], v["type"],
+                    storage=v["storage"], discard=v["discard"])
         return containers
 
     def make_well_references(self, params):
         parameters = {}
         for k,v in params.items():
-            if "/" in str(v):
+            if isinstance(v, dict):
+                parameters[k] = self.make_well_references(v)
+            elif isinstance(v, list) and "/" in str(v[0]):
+                parameters[k] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
+            elif "/" in str(v):
                 parameters[k] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
             else:
                 parameters[k] = v

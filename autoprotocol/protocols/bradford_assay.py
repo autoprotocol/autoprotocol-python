@@ -1,10 +1,6 @@
-import argparse
 import json
 import sys
 from autoprotocol.util import make_dottable_dict
-from autoprotocol.unit import Unit
-from autoprotocol.container import Well, WellGroup
-
 
 def bradford(protocol, refs, params):
     params = make_dottable_dict(params)

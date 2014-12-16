@@ -1,6 +1,5 @@
 import json
 from autoprotocol.util import make_dottable_dict
-from autoprotocol.unit import Unit
 
 def gibson(protocol, refs, params):
     params = make_dottable_dict(params)

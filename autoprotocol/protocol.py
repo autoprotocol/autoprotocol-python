@@ -162,7 +162,8 @@ class Protocol(object):
             raise ValueError("You a container type must always be specified")
         else:
             container = Container(id, cont_type)
-        if storage and storage in ["ambient", "cold_20", "cold_4", "warm_37"] and not discard:
+        if storage and storage in ["ambient", "cold_20", "cold_4", "warm_37"]
+            and not discard:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
@@ -173,12 +174,39 @@ class Protocol(object):
         return container
 
     def refify(self, op_data):
-        """Used to convert strings into their proper objects or vice versa
+        """Used to convert objects or collections of objects into their string
+        representations for the purposes of JSON encoding
+
+        Example
+        -------
+            protocol.refify(Unit(3,"microliter"))
+        becomes
+            "3:microliter"
+
+            protocol.refify(sample_container.well("A1"))
+        becomes
+            "sample_container/A1"
 
         Parameters
         ----------
         op_data : str, dict, list, Well, WellGroup, Unit, Container
             data to be "reffed"
+
+        Returns
+        -------
+        op_data : str, dict, list, Well, WellGroup, Unit, Container
+            original data is returned if it is not of a type that can be
+            "refified"
+        dict
+            if op_data is a dict, a dict is returned with the same keys as
+            op_data and values reffified according to their type
+        list
+            if op_data is a list, a list is returned with each object reffed
+            according to its type
+        str
+            op_data of types Well, WellGroup, Container and Unit is returned
+            as a string representation of that object
+
         """
         if type(op_data) is dict:
             return {k: self.refify(v) for k, v in op_data.items()}
@@ -213,10 +241,9 @@ class Protocol(object):
         """
         Returns
         -------
-
-        Raises
-        ------
-
+        dict
+            dict with keys "refs" and "instructions", each of which contain
+            the "refified" contents of their corresponding Protocol attribute
         """
         return {
             "refs": dict(map(lambda (k, v): (k, v.opts), self.refs.items())),
@@ -225,18 +252,15 @@ class Protocol(object):
         }
 
     def pipette(self, groups):
-        """
+        """Takes groups to be passed to a Pipette object which is then appended
+        to the instructions attribute of this Protocol
 
         Parameters
         ----------
         groups : list of dicts
-
-        Returns
-        -------
-
-        Raises
-        ------
-
+            a list of "distribute" and/or "transfer" instructions to be passed to a
+            Pipette object, which is then appended to this protocol's
+            instructions attribute
         """
         if len(self.instructions) > 0 and self.instructions[-1].op == 'pipette':
             self.instructions[-1].groups += groups
@@ -244,21 +268,29 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def distribute(self, source, dest, volume, allow_carryover=False):
-        """
+        """Allows encoding of distribute groups representing liquid handling
+        from one or multiple wells to one or multiple other wells.
 
         Parameters
         ----------
         source : Well, WellGroup
+            Well or wells to distribute liquid from.  If passed as a WellGroup
+            with set_volume() called on it, liquid will be automatically be drawn
+            from the wells specified using the fill_wells function
         dest : Well, WellGroup
+            Well or wells to distribute liquid to
         volume : str, Unit
+            volume of liquid to be distributed to each destination well
         allow_carryover : bool, optional
-
-        Returns
-        -------
+            specify whether the same pipette tip can be used to aspirate more
+            liquid from source wells after the previous volume aspirated has
+            been depleted
 
         Raises
         ------
-
+        RuntimeError
+            if volume is not expressed either as a string with the format
+            "value:unit" or as a Unit object
         """
         opts = {}
         if isinstance(volume, Unit):
@@ -296,20 +328,29 @@ class Protocol(object):
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="50:microliter/second"):
-        """
+        """Allows encoding of transfer groups, each representing liquid handling
+        from one specific well to another.  A new pipette tip is used between
+        each transfer step.
 
         Parameters
         ----------
         source : Well, WellGroup
+            Well or wells to transfer liquid from.  Expressing both source and
+            dest as WellGroups appends transfer steps from each well in the
+            source group to the well at the corresponding index in the list of
+            destination wells.
         dest : Well, WellGroup
+            Well or wells to transfer liquid to.
         volume : str, Unit
+            volume of liquid to be transfered from one well to another
         mix_after : bool, optional
+            set True to mix destination well using the same pipette tip
         mix_vol : str, optional
+            volume to be aspirated and expelled during mixing
         repetitions : int, optional
+            mix repititions
         flowrate : str, optional
-
-        Returns
-        -------
+            liquid flow rate during mixing
 
         Raises
         ------
@@ -317,8 +358,11 @@ class Protocol(object):
             if transferring from WellGroup to WellGroup that have different
             number of wells
         RuntimeError
-            if
-
+            if volume is passed as anything other than a string in the format
+            "value:unit" or as a Unit object
+        RuntimeError
+            if source and/or destination wells are passed as anything other than
+            Well or WellGroup objects
         """
         opts = []
         if isinstance(volume, Unit):
@@ -380,30 +424,19 @@ class Protocol(object):
 
     def mix(self, well, volume="50:microliter", speed="50:microliter/second",
             repetitions=10):
-        """
+        """Mix specified well using a new pipette tip
 
         Parameters
         ----------
         well : str, Well
+            well to be mixed
         volume : str, Unit, optional
+            volume of liquid to be aspirated and expelled during mixing
         speed : str, Unit, optional
+            flowrate of liquid during mixing
         repetitions : int, optional
-
-
-        Returns
-        -------
-
-        Raises
-        ------
-
+            number of times to aspirate and expell liquid during mixing
         """
-        if isinstance(well, Well):
-            well = self.refify(well)
-        elif isinstance(well, WellGroup):
-            for w in well.wells:
-                self.mix(w, volume, speed, repetitions)
-        if isinstance(volume, Unit):
-            volume = self.refify(volume)
         opts = {
             "well": well,
             "volume": volume,
@@ -413,7 +446,7 @@ class Protocol(object):
         self.pipette([{"mix": [opts]}])
 
     def spin(self, ref, speed, duration):
-        """
+        """appends a Spin Instruction to the instructions list
 
         Parameters
         ----------
@@ -458,22 +491,21 @@ class Protocol(object):
 
     def thermocycle_ramp(self, ref, start_temp, end_temp, time,
                          step_duration="60:second"):
-        """
+        """Appends instructions representing a thermocyle ramp-up or ramp-down
+        protocol based on start_temp and end_temp
 
         Parameters
         ----------
         ref : str, Ref
+            Plate to be thermocycled
         start_temp : str, Unit
+            starting temperature to ramp up or down from
         end_temp : str, Unit
+            final temperature to ramp up or down to
         time : str, Unit
+            total duration of thermocycle protocol
         step_duration : str, Unit, optional
-
-        Returns
-        -------
-
-        Raises
-        ------
-
+            individual temperature step duration
         """
         start_temp = int(Unit.fromstring(start_temp).value)
         end_temp = int(Unit.fromstring(end_temp).value)
@@ -494,22 +526,6 @@ class Protocol(object):
         self.instructions.append(Thermocycle(ref, groups))
 
     def incubate(self, ref, where, duration, shaking=False):
-        """
-
-        Parameters
-        ----------
-        ref : str, Ref
-        where : str
-        duration : str, Unit
-        shaking : bool, optional
-
-        Returns
-        -------
-
-        Raises
-        ------
-
-        """
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
     # mag adapter steps must be followed by pipette instructions
@@ -520,7 +536,10 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Ref
+            plate to be transferred to magnetic adapter
         duration : str, Unit
+            duration for plate to incubate on the magentic adapter (with no
+            pipetting occuring)
         """
         sep = Pipette([])
         sep.data["x-magnetic_separate"] = {
@@ -537,6 +556,7 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Ref
+            plate to be removed from magentic block
         """
         self.instructions.append(Pipette([]))
 

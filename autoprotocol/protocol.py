@@ -3,6 +3,7 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 
+
 class Ref(object):
     """Protocol objects contain a list of Ref objects which are encoded into
     JSON representing refs in the final protocol generated
@@ -163,13 +164,14 @@ class Protocol(object):
             raise ValueError("You a container type must always be specified")
         else:
             container = Container(id, cont_type)
-        if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and not discard:
+        if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and \
+                not discard:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
         else:
-            raise ValueError("You must specify either a valid storage \
-                            temperature or set discard=True for a container")
+            raise ValueError("You must specify either a valid storage "
+                             "temperature or set discard=True for a container")
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -262,7 +264,8 @@ class Protocol(object):
             Pipette object, which is then appended to this protocol's
             instructions attribute
         """
-        if len(self.instructions) > 0 and self.instructions[-1].op == 'pipette':
+        if len(self.instructions) > 0 and \
+                self.instructions[-1].op == 'pipette':
             self.instructions[-1].groups += groups
         else:
             self.instructions.append(Pipette(groups))
@@ -305,11 +308,11 @@ class Protocol(object):
             groups = []
             for d in dists:
                 groups.append(
-                    {"distribute": {"from": d["from"],
-                                    "to": d["to"],
-                                    "allow_carryover": allow_carryover
-                                    }
-                    }
+                    {"distribute": {
+                        "from": d["from"],
+                        "to": d["to"],
+                        "allow_carryover": allow_carryover
+                    }}
                 )
             self.pipette(groups)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
@@ -368,14 +371,14 @@ class Protocol(object):
         if isinstance(volume, Unit):
             volume = str(volume)
         elif not isinstance(volume, basestring):
-            raise RuntimeError('volume for transfer must be expressed in as a \
-                               string with the format "value:unit" or as a \
-                               Unit')
+            raise RuntimeError(
+                "volume for transfer must be expressed in as a string with "
+                "the format \"value:unit\" or as a Unit")
         if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
             if len(source.wells) != len(dest.wells):
-                raise RuntimeError("source and destination WellGroups do not \
-                                    have the same number of wells and transfer \
-                                    cannot happen one to one")
+                raise RuntimeError(
+                    "source and destination WellGroups do not have the same "
+                    "number of wells and transfer cannot happen one to one")
             else:
                 for s, d in zip(source.wells, dest.wells):
                     xfer = {
@@ -463,7 +466,11 @@ class Protocol(object):
         """
         self.instructions.append(Spin(ref, speed, duration))
 
-    def thermocycle(self, ref, groups, volume=None, dataref=None, dyes=None, melting=None):
+    def thermocycle(self, ref, groups,
+                    volume=None,
+                    dataref=None,
+                    dyes=None,
+                    melting=None):
         """
 
         Parameters
@@ -483,11 +490,12 @@ class Protocol(object):
 
         """
         if not isinstance(groups, list):
-            raise AttributeError("groups for thermocycling "
-                "must be a list of cycles in the form of "
-                "[{'cycles':___, 'steps': [{'temperature':___,"
+            raise AttributeError(
+                "groups for thermocycling must be a list of cycles in the "
+                "form of [{'cycles':___, 'steps': [{'temperature':___,"
                 "'duration':___, }]}, { ... }, ...]")
-        self.instructions.append(Thermocycle(ref, groups, volume, dataref, dyes, melting))
+        self.instructions.append(
+            Thermocycle(ref, groups, volume, dataref, dyes, melting))
 
     def thermocycle_ramp(self, ref, start_temp, end_temp, time,
                          step_duration="60:second"):
@@ -583,7 +591,8 @@ class Protocol(object):
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes))
 
-    def fluorescence(self, ref, wells, excitation, emission, dataref, flashes=25):
+    def fluorescence(self, ref, wells, excitation, emission, dataref,
+                     flashes=25):
         """This step transfers the plate to the plate reader and reads the
         fluoresence for the indicated wavelength for the indicated wells.
         Appends an Fluorescence instruction to the list of instructions for this
@@ -666,8 +675,9 @@ class Protocol(object):
                 src = next(
                     (w for w in src_group.wells if w.volume > volume), None)
                 if src is None:
-                    raise RuntimeError("no well in source group has more than %s"
-                                        % str(volume))
+                    raise RuntimeError(
+                        "no well in source group has more than %s" %
+                        str(volume))
                 distributes.append({
                     "from": self.refify(src),
                     "to": []
@@ -685,17 +695,18 @@ class Protocol(object):
 
     def ref_containers(self, refs):
         containers = {}
-        for k,v in refs.items():
+        for k, v in refs.items():
             if isinstance(v, Container):
                 containers[str(k)] = v
             else:
-                containers[str(k)] = self.ref(k, v["id"], v["type"],
-                    storage=v["storage"], discard=v["discard"])
+                containers[str(k)] = \
+                    self.ref(k, v["id"], v["type"], storage=v["storage"],
+                             discard=v["discard"])
         return containers
 
     def make_well_references(self, params):
         parameters = {}
-        for k,v in params.items():
+        for k, v in params.items():
             if isinstance(v, dict):
                 parameters[k] = self.make_well_references(v)
             elif isinstance(v, list) and "/" in str(v[0]):

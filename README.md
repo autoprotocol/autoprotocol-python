@@ -64,8 +64,7 @@ Running the protocol will produce JSON-formatted autoprotocol output on
 standard out. To submit a protocol to transcriptic.com to be run or analyzed,
 use the [Transcriptic Runner](/transcriptic/runner):
 
-    $ python -m autoprotocol.protocols.gibson_assebly gibson_config.json \
-        | transcriptic analyze
+    $ python -m autoprotocol.protocols.gibson_assebly gibson_config.json | transcriptic analyze
 
 ## Contributing
 

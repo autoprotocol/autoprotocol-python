@@ -4,50 +4,8 @@ from .unit import Unit
 from .instruction import *
 
 
+# Used internally to link a ref name (string) to a Container instance.
 class Ref(object):
-    """Protocol objects contain a list of Ref objects which are encoded into
-    JSON representing refs in the final protocol generated
-
-    Example
-    -------
-        Ref("plate_name", {"new": "96-pcr", "store": {"where": "cold_4"}},
-            Container(None, "96-pcr"))
-
-    becomes:
-
-        "protocol":{
-            "refs":{
-                "plate_name":{
-                    "new": "96-pcr",
-                    "store": {
-                        "where": "cold_4",
-                        "shaking": false
-                    }
-                }
-            }
-            "instructions":[{ ... }]
-        }
-
-    Parameters
-    ----------
-    name : str
-        the name or label of the container_type
-    opts : dict
-        dict containing attributes of the container such as
-        storage and container type
-    container : Container
-        A Container object to be associated with this Ref
-
-    Attributes
-    ----------
-    name : str
-        the name or label of the container_type
-    opts : dict
-        dict containing attributes of the container such as
-        storage and container type
-    container : Container
-        A Container object to be associated with this Ref
-    """
     def __init__(self, name, opts, container):
         assert "/" not in name
         self.name = name
@@ -56,23 +14,29 @@ class Ref(object):
 
 
 class Protocol(object):
-    """Protocol objects contain lists of Ref objects and Instruction objects
+    """
+    A Protocol is a sequence of instructions to be executed, and a set of
+    containers on which those instructions act.
 
-    Parameters
-    ----------
-    refs : list of Refs
-        list of Ref objects which are references to containers associated
-        with this particular protocol
-    instructions : list of Instructions, optional
-        list of Instruction objects
+    Initially, a Protocol has an empty sequence of instructions and no
+    referenced containers. To add a reference to a container, use the ref()
+    method, which returns a Container:
 
-    Attributes
-    ----------
-    refs : list of Refs
-        list of Ref objects which are references to containers associated
-        with this particular protocol
-    instructions : list of Instructions, optional
-        list of Instruction objects
+        my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
+                                cont_type="96-pcr", storage="cold_4")
+
+    To add instructions to the protocol, use the helper methods:
+
+        protocol.transfer(source=my_plate.well("A1"),
+                          dest=my_plate.well("B4"),
+                          volume="50:microliter")
+        protocol.thermocycle(my_plate, groups=[
+            { "cycles": 1,
+              "steps": [
+                { "temperature": "95:celsius", "duration": "1:hour" }
+                ]
+              }
+            ])
     """
 
     def __init__(self, refs=[], instructions=None):
@@ -89,8 +53,8 @@ class Protocol(object):
         ----------
         shortname : {"384-flat", "384-pcr", "96-flat", "96-pcr", "96-deep",
                     "micro-2.0", "micro-1.5"}
-            string representing one of the ContainerTypes in the _CONTAINER_TYPES
-            dictionary
+            string representing one of the ContainerTypes in the
+            _CONTAINER_TYPES dictionary
 
         Returns
         -------
@@ -119,7 +83,9 @@ class Protocol(object):
 
         Example
         -------
-        sample_ref = ref("sample_plate", id=None, cont_type="96-pcr", discard=True)
+        sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
+        sample_ref = ref("sample_plate", id="ct1cxae33lkj",
+                         cont_type="96-pcr", storage="ambient")
 
         returns a Container object using Container(None, "96-pcr")
 
@@ -134,9 +100,9 @@ class Protocol(object):
         cont_type : str, ContainerType
             container type of the Container object that will be generated
         storage : {"ambient", "cold_20", "cold_4", "warm_37"}, optional
-            temperature the container being referenced should be stored at after
-            a run is completed.  Either a storage condition must be specified or
-            discard must be set to True.
+            temperature the container being referenced should be stored at
+            after a run is completed.  Either a storage condition must be
+            specified or discard must be set to True.
         discard : bool, optional
             if no storage condition is specified and discard is set to True,
             the container being referenced will be discarded after a run
@@ -175,56 +141,6 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
-    def refify(self, op_data):
-        """Used to convert objects or collections of objects into their string
-        representations for the purposes of JSON encoding
-
-        Example
-        -------
-            protocol.refify(Unit(3,"microliter"))
-        becomes
-            "3:microliter"
-
-            protocol.refify(sample_container.well("A1"))
-        becomes
-            "sample_container/A1"
-
-        Parameters
-        ----------
-        op_data : str, dict, list, Well, WellGroup, Unit, Container
-            data to be "reffed"
-
-        Returns
-        -------
-        op_data : str, dict, list, Well, WellGroup, Unit, Container
-            original data is returned if it is not of a type that can be
-            "refified"
-        dict
-            if op_data is a dict, a dict is returned with the same keys as
-            op_data and values reffified according to their type
-        list
-            if op_data is a list, a list is returned with each object reffed
-            according to its type
-        str
-            op_data of types Well, WellGroup, Container and Unit is returned
-            as a string representation of that object
-
-        """
-        if type(op_data) is dict:
-            return {k: self.refify(v) for k, v in op_data.items()}
-        elif type(op_data) is list:
-            return [self.refify(i) for i in op_data]
-        elif isinstance(op_data, Well):
-            return self._ref_for_well(op_data)
-        elif isinstance(op_data, WellGroup):
-            return [self._ref_for_well(w) for w in op_data.wells]
-        elif isinstance(op_data, Container):
-            return self._ref_for_container(op_data)
-        elif isinstance(op_data, Unit):
-            return str(op_data)
-        else:
-            return op_data
-
     def append(self, instructions):
         """appends instruction to the list of Instruction object associated
         with this protocol
@@ -249,7 +165,7 @@ class Protocol(object):
         """
         return {
             "refs": dict(map(lambda (k, v): (k, v.opts), self.refs.items())),
-            "instructions": map(lambda x: self.refify(x.data),
+            "instructions": map(lambda x: self._refify(x.data),
                                 self.instructions)
         }
 
@@ -260,8 +176,8 @@ class Protocol(object):
         Parameters
         ----------
         groups : list of dicts
-            a list of "distribute" and/or "transfer" instructions to be passed to a
-            Pipette object, which is then appended to this protocol's
+            a list of "distribute" and/or "transfer" instructions to be passed
+            to a Pipette object, which is then appended to this protocol's
             instructions attribute
         """
         if len(self.instructions) > 0 and \
@@ -278,8 +194,8 @@ class Protocol(object):
         ----------
         source : Well, WellGroup
             Well or wells to distribute liquid from.  If passed as a WellGroup
-            with set_volume() called on it, liquid will be automatically be drawn
-            from the wells specified using the fill_wells function
+            with set_volume() called on it, liquid will be automatically be
+            drawn from the wells specified using the fill_wells function
         dest : Well, WellGroup
             Well or wells to distribute liquid to
         volume : str, Unit
@@ -316,16 +232,16 @@ class Protocol(object):
                 )
             self.pipette(groups)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            opts["from"] = self.refify(source)
+            opts["from"] = self._refify(source)
             opts["to"] = []
             for well in dest.wells:
                 opts["to"].append(
-                    {"well": self.refify(well), "volume": volume})
+                    {"well": self._refify(well), "volume": volume})
             self.pipette([{"distribute": opts}])
         elif isinstance(source, Well) and isinstance(dest, Well):
-            opts["from"] = self.refify(source)
+            opts["from"] = self._refify(source)
             opts["to"] = []
-            opts["to"].append({"well": self.refify(dest), "volume": volume})
+            opts["to"].append({"well": self._refify(dest), "volume": volume})
             self.pipette([{"distribute": opts}])
 
     def transfer(self, source, dest, volume, mix_after=False,
@@ -364,8 +280,8 @@ class Protocol(object):
             if volume is passed as anything other than a string in the format
             "value:unit" or as a Unit object
         RuntimeError
-            if source and/or destination wells are passed as anything other than
-            Well or WellGroup objects
+            if source and/or destination wells are passed as anything other
+            than Well or WellGroup objects
         """
         opts = []
         if isinstance(volume, Unit):
@@ -382,8 +298,8 @@ class Protocol(object):
             else:
                 for s, d in zip(source.wells, dest.wells):
                     xfer = {
-                        "from": self.refify(s),
-                        "to": self.refify(d),
+                        "from": self._refify(s),
+                        "to": self._refify(d),
                         "volume": volume
                     }
                     if mix_after:
@@ -396,8 +312,8 @@ class Protocol(object):
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
                 xfer = {
-                    "from": self.refify(source),
-                    "to": self.refify(d),
+                    "from": self._refify(source),
+                    "to": self._refify(d),
                     "volume": volume
                 }
                 if mix_after:
@@ -409,8 +325,8 @@ class Protocol(object):
                 opts.append(xfer)
         elif isinstance(source, Well) and isinstance(dest, Well):
             xfer = {
-                "from": self.refify(source),
-                "to": self.refify(dest),
+                "from": self._refify(source),
+                "to": self._refify(dest),
                 "volume": volume
             }
             if mix_after:
@@ -595,8 +511,8 @@ class Protocol(object):
                      flashes=25):
         """This step transfers the plate to the plate reader and reads the
         fluoresence for the indicated wavelength for the indicated wells.
-        Appends an Fluorescence instruction to the list of instructions for this
-        Protocol object.
+        Appends an Fluorescence instruction to the list of instructions for
+        this Protocol object.
 
         Parameters
         ----------
@@ -679,7 +595,7 @@ class Protocol(object):
                         "no well in source group has more than %s" %
                         str(volume))
                 distributes.append({
-                    "from": self.refify(src),
+                    "from": self._refify(src),
                     "to": []
                 })
             distributes[-1]["to"].append({
@@ -692,6 +608,22 @@ class Protocol(object):
             else:
                 d.volume = volume
         return distributes
+
+    def _refify(self, op_data):
+        if type(op_data) is dict:
+            return {k: self._refify(v) for k, v in op_data.items()}
+        elif type(op_data) is list:
+            return [self._refify(i) for i in op_data]
+        elif isinstance(op_data, Well):
+            return self._ref_for_well(op_data)
+        elif isinstance(op_data, WellGroup):
+            return [self._ref_for_well(w) for w in op_data.wells]
+        elif isinstance(op_data, Container):
+            return self._ref_for_container(op_data)
+        elif isinstance(op_data, Unit):
+            return str(op_data)
+        else:
+            return op_data
 
     def ref_containers(self, refs):
         containers = {}

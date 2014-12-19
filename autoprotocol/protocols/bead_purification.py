@@ -2,6 +2,60 @@ from autoprotocol.util import make_dottable_dict
 from autoprotocol.unit import Unit
 
 def bead_separation(protocol, refs, params):
+    '''
+    Template for bead_separation_params.json config file
+    (change or add to defaults for your run):
+    {
+        "refs": {
+            "beads": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "resource_plate": {
+                "id": null,
+                "type": "96-deep",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "sample_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "trash": {
+                "id": null,
+                "type": "96-deep",
+                "storage": null,
+                "discard": true
+                }
+        },
+        "parameters": {
+            "run_title": "Test Run Please Ignore - Bead Separation",
+            "sample_number": 12,
+            "sample_start": "sample_plate/A1",
+            "sample_volume": "20:microliter",
+            "destination_start": "sample_plate/B1",
+            "initial_incubation_time": "10:minute",
+            "initial_incubation_temp": "ambient",
+            "initial_mag_adapter_time": "2:minute",
+            "ethanol_wash_vol": "60:microliter",
+            "supernatant_removal_vol": "42:microliter",
+            "wash_removal_vol": "90:microliter",
+            "ethanol_air_dry_time": "15:minute",
+            "ethanol_air_dry_temp": "ambient",
+            "resuspension_time": "5:minute",
+            "final_mag_adapter_time": "5:minute",
+            "resuspension_vol": "50:microliter",
+            "ethanol": "resource_plate/A1",
+            "te": "resource_plate/A2"
+        }
+    }
+
+
+    '''
     params = make_dottable_dict(params)
     refs = make_dottable_dict(refs)
 
@@ -15,7 +69,6 @@ def bead_separation(protocol, refs, params):
         params.sample_volume) * Unit(1.8, "microliter")
 
     # Allow beads to come to room temperature
-    #thaw_reagents(objects=reagents, temp="ambient", duration="10:minute", protocol=protocol)
 
     # Resuspend the beads
     protocol.mix(refs.beads.well(0), volume="500:microliter")

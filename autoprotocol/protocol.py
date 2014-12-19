@@ -550,7 +550,7 @@ class Protocol(object):
         self.instructions.append(Uncover(ref))
 
     def _ref_for_well(self, well):
-        return "%s/%d" % (self._ref_for_container(well.container), well.idx)
+        return "%s/%d" % (self._ref_for_container(well.container), well.index)
 
     def _ref_for_container(self, container):
         for k, v in self.refs.iteritems():
@@ -630,6 +630,9 @@ class Protocol(object):
         for k, v in refs.items():
             if isinstance(v, Container):
                 containers[str(k)] = v
+            if isinstance(v, list):
+                for cont in v:
+                    self.ref_containers(v)
             else:
                 containers[str(k)] = \
                     self.ref(k, v["id"], v["type"], storage=v["storage"],
@@ -640,11 +643,17 @@ class Protocol(object):
         parameters = {}
         for k, v in params.items():
             if isinstance(v, dict):
-                parameters[k] = self.make_well_references(v)
+                parameters[str(k)] = self.make_well_references(v)
             elif isinstance(v, list) and "/" in str(v[0]):
                 parameters[k] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
             elif "/" in str(v):
-                parameters[k] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
+                if not v.rsplit("/")[0] in self.refs:
+                    raise RuntimeError("Parameters contain well references to \
+                        a container that isn't referenced in this protocol.")
+                if v.rsplit("/")[1] == "all_wells":
+                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.all_wells()
+                else:
+                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
             else:
-                parameters[k] = v
+                parameters[str(k)] = v
         return parameters

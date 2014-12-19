@@ -9,9 +9,9 @@ class Well(object):
     object.
     """
 
-    def __init__(self, container, idx):
+    def __init__(self, container, index):
         self.container = container
-        self.idx = idx
+        self.index = index
         self.volume = None
 
     def set_volume(self, vol):
@@ -22,10 +22,10 @@ class Well(object):
         return self
 
     def humanize(self):
-        return self.container.humanize(self.idx)
+        return self.container.humanize(self.index)
 
     def __repr__(self):
-        return "Well(%s, %s, %s)" % (str(self.container), str(self.idx),
+        return "Well(%s, %s, %s)" % (str(self.container), str(self.index),
                                      str(self.volume))
 
 
@@ -52,10 +52,9 @@ class WellGroup(object):
         """
         indices = []
         for w in self.wells:
-            assert w.container == self.wells[0].container, \
-                "All wells in WellGroup must belong to the same container to " \
-                "get their indices"
-            indices.append(str(w.idx))
+            # assert w.container == self.wells[0].container, "All wells in \
+            #     WellGroup must belong to the same container to get their indices"
+            indices.append(w.index)
         return indices
 
     def append(self, other):

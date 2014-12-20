@@ -212,15 +212,15 @@ class Protocol(object):
             "value:unit" or as a Unit object
         """
         opts = {}
-        if isinstance(volume, Unit):
-            volume = str(volume)
-        elif not isinstance(volume, basestring):
-            raise RuntimeError("volume for transfer must be expressed in as a \
-                                string with the format 'value:unit' or as a \
-                                Unit")
+        # if isinstance(volume, Unit):
+        #     volume = str(volume)
+        # elif not isinstance(volume, basestring):
+        #     raise RuntimeError("volume for transfer must be expressed in as a \
+        #                         string with the format 'value:unit' or as a \
+        #                         Unit")
         opts["allow_carryover"] = allow_carryover
         if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            dists = self.fill_wells(dest, source, volume)
+            dists = self.fill_wells(dest, source, Unit.fromstring(volume))
             groups = []
             for d in dists:
                 groups.append(
@@ -232,16 +232,17 @@ class Protocol(object):
                 )
             self.pipette(groups)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            opts["from"] = self._refify(source)
+            opts["from"] = source
             opts["to"] = []
             for well in dest.wells:
                 opts["to"].append(
-                    {"well": self._refify(well), "volume": volume})
+                    {"well": well, "volume": volume})
             self.pipette([{"distribute": opts}])
         elif isinstance(source, Well) and isinstance(dest, Well):
-            opts["from"] = self._refify(source)
+            opts["from"] = self.source
             opts["to"] = []
-            opts["to"].append({"well": self._refify(dest), "volume": volume})
+            opts["to"].append({"well": dest,
+                "volume": volume})
             self.pipette([{"distribute": opts}])
 
     def transfer(self, source, dest, volume, mix_after=False,
@@ -298,8 +299,8 @@ class Protocol(object):
             else:
                 for s, d in zip(source.wells, dest.wells):
                     xfer = {
-                        "from": self._refify(s),
-                        "to": self._refify(d),
+                        "from": s,
+                        "to": d,
                         "volume": volume
                     }
                     if mix_after:
@@ -312,8 +313,8 @@ class Protocol(object):
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
                 xfer = {
-                    "from": self._refify(source),
-                    "to": self._refify(d),
+                    "from": source,
+                    "to": d,
                     "volume": volume
                 }
                 if mix_after:
@@ -325,8 +326,8 @@ class Protocol(object):
                 opts.append(xfer)
         elif isinstance(source, Well) and isinstance(dest, Well):
             xfer = {
-                "from": self._refify(source),
-                "to": self._refify(dest),
+                "from": source,
+                "to": dest,
                 "volume": volume
             }
             if mix_after:
@@ -582,7 +583,6 @@ class Protocol(object):
             designated destination wells
 
         """
-        volume = Unit.fromstring(volume)
         src = None
         distributes = []
         for d in dst_group.wells:
@@ -645,7 +645,9 @@ class Protocol(object):
             if isinstance(v, dict):
                 parameters[str(k)] = self.make_well_references(v)
             elif isinstance(v, list) and "/" in str(v[0]):
-                parameters[k] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
+                parameters[str(k)] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
+            elif ":" in str(v):
+                parameters[str(k)] = Unit.fromstring(str(v))
             elif "/" in str(v):
                 if not v.rsplit("/")[0] in self.refs:
                     raise RuntimeError("Parameters contain well references to \

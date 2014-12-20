@@ -91,14 +91,15 @@ def genotyping(protocol, refs, params):
         if k.rsplit("_")[-1] == "MM":
             mix_to_samples[k] = params["%s_samples" % k.rsplit("_")[0]]
 
-    if params.pcr_match_sample_layout:
-        for mix, group in mix_to_samples.items():
+    for mix, group in mix_to_samples.items():
+        if params.pcr_match_sample_layout:
             destination_wells = WellGroup([refs.pcr.well(i) for i in group.indices()])
             protocol.distribute(refs[mix].well(0), destination_wells,
                 params.mastermix_vol_per_rxn, allow_carryover=True)
             protocol.transfer(group, destination_wells, params.sample_vol)
-    else:
-        pass
+        else:
+
+
 
 
     protocol.seal("pcr")

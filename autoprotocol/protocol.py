@@ -239,7 +239,7 @@ class Protocol(object):
                     {"well": well, "volume": volume})
             self.pipette([{"distribute": opts}])
         elif isinstance(source, Well) and isinstance(dest, Well):
-            opts["from"] = self.source
+            opts["from"] = source
             opts["to"] = []
             opts["to"].append({"well": dest,
                 "volume": volume})
@@ -285,13 +285,15 @@ class Protocol(object):
             than Well or WellGroup objects
         """
         opts = []
-        if isinstance(volume, Unit):
-            volume = str(volume)
-        elif not isinstance(volume, basestring):
-            raise RuntimeError(
-                "volume for transfer must be expressed in as a string with "
-                "the format \"value:unit\" or as a Unit")
-        if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
+        if isinstance(volume, basestring):
+            volume = Unit.fromstring(volume)
+        if volume > Unit(900,"microliter"):
+            diff = Unit.fromstring(volume) - Unit(900,"microliter")
+            self.transfer(source, dest, "900:microliter", mix_after,
+                mix_vol, repetitions, flowrate)
+            self.transfer(source, dest, diff, mix_after, mix_vol, repetitions,
+                flowrate)
+        elif isinstance(source, WellGroup) and isinstance(dest, WellGroup):
             if len(source.wells) != len(dest.wells):
                 raise RuntimeError(
                     "source and destination WellGroups do not have the same "
@@ -340,7 +342,8 @@ class Protocol(object):
         else:
             raise RuntimeError("transfer function must take Well or WellGroup "
                                "objects")
-        self.pipette([{"transfer": opts}])
+        if opts:
+            self.pipette([{"transfer": opts}])
 
     def mix(self, well, volume="50:microliter", speed="50:microliter/second",
             repetitions=10):

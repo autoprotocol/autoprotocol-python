@@ -1,8 +1,104 @@
 import json
 import sys
 from autoprotocol.util import make_dottable_dict
+from autoprotocol.container import WellGroup
 
 def bradford(protocol, refs, params):
+    '''
+    Template for bradford_params.json config file
+    (change or add to defaults for your run):
+    {
+        "refs":{
+            "BSA": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "water": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "ambient",
+                "discard": false
+            },
+            "coomassie_1": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "coomassie_2": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "coomassie_3": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "coomassie_4": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "coomassie_5": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "coomassie_6": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": false
+            },
+            "lysate_1": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "lysate_2": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "lysate_3": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "standard_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": false,
+                "discard": true
+            },
+            "bradford_plate": {
+                "id": null,
+                "type": "96-flat",
+                "storage": "cold_20",
+                "discard": false
+            }
+        },
+        "parameters":{
+            "run_title": "Test Run Please Ignore - Bradford Assay",
+            "measurement_start": "bradford_plate/A4",
+            "standard_replicates": 3,
+            "sample_replicates":3,
+            "sample_number": 3,
+            "num_blanks": 3
+        }
+    }
+
+    '''
     params = make_dottable_dict(params)
     refs = make_dottable_dict(refs)
 
@@ -11,10 +107,10 @@ def bradford(protocol, refs, params):
         params.standard_replicates) +
         (params.sample_number * params.sample_replicates)
         + params.num_blanks, columnwise = True)
-
     wells_with_standard = wells_to_measure.wells[0:3*len(standard_wells)]
     sample_wells = wells_to_measure.wells[len(wells_with_standard):len(wells_to_measure)-3]
     blanks = wells_to_measure.wells[-1:-params.num_blanks]
+
     coomassie = WellGroup([])
     for name,ref in refs.items():
         if name.rsplit("_")[0] == "coomassie":
@@ -53,8 +149,8 @@ def bradford(protocol, refs, params):
         start += 3
         end += 3
 
-    protocol.absorbance(refs.bradford_plate, wells_to_measure, "595:nanometer",
-                        dataref="bradford")
+    protocol.absorbance(refs.bradford_plate, wells_to_measure,
+        "595:nanometer", dataref="bradford")
 
 if __name__ == '__main__':
     from autoprotocol.harness import run

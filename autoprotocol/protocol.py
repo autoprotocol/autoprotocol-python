@@ -212,15 +212,15 @@ class Protocol(object):
             "value:unit" or as a Unit object
         """
         opts = {}
-        if isinstance(volume, Unit):
-            volume = str(volume)
-        elif not isinstance(volume, basestring):
-            raise RuntimeError("volume for transfer must be expressed in as a \
-                                string with the format 'value:unit' or as a \
-                                Unit")
+        # if isinstance(volume, Unit):
+        #     volume = str(volume)
+        # elif not isinstance(volume, basestring):
+        #     raise RuntimeError("volume for transfer must be expressed in as a \
+        #                         string with the format 'value:unit' or as a \
+        #                         Unit")
         opts["allow_carryover"] = allow_carryover
         if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            dists = self.fill_wells(dest, source, volume)
+            dists = self.fill_wells(dest, source, Unit.fromstring(volume))
             groups = []
             for d in dists:
                 groups.append(
@@ -232,16 +232,17 @@ class Protocol(object):
                 )
             self.pipette(groups)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            opts["from"] = self._refify(source)
+            opts["from"] = source
             opts["to"] = []
             for well in dest.wells:
                 opts["to"].append(
-                    {"well": self._refify(well), "volume": volume})
+                    {"well": well, "volume": volume})
             self.pipette([{"distribute": opts}])
         elif isinstance(source, Well) and isinstance(dest, Well):
-            opts["from"] = self._refify(source)
+            opts["from"] = source
             opts["to"] = []
-            opts["to"].append({"well": self._refify(dest), "volume": volume})
+            opts["to"].append({"well": dest,
+                "volume": volume})
             self.pipette([{"distribute": opts}])
 
     def transfer(self, source, dest, volume, mix_after=False,
@@ -284,36 +285,27 @@ class Protocol(object):
             than Well or WellGroup objects
         """
         opts = []
-        if isinstance(volume, Unit):
-            volume = str(volume)
-        elif not isinstance(volume, basestring):
-            raise RuntimeError(
-                "volume for transfer must be expressed in as a string with "
-                "the format \"value:unit\" or as a Unit")
-        if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
+        if isinstance(volume, basestring):
+            volume = Unit.fromstring(volume)
+        if volume > Unit(900,"microliter"):
+            diff = Unit.fromstring(volume) - Unit(900,"microliter")
+            self.transfer(source, dest, "900:microliter", mix_after,
+                mix_vol, repetitions, flowrate)
+            self.transfer(source, dest, diff, mix_after, mix_vol, repetitions,
+                flowrate)
+        elif isinstance(source, WellGroup) and isinstance(dest, WellGroup):
             if len(source.wells) != len(dest.wells):
                 raise RuntimeError(
                     "source and destination WellGroups do not have the same "
                     "number of wells and transfer cannot happen one to one")
             else:
-                for s, d in zip(source.wells, dest.wells):
-                    xfer = {
-                        "from": self._refify(s),
-                        "to": self._refify(d),
-                        "volume": volume
-                    }
-                    if mix_after:
-                        xfer["mix_after"] = {
-                            "volume": mix_vol,
-                            "repetitions": repetitions,
-                            "speed": flowrate
-                        }
-                    opts.append(xfer)
+                for s,d in zip(source.wells, dest.wells):
+                    self.transfer(s,d,volume)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
                 xfer = {
-                    "from": self._refify(source),
-                    "to": self._refify(d),
+                    "from": source,
+                    "to": d,
                     "volume": volume
                 }
                 if mix_after:
@@ -325,8 +317,8 @@ class Protocol(object):
                 opts.append(xfer)
         elif isinstance(source, Well) and isinstance(dest, Well):
             xfer = {
-                "from": self._refify(source),
-                "to": self._refify(dest),
+                "from": source,
+                "to": dest,
                 "volume": volume
             }
             if mix_after:
@@ -339,7 +331,8 @@ class Protocol(object):
         else:
             raise RuntimeError("transfer function must take Well or WellGroup "
                                "objects")
-        self.pipette([{"transfer": opts}])
+        if opts:
+            self.pipette([{"transfer": opts}])
 
     def mix(self, well, volume="50:microliter", speed="50:microliter/second",
             repetitions=10):
@@ -503,7 +496,7 @@ class Protocol(object):
         flashes : int, optional
         """
         if isinstance(wells, WellGroup):
-            wells = wells.indices()
+            wells = wells.indices(human=True)
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes))
 
@@ -550,7 +543,7 @@ class Protocol(object):
         self.instructions.append(Uncover(ref))
 
     def _ref_for_well(self, well):
-        return "%s/%d" % (self._ref_for_container(well.container), well.idx)
+        return "%s/%d" % (self._ref_for_container(well.container), well.index)
 
     def _ref_for_container(self, container):
         for k, v in self.refs.iteritems():
@@ -582,9 +575,9 @@ class Protocol(object):
             designated destination wells
 
         """
-        volume = Unit.fromstring(volume)
         src = None
         distributes = []
+
         for d in dst_group.wells:
             if len(distributes) == 0 or src.volume < volume:
                 # find a src well with enough volume
@@ -630,6 +623,9 @@ class Protocol(object):
         for k, v in refs.items():
             if isinstance(v, Container):
                 containers[str(k)] = v
+            if isinstance(v, list):
+                for cont in v:
+                    self.ref_containers(v)
             else:
                 containers[str(k)] = \
                     self.ref(k, v["id"], v["type"], storage=v["storage"],
@@ -640,11 +636,19 @@ class Protocol(object):
         parameters = {}
         for k, v in params.items():
             if isinstance(v, dict):
-                parameters[k] = self.make_well_references(v)
+                parameters[str(k)] = self.make_well_references(v)
             elif isinstance(v, list) and "/" in str(v[0]):
-                parameters[k] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
+                parameters[str(k)] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
+            elif ":" in str(v):
+                parameters[str(k)] = Unit.fromstring(str(v))
             elif "/" in str(v):
-                parameters[k] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
+                if not v.rsplit("/")[0] in self.refs:
+                    raise RuntimeError("Parameters contain well references to \
+                        a container that isn't referenced in this protocol.")
+                if v.rsplit("/")[1] == "all_wells":
+                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.all_wells()
+                else:
+                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
             else:
-                parameters[k] = v
+                parameters[str(k)] = v
         return parameters

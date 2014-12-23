@@ -2,6 +2,50 @@ import json
 from autoprotocol.util import make_dottable_dict
 
 def kunkel_anneal(protocol, refs, params):
+    '''
+    Template for kunkel_anneal_config.json file
+    (change or add to defaults for your run):
+    {
+        "refs":{
+            "diluted_oligo_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "resource_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "reaction_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "ambient",
+                "discard": false
+            }
+        },
+        "parameters":{
+            "ssDNA_mix_vol": "2.2:microliter",
+            "ssDNA_mix_loc": "resource_plate/D1",
+            "oligo_vol": "2:microliter",
+            "oligos": [
+                "diluted_oligo_plate/0",
+                "diluted_oligo_plate/1",
+                "diluted_oligo_plate/2",
+                "diluted_oligo_plate/3",
+                "diluted_oligo_plate/4",
+                "diluted_oligo_plate/5",
+                "diluted_oligo_plate/6",
+                "diluted_oligo_plate/7",
+                "diluted_oligo_plate/8",
+                "diluted_oligo_plate/9",
+                "diluted_oligo_plate/10"
+            ]
+        }
+    }
+    '''
     params = make_dottable_dict(params)
 
     reaction_wells = refs["reaction_plate"].wells_from(0,len(params.oligos), columnwise=True)

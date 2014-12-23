@@ -7,8 +7,11 @@ class Unit(object):
 
     @staticmethod
     def fromstring(s):
-        value, unit = s.split(":")
-        return Unit(float(value), unit)
+        if isinstance(s, Unit):
+            return s
+        else:
+            value, unit = s.split(":")
+            return Unit(float(value), unit)
 
     def __str__(self):
         return ":".join([str(self.value), self.unit])

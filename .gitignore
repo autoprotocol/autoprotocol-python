@@ -21,3 +21,5 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+config/
+client_protocols/

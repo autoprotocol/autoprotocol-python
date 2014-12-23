@@ -20,7 +20,7 @@ class ContainerType(namedtuple("ContainerType",
         at 0 = A1).
         """
         if isinstance(well_ref, Well):
-            well_ref = well_ref.idx
+            well_ref = well_ref.index
         well_ref = str(well_ref)
         m = re.match("([a-z])(\d+)$", well_ref, re.I)
         # TODO(jeremy): check bounds

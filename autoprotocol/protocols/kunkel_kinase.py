@@ -2,6 +2,53 @@ import json
 from autoprotocol.util import make_dottable_dict
 
 def kunkel_kinase(protocol, refs, params):
+    '''
+    Template for kunkel_kinase_config.json file
+    (change or add to defaults for your run):
+    {
+        "refs":{
+            "oligo_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "kinased_oligo_plate": {
+                "id": null,
+                "type": "96-pcr",
+                "storage": "cold_20",
+                "discard": false
+            },
+            "resource_plate": {
+                "id": null,
+                "type": "384-pcr",
+                "storage": "cold_20",
+                "discard": false
+            }
+        },
+        "parameters":{
+            "oligo_number": 12,
+            "oligo_start": "oligo_plate/A1",
+            "kinase_mix_loc": [
+                "resource_plate/1",
+                "resource_plate/2",
+                "resource_plate/3",
+                "resource_plate/4",
+                "resource_plate/5",
+                "resource_plate/6",
+                "resource_plate/7"
+            ],
+            "kinase_incubation_time": "1:hour",
+            "kinase_incubation_temp": "37:celsius",
+            "kinase_MM_volume": "23:microliter",
+            "conc_oligo_volume": "7:microliter",
+            "mix_volume": "10:microliter",
+            "kinased_start": "kinased_oligo_plate/A1",
+            "kinase_time": "60:minute"
+        }
+    }
+    '''
+
     params = make_dottable_dict(params)
 
     oligo_wells = refs["oligo_plate"].wells_from(params.oligo_start, params.oligo_number, columnwise = True)

@@ -212,12 +212,6 @@ class Protocol(object):
             "value:unit" or as a Unit object
         """
         opts = {}
-        # if isinstance(volume, Unit):
-        #     volume = str(volume)
-        # elif not isinstance(volume, basestring):
-        #     raise RuntimeError("volume for transfer must be expressed in as a \
-        #                         string with the format 'value:unit' or as a \
-        #                         Unit")
         opts["allow_carryover"] = allow_carryover
         if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
             dists = self.fill_wells(dest, source, Unit.fromstring(volume))
@@ -303,18 +297,7 @@ class Protocol(object):
                     self.transfer(s,d,volume)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
-                xfer = {
-                    "from": source,
-                    "to": d,
-                    "volume": volume
-                }
-                if mix_after:
-                    xfer["mix_after"] = {
-                        "volume": mix_vol,
-                        "repetitions": repetitions,
-                        "speed": flowrate
-                    }
-                opts.append(xfer)
+                self.transfer(source, d, volume)
         elif isinstance(source, Well) and isinstance(dest, Well):
             xfer = {
                 "from": source,

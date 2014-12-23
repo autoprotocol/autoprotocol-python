@@ -1,5 +1,6 @@
 import json
 from autoprotocol.util import make_dottable_dict
+from autoprotocol.container import WellGroup
 
 def ligate(protocol, refs, params):
     '''

@@ -98,9 +98,7 @@ def genotyping(protocol, refs, params):
                 params.mastermix_vol_per_rxn, allow_carryover=True)
             protocol.transfer(group, destination_wells, params.sample_vol)
         else:
-
-
-
+            pass
 
     protocol.seal("pcr")
 
@@ -130,4 +128,4 @@ def genotyping(protocol, refs, params):
 
 if __name__ == '__main__':
     from autoprotocol.harness import run
-    run(colony_pcr)
+    run(genotyping)

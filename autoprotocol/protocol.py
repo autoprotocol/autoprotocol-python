@@ -507,7 +507,7 @@ class Protocol(object):
         flashes : int, optional
         """
         if isinstance(wells, WellGroup):
-            wells = wells.indices()
+            wells = wells.indices(human=True)
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes))
 

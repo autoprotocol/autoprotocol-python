@@ -149,7 +149,7 @@ def bradford(protocol, refs, params):
         start += 3
         end += 3
 
-    protocol.absorbance(refs.bradford_plate, wells_to_measure.indices(human=True),
+    protocol.absorbance(refs.bradford_plate, wells_to_measure,
         "595:nanometer", dataref="bradford")
 
 if __name__ == '__main__':

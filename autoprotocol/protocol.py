@@ -299,19 +299,8 @@ class Protocol(object):
                     "source and destination WellGroups do not have the same "
                     "number of wells and transfer cannot happen one to one")
             else:
-                for s, d in zip(source.wells, dest.wells):
-                    xfer = {
-                        "from": s,
-                        "to": d,
-                        "volume": volume
-                    }
-                    if mix_after:
-                        xfer["mix_after"] = {
-                            "volume": mix_vol,
-                            "repetitions": repetitions,
-                            "speed": flowrate
-                        }
-                    opts.append(xfer)
+                for s,d in zip(source.wells, dest.wells):
+                    self.transfer(s,d,volume)
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
                 xfer = {
@@ -588,6 +577,7 @@ class Protocol(object):
         """
         src = None
         distributes = []
+
         for d in dst_group.wells:
             if len(distributes) == 0 or src.volume < volume:
                 # find a src well with enough volume

@@ -1,6 +1,7 @@
 import json
 import sys
 from autoprotocol.util import make_dottable_dict
+from autoprotocol.container import WellGroup
 
 def bradford(protocol, refs, params):
     '''
@@ -106,10 +107,10 @@ def bradford(protocol, refs, params):
         params.standard_replicates) +
         (params.sample_number * params.sample_replicates)
         + params.num_blanks, columnwise = True)
-
     wells_with_standard = wells_to_measure.wells[0:3*len(standard_wells)]
     sample_wells = wells_to_measure.wells[len(wells_with_standard):len(wells_to_measure)-3]
     blanks = wells_to_measure.wells[-1:-params.num_blanks]
+
     coomassie = WellGroup([])
     for name,ref in refs.items():
         if name.rsplit("_")[0] == "coomassie":
@@ -148,8 +149,8 @@ def bradford(protocol, refs, params):
         start += 3
         end += 3
 
-    protocol.absorbance(refs.bradford_plate, wells_to_measure, "595:nanometer",
-                        dataref="bradford")
+    protocol.absorbance(refs.bradford_plate, wells_to_measure.indices(human=True),
+        "595:nanometer", dataref="bradford")
 
 if __name__ == '__main__':
     from autoprotocol.harness import run

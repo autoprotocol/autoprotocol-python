@@ -7,8 +7,7 @@ generating Autoprotocol, and a number of validated protocols.
 ## Installation
 
     $ git clone https://github.com/autoprotocol/autoprotocol-python
-    $ cd autoprotocol-python
-    $ python setup.py install
+    $ python autoprotocol/setup.py install
 
 ## Writing Protocols
 

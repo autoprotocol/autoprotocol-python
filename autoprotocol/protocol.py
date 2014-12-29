@@ -241,7 +241,7 @@ class Protocol(object):
 
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
-                 flowrate="50:microliter/second"):
+                 flowrate="100:microliter/second"):
         """Allows encoding of transfer groups, each representing liquid handling
         from one specific well to another.  A new pipette tip is used between
         each transfer step.
@@ -317,7 +317,7 @@ class Protocol(object):
         if opts:
             self.pipette([{"transfer": opts}])
 
-    def mix(self, well, volume="50:microliter", speed="50:microliter/second",
+    def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):
         """Mix specified well using a new pipette tip
 

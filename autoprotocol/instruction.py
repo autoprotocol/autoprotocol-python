@@ -17,16 +17,26 @@ class Pipette(Instruction):
         })
 
     @staticmethod
-    def _transferGroup(src, dest, vol):
-        vol = str(vol) + ":microliter"
-        return {
+    def _transferGroup(src, dest, vol, mix_after=False,
+                 mix_vol="20:microliter", repetitions=10,
+                 flowrate="100:microliter/second"):
+        group = {
             "from": src,
             "to": dest,
             "volume": vol,
         }
+        if mix_after:
+            group["mix_after"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+            }
+        return group
 
     @staticmethod
-    def transfers(srcs, dests, vols):
+    def transfers(srcs, dests, vols, mix_after=False,
+                 mix_vol="20:microliter", repetitions=10,
+                 flowrate="100:microliter/second"):
         """
         Returns a valid list of pipette transfer groups.  This can be passed
         directly to the Pipette constructor as the "groups" argument.
@@ -37,8 +47,9 @@ class Pipette(Instruction):
         """
 
         return [{
-                "transfer": [Pipette._transferGroup(s, d, v)
-                                for (s, d, v) in zip(srcs, dests, vols)],
+                "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol,
+                            repetitions, flowrate) for (s, d, v) in
+                            zip(srcs, dests, vols)],
         }]
 
 class Spin(Instruction):

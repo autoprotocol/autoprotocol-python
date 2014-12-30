@@ -241,7 +241,7 @@ class Protocol(object):
 
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
-                 flowrate="100:microliter/second"):
+                 flowrate="100:microliter/second", allow_carryover=False):
         """Allows encoding of transfer groups, each representing liquid handling
         from one specific well to another.  A new pipette tip is used between
         each transfer step.
@@ -316,6 +316,66 @@ class Protocol(object):
                                "objects")
         if opts:
             self.pipette([{"transfer": opts}])
+
+    def serial_dilute_rowwise(self, container, source, start_well, end_well, vol,
+                                mix_after=True, reverse=False):
+        """
+        Serial dilute source liquid in specified wells of the container specified.
+        Defaults to dilute from left to right (increasing well index) unless reverse
+        is set to true.  This operation utilizes the transfers() method on Pipette,
+        meaning only one tip is used.  The wells between start_well and end_well
+        (not including those wells) should already contain the specified volume of
+        diluent.
+
+        Parameters
+        ----------
+        container : Container
+        source : Well
+            Well containing source liquid.  Will be transfered to starting well
+            with double the volume specified in parameters
+        start_well : Well
+            Start of dilution, well containing the highest concentration of liquid
+        end_well : Well
+            End of dilution, well containing the lowest concentration of liquid
+        vol : Unit, str
+            Final volume of each well in the dilution series, most concentrated
+            liquid will be transfered to the starting well with double this volume
+        mix_after : bool
+            If set to True, each well will be mixed after liquid is transfered to it.
+        reverse : bool
+            If set to True, liquid will be most concentrated in the well in the
+            dilution series with the highest index
+        """
+        source_well = start_well
+        begin_dilute = start_well
+        end_dilute = end_well
+        wells_to_dilute = container.wells_from(begin_dilute,
+            end_dilute.index-begin_dilute.index + 1)
+        srcs = []
+        dests = []
+        vols = []
+        if reverse:
+            begin_dilute = end_well
+            end_dilute = start_well
+            source_well = end_well
+            wells_to_dilute = container.wells_from(end_dilute,
+                begin_dilute.index-end_dilute.index + 1)
+        self.transfer(source, source_well,
+            Unit.fromstring(vol)*Unit(2,"microliter"))
+        if reverse:
+            while len(wells_to_dilute.wells) >= 2:
+                srcs.append(wells_to_dilute.wells.pop())
+                dests.append(wells_to_dilute.wells[-1])
+                vols.append(vol)
+            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
+                mix_after=mix_after)))
+        else:
+            for i in range(1, len(wells_to_dilute.wells)):
+                srcs.append(wells_to_dilute.wells[i-1])
+                dests.append(wells_to_dilute[i])
+                vols.append(vol)
+            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
+                mix_after=mix_after)))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):

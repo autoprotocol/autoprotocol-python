@@ -662,20 +662,103 @@ class Protocol(object):
             return op_data
 
     def ref_containers(self, refs):
+        """
+        Process (ref) JSON container refererences in the form of:
+
+        {
+            "refs" : {
+                "id": <id>,
+                "type": <type>,
+                "storage": <storage>,
+                "discard": <bool>
+
+            }
+        }
+
+        into Container objects
+
+        Example
+        -------
+
+        refs = {
+            "sample": {
+                "id": null,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": null
+            }
+        }
+
+        protocol.ref_containers(refs)
+
+        returns:
+
+        {
+            "sample": Container(None, "micro-1.5")
+        }
+
+        Parameters
+        ----------
+        refs : JSON object
+        """
         containers = {}
         for k, v in refs.items():
             if isinstance(v, Container):
                 containers[str(k)] = v
             if isinstance(v, list):
                 for cont in v:
-                    self.ref_containers(v)
+                    self.ref_containers(cont)
             else:
+                if "discard" in v:
+                    discard = v["discard"]
+                else:
+                    discard = False
                 containers[str(k)] = \
                     self.ref(k, v["id"], v["type"], storage=v["storage"],
-                             discard=v["discard"])
+                             discard=discard)
         return containers
 
     def make_well_references(self, params):
+        """
+        Process JSON well references in the form of:
+        {
+            "parameters": {
+                "sample_name": "<container name>/<well index>",
+                "sample_group": [
+                    "<container name>/<well index>",
+                    "<container name>/<well index>",
+                    "<container name>/<well index>"
+                ]
+            }
+        }
+
+        Example
+        -------
+
+        parameters = {
+                "mastermix_loc": "sample_plate/A1",
+                "samples": [
+                    "sample_plate/B1",
+                    "sample_plate/B2",
+                    "sample_plate/B3",
+                    "sample_plate/B4"
+                ]
+        }
+
+        protocol.make_well_references(parameters)
+
+        returns:
+
+        {
+            "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
+            "samples": WellGroup([
+                    protocol.refs["sample_plate"].well("B1"),
+                    protocol.refs["sample_plate"].well("B2"),
+                    protocol.refs["sample_plate"].well("B3"),
+                    protocol.refs["sample_plate"].well("B4")
+                ])
+        }
+        """
         parameters = {}
         for k, v in params.items():
             if isinstance(v, dict):

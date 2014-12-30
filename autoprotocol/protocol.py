@@ -77,7 +77,7 @@ class Protocol(object):
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
-        """appends a Ref object to the list of Refs associated with this protocol
+        """Append a Ref object to the list of Refs associated with this protocol
         and returns a Container with the id, container type and storage or
         discard conditions specified.
 
@@ -142,7 +142,7 @@ class Protocol(object):
         return container
 
     def append(self, instructions):
-        """appends instruction to the list of Instruction object associated
+        """Append instruction(s) to the list of Instruction objects associated
         with this protocol
 
         Parameters
@@ -170,7 +170,7 @@ class Protocol(object):
         }
 
     def pipette(self, groups):
-        """Takes groups to be passed to a Pipette object which is then appended
+        """Take groups to be passed to a Pipette object which is then appended
         to the instructions attribute of this Protocol
 
         Parameters
@@ -187,7 +187,7 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def distribute(self, source, dest, volume, allow_carryover=False):
-        """Allows encoding of distribute groups representing liquid handling
+        """Allow encoding of distribute groups representing liquid handling
         from one or multiple wells to one or multiple other wells.
 
         Parameters
@@ -242,7 +242,7 @@ class Protocol(object):
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
-        """Allows encoding of transfer groups, each representing liquid handling
+        """Allow encoding of transfer groups, each representing liquid handling
         from one specific well to another.  A new pipette tip is used between
         each transfer step.
 
@@ -401,19 +401,13 @@ class Protocol(object):
         self.pipette([{"mix": [opts]}])
 
     def spin(self, ref, speed, duration):
-        """appends a Spin Instruction to the instructions list
+        """Append a Spin Instruction to the instructions list
 
         Parameters
         ----------
         ref : str, Ref
         speed: str, Unit
         duration: str, Unit
-
-        Returns
-        -------
-
-        Raises
-        ------
 
         """
         self.instructions.append(Spin(ref, speed, duration))
@@ -434,11 +428,21 @@ class Protocol(object):
         dyes : list, optional
         melting : str, Unit, optional
 
-        Returns
-        -------
-
         Raises
         ------
+        AttributeError
+            if groups are not in the form of:
+                [{
+                    'cycles':___,
+                    'steps': [
+                        {'temperature':___,"
+                            'duration':___,
+                        },
+                        { ... }
+                    ]},
+                    { ... }, ...
+                }]
+
 
         """
         if not isinstance(groups, list):
@@ -451,7 +455,7 @@ class Protocol(object):
 
     def thermocycle_ramp(self, ref, start_temp, end_temp, time,
                          step_duration="60:second"):
-        """Appends instructions representing a thermocyle ramp-up or ramp-down
+        """Append instructions representing a thermocyle ramp-up or ramp-down
         protocol based on start_temp and end_temp
 
         Parameters
@@ -490,7 +494,7 @@ class Protocol(object):
 
     # mag adapter steps must be followed by pipette instructions
     def plate_to_mag_adapter(self, ref, duration):
-        """utilizes the Pipette instruction to transfer a plate to the magnetized
+        """Utilize the Pipette instruction to transfer a plate to the magnetized
         slot on the liquid handler
 
         Parameters
@@ -509,7 +513,7 @@ class Protocol(object):
         self.instructions.append(sep)
 
     def plate_off_mag_adapter(self, ref):
-        """This function utilizes the Pipette instruction to transfer a plate
+        """Utilize the Pipette instruction to transfer a plate
         off of the magnetic block slot on the liquid handler to a normal, non-
         magnetized slot
 
@@ -521,9 +525,9 @@ class Protocol(object):
         self.instructions.append(Pipette([]))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25):
-        """This step transfers the plate to the plate reader and reads the
+        """Transfer the plate to the plate reader and reads the
         absorbance for the indicated wavelength for the indicated wells.
-        Appends an Absorbance instruction to the list of instructions for this
+        Append an Absorbance instruction to the list of instructions for this
         Protocol object.
 
         Parameters
@@ -545,14 +549,14 @@ class Protocol(object):
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25):
-        """This step transfers the plate to the plate reader and reads the
+        """Transfer the plate to the plate reader and read the
         fluoresence for the indicated wavelength for the indicated wells.
-        Appends an Fluorescence instruction to the list of instructions for
+        Append a Fluorescence instruction to the list of instructions for
         this Protocol object.
 
         Parameters
         ----------
-        ref : str, Ref
+        ref : str, Container
         wells : list, WellGroup
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
@@ -570,6 +574,20 @@ class Protocol(object):
             Fluorescence(ref, wells, excitation, emission, dataref, flashes))
 
     def gel_separate(self, ref, matrix, ladder, duration, dataref):
+        """
+
+        Parameters
+        ----------
+        ref : str, Container
+            reference to be gel separated
+        matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
+                  'agarose(12,1.2%)', 'agarose(8,0.8%)'}
+            matrix in which to gel separate samples
+        ladder : {'ladder1', 'ladder2'}
+            ladder by which to measure separated fragment size
+        duration : str, Unit
+        dataref : str
+        """
         self.instructions.append(
             GelSeparate(ref, matrix, ladder, duration, dataref))
 

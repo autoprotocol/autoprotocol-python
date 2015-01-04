@@ -573,6 +573,11 @@ class Protocol(object):
         self.instructions.append(
             Fluorescence(ref, wells, excitation, emission, dataref, flashes))
 
+    def luminesence(self, ref, wells, dataref):
+        if isinstance(wells, WellGroup):
+            wells = wells.indices()
+        self.instructions.append(Luminesence(refs, wells, dataref))
+
     def gel_separate(self, ref, matrix, ladder, duration, dataref):
         """
 

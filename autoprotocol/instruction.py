@@ -214,6 +214,15 @@ class Fluorescence(Instruction):
             "dataref": dataref
         })
 
+class Luminesence(Instruction):
+    def __init__(self, ref, wells, dataref):
+        super(Luminesence, self).__init__({
+            "op": "luminesence",
+            "object": ref,
+            "wells": wells,
+            "dataref": dataref
+            })
+
 class Seal(Instruction):
     def __init__(self, ref):
         super(Seal, self).__init__({

@@ -1,7 +1,7 @@
 from autoprotocol.container import WellGroup
 from autoprotocol.util import make_dottable_dict
 
-def genotyping(protocol, refs, params):
+def genotyping(protocol, params):
     '''
     Template for genotyping_config.json file
     do not change the structure of this config file, make sure that the tubes
@@ -11,7 +11,7 @@ def genotyping(protocol, refs, params):
 
     (change or add to default values for your run):
     {
-        "refs":{
+        "parameters":{
             "allele1_MM": {
                 "id": null,
                 "type": "micro-1.5",
@@ -24,7 +24,7 @@ def genotyping(protocol, refs, params):
                 "storage": "cold_20",
                 "discard": false
             },
-            "bacteria": {
+            "dna_source": {
                 "id": null,
                 "type": "96-flat",
                 "storage": "cold_4",
@@ -35,39 +35,37 @@ def genotyping(protocol, refs, params):
                 "type": "96-pcr",
                 "storage": "cold_20",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "pcr_match_sample_layout":true,
             "mastermix_vol_per_rxn": "14:microliter",
             "sample_vol": "3:microliter",
             "allele1_samples": [
-                "bacteria/0",
-                "bacteria/1",
-                "bacteria/2",
-                "bacteria/3",
-                "bacteria/4",
-                "bacteria/5",
-                "bacteria/6",
-                "bacteria/7",
-                "bacteria/8",
-                "bacteria/9",
-                "bacteria/10",
-                "bacteria/11"
+                "dna_source/0",
+                "dna_source/1",
+                "dna_source/2",
+                "dna_source/3",
+                "dna_source/4",
+                "dna_source/5",
+                "dna_source/6",
+                "dna_source/7",
+                "dna_source/8",
+                "dna_source/9",
+                "dna_source/10",
+                "dna_source/11"
             ],
             "allele2_samples": [
-                "bacteria/12",
-                "bacteria/13",
-                "bacteria/14",
-                "bacteria/15",
-                "bacteria/16",
-                "bacteria/17",
-                "bacteria/18",
-                "bacteria/19",
-                "bacteria/20",
-                "bacteria/21",
-                "bacteria/22",
-                "bacteria/23"
+                "dna_source/12",
+                "dna_source/13",
+                "dna_source/14",
+                "dna_source/15",
+                "dna_source/16",
+                "dna_source/17",
+                "dna_source/18",
+                "dna_source/19",
+                "dna_source/20",
+                "dna_source/21",
+                "dna_source/22",
+                "dna_source/23"
             ],
         "pcr_cycles": 30,
         "activation_time": "2:minute",
@@ -82,8 +80,8 @@ def genotyping(protocol, refs, params):
     }
 
     '''
-    refs = make_dottable_dict(refs)
     params = make_dottable_dict(params)
+    refs = make_dottable_dict(params.refs)
 
     mix_to_samples = {}
 

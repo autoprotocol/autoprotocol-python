@@ -1,5 +1,5 @@
 {
-    "refs":{
+    "parameters":{
         "container1_name": {
             "id": null,
             "type": "",
@@ -11,9 +11,8 @@
             "type": "",
             "storage": "",
             "discard": false
-        }
-    },
-    "parameters":{
-
+        },
+    "reagent_location": "container2_name/A1",
+    "reagent_volume": "10:microliters"
     }
 }

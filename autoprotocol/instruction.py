@@ -101,24 +101,27 @@ class Thermocycle(Instruction):
     CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
-    def __init__(self, ref, groups, volume=None, dataref=None, dyes=None, melting=None):
+    def __init__(self, ref, groups, volume="25:microliter", dataref=None, dyes=None, melting=None):
+        instruction = {
+            "op": "thermocycle",
+            "object": ref,
+            "groups": groups,
+            "volume": volume
+        }
         if dyes:
             keys = dyes.keys()
             if Thermocycle.find_invalid_dyes(keys):
                 dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
-        if bool(dataref) != bool(dyes):
+            else:
+                instruction["dyes"] = dyes
+        elif bool(dataref) != bool(dyes):
             raise ValueError("thermocycle instruction supplied `%s` without `%s`" % ("dataref" if bool(dataref) else "dyes", "dyes" if bool(dataref) else "dataref"))
-        if melting and not dyes:
+        elif melting and not dyes:
             raise ValueError("thermocycle instruction supplied `melting` without `dyes`: %s")
-        super(Thermocycle, self).__init__({
-            "op": "thermocycle",
-            "object": ref,
-            "groups": groups,
-            "dataref": dataref,
-            "volume": volume,
-            "dyes": dyes,
-            "melting": melting
-        })
+        if melting:
+            instruction["melting"] = melting
+
+        super(Thermocycle, self).__init__(instruction)
 
     @staticmethod
     def find_invalid_dyes(dyes):

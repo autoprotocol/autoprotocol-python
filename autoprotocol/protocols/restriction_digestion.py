@@ -1,12 +1,12 @@
 import json
 from autoprotocol.util import make_dottable_dict
 
-def restriction_digest(protocol, refs, params):
+def restriction_digest(protocol, params):
     '''
     Template for restriction_digest_config.json file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "enzymes": {
                 "id": null,
                 "type": "96-pcr",
@@ -42,14 +42,11 @@ def restriction_digest(protocol, refs, params):
                 "type": "96-pcr",
                 "storage": "cold_4",
                 "discard": false
-            }
-
-        },
-        "parameters":{
-            "XhoI": "enzymes/H12",
-            "MluI": "enzymes/C10",
-            "EcoRI": "enzymes/A3",
-            "NheI": "enzymes/D7",
+            },
+            "enzyme_1": "enzymes/H12",
+            "enzyme_2": "enzymes/C10",
+            "enzyme_3": "enzymes/A3",
+            "enzyme_4": "enzymes/D7",
             "cut_backbone": "destination_plate/A1",
             "cut_insert": "destination_plate/A2",
             "enzyme_vol": "3:microliter",
@@ -64,7 +61,7 @@ def restriction_digest(protocol, refs, params):
     }
     '''
     params = make_dottable_dict(params)
-    refs = make_dottable_dict(refs)
+    refs = make_dottable_dict(params.refs)
 
     protocol.transfer(refs.backbone.well(0), params.cut_backbone, params.source_DNA_vol)
     protocol.transfer(refs.insert.well(0), params.cut_insert, params.source_DNA_vol)
@@ -75,12 +72,12 @@ def restriction_digest(protocol, refs, params):
     protocol.transfer(refs.water.well(0), params.cut_backbone, params.water_vol)
     protocol.transfer(refs.water.well(0), params.cut_insert, params.water_vol)
 
-    protocol.transfer(params.XhoI, params.cut_backbone, params.enzyme_vol)
-    protocol.transfer(params.EcoRI, params.cut_backbone, params.enzyme_vol,
+    protocol.transfer(params.enzyme_1, params.cut_backbone, params.enzyme_vol)
+    protocol.transfer(params.enzyme_2, params.cut_backbone, params.enzyme_vol,
         mix_after=True, mix_vol="5:microliter")
-    protocol.transfer(params.MluI, params.cut_insert, params.enzyme_vol,
+    protocol.transfer(params.enzyme_3, params.cut_insert, params.enzyme_vol,
         mix_after=True, mix_vol="5:microliter")
-    protocol.transfer(params.NheI, params.cut_insert, params.enzyme_vol,
+    protocol.transfer(params.enzyme_4, params.cut_insert, params.enzyme_vol,
         mix_after=True, mix_vol="5:microliter")
 
 

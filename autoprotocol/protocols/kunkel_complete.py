@@ -5,12 +5,13 @@ from autoprotocol.protocols.kunkel_kinase import kunkel_kinase
 from autoprotocol.protocols.kunkel_dilute import kunkel_dilute
 from autoprotocol.protocols.kunkel_polymerize import kunkel_polymerize
 
-def kunkel_complete(protocol, refs, params):
+def kunkel_complete(protocol, params):
     '''
     Template for kunkel_comlplete_config.json file
+    **keep container names the same**
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "oligo_plate": {
                 "id": null,
                 "type": "96-pcr",
@@ -58,31 +59,25 @@ def kunkel_complete(protocol, refs, params):
                 "type": "micro-1.5",
                 "storage": "ambient",
                 "discard": false
-            }
-        },
-        "parameters":{
-            "kinase_parameters": {
-                "oligo_number": 12,
-                "oligo_start": "oligo_plate/A1",
-                "kinase_mix_loc": [
-                    "resource_plate/1",
-                    "resource_plate/2",
-                    "resource_plate/3",
-                    "resource_plate/4",
-                    "resource_plate/5",
-                    "resource_plate/6",
-                    "resource_plate/7"
-                ],
-                "kinase_incubation_time": "1:hour",
-                "kinase_incubation_temp": "37:celsius",
-                "kinase_MM_volume": "23:microliter",
-                "conc_oligo_volume": "7:microliter",
-                "mix_volume": "10:microliter",
-                "kinased_start": "kinased_oligo_plate/A1",
-                "kinase_time": "60:minute"
             },
-
-        "dilute_parameters": {
+            "oligo_number": 12,
+            "oligo_start": "oligo_plate/A1",
+            "kinase_mix_loc": [
+                "resource_plate/1",
+                "resource_plate/2",
+                "resource_plate/3",
+                "resource_plate/4",
+                "resource_plate/5",
+                "resource_plate/6",
+                "resource_plate/7"
+            ],
+            "kinase_incubation_time": "1:hour",
+            "kinase_incubation_temp": "37:celsius",
+            "kinase_MM_volume": "23:microliter",
+            "conc_oligo_volume": "7:microliter",
+            "mix_volume": "10:microliter",
+            "kinased_start": "kinased_oligo_plate/A1",
+            "kinase_time": "60:minute",
             "kinased_oligos": [
                 "kinased_oligo_plate/A1",
                 "kinased_oligo_plate/B1",
@@ -107,9 +102,7 @@ def kunkel_complete(protocol, refs, params):
             ],
             "water_vol": "198:microliter",
             "dilution_start": "diluted_oligo_plate/A1",
-            "oligo_vol": "2:microliter"
-        },
-        "anneal_parameters": {
+            "oligo_vol": "2:microliter",
             "ssDNA_mix_vol": "2.2:microliter",
             "ssDNA_mix_loc": "resource_plate/D1",
             "oligo_vol": "2:microliter",
@@ -124,30 +117,27 @@ def kunkel_complete(protocol, refs, params):
                 "diluted_oligo_plate/H1",
                 "diluted_oligo_plate/A2",
                 "diluted_oligo_plate/B2"
-            ]
-        },
-        "polymerize_parameters": {
+            ],
             "polymerize_MM_vol": "2.2:microliter",
             "polymerize_MM_loc": "resource_plate/E1",
             "kunkel_number": 10,
             "reaction_start": "reaction_plate/A1"
         }
-        }
     }
     '''
     params = make_dottable_dict(params)
 
-    kunkel_kinase(protocol, refs, params.kinase_parameters)
+    kunkel_kinase(protocol, params)
 
     protocol.unseal("kinased_oligo_plate")
 
-    kunkel_dilute(protocol, refs, params.dilute_parameters)
+    kunkel_dilute(protocol, params)
 
-    kunkel_anneal(protocol, refs, params.anneal_parameters)
+    kunkel_anneal(protocol, params)
 
     protocol.unseal("reaction_plate")
 
-    kunkel_polymerize(protocol, refs, params.polymerize_parameters)
+    kunkel_polymerize(protocol, params)
 
 if __name__ == '__main__':
     from autoprotocol.harness import run

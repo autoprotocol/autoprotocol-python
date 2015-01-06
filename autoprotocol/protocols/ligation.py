@@ -2,12 +2,12 @@ import json
 from autoprotocol.util import make_dottable_dict
 from autoprotocol.container import WellGroup
 
-def ligate(protocol, refs, params):
+def ligate(protocol, params):
     '''
     Template for ligation_config.json file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "resources": {
                 "id": null,
                 "type": "384-pcr",
@@ -25,9 +25,7 @@ def ligate(protocol, refs, params):
                 "type": "96-pcr",
                 "storage": "cold_4",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "T4_Ligase": "resources/A1",
             "T4_buffer": "resources/A2",
             "cut_backbone": "resources/B1",
@@ -49,7 +47,7 @@ def ligate(protocol, refs, params):
     }
     '''
     params = make_dottable_dict(params)
-    refs = make_dottable_dict(refs)
+    refs = make_dottable_dict(params.refs)
 
     destination_wells = WellGroup([params.construct_1, params.construct_2, params.construct_3])
 

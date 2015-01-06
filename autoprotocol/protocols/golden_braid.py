@@ -1,12 +1,12 @@
 from autoprotocol.util import make_dottable_dict
 from autoprotocol.unit import Unit
 
-def golden_braid(protocol, refs, params):
+def golden_braid(protocol, params):
     '''
     Template for golden_braid_config.json file
 
     {
-        "refs": {
+        "parameters": {
             "resources": {
                 "id": null,
                 "type": "96-pcr",
@@ -18,9 +18,7 @@ def golden_braid(protocol, refs, params):
                 "type": "96-pcr",
                 "storage": "cold_4",
                 "discard": false
-            }
-        }
-        "parameters": {
+            },
             "reaction_start": "destination_plate/A1",
             "MM_loc": "resources/A3",
             "T4_ligase": "resources/C1",

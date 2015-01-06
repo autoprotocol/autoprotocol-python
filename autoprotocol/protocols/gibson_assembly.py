@@ -1,12 +1,12 @@
 import json
 from autoprotocol.util import make_dottable_dict
 
-def gibson(protocol, refs, params):
+def gibson(protocol, params):
     '''
     Template for gibson_config.json config file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "resources": {
                 "id": null,
                 "type": "96-pcr",
@@ -18,9 +18,7 @@ def gibson(protocol, refs, params):
                 "type": "96-pcr",
                 "storage": "cold_4",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "backbone_loc":"resources/A1",
             "insert1_loc": "resources/A2",
             "insert2_loc": "resources/A3",

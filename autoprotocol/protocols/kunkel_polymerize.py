@@ -1,12 +1,12 @@
 import json
 from autoprotocol.util import make_dottable_dict
 
-def kunkel_polymerize(protocol, refs, params):
+def kunkel_polymerize(protocol, params):
     '''
     Template for kunkel_polymerize_config.json config file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "resource_plate": {
                 "id": null,
                 "type": "384-pcr",
@@ -18,9 +18,7 @@ def kunkel_polymerize(protocol, refs, params):
                 "type": "384-pcr",
                 "storage": "ambient",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "polymerize_MM_vol": "2.2:microliter",
             "polymerize_MM_loc": "resource_plate/E1",
             "kunkel_number": 10,
@@ -29,6 +27,7 @@ def kunkel_polymerize(protocol, refs, params):
     }
     '''
     params = make_dottable_dict(params)
+    refs = params.refs
 
     reactions = refs["reaction_plate"].wells_from(params.reaction_start, params.kunkel_number, columnwise = True)
 

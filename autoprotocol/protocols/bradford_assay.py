@@ -3,12 +3,12 @@ import sys
 from autoprotocol.util import make_dottable_dict
 from autoprotocol.container import WellGroup
 
-def bradford(protocol, refs, params):
+def bradford(protocol, params):
     '''
     Template for bradford_params.json config file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "BSA": {
                 "id": null,
                 "type": "micro-1.5",
@@ -86,10 +86,7 @@ def bradford(protocol, refs, params):
                 "type": "96-flat",
                 "storage": "cold_20",
                 "discard": false
-            }
-        },
-        "parameters":{
-            "run_title": "Test Run Please Ignore - Bradford Assay",
+            },
             "measurement_start": "bradford_plate/A4",
             "standard_replicates": 3,
             "sample_replicates":3,
@@ -100,7 +97,7 @@ def bradford(protocol, refs, params):
 
     '''
     params = make_dottable_dict(params)
-    refs = make_dottable_dict(refs)
+    refs = make_dottable_dict(params.refs)
 
     standard_wells = refs.standard_plate.wells_from(0,8,columnwise=True)
     wells_to_measure = refs.bradford_plate.wells_from(0, (len(standard_wells) *

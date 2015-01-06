@@ -1,12 +1,12 @@
 import json
 from autoprotocol.util import make_dottable_dict
 
-def kunkel_kinase(protocol, refs, params):
+def kunkel_kinase(protocol, params):
     '''
     Template for kunkel_kinase_config.json file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "oligo_plate": {
                 "id": null,
                 "type": "96-pcr",
@@ -24,9 +24,7 @@ def kunkel_kinase(protocol, refs, params):
                 "type": "384-pcr",
                 "storage": "cold_20",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "oligo_number": 12,
             "oligo_start": "oligo_plate/A1",
             "kinase_mix_loc": [
@@ -50,6 +48,7 @@ def kunkel_kinase(protocol, refs, params):
     '''
 
     params = make_dottable_dict(params)
+    refs = params.refs
 
     oligo_wells = refs["oligo_plate"].wells_from(params.oligo_start, params.oligo_number, columnwise = True)
     kinased_wells = refs["kinased_oligo_plate"].wells_from("A1", params.oligo_number, columnwise = True)

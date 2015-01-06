@@ -1,12 +1,12 @@
 from autoprotocol.util import make_dottable_dict
 from autoprotocol.unit import Unit
 
-def bead_separation(protocol, refs, params):
+def bead_purification(protocol, params):
     '''
-    Template for bead_separation_params.json config file
+    Template for bead_purification_params.json config file
     (change or add to defaults for your run):
     {
-        "refs": {
+        "parameters": {
             "beads": {
                 "id": null,
                 "type": "micro-1.5",
@@ -30,10 +30,7 @@ def bead_separation(protocol, refs, params):
                 "type": "96-deep",
                 "storage": null,
                 "discard": true
-                }
-        },
-        "parameters": {
-            "run_title": "Test Run Please Ignore - Bead Separation",
+                },
             "sample_number": 12,
             "sample_start": "sample_plate/A1",
             "sample_volume": "20:microliter",
@@ -57,7 +54,7 @@ def bead_separation(protocol, refs, params):
 
     '''
     params = make_dottable_dict(params)
-    refs = make_dottable_dict(refs)
+    refs = make_dottable_dict(params.refs)
 
     samples = refs.sample_plate.wells_from(
         params.sample_start,
@@ -139,4 +136,4 @@ def bead_separation(protocol, refs, params):
 
 if __name__ == '__main__':
     from autoprotocol.harness import run
-    run(bead_separation)
+    run(bead_purification)

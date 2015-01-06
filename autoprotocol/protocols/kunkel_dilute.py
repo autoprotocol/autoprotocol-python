@@ -1,12 +1,12 @@
 import json
 from autoprotocol.util import make_dottable_dict
 
-def kunkel_dilute(protocol, refs, params):
+def kunkel_dilute(protocol, params):
     '''
     Template for kunkel_dilute_config.json file
     (change or add to defaults for your run):
     {
-        "refs":{
+        "parameters":{
             "kinased_oligo_plate": {
                 "id": null,
                 "type": "96-pcr",
@@ -36,9 +36,7 @@ def kunkel_dilute(protocol, refs, params):
                 "type": "micro-1.5",
                 "storage": "ambient",
                 "discard": false
-            }
-        },
-        "parameters":{
+            },
             "kinased_oligos": [
                 "kinased_oligo_plate/A1",
                 "kinased_oligo_plate/B1",
@@ -69,7 +67,9 @@ def kunkel_dilute(protocol, refs, params):
     '''
 
     params = make_dottable_dict(params)
-    dilute_wells = refs["diluted_oligo_plate"].wells_from(params.dilution_start,
+    refs = make_dottable_dict(params.refs)
+
+    dilute_wells = refs.diluted_oligo_plate.wells_from(params.dilution_start,
                                         len(params.combos), columnwise = True)
     protocol.distribute(params.water.set_volume("1500:microliter"), dilute_wells, params.water_vol,
                         allow_carryover = True)

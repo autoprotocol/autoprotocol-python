@@ -413,11 +413,29 @@ class Protocol(object):
         self.instructions.append(Spin(ref, speed, duration))
 
     def thermocycle(self, ref, groups,
-                    volume=None,
+                    volume="10:microliter",
                     dataref=None,
                     dyes=None,
                     melting=None):
         """
+        Append a Thermocycle instruction to the list of instructions, with
+        groups being a list of dicts in the form of:
+        "groups": [{
+            "cycles": integer,
+            "steps": [{
+              "duration": duration,
+              "temperature": temperature,
+              "read": boolean // optional (default true)
+            },{
+              "duration": duration,
+              "gradient": {
+                "top": temperature,
+                "bottom": temperature
+              },
+              "read": boolean // optional (default true)
+            }]
+        }],
+
 
         Parameters
         ----------
@@ -492,10 +510,12 @@ class Protocol(object):
     def incubate(self, ref, where, duration, shaking=False):
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
-    # mag adapter steps must be followed by pipette instructions
+
     def plate_to_mag_adapter(self, ref, duration):
         """Utilize the Pipette instruction to transfer a plate to the magnetized
         slot on the liquid handler
+
+        Magnetic adapter instructions MUST be followed by Pipette Instructions
 
         Parameters
         ----------
@@ -574,6 +594,14 @@ class Protocol(object):
             Fluorescence(ref, wells, excitation, emission, dataref, flashes))
 
     def luminesence(self, ref, wells, dataref):
+        """
+        Parameters
+        ----------
+        ref : str, Container
+        wells : list, WellGroup
+            WellGroup or list of wells to be measured
+        dataref : str
+        """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(Luminesence(refs, wells, dataref))
@@ -684,68 +712,17 @@ class Protocol(object):
         else:
             return op_data
 
-    def ref_containers(self, refs):
+    def _ref_containers_and_wells(self, params):
         """
-        Process (ref) JSON container refererences in the form of:
-
-        {
-            "refs" : {
-                "id": <id>,
-                "type": <type>,
-                "storage": <storage>,
-                "discard": <bool>
-
-            }
-        }
-
-        into Container objects
-
-        Example
-        -------
-
-        refs = {
-            "sample": {
-                "id": null,
-                "type": "micro-1.5",
-                "storage": "cold_4",
-                "discard": null
-            }
-        }
-
-        protocol.ref_containers(refs)
-
-        returns:
-
-        {
-            "sample": Container(None, "micro-1.5")
-        }
-
-        Parameters
-        ----------
-        refs : JSON object
-        """
-        containers = {}
-        for k, v in refs.items():
-            if isinstance(v, Container):
-                containers[str(k)] = v
-            if isinstance(v, list):
-                for cont in v:
-                    self.ref_containers(cont)
-            else:
-                if "discard" in v:
-                    discard = v["discard"]
-                else:
-                    discard = False
-                containers[str(k)] = \
-                    self.ref(k, v["id"], v["type"], storage=v["storage"],
-                             discard=discard)
-        return containers
-
-    def make_well_references(self, params):
-        """
-        Process JSON well references in the form of:
+        Used by harness.py to process JSON container and well references in the form of:
         {
             "parameters": {
+                "sample_container" : {
+                     "id": <id>,
+                     "type": <type>,
+                     "storage": <storage>,
+                     "discard": <bool>
+                },
                 "sample_name": "<container name>/<well index>",
                 "sample_group": [
                     "<container name>/<well index>",
@@ -759,13 +736,19 @@ class Protocol(object):
         -------
 
         parameters = {
-                "mastermix_loc": "sample_plate/A1",
-                "samples": [
-                    "sample_plate/B1",
-                    "sample_plate/B2",
-                    "sample_plate/B3",
-                    "sample_plate/B4"
-                ]
+            "sample": {
+                    "id": null,
+                    "type": "micro-1.5",
+                    "storage": "cold_4",
+                    "discard": null
+            },
+            "mastermix_loc": "sample_plate/A1",
+            "samples": [
+                "sample_plate/B1",
+                "sample_plate/B2",
+                "sample_plate/B3",
+                "sample_plate/B4"
+            ]
         }
 
         protocol.make_well_references(parameters)
@@ -773,6 +756,9 @@ class Protocol(object):
         returns:
 
         {
+            "refs":{
+                "sample": Container(None, "micro-1.5")
+            },
             "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
             "samples": WellGroup([
                     protocol.refs["sample_plate"].well("B1"),
@@ -783,13 +769,40 @@ class Protocol(object):
         }
         """
         parameters = {}
+        containers = {}
+
+        #ref containers
         for k, v in params.items():
             if isinstance(v, dict):
-                parameters[str(k)] = self.make_well_references(v)
-            elif isinstance(v, list) and "/" in str(v[0]):
-                parameters[str(k)] = WellGroup([self.refs[i.rsplit("/")[0]].container.well(i.rsplit("/")[1]) for i in v])
-            elif ":" in str(v):
-                parameters[str(k)] = Unit.fromstring(str(v))
+                parameters[str(k)] = self._ref_containers_and_wells(v)
+            if isinstance(v, list) and isinstance(v[0], dict):
+                for cont in v:
+                    self._ref_containers_and_wells(cont.encode('utf-8'))
+            elif isinstance(v, dict) and "type" in v:
+                if "discard" in v:
+                    discard = v["discard"]
+                    if discard and v["storage"]:
+                        raise RuntimeError("You must either specify a storage "
+                            "condition or set discard to true, not both.")
+                else:
+                    discard = False
+                containers[str(k)] = \
+                    self.ref(k, v["id"], v["type"], storage=v["storage"],
+                             discard=discard)
+            else:
+                parameters[str(k)] = v
+        parameters["refs"] = containers
+
+
+        #ref wells (must be done after reffing containers)
+        for k, v in params.items():
+            if isinstance(v, list) and "/" in str(v[0]):
+                group = WellGroup([])
+                for w in v:
+                    cont = w.rsplit("/")[0].encode('utf-8')
+                    well = w.rsplit("/")[1].encode('utf-8')
+                    group.append(self.refs[cont].container.well(well))
+                parameters[str(k)] = group
             elif "/" in str(v):
                 if not v.rsplit("/")[0] in self.refs:
                     raise RuntimeError("Parameters contain well references to \
@@ -800,4 +813,5 @@ class Protocol(object):
                     parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
             else:
                 parameters[str(k)] = v
+
         return parameters

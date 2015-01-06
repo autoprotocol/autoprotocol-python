@@ -170,8 +170,8 @@ class Protocol(object):
         }
 
     def pipette(self, groups):
-        """Take groups to be passed to a Pipette object which is then appended
-        to the instructions attribute of this Protocol
+        """
+        Append given pipette groups to the protocol
 
         Parameters
         ----------
@@ -187,8 +187,7 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def distribute(self, source, dest, volume, allow_carryover=False):
-        """Allow encoding of distribute groups representing liquid handling
-        from one or multiple wells to one or multiple other wells.
+        """Distribute liquid from source well(s) to destination wells(s)
 
         Parameters
         ----------
@@ -408,7 +407,6 @@ class Protocol(object):
         ref : str, Ref
         speed: str, Unit
         duration: str, Unit
-
         """
         self.instructions.append(Spin(ref, speed, duration))
 
@@ -460,8 +458,6 @@ class Protocol(object):
                     ]},
                     { ... }, ...
                 }]
-
-
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -510,12 +506,10 @@ class Protocol(object):
     def incubate(self, ref, where, duration, shaking=False):
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
-
     def plate_to_mag_adapter(self, ref, duration):
-        """Utilize the Pipette instruction to transfer a plate to the magnetized
-        slot on the liquid handler
+        """Transfer a plate to the magnetized slot on the liquid handler
 
-        Magnetic adapter instructions MUST be followed by Pipette Instructions
+        Magnetic adapter instructions MUST be followed by Pipette instructions
 
         Parameters
         ----------
@@ -533,9 +527,9 @@ class Protocol(object):
         self.instructions.append(sep)
 
     def plate_off_mag_adapter(self, ref):
-        """Utilize the Pipette instruction to transfer a plate
-        off of the magnetic block slot on the liquid handler to a normal, non-
-        magnetized slot
+        """Transfer a plate from the magnetized spot on the liquid handler to a non-magnetized one
+
+        Magnetic adapter instructions MUST be followed by Pipette instructions
 
         Parameters
         ----------
@@ -545,10 +539,7 @@ class Protocol(object):
         self.instructions.append(Pipette([]))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25):
-        """Transfer the plate to the plate reader and reads the
-        absorbance for the indicated wavelength for the indicated wells.
-        Append an Absorbance instruction to the list of instructions for this
-        Protocol object.
+        """Reads the absorbance for the indicated wavelength for the indicated wells. Append an Absorbance instruction to the list of instructions for this Protocol object.
 
         Parameters
         ----------

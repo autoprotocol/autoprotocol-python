@@ -4,23 +4,20 @@ import argparse
 
 def run(fn):
     '''
-    Take a function passed to it, initialize a Protocol object, run
-    Protocol.ref_container and Protocol.make_well_references on the JSON config
-    file specified on the command-line and pass what they return to the function
-    passed. Prints resulting protocol to standard out.
+    Take configuration JSON file from the command line and run the given protocol.
 
     Example
     -------
 
     sample_config.json
         {
-            "sample_plate":{
-                "id": null,
-                "type": "96-deep",
-                "storage": null,
-                "discard": true
-            },
             "parameters": {
+                "sample_plate":{
+                    "id": null,
+                    "type": "96-deep",
+                    "storage": null,
+                    "discard": true
+                },
                 "buffer_vol": "4:microliter"
             }
 
@@ -38,13 +35,11 @@ def run(fn):
             run(sample)
 
     on command-line:
-        $python -m autoprotocol.protocol.sample autoprotocol/config/sample_config.json
+        $ python -m autoprotocol.protocol.sample autoprotocol/config/sample_config.json
 
     Parameters
     ----------
-    fn :function
-
-
+    fn : function
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help='JSON-formatted protocol configuration file')

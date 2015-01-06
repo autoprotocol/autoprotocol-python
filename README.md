@@ -7,7 +7,8 @@ generating Autoprotocol, and a number of validated protocols.
 ## Installation
 
     $ git clone https://github.com/autoprotocol/autoprotocol-python
-    $ python autoprotocol/setup.py install
+    $ cd autoprotocol-python
+    $ python setup.py install
 
 ## Writing Protocols
 
@@ -21,7 +22,7 @@ p.transfer(bacteria.well("A1"), bacteria.well("A2"), "15:microliter")
 ```
 
 ## Running and Submitting Protocols
-The protocols in the `autoprotocol.protocols` module can be run directly from
+<!-- The protocols in the `autoprotocol.protocols` module can be run directly from
 the command line, using a JSON configuration file to specify parameters. For
 example, to run the Gibson assembly protocol:
 
@@ -30,7 +31,7 @@ example, to run the Gibson assembly protocol:
 Where `gibson_config.json` looks like:
 ```
 {
-  "refs": {
+  "parameters": {
     "resources": {
       "id": <container id>,
       "type": "96-pcr",
@@ -42,8 +43,6 @@ Where `gibson_config.json` looks like:
       "storage": "cold_4",
       "discard": false
     }
-  },
-  "parameters": {
     "backbone_loc": "resources/A1",
     "insert1_loc": "resources/A2",
     "insert2_loc": "resources/A3",
@@ -64,7 +63,7 @@ standard out. To submit a protocol to transcriptic.com to be run or analyzed,
 use the [Transcriptic Runner](http://github.com/transcriptic/runner):
 
     $ python -m autoprotocol.protocols.gibson_assembly gibson_config.json \
-        | transcriptic analyze
+        | transcriptic analyze -->
 
 ## Contributing
 

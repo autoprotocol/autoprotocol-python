@@ -110,7 +110,7 @@ class Container(object):
 
     def well(self, i):
         """
-        Return a Well object representing the index specified of this Container.
+        Return a Well object representing the well at the index specified of this Container.
 
         Parameters
         ----------
@@ -133,22 +133,19 @@ class Container(object):
 
     def robotize(self, well_ref):
         """
-            Return the integer representation of the well index given, based on
-            the ContainerType of the Container
+            Return the integer representation of the well index given, based on the ContainerType of the Container
         """
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
         """
-            Return the human readable representation of the integer well index
-            given based on the ContainerType of the Container
+            Return the human readable representation of the integer well index given based on the ContainerType of the Container
         """
         return self.container_type.humanize(well_ref)
 
     def decompose(self, well_ref):
         """
-            Return a tuple representing the column and row number of the well
-            index given based on the ContainerType of the Container
+            Return a tuple representing the column and row number of the well index given based on the ContainerType of the Container
         """
         return self.container_type.decompose(well_ref)
 
@@ -167,9 +164,7 @@ class Container(object):
 
     def wells_from(self, start, num, columnwise=False):
         """
-        Return a WellGroup of Wells belonging to this Container starting from
-        the index indicated (in integer or string form) and including the number
-        of proceeding wells specified
+        Return a WellGroup of Wells belonging to this Container starting from the index indicated (in integer or string form) and including the number of proceeding wells specified
         """
         start = self.robotize(start)
         if columnwise:

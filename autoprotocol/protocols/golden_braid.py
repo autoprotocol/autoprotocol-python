@@ -45,7 +45,7 @@ def golden_braid(protocol, params):
     '''
 
     params = make_dottable_dict(params)
-    refs = make_dottable_dict(refs)
+    refs = make_dottable_dict(params.refs)
 
     MM_vol = Unit.fromstring(params.backbone_vol) + Unit.fromstring(params.enzyme_vol) + Unit.fromstring(params.buffer_vol) + Unit.fromstring(params.ligase_vol) + Unit.fromstring(params.fragment_vol) + Unit.fromstring(params.water_vol)
     # make master mix

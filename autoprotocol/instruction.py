@@ -101,25 +101,27 @@ class Thermocycle(Instruction):
     CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
-    def __init__(self, ref, groups, volume="25:microliter", dataref=None, dyes=None, melting=None):
+    def __init__(self, ref, groups, volume="25:microliter", dataref=None,
+                 dyes=None, melting=None):
         instruction = {
             "op": "thermocycle",
             "object": ref,
             "groups": groups,
             "volume": volume
         }
-        if dyes:
+        if dyes and dataref and melting:
+            instruction["dataref"] = dataref
+            instruction["melting"] = melting
             keys = dyes.keys()
             if Thermocycle.find_invalid_dyes(keys):
                 dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
             else:
                 instruction["dyes"] = dyes
-        elif bool(dataref) != bool(dyes):
-            raise ValueError("thermocycle instruction supplied `%s` without `%s`" % ("dataref" if bool(dataref) else "dyes", "dyes" if bool(dataref) else "dataref"))
-        elif melting and not dyes:
-            raise ValueError("thermocycle instruction supplied `melting` without `dyes`: %s")
-        if melting:
-            instruction["melting"] = melting
+        elif not dyes and not dataref and not melting:
+            pass
+        else:
+            raise ValueError("You must specify a melting temperature, "
+                "a dataref name and dyes for a qPCR instruction")
 
         super(Thermocycle, self).__init__(instruction)
 

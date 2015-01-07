@@ -8,16 +8,12 @@ class ContainerType(namedtuple("ContainerType",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count"])):
-    """
-    The ContainerType class holds the capabilities and properties of a
-    particular container type.
+    """The ContainerType class holds the capabilities and properties of a particular container type.
     """
 
     def robotize(self, well_ref):
         """
-        Convert a well reference (int, "A1" or int-in-a-string "23") to a
-        robot-friendly rowwise integer (left-to-right, top-to-bottom, starting
-        at 0 = A1).
+        Convert a well reference (int, "A1" or int-in-a-string "23") to a robot-friendly rowwise integer (left-to-right, top-to-bottom, starting at 0 = A1).
         """
         if isinstance(well_ref, Well):
             well_ref = well_ref.index

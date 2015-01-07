@@ -3,8 +3,7 @@ from .protocol import Protocol
 import argparse
 
 def run(fn):
-    '''
-    Take configuration JSON file from the command line and run the given protocol.
+    '''Take configuration JSON file from the command line and run the given protocol.
 
     Example
     -------

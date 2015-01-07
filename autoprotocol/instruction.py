@@ -10,10 +10,7 @@ class Instruction(object):
         return json.dumps(self.data, indent = 2)
 
 class Pipette(Instruction):
-    '''
-    A pipette instruction is constructed as a list of groups, executed in order,
-    where each group is a transfer, distribute or mix group.
-    One disposable tip is used for each group.
+    '''A pipette instruction is constructed as a list of groups, executed in order, where each group is a transfer, distribute or mix group.  One disposable tip is used for each group.
 
     transfer
     --------
@@ -128,7 +125,7 @@ class Thermocycle(Instruction):
     @staticmethod
     def find_invalid_dyes(dyes):
         """
-        Takes a set or list of dye names and returns the set that are not valid.
+        Take a set or list of dye names and returns the set that are not valid.
 
         dyes - [list or set]
         """
@@ -138,7 +135,7 @@ class Thermocycle(Instruction):
     @staticmethod
     def convert_well_map_to_dye_map(well_map):
         """
-        Takes a map of wells to the dyes it contains and returns a map of dyes to the list of wells that contain it.
+        Take a map of wells to the dyes it contains and returns a map of dyes to the list of wells that contain it.
 
         well_map - [{well:str}]
         """
@@ -153,9 +150,7 @@ class Thermocycle(Instruction):
 
 class Incubate(Instruction):
     """
-    The incubate instruction stores a sample in a specific environment for a
-    given duration. Once the duration has elapsed, the sample will be returned
-    to the ambient environment until it is next used.
+    Store a sample in a specific environment for a given duration. Once the duration has elapsed, the sample will be returned to the ambient environment until it is next used.
     """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 

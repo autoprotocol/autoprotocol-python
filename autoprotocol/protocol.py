@@ -47,7 +47,7 @@ class Protocol(object):
         self.instructions = instructions if instructions is not None else []
 
     def container_type(self, shortname):
-        """converts a ContainerType shortname into a ContainerType object
+        """convert a ContainerType shortname into a ContainerType object
 
         Parameters
         ----------
@@ -77,9 +77,7 @@ class Protocol(object):
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
-        """Append a Ref object to the list of Refs associated with this protocol
-        and returns a Container with the id, container type and storage or
-        discard conditions specified.
+        """Append a Ref object to the list of Refs associated with this protocol and returns a Container with the id, container type and storage or discard conditions specified.
 
         Example
         -------
@@ -170,8 +168,7 @@ class Protocol(object):
         }
 
     def pipette(self, groups):
-        """
-        Append given pipette groups to the protocol
+        """Append given pipette groups to the protocol
 
         Parameters
         ----------
@@ -241,9 +238,7 @@ class Protocol(object):
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
-        """Allow encoding of transfer groups, each representing liquid handling
-        from one specific well to another.  A new pipette tip is used between
-        each transfer step.
+        """Allow encoding of transfer groups, each representing liquid handling from one specific well to another.  A new pipette tip is used between each transfer step.
 
         Parameters
         ----------
@@ -319,12 +314,7 @@ class Protocol(object):
     def serial_dilute_rowwise(self, container, source, start_well, end_well, vol,
                                 mix_after=True, reverse=False):
         """
-        Serial dilute source liquid in specified wells of the container specified.
-        Defaults to dilute from left to right (increasing well index) unless reverse
-        is set to true.  This operation utilizes the transfers() method on Pipette,
-        meaning only one tip is used.  The wells between start_well and end_well
-        (not including those wells) should already contain the specified volume of
-        diluent.
+        Serial dilute source liquid in specified wells of the container specified.  Defaults to dilute from left to right (increasing well index) unless reverse is set to true.  This operation utilizes the transfers() method on Pipette, meaning only one tip is used.  The wells between start_well and end_well (not including those wells) should already contain the specified volume of diluent.
 
         Parameters
         ----------
@@ -560,10 +550,7 @@ class Protocol(object):
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25):
-        """Transfer the plate to the plate reader and read the
-        fluoresence for the indicated wavelength for the indicated wells.
-        Append a Fluorescence instruction to the list of instructions for
-        this Protocol object.
+        """Read the fluoresence for the indicated wavelength for the indicated wells.  Append a Fluorescence instruction to the list of instructions for this Protocol object.
 
         Parameters
         ----------
@@ -599,7 +586,6 @@ class Protocol(object):
 
     def gel_separate(self, ref, matrix, ladder, duration, dataref):
         """
-
         Parameters
         ----------
         ref : str, Container
@@ -636,8 +622,7 @@ class Protocol(object):
                 return k
 
     def fill_wells(self, dst_group, src_group, volume):
-        """This function is used to distribute liquid to a WellGroup, sourcing
-        the liquid from a group of wells all containing the same substance.
+        """Distribute liquid to a WellGroup, sourcing the liquid from a group of wells all containing the same substance.
 
         Parameters
         ----------
@@ -704,24 +689,7 @@ class Protocol(object):
             return op_data
 
     def _ref_containers_and_wells(self, params):
-        """
-        Used by harness.py to process JSON container and well references in the form of:
-        {
-            "parameters": {
-                "sample_container" : {
-                     "id": <id>,
-                     "type": <type>,
-                     "storage": <storage>,
-                     "discard": <bool>
-                },
-                "sample_name": "<container name>/<well index>",
-                "sample_group": [
-                    "<container name>/<well index>",
-                    "<container name>/<well index>",
-                    "<container name>/<well index>"
-                ]
-            }
-        }
+        """Used by harness.run() to process JSON container and well references
 
         Example
         -------

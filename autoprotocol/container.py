@@ -1,8 +1,6 @@
 from .unit import Unit
 
-
 class Well(object):
-
     """A Well object describes a single location within a container.
 
     Do not construct a Well directly -- retrieve it from the related Container
@@ -30,7 +28,6 @@ class Well(object):
 
 
 class WellGroup(object):
-
     """A logical grouping of Wells.
 
     Wells in a WellGroup do not necessarily need to be in the same container.
@@ -46,9 +43,7 @@ class WellGroup(object):
         return self
 
     def indices(self, human=False):
-        """
-        Return the indices of the wells in the group, given that all the wells
-        belong to the same container.
+        """Return the indices of the wells in the group, given that all the wellsbelong to the same container.
         """
         indices = []
         for w in self.wells:
@@ -77,9 +72,7 @@ class WellGroup(object):
 
 
 class Container(object):
-
-    """
-    A reference to a specific physical container (e.g. a tube or 96-well
+    """A reference to a specific physical container (e.g. a tube or 96-well
     microplate).
 
     Every Container has an associated ContainerType, which defines the well
@@ -109,8 +102,7 @@ class Container(object):
                        for idx in xrange(container_type.well_count)]
 
     def well(self, i):
-        """
-        Return a Well object representing the well at the index specified of this Container.
+        """Return a Well object representing the well at the index specified of this Container.
 
         Parameters
         ----------
@@ -121,8 +113,7 @@ class Container(object):
         return self._wells[self.robotize(i)]
 
     def wells(self, *args):
-        """
-        Return a WellGroup containing references to wells corresponding to the
+        """Return a WellGroup containing references to wells corresponding to the
         index or indices given.
 
         args : str, int, list
@@ -132,26 +123,22 @@ class Container(object):
         return WellGroup([self.well(i) for i in args])
 
     def robotize(self, well_ref):
-        """
-            Return the integer representation of the well index given, based on the ContainerType of the Container
+        """Return the integer representation of the well index given, based on the ContainerType of the Container
         """
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
-        """
-            Return the human readable representation of the integer well index given based on the ContainerType of the Container
+        """Return the human readable representation of the integer well index given based on the ContainerType of the Container
         """
         return self.container_type.humanize(well_ref)
 
     def decompose(self, well_ref):
-        """
-            Return a tuple representing the column and row number of the well index given based on the ContainerType of the Container
+        """Return a tuple representing the column and row number of the well index given based on the ContainerType of the Container
         """
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):
-        """
-        Return a WellGroup representing all Wells belonging to this Container
+        """Return a WellGroup representing all Wells belonging to this Container
         """
         if columnwise:
             num_cols = self.container_type.col_count
@@ -163,8 +150,7 @@ class Container(object):
             return WellGroup(self._wells)
 
     def wells_from(self, start, num, columnwise=False):
-        """
-        Return a WellGroup of Wells belonging to this Container starting from the index indicated (in integer or string form) and including the number of proceeding wells specified
+        """Return a WellGroup of Wells belonging to this Container starting from the index indicated (in integer or string form) and including the number of proceeding wells specified
         """
         start = self.robotize(start)
         if columnwise:

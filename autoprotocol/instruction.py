@@ -10,6 +10,36 @@ class Instruction(object):
         return json.dumps(self.data, indent = 2)
 
 class Pipette(Instruction):
+    '''A pipette instruction is constructed as a list of groups, executed in
+    order, where each group is a transfer, distribute or mix group.  One
+    disposable tip is used for each group.
+
+    transfer
+    --------
+        For each element in the transfer list, in order, aspirates the specifed
+        volume from the source well and dispenses the same volume into the target well.
+
+    distribute
+    ----------
+        Aspirates sufficient volume from the source well, then dispenses into
+        each target well the volume requested, in the order specified.
+        If the total volume to be dispensed exceeds the maximum tip volume
+        (900 uL), you must either specify allow_carryover to allow the pipette
+        to return to the source and aspirate another load, or break your group
+        up into multiple distributes each of less than the maximum tip volume.
+        Specifying allow_carryover means that the source well could become
+        contaminated with material from the target wells, so take care to use it
+        only when you're sure that contamination won't be an issue=for example,
+        if the target plate is empty.
+
+    mix
+    ---
+        Mixes the specified wells, in order, by repeated aspiration and
+        dispensing of the specified volume. The default mixing speed is
+        50 uL/second, but you may specify a slower or faster speed.
+
+    Well positions are given using the format :ref/:index
+    '''
     def __init__(self, groups):
         super(Pipette, self).__init__({
             "op": "pipette",
@@ -17,16 +47,26 @@ class Pipette(Instruction):
         })
 
     @staticmethod
-    def _transferGroup(src, dest, vol):
-        vol = str(vol) + ":microliter"
-        return {
+    def _transferGroup(src, dest, vol, mix_after=False,
+                 mix_vol="20:microliter", repetitions=10,
+                 flowrate="100:microliter/second"):
+        group = {
             "from": src,
             "to": dest,
             "volume": vol,
         }
+        if mix_after:
+            group["mix_after"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+            }
+        return group
 
     @staticmethod
-    def transfers(srcs, dests, vols):
+    def transfers(srcs, dests, vols, mix_after=False,
+                 mix_vol="20:microliter", repetitions=10,
+                 flowrate="100:microliter/second"):
         """
         Returns a valid list of pipette transfer groups.  This can be passed
         directly to the Pipette constructor as the "groups" argument.
@@ -37,8 +77,9 @@ class Pipette(Instruction):
         """
 
         return [{
-                "transfer": [Pipette._transferGroup(s, d, v)
-                                for (s, d, v) in zip(srcs, dests, vols)],
+                "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol,
+                            repetitions, flowrate) for (s, d, v) in
+                            zip(srcs, dests, vols)],
         }]
 
 class Spin(Instruction):
@@ -59,29 +100,34 @@ class Thermocycle(Instruction):
     CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
-    def __init__(self, ref, groups, volume=None, dataref=None, dyes=None, melting=None):
-        if dyes:
-            keys = dyes.keys()
-            if Thermocycle.find_invalid_dyes(keys):
-                dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
-        if bool(dataref) != bool(dyes):
-            raise ValueError("thermocycle instruction supplied `%s` without `%s`" % ("dataref" if bool(dataref) else "dyes", "dyes" if bool(dataref) else "dataref"))
-        if melting and not dyes:
-            raise ValueError("thermocycle instruction supplied `melting` without `dyes`: %s")
-        super(Thermocycle, self).__init__({
+    def __init__(self, ref, groups, volume="25:microliter", dataref=None,
+                 dyes=None, melting=None):
+        instruction = {
             "op": "thermocycle",
             "object": ref,
             "groups": groups,
-            "dataref": dataref,
-            "volume": volume,
-            "dyes": dyes,
-            "melting": melting
-        })
+            "volume": volume
+        }
+        if dyes and dataref and melting:
+            instruction["dataref"] = dataref
+            instruction["melting"] = melting
+            keys = dyes.keys()
+            if Thermocycle.find_invalid_dyes(keys):
+                dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
+            else:
+                instruction["dyes"] = dyes
+        elif not dyes and not dataref and not melting:
+            pass
+        else:
+            raise ValueError("You must specify a melting temperature, "
+                "a dataref name and dyes for a qPCR instruction")
+
+        super(Thermocycle, self).__init__(instruction)
 
     @staticmethod
     def find_invalid_dyes(dyes):
         """
-        Takes a set or list of dye names and returns the set that are not valid.
+        Take a set or list of dye names and returns the set that are not valid.
 
         dyes - [list or set]
         """
@@ -91,20 +137,27 @@ class Thermocycle(Instruction):
     @staticmethod
     def convert_well_map_to_dye_map(well_map):
         """
-        Takes a map of wells to the dyes it contains and returns a map of dyes to the list of wells that contain it.
+        Take a map of wells to the dyes it contains and returns a map of dyes to
+        the list of wells that contain it.
 
         well_map - [{well:str}]
         """
 
         dye_names = reduce(lambda x,y: x.union(y), [set(v) for v in well_map.itervalues()])
         if Thermocycle.find_invalid_dyes(dye_names):
-            raise ValueError("thermocycle instruction supplied the following invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
+            raise ValueError("thermocycle instruction supplied the following "
+                "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
         dye_map = {dye:[] for dye in dye_names}
         for well,dyes in well_map.iteritems():
             for dye in dyes: dye_map[dye] += [well]
         return dye_map
 
 class Incubate(Instruction):
+    """
+    Store a sample in a specific environment for a given duration. Once the
+    duration has elapsed, the sample will be returned to the ambient environment
+    until it is next used.
+    """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 
     def __init__(self, ref, where, duration, shaking = False):
@@ -166,6 +219,15 @@ class Fluorescence(Instruction):
             "num_flashes": flashes,
             "dataref": dataref
         })
+
+class Luminesence(Instruction):
+    def __init__(self, ref, wells, dataref):
+        super(Luminesence, self).__init__({
+            "op": "luminesence",
+            "object": ref,
+            "wells": wells,
+            "dataref": dataref
+            })
 
 class Seal(Instruction):
     def __init__(self, ref):

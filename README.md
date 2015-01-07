@@ -9,6 +9,10 @@ generating Autoprotocol.
     $ git clone https://github.com/autoprotocol/autoprotocol-python
     $ cd autoprotocol-python
     $ python setup.py install
+    
+or, alternatively:
+
+    $ pip install autoprotocol
 
 ## Simple Protocol Example
 ```python

@@ -22,3 +22,4 @@ var/
 .installed.cfg
 *.egg
 config/
+.arcconfig

@@ -4,8 +4,9 @@ from .unit import Unit
 from .instruction import *
 
 
-# Used internally to link a ref name (string) to a Container instance.
 class Ref(object):
+    """Link a ref name (string) to a Container instance.
+    """
     def __init__(self, name, opts, container):
         assert "/" not in name
         self.name = name
@@ -47,7 +48,7 @@ class Protocol(object):
         self.instructions = instructions if instructions is not None else []
 
     def container_type(self, shortname):
-        """convert a ContainerType shortname into a ContainerType object
+        """Convert a ContainerType shortname into a ContainerType object.
 
         Parameters
         ----------
@@ -77,7 +78,9 @@ class Protocol(object):
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
-        """Append a Ref object to the list of Refs associated with this protocol and returns a Container with the id, container type and storage or discard conditions specified.
+        """Append a Ref object to the list of Refs associated with this protocol
+        and returns a Container with the id, container type and storage or
+        discard conditions specified.
 
         Example
         -------
@@ -238,7 +241,8 @@ class Protocol(object):
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
-        """Allow encoding of transfer groups, each representing liquid handling from one specific well to another.  A new pipette tip is used between each transfer step.
+        """Transfer liquid from one specific well to another.  A new pipette tip
+        is used between each transfer step.
 
         Parameters
         ----------
@@ -311,10 +315,15 @@ class Protocol(object):
         if opts:
             self.pipette([{"transfer": opts}])
 
-    def serial_dilute_rowwise(self, container, source, start_well, end_well, vol,
+    def serial_dilute_rowwise(self, source, well_group, vol,
                                 mix_after=True, reverse=False):
         """
-        Serial dilute source liquid in specified wells of the container specified.  Defaults to dilute from left to right (increasing well index) unless reverse is set to true.  This operation utilizes the transfers() method on Pipette, meaning only one tip is used.  The wells between start_well and end_well (not including those wells) should already contain the specified volume of diluent.
+        Serial dilute source liquid in specified wells of the container
+        specified. Defaults to dilute from left to right (increasing well index) unless
+        reverse is set to true.  This operation utilizes the transfers() method
+        on Pipette, meaning only one tip is used.  All wells in the WellGroup
+        well_group except for the first well and the last well should already
+        contain the diluent.
 
         Parameters
         ----------
@@ -323,30 +332,36 @@ class Protocol(object):
             Well containing source liquid.  Will be transfered to starting well
             with double the volume specified in parameters
         start_well : Well
-            Start of dilution, well containing the highest concentration of liquid
+            Start of dilution, well containing the highest concentration of
+            liquid
         end_well : Well
             End of dilution, well containing the lowest concentration of liquid
         vol : Unit, str
             Final volume of each well in the dilution series, most concentrated
-            liquid will be transfered to the starting well with double this volume
+            liquid will be transfered to the starting well with double this
+            volume
         mix_after : bool
-            If set to True, each well will be mixed after liquid is transfered to it.
+            If set to True, each well will be mixed after liquid is transfered
+            to it.
         reverse : bool
             If set to True, liquid will be most concentrated in the well in the
             dilution series with the highest index
         """
-        source_well = start_well
-        begin_dilute = start_well
-        end_dilute = end_well
+        if not isinstance(well_group, WellGroup):
+            raise RuntimeError("serial_dilute_rowwise() must take a WellGroup "
+                "as an argument")
+        source_well = well_group.wells[0]
+        begin_dilute = well_group.wells[0]
+        end_dilute = well_group.wells[-1]
         wells_to_dilute = container.wells_from(begin_dilute,
             end_dilute.index-begin_dilute.index + 1)
         srcs = []
         dests = []
         vols = []
         if reverse:
-            begin_dilute = end_well
-            end_dilute = start_well
-            source_well = end_well
+            source_well = well_group.wells[-1]
+            begin_dilute = well_group.wells[-1]
+            end_dilute = well_group.wells[0]
             wells_to_dilute = container.wells_from(end_dilute,
                 begin_dilute.index-end_dilute.index + 1)
         self.transfer(source, source_well,
@@ -517,7 +532,8 @@ class Protocol(object):
         self.instructions.append(sep)
 
     def plate_off_mag_adapter(self, ref):
-        """Transfer a plate from the magnetized spot on the liquid handler to a non-magnetized one
+        """Transfer a plate from the magnetized spot on the liquid handler to a
+        non-magnetized one
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
 
@@ -529,7 +545,9 @@ class Protocol(object):
         self.instructions.append(Pipette([]))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25):
-        """Reads the absorbance for the indicated wavelength for the indicated wells. Append an Absorbance instruction to the list of instructions for this Protocol object.
+        """Reads the absorbance for the indicated wavelength for the indicated
+        wells. Append an Absorbance instruction to the list of instructions for
+        this Protocol object.
 
         Parameters
         ----------
@@ -550,7 +568,9 @@ class Protocol(object):
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25):
-        """Read the fluoresence for the indicated wavelength for the indicated wells.  Append a Fluorescence instruction to the list of instructions for this Protocol object.
+        """Read the fluoresence for the indicated wavelength for the indicated
+        wells.  Append a Fluorescence instruction to the list of instructions
+        for this Protocol object.
 
         Parameters
         ----------
@@ -622,7 +642,8 @@ class Protocol(object):
                 return k
 
     def fill_wells(self, dst_group, src_group, volume):
-        """Distribute liquid to a WellGroup, sourcing the liquid from a group of wells all containing the same substance.
+        """Distribute liquid to a WellGroup, sourcing the liquid from a group
+        of wells all containing the same substance.
 
         Parameters
         ----------

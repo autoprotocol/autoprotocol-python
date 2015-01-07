@@ -10,7 +10,9 @@ class Instruction(object):
         return json.dumps(self.data, indent = 2)
 
 class Pipette(Instruction):
-    '''A pipette instruction is constructed as a list of groups, executed in order, where each group is a transfer, distribute or mix group.  One disposable tip is used for each group.
+    '''A pipette instruction is constructed as a list of groups, executed in
+    order, where each group is a transfer, distribute or mix group.  One
+    disposable tip is used for each group.
 
     transfer
     --------
@@ -135,14 +137,16 @@ class Thermocycle(Instruction):
     @staticmethod
     def convert_well_map_to_dye_map(well_map):
         """
-        Take a map of wells to the dyes it contains and returns a map of dyes to the list of wells that contain it.
+        Take a map of wells to the dyes it contains and returns a map of dyes to
+        the list of wells that contain it.
 
         well_map - [{well:str}]
         """
 
         dye_names = reduce(lambda x,y: x.union(y), [set(v) for v in well_map.itervalues()])
         if Thermocycle.find_invalid_dyes(dye_names):
-            raise ValueError("thermocycle instruction supplied the following invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
+            raise ValueError("thermocycle instruction supplied the following "
+                "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
         dye_map = {dye:[] for dye in dye_names}
         for well,dyes in well_map.iteritems():
             for dye in dyes: dye_map[dye] += [well]
@@ -150,7 +154,9 @@ class Thermocycle(Instruction):
 
 class Incubate(Instruction):
     """
-    Store a sample in a specific environment for a given duration. Once the duration has elapsed, the sample will be returned to the ambient environment until it is next used.
+    Store a sample in a specific environment for a given duration. Once the
+    duration has elapsed, the sample will be returned to the ambient environment
+    until it is next used.
     """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 

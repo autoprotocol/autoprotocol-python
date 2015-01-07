@@ -12,7 +12,7 @@ generating Autoprotocol.
 
 ## Simple Protocol Example
 ```python
-from autoprotocol-core import Protocol
+from autoprotocol import Protocol
 
 p = Protocol()
 bacteria = p.ref("bacteria", cont_type="96-pcr", storage="cold_4")

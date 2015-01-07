@@ -3,7 +3,8 @@ from .protocol import Protocol
 import argparse
 
 def run(fn):
-    '''Take configuration JSON file from the command line and run the given protocol.
+    '''Take configuration JSON file from the command line and run the given
+    protocol.
 
     Example
     -------
@@ -34,7 +35,7 @@ def run(fn):
             run(sample)
 
     on command-line:
-        $ python -m autoprotocol.protocol.sample autoprotocol/config/sample_config.json
+        $ python -m sample autoprotocol/config/sample_config.json
 
     Parameters
     ----------

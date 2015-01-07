@@ -1,5 +1,6 @@
 class make_dottable_dict(dict):
-    '''Enable dictionaries to be accessed using dot notation instead of bracket notation.
+    '''Enable dictionaries to be accessed using dot notation instead of bracket
+    notation.
 
     Example
     -------

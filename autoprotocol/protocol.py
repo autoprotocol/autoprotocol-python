@@ -150,6 +150,7 @@ class Protocol(object):
         ----------
         instructions : Instruction
             Instruction object to be appended
+
         """
         if type(instructions) is list:
             self.instructions.extend(instructions)
@@ -163,6 +164,7 @@ class Protocol(object):
         dict
             dict with keys "refs" and "instructions", each of which contain
             the "refified" contents of their corresponding Protocol attribute
+
         """
         return {
             "refs": dict(map(lambda (k, v): (k, v.opts), self.refs.items())),
@@ -511,6 +513,8 @@ class Protocol(object):
         self.instructions.append(Thermocycle(ref, groups))
 
     def incubate(self, ref, where, duration, shaking=False):
+        '''
+        '''
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
     def plate_to_mag_adapter(self, ref, duration):

@@ -5,6 +5,7 @@ class Well(object):
 
     Do not construct a Well directly -- retrieve it from the related Container
     object.
+
     """
 
     def __init__(self, container, index):
@@ -31,20 +32,37 @@ class WellGroup(object):
     """A logical grouping of Wells.
 
     Wells in a WellGroup do not necessarily need to be in the same container.
+
     """
 
     def __init__(self, wells):
         self.wells = wells
 
     def set_volume(self, vol):
-        """Set the volume of every well in the group to vol."""
+        """Set the volume of every well in the group to vol.
+        Must be called on a WellGroup when it is the source in a
+        Protocol.distribute() call
+
+        Parameters
+        ----------
+        vol : str
+            Theoretical volume of each well in the WellGroup
+
+        """
         for w in self.wells:
             w.set_volume(vol)
         return self
 
     def indices(self, human=False):
-        """Return the indices of the wells in the group, given that all the
+        """Return the indices of the wells in the group, given that all of the
         wells belong to the same container.
+
+        Parameters
+        ----------
+        human : bool, optionally
+            Specify whether list of wells should be in robot (0,1,2...) or
+            humanized ("A1", "A2", "A3"...) form
+
         """
         indices = []
         for w in self.wells:
@@ -57,6 +75,12 @@ class WellGroup(object):
         return indices
 
     def append(self, other):
+        """Append another well to this WellGroup
+
+        Parameters
+        ----------
+        other : Well
+        """
         return self.wells.append(other)
 
     def __getitem__(self, key):

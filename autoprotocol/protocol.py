@@ -755,7 +755,7 @@ class Protocol(object):
         for k, v in params.items():
             if isinstance(v, dict):
                 parameters[str(k)] = self._ref_containers_and_wells(v)
-            if isinstance(v, list) and isinstance(v[0], dict):
+            if isinstance(v, list) and isinstance(v[0], dict) and ("id" in v[0]):
                 for cont in v:
                     self._ref_containers_and_wells(cont.encode('utf-8'))
             elif isinstance(v, dict) and "type" in v:
@@ -783,7 +783,7 @@ class Protocol(object):
                     well = w.rsplit("/")[1].encode('utf-8')
                     group.append(self.refs[cont].container.well(well))
                 parameters[str(k)] = group
-            elif "/" in str(v):
+            elif ("/" in str(v)) and (":" not in str(v)):
                 if not v.rsplit("/")[0] in self.refs:
                     raise RuntimeError("Parameters contain well references to \
                         a container that isn't referenced in this protocol.")

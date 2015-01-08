@@ -49,6 +49,9 @@ def run(fn):
     protocol = Protocol()
     params = protocol._ref_containers_and_wells(config["parameters"])
 
-    fn(protocol, params)
+    from autoprotocol.environment import Environment
+    env = Environment(protocol=protocol, params=params)
 
-    print json.dumps(protocol.as_dict(), indent=2)
+    fn(env)
+
+    print json.dumps(env.protocol.as_dict(), indent=2)

@@ -55,8 +55,9 @@ class Pipette(Instruction):
 
     @staticmethod
     def _transferGroup(src, dest, vol, mix_after=False,
-                 mix_vol="20:microliter", repetitions=10,
+                 mix_vol=None, repetitions=10,
                  flowrate="100:microliter/second"):
+
         group = {
             "from": src,
             "to": dest,
@@ -72,7 +73,7 @@ class Pipette(Instruction):
 
     @staticmethod
     def transfers(srcs, dests, vols, mix_after=False,
-                 mix_vol="20:microliter", repetitions=10,
+                 mix_vol=None, repetitions=10,
                  flowrate="100:microliter/second"):
         """
         Return a valid list of pipette transfer groups.  This can be passed
@@ -88,6 +89,8 @@ class Pipette(Instruction):
             List of volumes in microliters.  These should be bare numbers.
 
         """
+        if mix_after and not mix_vol:
+            mix_vol = vols[0]
 
         return [{
                 "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol,

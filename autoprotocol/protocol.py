@@ -258,7 +258,7 @@ class Protocol(object):
             raise ValueError("source and dest must be WellGroups or Wells")
 
     def transfer(self, source, dest, volume, one_source=False, mix_after=False,
-                 mix_vol="20:microliter", repetitions=10,
+                 mix_vol=None, repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
@@ -298,6 +298,8 @@ class Protocol(object):
 
         """
         opts = []
+        if mix_after and not mix_vol:
+            mix_vol = volume
         if isinstance(volume, basestring):
             volume = Unit.fromstring(volume)
         if volume > Unit(900,"microliter"):

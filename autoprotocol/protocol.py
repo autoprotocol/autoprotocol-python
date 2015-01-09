@@ -763,13 +763,13 @@ class Protocol(object):
             elif isinstance(v, dict) and "type" in v:
                 if "discard" in v:
                     discard = v["discard"]
-                    if discard and v["storage"]:
+                    if discard and v.get("storage"):
                         raise RuntimeError("You must either specify a storage "
                             "condition or set discard to true, not both.")
                 else:
                     discard = False
                 containers[str(k)] = \
-                    self.ref(k, v["id"], v["type"], storage=v["storage"],
+                    self.ref(k, v["id"], v["type"], storage=v.get("storage"),
                              discard=discard)
             else:
                 parameters[str(k)] = v

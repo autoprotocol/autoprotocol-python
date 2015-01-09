@@ -21,23 +21,28 @@ class Protocol(object):
 
     Initially, a Protocol has an empty sequence of instructions and no
     referenced containers. To add a reference to a container, use the ref()
-    method, which returns a Container:
+    method, which returns a Container
 
-        my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
-                                cont_type="96-pcr", storage="cold_4")
+        .. code-block:: python
 
-    To add instructions to the protocol, use the helper methods:
+            my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
+                                    cont_type="96-pcr", storage="cold_4")
 
-        protocol.transfer(source=my_plate.well("A1"),
-                          dest=my_plate.well("B4"),
-                          volume="50:microliter")
-        protocol.thermocycle(my_plate, groups=[
-            { "cycles": 1,
-              "steps": [
-                { "temperature": "95:celsius", "duration": "1:hour" }
-                ]
-              }
-            ])
+    To add instructions to the protocol, use the helper methods in this class
+
+        .. code-block:: python
+
+            protocol.transfer(source=my_plate.well("A1"),
+                              dest=my_plate.well("B4"),
+                              volume="50:microliter")
+            protocol.thermocycle(my_plate, groups=[
+                { "cycles": 1,
+                  "steps": [
+                    { "temperature": "95:celsius", "duration": "1:hour" }
+                    ]
+                  }
+                ])
+
     """
 
     def __init__(self, refs=[], instructions=None):
@@ -48,7 +53,8 @@ class Protocol(object):
         self.instructions = instructions if instructions is not None else []
 
     def container_type(self, shortname):
-        """Convert a ContainerType shortname into a ContainerType object.
+        """
+        Convert a ContainerType shortname into a ContainerType object.
 
         Parameters
         ----------
@@ -68,6 +74,7 @@ class Protocol(object):
         ------
         ValueError
             if an unknown ContainerType shortname is passed as a parameter
+
         """
         if shortname in _CONTAINER_TYPES:
             return _CONTAINER_TYPES[shortname]
@@ -78,15 +85,18 @@ class Protocol(object):
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
-        """Append a Ref object to the list of Refs associated with this protocol
+        """
+        Append a Ref object to the list of Refs associated with this protocol
         and returns a Container with the id, container type and storage or
         discard conditions specified.
 
-        Example
-        -------
-        sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
-        sample_ref = ref("sample_plate", id="ct1cxae33lkj",
-                         cont_type="96-pcr", storage="ambient")
+        Ex)
+
+        .. code-block:: python
+
+            sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
+            sample_ref = ref("sample_plate", id="ct1cxae33lkj",
+                             cont_type="96-pcr", storage="ambient")
 
         returns a Container object using Container(None, "96-pcr")
 
@@ -143,7 +153,8 @@ class Protocol(object):
         return container
 
     def append(self, instructions):
-        """Append instruction(s) to the list of Instruction objects associated
+        """
+        Append instruction(s) to the list of Instruction objects associated
         with this protocol
 
         Parameters
@@ -159,6 +170,8 @@ class Protocol(object):
 
     def as_dict(self):
         """
+        Return the entire protocol as a dictionary.
+
         Returns
         -------
         dict
@@ -189,7 +202,8 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def distribute(self, source, dest, volume, allow_carryover=False):
-        """Distribute liquid from source well(s) to destination wells(s)
+        """
+        Distribute liquid from source well(s) to destination wells(s)
 
         Parameters
         ----------
@@ -211,6 +225,7 @@ class Protocol(object):
         RuntimeError
             if volume is not expressed either as a string with the format
             "value:unit" or as a Unit object
+
         """
         opts = {}
         opts["allow_carryover"] = allow_carryover
@@ -245,7 +260,8 @@ class Protocol(object):
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
-        """Transfer liquid from one specific well to another.  A new pipette tip
+        """
+        Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step.
 
         Parameters
@@ -279,6 +295,7 @@ class Protocol(object):
         RuntimeError
             if source and/or destination wells are passed as anything other
             than Well or WellGroup objects
+
         """
         opts = []
         if isinstance(volume, basestring):
@@ -350,6 +367,7 @@ class Protocol(object):
         reverse : bool
             If set to True, liquid will be most concentrated in the well in the
             dilution series with the highest index
+
         """
         if not isinstance(well_group, WellGroup):
             raise RuntimeError("serial_dilute_rowwise() must take a WellGroup "
@@ -387,7 +405,8 @@ class Protocol(object):
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):
-        """Mix specified well using a new pipette tip
+        """
+        Mix specified well using a new pipette tip
 
         Parameters
         ----------
@@ -399,6 +418,7 @@ class Protocol(object):
             flowrate of liquid during mixing
         repetitions : int, optional
             number of times to aspirate and expell liquid during mixing
+
         """
         opts = {
             "well": well,
@@ -416,6 +436,7 @@ class Protocol(object):
         ref : str, Ref
         speed: str, Unit
         duration: str, Unit
+
         """
         self.instructions.append(Spin(ref, speed, duration))
 
@@ -426,23 +447,25 @@ class Protocol(object):
                     melting=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
-        groups being a list of dicts in the form of:
-        "groups": [{
-            "cycles": integer,
-            "steps": [{
-              "duration": duration,
-              "temperature": temperature,
-              "read": boolean // optional (default true)
-            },{
-              "duration": duration,
-              "gradient": {
-                "top": temperature,
-                "bottom": temperature
-              },
-              "read": boolean // optional (default true)
-            }]
-        }],
+        groups being a list of dicts in the formof:
 
+        .. code-block:: python
+
+            "groups": [{
+                "cycles": integer,
+                "steps": [{
+                  "duration": duration,
+                  "temperature": temperature,
+                  "read": boolean // optional (default true)
+                },{
+                  "duration": duration,
+                  "gradient": {
+                    "top": temperature,
+                    "bottom": temperature
+                  },
+                  "read": boolean // optional (default true)
+                }]
+            }],
 
         Parameters
         ----------
@@ -457,6 +480,9 @@ class Protocol(object):
         ------
         AttributeError
             if groups are not in the form of:
+
+            .. code-block:: python
+
                 [{
                     'cycles':___,
                     'steps': [
@@ -467,6 +493,7 @@ class Protocol(object):
                     ]},
                     { ... }, ...
                 }]
+
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -493,6 +520,7 @@ class Protocol(object):
             total duration of thermocycle protocol
         step_duration : str, Unit, optional
             individual temperature step duration
+
         """
         start_temp = int(Unit.fromstring(start_temp).value)
         end_temp = int(Unit.fromstring(end_temp).value)
@@ -529,6 +557,7 @@ class Protocol(object):
         duration : str, Unit
             duration for plate to incubate on the magentic adapter (with no
             pipetting occuring)
+
         """
         sep = Pipette([])
         sep.data["x-magnetic_separate"] = {
@@ -547,6 +576,7 @@ class Protocol(object):
         ----------
         ref : str, Ref
             plate to be removed from magentic block
+
         """
         self.instructions.append(Pipette([]))
 
@@ -566,6 +596,7 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices(human=True)
@@ -591,6 +622,7 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
@@ -605,6 +637,7 @@ class Protocol(object):
         wells : list, WellGroup
             WellGroup or list of wells to be measured
         dataref : str
+
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
@@ -623,6 +656,7 @@ class Protocol(object):
             ladder by which to measure separated fragment size
         duration : str, Unit
         dataref : str
+
         """
         self.instructions.append(
             GelSeparate(ref, matrix, ladder, duration, dataref))
@@ -718,41 +752,48 @@ class Protocol(object):
     def _ref_containers_and_wells(self, params):
         """Used by harness.run() to process JSON container and well references
 
-        Example
-        -------
+        .. code-block:: python
 
-        parameters = {
-            "sample": {
-                    "id": null,
-                    "type": "micro-1.5",
-                    "storage": "cold_4",
-                    "discard": null
-            },
-            "mastermix_loc": "sample_plate/A1",
-            "samples": [
-                "sample_plate/B1",
-                "sample_plate/B2",
-                "sample_plate/B3",
-                "sample_plate/B4"
-            ]
-        }
+            parameters = {
+                "sample": {
+                        "id": null,
+                        "type": "micro-1.5",
+                        "storage": "cold_4",
+                        "discard": null
+                },
+                "mastermix_loc": "sample_plate/A1",
+                "samples": [
+                    "sample_plate/B1",
+                    "sample_plate/B2",
+                    "sample_plate/B3",
+                    "sample_plate/B4"
+                ]
+            }
 
         protocol.make_well_references(parameters)
 
         returns:
 
-        {
-            "refs":{
-                "sample": Container(None, "micro-1.5")
-            },
-            "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
-            "samples": WellGroup([
-                    protocol.refs["sample_plate"].well("B1"),
-                    protocol.refs["sample_plate"].well("B2"),
-                    protocol.refs["sample_plate"].well("B3"),
-                    protocol.refs["sample_plate"].well("B4")
-                ])
-        }
+        .. code-block:: python
+
+            {
+                "refs":{
+                    "sample": Container(None, "micro-1.5")
+                },
+                "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
+                "samples": WellGroup([
+                        protocol.refs["sample_plate"].well("B1"),
+                        protocol.refs["sample_plate"].well("B2"),
+                        protocol.refs["sample_plate"].well("B3"),
+                        protocol.refs["sample_plate"].well("B4")
+                    ])
+            }
+
+        Parameters
+        ----------
+        params : dict
+            A dictionary of parameters to be passed to a protocol.
+
         """
         parameters = {}
         containers = {}

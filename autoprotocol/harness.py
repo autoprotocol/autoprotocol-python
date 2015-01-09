@@ -3,13 +3,15 @@ from .protocol import Protocol
 import argparse
 
 def run(fn):
-    '''Take configuration JSON file from the command line and run the given
+    """
+    Take configuration JSON file from the command line and run the given
     protocol.
 
-    Example
-    -------
 
     sample_config.json
+
+    .. code-block:: python
+
         {
             "parameters": {
                 "sample_plate":{
@@ -25,6 +27,8 @@ def run(fn):
 
     sample.py
 
+    .. code-block:: python
+
         def sample(protocol, params):
             protocol.distribute(params.refs["sample_plate"].well("A1"),
                 refs["sample_plate"].wells_from("B1", 12),
@@ -35,12 +39,16 @@ def run(fn):
             run(sample)
 
     on command-line:
+
+    .. code-block:: python
+
         $ python -m sample autoprotocol/config/sample_config.json
 
     Parameters
     ----------
     fn : function
-    '''
+
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('config', help='JSON-formatted protocol configuration file')
     args = parser.parse_args()

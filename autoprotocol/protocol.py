@@ -237,6 +237,8 @@ class Protocol(object):
             opts["to"].append({"well": dest,
                 "volume": volume})
             self.pipette([{"distribute": opts}])
+        else:
+            raise ValueError("source and dest must be WellGroups or Wells")
 
     def transfer(self, source, dest, volume, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,

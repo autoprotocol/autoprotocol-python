@@ -2,7 +2,7 @@ from __future__ import division
 
 class Unit(object):
     def __init__(self, value, unit):
-        self.value = value
+        self.value = float(value)
         self.unit = unit
 
     @staticmethod

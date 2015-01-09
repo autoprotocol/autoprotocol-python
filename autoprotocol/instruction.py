@@ -1,26 +1,33 @@
 import json
 
 class Instruction(object):
+    """Base class for an instruction that is to later be encoded as JSON.
+
+    """
     def __init__(self, data):
         super(Instruction, self).__init__()
         self.data = data
         self.__dict__.update(data)
 
     def json(self):
+        """Return instruction object properly encoded as JSON for Autoprotocol.
+
+        """
         return json.dumps(self.data, indent = 2)
 
 class Pipette(Instruction):
-    '''A pipette instruction is constructed as a list of groups, executed in
+    '''
+    A pipette instruction is constructed as a list of groups, executed in
     order, where each group is a transfer, distribute or mix group.  One
     disposable tip is used for each group.
 
-    transfer
-    --------
+    transfer:
+
         For each element in the transfer list, in order, aspirates the specifed
         volume from the source well and dispenses the same volume into the target well.
 
-    distribute
-    ----------
+    distribute:
+
         Aspirates sufficient volume from the source well, then dispenses into
         each target well the volume requested, in the order specified.
         If the total volume to be dispensed exceeds the maximum tip volume
@@ -32,13 +39,13 @@ class Pipette(Instruction):
         only when you're sure that contamination won't be an issue=for example,
         if the target plate is empty.
 
-    mix
-    ---
+    mix:
         Mixes the specified wells, in order, by repeated aspiration and
         dispensing of the specified volume. The default mixing speed is
         50 uL/second, but you may specify a slower or faster speed.
 
     Well positions are given using the format :ref/:index
+
     '''
     def __init__(self, groups):
         super(Pipette, self).__init__({
@@ -68,12 +75,18 @@ class Pipette(Instruction):
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second"):
         """
-        Returns a valid list of pipette transfer groups.  This can be passed
+        Return a valid list of pipette transfer groups.  This can be passed
         directly to the Pipette constructor as the "groups" argument.
 
-        srcs  - [str] - List of ":ref/:well" to use as the transfer sources
-        dests - [str] - List of ":ref/:well" to use as the transfer destinations
-        vols  - [float] - List of volumes in microliters.  These should be bare numbers.
+        Parameters
+        ----------
+        srcs : list
+            List of ":ref/:well" to use as the transfer sources.
+        dests : list
+            List of ":ref/:well" to use as the transfer destinations
+        vols : list
+            List of volumes in microliters.  These should be bare numbers.
+
         """
 
         return [{
@@ -83,6 +96,9 @@ class Pipette(Instruction):
         }]
 
 class Spin(Instruction):
+    """
+
+    """
     def __init__(self, ref, speed, duration):
         super(Spin, self).__init__({
             "op": "spin",
@@ -92,6 +108,9 @@ class Spin(Instruction):
         })
 
 class Thermocycle(Instruction):
+    """
+
+    """
     CHANNEL1_DYES  = ["FAM","SYBR"]
     CHANNEL2_DYES  = ["VIC","HEX","TET","CALGOLD540"]
     CHANNEL3_DYES  = ["ROX","TXR","CALRED610"]
@@ -157,6 +176,7 @@ class Incubate(Instruction):
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
     until it is next used.
+
     """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 
@@ -172,6 +192,9 @@ class Incubate(Instruction):
         })
 
 class SangerSeq(Instruction):
+    """
+
+    """
     def __init__(self, ref, dataref):
         super(SangerSeq, self).__init__({
             "op": "sangerseq",
@@ -180,6 +203,9 @@ class SangerSeq(Instruction):
         })
 
 class GelSeparate(Instruction):
+    """
+
+    """
     MATRICES = ['agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)', 'agarose(12,1.2%)', 'agarose(8,0.8%)']
     LADDERS = ['ladder1', 'ladder2']
 
@@ -198,6 +224,9 @@ class GelSeparate(Instruction):
         })
 
 class Absorbance(Instruction):
+    """
+
+    """
     def __init__(self, ref, wells, wavelength, dataref, flashes = 25):
         super(Absorbance, self).__init__({
             "op": "absorbance",
@@ -209,6 +238,9 @@ class Absorbance(Instruction):
         })
 
 class Fluorescence(Instruction):
+    """
+
+    """
     def __init__(self, ref, wells, excitation, emission, dataref, flashes = 25):
         super(Fluorescence, self).__init__({
             "op": "fluorescence",
@@ -221,6 +253,9 @@ class Fluorescence(Instruction):
         })
 
 class Luminesence(Instruction):
+    """
+
+    """
     def __init__(self, ref, wells, dataref):
         super(Luminesence, self).__init__({
             "op": "luminesence",
@@ -230,6 +265,9 @@ class Luminesence(Instruction):
             })
 
 class Seal(Instruction):
+    """
+
+    """
     def __init__(self, ref):
         super(Seal, self).__init__({
             "op": "seal",
@@ -237,6 +275,9 @@ class Seal(Instruction):
         })
 
 class Unseal(Instruction):
+    """
+
+    """
     def __init__(self, ref):
         super(Unseal, self).__init__({
             "op": "unseal",
@@ -244,6 +285,9 @@ class Unseal(Instruction):
         })
 
 class Cover(Instruction):
+    """
+
+    """
     def __init__(self, ref, lid):
         super(Cover, self).__init__({
             "op": "cover",
@@ -252,6 +296,9 @@ class Cover(Instruction):
         })
 
 class Uncover(Instruction):
+    """
+
+    """
     def __init__(self, ref):
         super(Uncover, self).__init__({
             "op": "uncover",

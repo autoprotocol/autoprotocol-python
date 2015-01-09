@@ -8,8 +8,10 @@ class ContainerType(namedtuple("ContainerType",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count"])):
-    """The ContainerType class holds the capabilities and properties of a
+    """
+    The ContainerType class holds the capabilities and properties of a
     particular container type.
+
     """
 
     def robotize(self, well_ref):
@@ -17,6 +19,7 @@ class ContainerType(namedtuple("ContainerType",
         Convert a well reference (int, "A1" or int-in-a-string "23") to a
         robot-friendly rowwise integer (left-to-right, top-to-bottom,
         starting at 0 = A1).
+
         """
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
@@ -35,17 +38,25 @@ class ContainerType(namedtuple("ContainerType",
                 raise Exception("Well must be in A1 format or be an integer")
 
     def humanize(self, well_ref):
+        """
+        Return the human readable form of an integer well index based on the
+        well format of this ContainerType.
+
+        """
         row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):
-        """
-        Return the (col, row) corresponding to the given idx.
+        """Return the (col, row) corresponding to the given well index.
+
         """
         idx = self.robotize(idx)
         return (idx / self.col_count, idx % self.col_count)
 
     def row_count(self):
+        """Return number of rows this ContainerType has.
+
+        """
         return self.well_count / self.col_count
 
 

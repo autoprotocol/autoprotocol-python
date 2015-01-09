@@ -786,13 +786,16 @@ class Protocol(object):
                     group.append(self.refs[cont].container.well(well))
                 parameters[str(k)] = group
             elif "/" in str(v):
-                if not v.rsplit("/")[0] in self.refs:
-                    raise RuntimeError("Parameters contain well references to \
-                        a container that isn't referenced in this protocol.")
+                ref_name = v.rsplit("/")[0]
+                if not ref_name in self.refs:
+                    raise RuntimeError(
+                        "Parameters contain well references to "
+                        "a container that isn't referenced in this protocol: "
+                        "'%s'." % ref_name)
                 if v.rsplit("/")[1] == "all_wells":
-                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.all_wells()
+                    parameters[str(k)] = self.refs[ref_name].container.all_wells()
                 else:
-                    parameters[str(k)] = self.refs[v.rsplit("/")[0]].container.well(v.rsplit("/")[1])
+                    parameters[str(k)] = self.refs[ref_name].container.well(v.rsplit("/")[1])
             else:
                 parameters[str(k)] = v
 

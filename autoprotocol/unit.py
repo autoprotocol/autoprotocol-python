@@ -1,4 +1,5 @@
 from __future__ import division
+import operator
 
 class Unit(object):
     def __init__(self, value, unit):
@@ -59,5 +60,21 @@ class Unit(object):
             raise ValueError("Both operands must be of type Unit")
         if isinstance(other, Unit) and self.unit == other.unit:
             return Unit(self.value // other.value, self.unit)
+        else:
+            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
+
+    def __iadd__(self,other):
+        if not isinstance(other, Unit):
+            raise ValueError("Both operands must be of type Unit")
+        if isinstance(other, Unit) and self.unit == other.unit:
+            return Unit(operator.iadd(self.value,other.value), self.unit)
+        else:
+            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
+
+    def __isub__(self,other):
+        if not isinstance(other, Unit):
+            raise ValueError("Both operands must be of type Unit")
+        if isinstance(other, Unit) and self.unit == other.unit:
+            return Unit(operator.isub(self.value,other.value), self.unit)
         else:
             raise ValueError("unit %s is not %s" % (self.unit, other.unit))

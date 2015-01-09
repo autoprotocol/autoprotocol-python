@@ -257,7 +257,7 @@ class Protocol(object):
         else:
             raise ValueError("source and dest must be WellGroups or Wells")
 
-    def transfer(self, source, dest, volume, mix_after=False,
+    def transfer(self, source, dest, volume, one_source=False, mix_after=False,
                  mix_vol="20:microliter", repetitions=10,
                  flowrate="100:microliter/second", allow_carryover=False):
         """
@@ -307,13 +307,30 @@ class Protocol(object):
             self.transfer(source, dest, diff, mix_after, mix_vol, repetitions,
                 flowrate)
         elif isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            if len(source.wells) != len(dest.wells):
-                raise RuntimeError(
-                    "source and destination WellGroups do not have the same "
-                    "number of wells and transfer cannot happen one to one")
+            if not one_source:
+                if len(source.wells) != len(dest.wells):
+                    raise RuntimeError(
+                        "source and destination WellGroups do not have the same "
+                        "number of wells and transfer cannot happen one to one. "
+                        "Set the one_source keyword argument to true if you wish to"
+                        "transfer liquid from a source which is contained in "
+                        "multiple wells to multiple other wells")
+                else:
+                    for s,d in zip(source.wells, dest.wells):
+                        self.transfer(s,d,volume)
             else:
-                for s,d in zip(source.wells, dest.wells):
-                    self.transfer(s,d,volume)
+                curr_well = 0
+                vol = source.wells[curr_well].volume
+                for well in dest.wells:
+                    vol -= volume
+                    self.transfer(source.wells[curr_well], well, volume)
+                    if vol <= Unit(well.container.container_type.dead_vol,
+                        "microliter"):
+                        curr_well += 1
+                        if curr_well > len(source.wells):
+                            break
+                        else:
+                            vol = source.wells[curr_well].volume
         elif isinstance(source, Well) and isinstance(dest, WellGroup):
             for d in dest.wells:
                 self.transfer(source, d, volume)

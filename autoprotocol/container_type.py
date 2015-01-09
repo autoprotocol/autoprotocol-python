@@ -8,6 +8,7 @@ class ContainerType(namedtuple("ContainerType",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count","dead_volume_ul"])):
+
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.

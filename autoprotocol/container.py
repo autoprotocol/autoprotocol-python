@@ -22,10 +22,7 @@ class Well(object):
                            "microliter")
 
     def set_volume(self, vol):
-        """
-        Set the theoretical volume of liquid in this well.
-
-        Used by Protocol.fill_wells().
+        """Set the theoretical volume of liquid in this well.
 
         """
 
@@ -42,7 +39,7 @@ class Well(object):
         return self.container.humanize(self.index)
 
     def __repr__(self):
-        """
+        """Return a string representation of this well.
 
         """
         return "Well(%s, %s, %s)" % (str(self.container), str(self.index),
@@ -72,9 +69,11 @@ class WellGroup(object):
     def set_volume(self, vol):
         """
         Set the volume of every well in the group to vol.
+
         If a WellGroup will be used in a Protocol.distribute() call,
         the wells in that group must have their volume specified using
         set_volume().
+
 
         Parameters
         ----------
@@ -86,7 +85,9 @@ class WellGroup(object):
             w.set_volume(vol)
         return self
 
+
     def indices(self):
+
         """
         Return the indices of the wells in the group, given that all of the
         wells belong to the same container.
@@ -133,15 +134,13 @@ class WellGroup(object):
         return self.wells[key]
 
     def __len__(self):
-        """
-        Return the number of Wells in a WellGroup
+        """Return the number of Wells in a WellGroup
 
         """
         return len(self.wells)
 
     def __repr__(self):
-        """
-        Return a string representation of a WellGroup
+        """Return a string representation of a WellGroup
 
         """
         return "WellGroup(%s)" % (str(self.wells))
@@ -153,7 +152,6 @@ class WellGroup(object):
         Parameters
         ----------
         other : WellGroup
-
 
         """
         if not isinstance(other, WellGroup):

@@ -201,6 +201,7 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
+
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second"):
@@ -249,7 +250,6 @@ class Protocol(object):
 
         """
         opts = {}
-        opts["allow_carryover"] = allow_carryover
         dists = self.fill_wells(dest, source, volume)
         groups = []
         for d in dists:
@@ -277,7 +277,7 @@ class Protocol(object):
                  repetitions=10, flowrate="100:microliter/second"):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step by default unless one_tip is True.
+        is used between each transfer step.
 
         Parameters
         ----------

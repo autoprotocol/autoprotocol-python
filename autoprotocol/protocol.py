@@ -660,7 +660,7 @@ class Protocol(object):
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
-        self.instructions.append(Luminesence(refs, wells, dataref))
+        self.instructions.append(Luminesence(ref, wells, dataref))
 
     def gel_separate(self, ref, matrix, ladder, duration, dataref):
         """

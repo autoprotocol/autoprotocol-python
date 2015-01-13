@@ -35,7 +35,7 @@ class Unit(object):
     def __cmp__(self, other):
         if not isinstance(other, Unit):
             raise ValueError("Both operands must be of type Unit")
-        elif not self.unit != other.unit:
+        elif self.unit != other.unit:
             raise ValueError("unit %s is not %s" % (self.unit, other.unit))
         return cmp(self.value, other.value)
 

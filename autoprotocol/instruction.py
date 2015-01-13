@@ -89,11 +89,8 @@ class Pipette(Instruction):
             List of volumes in microliters.  These should be bare numbers.
 
         """
-        if mix_after and not mix_vol:
-            mix_vol = vols[0]
-
         return [{
-                "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol,
+                "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol or v,
                             repetitions, flowrate) for (s, d, v) in
                             zip(srcs, dests, vols)],
         }]

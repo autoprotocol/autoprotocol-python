@@ -20,14 +20,24 @@ A basic protocol object has empty "refs" and "instructions" stanzas.  Various he
 ```python
 from autoprotocol.protocol import Protocol
 
+#instantiate new Protocol object
 p = Protocol()
+
+#append refs (containers) to Protocol object
 bacteria = p.ref("bacteria", cont_type="96-pcr", storage="cold_4")
 medium = p.ref("medium", cont_type="micro-1.5", storage="cold_4")
 reaction_plate = p.ref("reaction_plate", cont_type="96-flat", storage="warm_37")
-p.incubate(bacteria, "warm_37", "1:hour")
-p.distribute(medium.well(0), reaction_plate.wells_from(0,4), "200:microliter")
-p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4), "2:microliter")
 
+#distribute medium from 1.5mL tube to reaction wells
+p.distribute(medium.well(0), reaction_plate.wells_from(0,4), "190:microliter")
+#transfer bacteria from source wells to reaction wells 
+p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4),
+    "10:microliter")
+#incubate bacteria at 37 degrees for 5 hours
+p.incubate(reaction_plate, "warm_37", "5:hour")
+#read absorbance of the first four wells on the reaction plate at 600 nanometers
+p.absorbance(reaction_plate, reaction_plate.wells_from(0,4).indices(), "600:nanometer",
+    "OD600_reading_01092014")
 ```
 calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.as_dict, indent=2)`) produces the following autoprotocol:
 
@@ -55,31 +65,24 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
   }, 
   "instructions": [
     {
-      "duration": "1:hour", 
-      "where": "warm_37", 
-      "object": "bacteria", 
-      "shaking": false, 
-      "op": "incubate"
-    }, 
-    {
       "groups": [
         {
           "distribute": {
             "to": [
               {
-                "volume": "200:microliter", 
+                "volume": "190:microliter", 
                 "well": "reaction_plate/0"
               }, 
               {
-                "volume": "200:microliter", 
+                "volume": "190:microliter", 
                 "well": "reaction_plate/1"
               }, 
               {
-                "volume": "200:microliter", 
+                "volume": "190:microliter", 
                 "well": "reaction_plate/2"
               }, 
               {
-                "volume": "200:microliter", 
+                "volume": "190:microliter", 
                 "well": "reaction_plate/3"
               }
             ], 
@@ -90,7 +93,7 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         {
           "transfer": [
             {
-              "volume": "2.0:microliter", 
+              "volume": "10.0:microliter", 
               "to": "reaction_plate/0", 
               "from": "bacteria/0"
             }
@@ -99,7 +102,7 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         {
           "transfer": [
             {
-              "volume": "2.0:microliter", 
+              "volume": "10.0:microliter", 
               "to": "reaction_plate/1", 
               "from": "bacteria/1"
             }
@@ -108,7 +111,7 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         {
           "transfer": [
             {
-              "volume": "2.0:microliter", 
+              "volume": "10.0:microliter", 
               "to": "reaction_plate/2", 
               "from": "bacteria/2"
             }
@@ -117,7 +120,7 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         {
           "transfer": [
             {
-              "volume": "2.0:microliter", 
+              "volume": "10.0:microliter", 
               "to": "reaction_plate/3", 
               "from": "bacteria/3"
             }
@@ -125,6 +128,26 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         }
       ], 
       "op": "pipette"
+    }, 
+    {
+      "duration": "5:hour", 
+      "where": "warm_37", 
+      "object": "reaction_plate", 
+      "shaking": false, 
+      "op": "incubate"
+    }, 
+    {
+      "dataref": "OD600_reading_01092014", 
+      "object": "reaction_plate", 
+      "wells": [
+        0, 
+        1, 
+        2, 
+        3
+      ], 
+      "num_flashes": 25, 
+      "wavelength": "600:nanometer", 
+      "op": "absorbance"
     }
   ]
 }

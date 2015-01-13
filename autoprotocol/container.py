@@ -60,8 +60,9 @@ class WellGroup(object):
     def set_volume(self, vol):
         """
         Set the volume of every well in the group to vol.
-        Must be called on a WellGroup when it is the source in a
-        Protocol.distribute() call
+        If a WellGroup will be used in a Protocol.distribute() call,
+        the wells in that group must have their volume specified using
+        set_volume().
 
         Parameters
         ----------

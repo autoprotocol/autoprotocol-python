@@ -103,6 +103,7 @@ class WellGroup(object):
         ----------
         other : Well
             Well to append to the WellGroup
+
         """
         if other in self.wells:
             raise RuntimeError("That Well is already a part of this WellGroup")
@@ -111,26 +112,41 @@ class WellGroup(object):
 
     def __getitem__(self, key):
         """
+        Return a specific Well from a WellGroup
+
+        Parameters
+        ----------
+        key : int
 
         """
         return self.wells[key]
 
     def __len__(self):
         """
+        Return the number of Wells in a WellGroup
 
         """
         return len(self.wells)
 
     def __repr__(self):
         """
+        Return a string representation of a WellGroup
 
         """
         return "WellGroup(%s)" % (str(self.wells))
 
     def __add__(self, other):
         """
+        Append another WellGroup to this WellGroup
+
+        Parameters
+        ----------
+        other : WellGroup
+
 
         """
+        if not isinstance(other, WellGroup):
+            raise RuntimeError("You can only add WellGroups together")
         return WellGroup(self.wells + other.wells)
 
 
@@ -292,6 +308,7 @@ class Container(object):
             for i in range(1,num_rows-1):
                 inner_wells.extend(range(col+1, (col+num_cols)-1))
                 col += num_cols
+        inner_wells = map(lambda x: self._wells[x], inner_wells)
         return WellGroup(inner_wells)
 
     def wells_from(self, start, num, columnwise=False):

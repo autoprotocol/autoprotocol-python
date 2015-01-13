@@ -272,6 +272,29 @@ class Container(object):
         else:
             return WellGroup(self._wells)
 
+    def inner_wells(self, columnwise=False):
+        """
+        Return a WellGroup of all wells on a plate excluding wells in the top and
+        bottom rows and in the first and last columns
+
+        """
+        num_cols = self.container_type.col_count
+        num_rows = self.container_type.row_count()
+        inner_wells = []
+
+        if columnwise:
+            for c in range(1,num_cols-1):
+                wells = []
+                for r in range(1, num_rows-1):
+                    wells.append((r*num_cols)+c)
+                inner_wells.extend(wells)
+        else:
+            col = num_cols
+            for i in range(1,num_rows-1):
+                inner_wells.extend(range(col+1, (col+num_cols)-1))
+                col += num_cols
+        return WellGroup(inner_wells)
+
     def wells_from(self, start, num, columnwise=False):
         """
         Return a WellGroup of Wells belonging to this Container starting from

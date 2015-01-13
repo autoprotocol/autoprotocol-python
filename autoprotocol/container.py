@@ -281,7 +281,6 @@ class Container(object):
         num_cols = self.container_type.col_count
         num_rows = self.container_type.row_count()
         inner_wells = []
-
         if columnwise:
             for c in range(1,num_cols-1):
                 wells = []

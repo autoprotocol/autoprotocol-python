@@ -14,8 +14,8 @@ or, alternatively:
 
     $ pip install autoprotocol
 
-## Simple Protocol Example
-A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methdods in Protocol are then used to append instructions and refs to the object such as in the simple protocol below: 
+## Building a Protocol
+A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methdods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below: 
 
 ```python
 from autoprotocol.protocol import Protocol

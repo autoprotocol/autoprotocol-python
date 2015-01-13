@@ -325,8 +325,9 @@ class Protocol(object):
                 vol = source.wells[curr_well].volume
                 for well in dest.wells:
                     vol -= volume
+                    well.set_volume(vol)
                     self.transfer(source.wells[curr_well], well, volume)
-                    if vol <= Unit(well.container.container_type.dead_vol,
+                    if vol <= Unit(well.container.container_type.dead_volume,
                         "microliter"):
                         curr_well += 1
                         if curr_well > len(source.wells):

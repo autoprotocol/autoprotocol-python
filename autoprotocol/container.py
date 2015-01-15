@@ -74,7 +74,7 @@ class WellGroup(object):
             w.set_volume(vol)
         return self
 
-    def indices(self, human=False):
+    def indices(self):
         """
         Return the indices of the wells in the group, given that all of the
         wells belong to the same container.
@@ -90,10 +90,8 @@ class WellGroup(object):
         for w in self.wells:
             assert w.container == self.wells[0].container, "All wells in \
                 WellGroup must belong to the same container to get their indices"
-            if human:
-                indices.append(w.humanize())
-            else:
-                indices.append(w.index)
+            indices.append(w.humanize())
+
         return indices
 
     def append(self, other):

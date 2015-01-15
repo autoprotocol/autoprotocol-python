@@ -127,19 +127,24 @@ class Thermocycle(Instruction):
             "groups": groups,
             "volume": volume
         }
-        if dyes and dataref and melting:
-            instruction["dataref"] = dataref
+
+        if (dyes and not dataref) or (dataref and not dyes):
+            raise ValueError("You must specify both a dataref name and the dyes"
+                " to use for qPCR")
+        elif melting and not dyes:
+            raise ValueError("A melting step requires a valid dyes object")
+
+        if melting:
             instruction["melting"] = melting
+        if dyes:
             keys = dyes.keys()
             if Thermocycle.find_invalid_dyes(keys):
                 dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
             else:
                 instruction["dyes"] = dyes
-        elif not dyes and not dataref and not melting:
-            pass
-        else:
-            raise ValueError("You must specify a melting temperature, "
-                "a dataref name and dyes for a qPCR instruction")
+
+        instruction["dataref"] = dataref
+
 
         super(Thermocycle, self).__init__(instruction)
 

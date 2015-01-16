@@ -677,53 +677,53 @@ class Protocol(object):
             GelSeparate(ref, matrix, ladder, duration, dataref))
 
     def seal(self, ref):
-    """
-    Seal indicated container using the automated plate sealer.
+        """
+        Seal indicated container using the automated plate sealer.
 
-    Parameters
-    ----------
-    ref : Ref, str
-        Container to be sealed
+        Parameters
+        ----------
+        ref : Ref, str
+            Container to be sealed
 
-    """
+        """
         self.instructions.append(Seal(ref))
 
     def unseal(self, ref):
-    """
-    Remove seal from indicated container using the automated plate unsealer.
+        """
+        Remove seal from indicated container using the automated plate unsealer.
 
-    Parameters
-    ----------
-    ref : Ref, str
-        Container to be unsealed
+        Parameters
+        ----------
+        ref : Ref, str
+            Container to be unsealed
 
-    """
+        """
         self.instructions.append(Unseal(ref))
 
     def cover(self, ref, lid='standard'):
-    """
-    Place specified lid type on specified container
+        """
+        Place specified lid type on specified container
 
-    Parameters
-    ----------
-    ref : str
-        Container to be convered
-    lid : {"standard", "universal", "low-evaporation"}
-        Type of lid to cover container with
+        Parameters
+        ----------
+        ref : str
+            Container to be convered
+        lid : {"standard", "universal", "low-evaporation"}
+            Type of lid to cover container with
 
-    """
+        """
         self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
-    """
-    Remove lid from specified container
+        """
+        Remove lid from specified container
 
-    Parameters
-    ----------
-    ref : str
-        Container to remove lid from
+        Parameters
+        ----------
+        ref : str
+            Container to remove lid from
 
-    """
+        """
         self.instructions.append(Uncover(ref))
 
     def _ref_for_well(self, well):
@@ -852,7 +852,7 @@ class Protocol(object):
         parameters = {}
         containers = {}
 
-        #ref containers
+        # ref containers
         for k, v in params.items():
             if isinstance(v, dict):
                 parameters[str(k)] = self._ref_containers_and_wells(v)
@@ -864,7 +864,8 @@ class Protocol(object):
                     discard = v["discard"]
                     if discard and v.get("storage"):
                         raise RuntimeError("You must either specify a storage "
-                            "condition or set discard to true, not both.")
+                                           "condition or set discard to true, "
+                                           "not both.")
                 else:
                     discard = False
                 containers[str(k)] = \

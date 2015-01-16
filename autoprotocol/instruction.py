@@ -1,5 +1,6 @@
 import json
 
+
 class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON.
 
@@ -13,7 +14,8 @@ class Instruction(object):
         """Return instruction object properly encoded as JSON for Autoprotocol.
 
         """
-        return json.dumps(self.data, indent = 2)
+        return json.dumps(self.data, indent=2)
+
 
 class Pipette(Instruction):
     '''
@@ -24,7 +26,8 @@ class Pipette(Instruction):
     transfer:
 
         For each element in the transfer list, in order, aspirates the specifed
-        volume from the source well and dispenses the same volume into the target well.
+        volume from the source well and dispenses the same volume into the
+         target well.
 
     distribute:
 
@@ -55,8 +58,8 @@ class Pipette(Instruction):
 
     @staticmethod
     def _transferGroup(src, dest, vol, mix_after=False,
-                 mix_vol=None, repetitions=10,
-                 flowrate="100:microliter/second"):
+                       mix_vol=None, repetitions=10,
+                       flowrate="100:microliter/second"):
 
         group = {
             "from": src,
@@ -65,16 +68,16 @@ class Pipette(Instruction):
         }
         if mix_after:
             group["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
+                "volume": mix_vol,
+                "repetitions": repetitions,
+                "speed": flowrate
             }
         return group
 
     @staticmethod
     def transfers(srcs, dests, vols, mix_after=False,
-                 mix_vol=None, repetitions=10,
-                 flowrate="100:microliter/second"):
+                  mix_vol=None, repetitions=10,
+                  flowrate="100:microliter/second"):
         """
         Return a valid list of pipette transfer groups.  This can be passed
         directly to the Pipette constructor as the "groups" argument.
@@ -90,15 +93,13 @@ class Pipette(Instruction):
 
         """
         return [{
-                "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol or v,
-                            repetitions, flowrate) for (s, d, v) in
-                            zip(srcs, dests, vols)],
+            "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol or v,
+                                                repetitions, flowrate) for
+                         (s, d, v) in zip(srcs, dests, vols)],
         }]
 
-class Spin(Instruction):
-    """
 
-    """
+class Spin(Instruction):
     def __init__(self, ref, speed, duration):
         super(Spin, self).__init__({
             "op": "spin",
@@ -107,16 +108,51 @@ class Spin(Instruction):
             "duration": duration
         })
 
+
 class Thermocycle(Instruction):
     """
+    Append a Thermocycle instruction to the list of instructions, with
+    groups being a list of dicts in the formof:
+
+    .. code-block:: python
+
+        "groups": [{
+            "cycles": integer,
+            "steps": [{
+              "duration": duration,
+              "temperature": temperature,
+              "read": boolean // optional (default true)
+            },{
+              "duration": duration,
+              "gradient": {
+                "top": temperature,
+                "bottom": temperature
+              },
+              "read": boolean // optional (default true)
+            }]
+        }],
+
+    Parameters
+    ----------
+    ref : str, Ref
+    groups : list of dicts
+    volume : str, Unit, optional
+    dataref : str, optional
+    dyes : list, optional
+    melting : str, Unit, optional
+
+    Raises
+    ------
+    AttributeError
+        if groups are not properly formatted
 
     """
-    CHANNEL1_DYES  = ["FAM","SYBR"]
-    CHANNEL2_DYES  = ["VIC","HEX","TET","CALGOLD540"]
-    CHANNEL3_DYES  = ["ROX","TXR","CALRED610"]
-    CHANNEL4_DYES  = ["CY5","QUASAR670"]
-    CHANNEL5_DYES  = ["QUASAR705"]
-    CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
+    CHANNEL1_DYES = ["FAM", "SYBR"]
+    CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
+    CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
+    CHANNEL4_DYES = ["CY5", "QUASAR670"]
+    CHANNEL5_DYES = ["QUASAR705"]
+    CHANNEL_DYES = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
     def __init__(self, ref, groups, volume="25:microliter", dataref=None,
@@ -130,7 +166,7 @@ class Thermocycle(Instruction):
 
         if (dyes and not dataref) or (dataref and not dyes):
             raise ValueError("You must specify both a dataref name and the dyes"
-                " to use for qPCR")
+                             " to use for qPCR")
         elif melting and not dyes:
             raise ValueError("A melting step requires a valid dyes object")
 
@@ -144,8 +180,6 @@ class Thermocycle(Instruction):
                 instruction["dyes"] = dyes
 
         instruction["dataref"] = dataref
-
-
         super(Thermocycle, self).__init__(instruction)
 
     @staticmethod
@@ -167,27 +201,44 @@ class Thermocycle(Instruction):
         well_map - [{well:str}]
         """
 
-        dye_names = reduce(lambda x,y: x.union(y), [set(v) for v in well_map.itervalues()])
+        dye_names = reduce(lambda x, y: x.union(y),
+                           [set(v) for v in well_map.itervalues()])
         if Thermocycle.find_invalid_dyes(dye_names):
             raise ValueError("thermocycle instruction supplied the following "
-                "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
-        dye_map = {dye:[] for dye in dye_names}
-        for well,dyes in well_map.iteritems():
-            for dye in dyes: dye_map[dye] += [well]
+                             "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
+        dye_map = {dye: [] for dye in dye_names}
+        for well, dyes in well_map.iteritems():
+            for dye in dyes:
+                dye_map[dye] += [well]
         return dye_map
+
 
 class Incubate(Instruction):
     """
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
-    until it is next used.
+    until it is next used.d
+
+    Parameters
+    ----------
+    ref : Ref, str
+        The container to be incubated
+    where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+        Temperature at which to incubate specified container
+    duration : Unit, str
+        Length of time to incubate container
+    shaking : bool
+        Specify whether or not to shake container if available at the specified
+        temperature
 
     """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 
-    def __init__(self, ref, where, duration, shaking = False):
+    def __init__(self, ref, where, duration, shaking=False):
         if where not in self.WHERE:
-            raise ValueError("specified `where` not contained in: %s" % ", ".join(self.WHERE))
+            raise ValueError("Specified `where` not contained in: %s" % ", ".join(self.WHERE))
+        if where == "ambient" and shaking:
+            raise ValueError("Shaking is not possible for ambient incubation")
         super(Incubate, self).__init__({
             "op": "incubate",
             "object": ref,
@@ -196,8 +247,17 @@ class Incubate(Instruction):
             "shaking": shaking
         })
 
+
 class SangerSeq(Instruction):
     """
+    Sequence specified object
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container containing samples to sequence
+    dataref : str
+        Name for set of sequencing data to be returned
 
     """
     def __init__(self, ref, dataref):
@@ -207,11 +267,27 @@ class SangerSeq(Instruction):
             "dataref": dataref
         })
 
+
 class GelSeparate(Instruction):
     """
+    Separate nucleic acids on an agarose gel.
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container containing samples to gel Separate
+    matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)', 'agarose(12,1.2%)', 'agarose(8,0.8%)'}
+        Agarose concentration and number of wells on gel used for separation
+    ladder : {"ladder1", "ladder2"}
+        Size range of ladder to be used to compare band size to
+    duration : Unit, str
+        Length of time to run gel separation
+    dataref : str
+        Name of dataset containing fragment sizes returned
 
     """
-    MATRICES = ['agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)', 'agarose(12,1.2%)', 'agarose(8,0.8%)']
+    MATRICES = ['agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
+                'agarose(12,1.2%)', 'agarose(8,0.8%)']
     LADDERS = ['ladder1', 'ladder2']
 
     def __init__(self, ref, matrix, ladder, duration, dataref):
@@ -228,8 +304,24 @@ class GelSeparate(Instruction):
             "dataref": dataref
         })
 
+
 class Absorbance(Instruction):
     """
+    Read the absorbance for the indicated wavelength for the indicated
+    wells. Append an Absorbance instruction to the list of instructions for
+    this Protocol object.
+
+    Parameters
+    ----------
+    ref : str, Ref
+    wells : list, WellGroup
+        WellGroup of wells to be measured or a list of well references in
+        the form of ["A1", "B1", "C5", ...]
+    wavelength : str, Unit
+        wavelength of light absorbance to be read for the indicated wells
+    dataref : str
+        name of this specific dataset of measured absorbances
+    flashes : int, optional
 
     """
     def __init__(self, ref, wells, wavelength, dataref, flashes = 25):
@@ -242,11 +334,29 @@ class Absorbance(Instruction):
             "dataref": dataref
         })
 
+
 class Fluorescence(Instruction):
     """
+    Read the fluoresence for the indicated wavelength for the indicated
+    wells.  Append a Fluorescence instruction to the list of instructions
+    for this Protocol object.
+
+    Parameters
+    ----------
+    ref : str, Container
+    wells : list, WellGroup
+        WellGroup of wells to be measured or a list of well references in
+        the form of ["A1", "B1", "C5", ...]
+    excitation : str, Unit
+        wavelength of light used to excite the wells indicated
+    emission : str, Unit
+        wavelength of light to be measured for the indicated wells
+    dataref : str
+        name of this specific dataset of measured absorbances
+    flashes : int, optional
 
     """
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes = 25):
+    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25):
         super(Fluorescence, self).__init__({
             "op": "fluorescence",
             "object": ref,
@@ -257,8 +367,17 @@ class Fluorescence(Instruction):
             "dataref": dataref
         })
 
+
 class Luminesence(Instruction):
     """
+    Read luminesence of indicated wells
+
+    Parameters
+    ----------
+    ref : str, Container
+    wells : list, WellGroup
+        WellGroup or list of wells to be measured
+    dataref : str
 
     """
     def __init__(self, ref, wells, dataref):
@@ -269,8 +388,15 @@ class Luminesence(Instruction):
             "dataref": dataref
             })
 
+
 class Seal(Instruction):
     """
+    Seal indicated container using the automated plate sealer.
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container to be sealed
 
     """
     def __init__(self, ref):
@@ -279,8 +405,15 @@ class Seal(Instruction):
             "object": ref
         })
 
+
 class Unseal(Instruction):
     """
+    Remove seal from indicated container using the automated plate unsealer.
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container to be unsealed
 
     """
     def __init__(self, ref):
@@ -289,19 +422,39 @@ class Unseal(Instruction):
             "object": ref
         })
 
+
 class Cover(Instruction):
     """
+    Place specified lid type on specified container
+
+    Parameters
+    ----------
+    ref : str
+        Container to be convered
+    lid : {"standard", "universal", "low-evaporation"}
+        Type of lid to cover container with
 
     """
-    def __init__(self, ref, lid):
+    LIDS = ["standard", "universal", "low-evaporation"]
+
+    def __init__(self, ref, lid="standard"):
+        if lid and lid not in self.LIDS:
+            raise ValueError("%s is not a valid lid type" % lid)
         super(Cover, self).__init__({
             "op": "cover",
             "object": ref,
             "lid": lid
         })
 
+
 class Uncover(Instruction):
     """
+    Remove lid from specified container
+
+    Parameters
+    ----------
+    ref : str
+        Container to remove lid from
 
     """
     def __init__(self, ref):

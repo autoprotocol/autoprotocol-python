@@ -24,7 +24,13 @@ class Well(object):
         """
         Set the theoretical volume of liquid in this well.
 
-        Used by Protocol.fill_wells()."""
+        Used by Protocol.fill_wells().
+
+        """
+        if Unit.fromstring(vol) > Unit(self.container.container_type.well_volume_ul,
+                                       "microliter"):
+            raise ValueError("Theoretical volume you are trying to set "
+                             "exceeds the maximum volume of this well")
         self.volume = Unit.fromstring(vol)
         return self
 

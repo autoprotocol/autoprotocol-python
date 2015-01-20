@@ -259,7 +259,8 @@ class Protocol(object):
             for well in dest.wells:
                 opts["to"].append(
                     {"well": well, "volume": volume})
-                source.volume -= volume
+                if source.volume:
+                    source.volume -= volume
                 if well.volume:
                     well.volume += volume
                 else:

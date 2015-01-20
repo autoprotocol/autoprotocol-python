@@ -239,52 +239,27 @@ class Protocol(object):
         """
         opts = {}
         opts["allow_carryover"] = allow_carryover
-        if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            dists = self.fill_wells(dest, source, volume)
-            groups = []
-            for d in dists:
-                opts = {}
-                if mix_before:
-                    if not mix_vol:
-                        raise RuntimeError("No mix volume specified for "
-                                           "mix_before")
-                    opts["mix_before"] = {
-                        "volume": mix_vol,
-                        "repetitions": repetitions,
-                        "speed": flowrate
-                    }
-                if allow_carryover:
-                    opts["allow_carryover"] = allow_carryover
-                opts["from"] = d["from"]
-                opts["to"] = d["to"]
-                groups.append(
-                    {"distribute": opts}
-                )
-            self.pipette(groups)
-        elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            opts["from"] = source
-            opts["to"] = []
-            for well in dest.wells:
-                opts["to"].append(
-                    {"well": well, "volume": volume})
-                if source.volume:
-                    source.volume -= volume
-                if well.volume:
-                    well.volume += volume
-                else:
-                    well.set_volume(volume)
-            self.pipette([{"distribute": opts}])
-        elif isinstance(source, Well) and isinstance(dest, Well):
-            volume = Unit.fromstring(volume)
-            opts["from"] = source
-            opts["to"] = []
-            opts["to"].append({"well": dest,
-                               "volume": volume})
-            source.volume -= volume
-            dest.volume += volume
-            self.pipette([{"distribute": opts}])
-        else:
-            raise ValueError("Source and dest must be WellGroups or Wells")
+        dists = self.fill_wells(dest, source, volume)
+        groups = []
+        for d in dists:
+            opts = {}
+            if mix_before:
+                if not mix_vol:
+                    raise RuntimeError("No mix volume specified for "
+                                       "mix_before")
+                opts["mix_before"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
+            if allow_carryover:
+                opts["allow_carryover"] = allow_carryover
+            opts["from"] = d["from"]
+            opts["to"] = d["to"]
+            groups.append(
+                {"distribute": opts}
+            )
+        self.pipette(groups)
 
     def transfer(self, source, dest, volume, mix_after=False, mix_before=False,
                  mix_vol=None, repetitions=10,
@@ -752,12 +727,13 @@ class Protocol(object):
         """
         src = None
         distributes = []
+        src_group = WellGroup(src_group)
+        dst_group = WellGroup(dst_group)
         if isinstance(volume, list) and len(volume) != len(dst_group.wells):
             raise RuntimeError("List length of volumes provided for distribution"
                                " does not match the number of destination wells")
         elif not isinstance(volume, list):
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)
-
         else:
             volume = [Unit.fromstring(x) for x in volume]
         for d,v in list(zip(dst_group.wells, volume)):
@@ -767,8 +743,8 @@ class Protocol(object):
                     (w for w in src_group.wells if w.volume > v), None)
                 if src is None:
                     raise RuntimeError(
-                        "no well in source group has more than %s" %
-                        str(v))
+                        "no well in source group has more than %s %s(s)" %
+                        (str(v).rsplit(":")[0],str(v).rsplit(":")[1]))
                 distributes.append({
                     "from": src,
                     "to": []

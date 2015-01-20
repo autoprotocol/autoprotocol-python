@@ -215,8 +215,14 @@ class Protocol(object):
             drawn from the wells specified using the fill_wells function
         dest : Well, WellGroup
             Well or wells to distribute liquid to
-        volume : str, Unit
-            volume of liquid to be distributed to each destination well
+        volume : str, Unit, list
+            Volume of liquid to be distributed to each destination well.  If a
+            single string or unit is passed to represent the volume, that volume
+            will be distributed to each destination well.  If a list of volumes
+            is provided, that volume will be distributed to the corresponding
+            well in the WellGroup provided. The length of the volumes list must
+            therefore match the number of wells in the destination WellGroup if
+            destination wells are recieving different volumes.
         allow_carryover : bool, optional
             specify whether the same pipette tip can be used to aspirate more
             liquid from source wells after the previous volume aspirated has
@@ -225,21 +231,23 @@ class Protocol(object):
         Raises
         ------
         RuntimeError
-            if volume is not expressed either as a string with the format
-            "value:unit" or as a Unit object
+            If no mix volume is specified for the mix_before instruction
+        ValueError
+            If source and destination well(s) is/are not expressed as either
+            Wells or WellGroups
 
         """
         opts = {}
         opts["allow_carryover"] = allow_carryover
-        volume = Unit.fromstring(volume)
         if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            dists = self.fill_wells(dest, source, Unit.fromstring(volume))
+            dists = self.fill_wells(dest, source, volume)
             groups = []
-            opts = {}
             for d in dists:
+                opts = {}
                 if mix_before:
                     if not mix_vol:
-                        mix_vol = d["to"][0]["volume"]
+                        raise RuntimeError("No mix volume specified for "
+                                           "mix_before")
                     opts["mix_before"] = {
                         "volume": mix_vol,
                         "repetitions": repetitions,
@@ -267,6 +275,7 @@ class Protocol(object):
                     well.set_volume(volume)
             self.pipette([{"distribute": opts}])
         elif isinstance(source, Well) and isinstance(dest, Well):
+            volume = Unit.fromstring(volume)
             opts["from"] = source
             opts["to"] = []
             opts["to"].append({"well": dest,
@@ -275,7 +284,7 @@ class Protocol(object):
             dest.volume += volume
             self.pipette([{"distribute": opts}])
         else:
-            raise ValueError("source and dest must be WellGroups or Wells")
+            raise ValueError("Source and dest must be WellGroups or Wells")
 
     def transfer(self, source, dest, volume, mix_after=False, mix_before=False,
                  mix_vol=None, repetitions=10,
@@ -729,40 +738,50 @@ class Protocol(object):
         Returns
         -------
         distirbutes : list
-
+            List of distribute groups
 
         Raises
         ------
         RuntimeError
             if source wells run out of liquid before distributing to all
             designated destination wells
+        RuntimeError
+            if length of list of volumes does not match the number of destination
+            wells to be distributed to
 
         """
         src = None
         distributes = []
+        if isinstance(volume, list) and len(volume) != len(dst_group.wells):
+            raise RuntimeError("List length of volumes provided for distribution"
+                               " does not match the number of destination wells")
+        elif not isinstance(volume, list):
+            volume = [Unit.fromstring(volume)]*len(dst_group.wells)
 
-        for d in dst_group.wells:
-            if len(distributes) == 0 or src.volume < volume:
+        else:
+            volume = [Unit.fromstring(x) for x in volume]
+        for d,v in list(zip(dst_group.wells, volume)):
+            if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
                 src = next(
-                    (w for w in src_group.wells if w.volume > volume), None)
+                    (w for w in src_group.wells if w.volume > v), None)
                 if src is None:
                     raise RuntimeError(
                         "no well in source group has more than %s" %
-                        str(volume))
+                        str(v))
                 distributes.append({
                     "from": src,
                     "to": []
                 })
             distributes[-1]["to"].append({
                 "well": d,
-                "volume": str(volume)
+                "volume": str(v)
             })
-            src.volume -= volume
+            src.volume -= v
             if d.volume:
-                d.volume += volume
+                d.volume += v
             else:
-                d.volume = volume
+                d.volume = v
         return distributes
 
     def _refify(self, op_data):

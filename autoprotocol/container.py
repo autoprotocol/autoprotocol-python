@@ -18,7 +18,8 @@ class Well(object):
     def __init__(self, container, index):
         self.container = container
         self.index = index
-        self.volume = None
+        self.volume = Unit(self.container.container_type.well_volume_ul,
+                           "microliter")
 
     def set_volume(self, vol):
         """
@@ -62,6 +63,10 @@ class WellGroup(object):
     """
 
     def __init__(self, wells):
+        if isinstance(wells, Well):
+            wells = [wells]
+        elif isinstance(wells, WellGroup):
+            wells = wells.wells
         self.wells = wells
 
     def set_volume(self, vol):

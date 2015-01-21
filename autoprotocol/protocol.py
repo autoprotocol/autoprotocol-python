@@ -261,9 +261,9 @@ class Protocol(object):
             )
         self.pipette(groups)
 
-    def transfer(self, source, dest, volume, mix_after=False, mix_before=False,
-                 mix_vol=None, repetitions=10,
-                 flowrate="100:microliter/second"):
+    def transfer(self, source, dest, volume, one_source=False, one_tip=False,
+                 mix_after=False, mix_before=False, mix_vol=None,
+                 repetitions=10, flowrate="100:microliter/second"):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step.
@@ -284,38 +284,61 @@ class Protocol(object):
             than Well or WellGroup objects
 
         """
+        volume = [Unit.fromstring(volume)]
+        source = WellGroup(source)
+        dest = WellGroup(dest)
         opts = []
-        volume = Unit.fromstring(volume)
-        if mix_after and not mix_vol:
-            mix_vol = volume
-        elif volume > Unit(900, "microliter"):
-            diff = Unit.fromstring(volume) - Unit(900, "microliter")
-            self.transfer(source, dest, "900:microliter", mix_after,
-                          mix_vol, repetitions, flowrate)
-            self.transfer(source, dest, diff, mix_after, mix_vol, repetitions,
-                          flowrate)
+        if len(volume) != len(dest.wells):
+            volume = volume * len(dest.wells)
+        if (len(source.wells) != len (dest.wells)) and not one_source:
+            raise RuntimeError("To transfer liquid from multiple wells "
+                               "containing the same source, set one_source to "
+                               "True.  Otherwise, you must specify the same "
+                               "number of source and destinationi wells to "
+                               "do a one-to-one transfer.")
+        elif one_source:
+            sources = []
+            for idx, d in enumerate(dest.wells):
+                for s in source.wells:
+                    while s.volume > volume[idx] and (len(sources) < len(dest.wells)):
+                        sources.append(s)
+                        s.volume -= volume[idx]
+            source = WellGroup(sources)
+        for s,d,v in list(zip(source.wells, dest.wells, volume)):
+            if mix_after and not mix_vol:
+                mix_vol = v
+            elif v > Unit(900, "microliter"):
+                diff = Unit.fromstring(vol) - Unit(900, "microliter")
+                self.transfer(s, d, "900:microliter", mix_after,
+                              mix_vol, repetitions, flowrate)
+                self.transfer(s, d, diff, one_source, one_tip, mix_after,
+                              mix_vol, repetitions, flowrate)
+            else:
+                xfer = {
+                    "from": s,
+                    "to": d,
+                    "volume": v
+                }
+                if mix_before:
+                    xfer["mix_before"] = {
+                        "volume": mix_vol,
+                        "repetitions": repetitions,
+                        "speed": flowrate
+                    }
+                if mix_after:
+                    xfer["mix_after"] = {
+                        "volume": mix_vol,
+                        "repetitions": repetitions,
+                        "speed": flowrate
+                    }
+                else:
+                    opts.append(xfer)
+                    d.set_volume(v)
+        if one_tip:
+            self.append(Pipette([{"transfer": opts}]))
         else:
-            xfer = {
-                "from": source,
-                "to": dest,
-                "volume": volume
-            }
-            if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if mix_after:
-                xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            opts.append(xfer)
-        if opts:
-            dest.set_volume(volume)
-            self.pipette([{"transfer": opts}])
+            for x in opts:
+                self.pipette([{"transfer": x}])
 
 
     def serial_dilute_rowwise(self, source, well_group, vol,
@@ -618,14 +641,15 @@ class Protocol(object):
             wells = wells.indices()
         self.instructions.append(Luminesence(ref, wells, dataref))
 
-    def gel_separate(self, ref, matrix, ladder, duration, dataref):
+    def gel_separate(self, wells, matrix, ladder, duration, dataref):
         """
         Separate nucleic acids on an agarose gel.
 
         Parameters
         ----------
-        ref : str, Container
-            reference to be gel separated
+        wells : list, WellGroup
+            List of string well references or WellGroup containing wells to be
+            separated on gel
         matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
                   'agarose(12,1.2%)', 'agarose(8,0.8%)'}
             matrix in which to gel separate samples
@@ -636,7 +660,7 @@ class Protocol(object):
 
         """
         self.instructions.append(
-            GelSeparate(ref, matrix, ladder, duration, dataref))
+            GelSeparate(wells, matrix, ladder, duration, dataref))
 
     def seal(self, ref):
         """

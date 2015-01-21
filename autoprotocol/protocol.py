@@ -227,6 +227,17 @@ class Protocol(object):
             specify whether the same pipette tip can be used to aspirate more
             liquid from source wells after the previous volume aspirated has
             been depleted
+        mix_before : bool, optional
+            Specify whether to mix the liquid in the destination well before
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before liquid is distributed.
+        repetitions : int, optional
+            Number of times to aspirate and dispense in order to mix
+            liquid in a well before liquid is distributed.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before liquid is distributed
 
         Raises
         ------
@@ -304,7 +315,7 @@ class Protocol(object):
             before and/or after each transfer step.
         repetitions : int, optional
             Number of times to aspirate and dispense in order to mix
-            liquid in a wells before and/or after each transfer step.
+            liquid in well before and/or after each transfer step.
         flowrate : str, Unit, optional
             Speed at which to mix liquid in well before and/or after each
             transfer step
@@ -407,10 +418,10 @@ class Protocol(object):
             Final volume of each well in the dilution series, most concentrated
             liquid will be transfered to the starting well with double this
             volume
-        mix_after : bool
+        mix_after : bool, optional
             If set to True, each well will be mixed after liquid is transfered
             to it.
-        reverse : bool
+        reverse : bool, optional
             If set to True, liquid will be most concentrated in the well in the
             dilution series with the highest index
 
@@ -635,7 +646,7 @@ class Protocol(object):
 
         """
         if isinstance(wells, WellGroup):
-            wells = wells.indices(human=True)
+            wells = wells.indices()
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes))
 
@@ -735,7 +746,7 @@ class Protocol(object):
         ----------
         ref : str
             Container to be convered
-        lid : {"standard", "universal", "low-evaporation"}
+        lid : {"standard", "universal", "low-evaporation"}, optional
             Type of lid to cover container with
 
         """

@@ -93,11 +93,17 @@ class Thermocycle(Instruction):
     Parameters
     ----------
     ref : str, Ref
+        Container to be thermocycled
     groups : list of dicts
+        List of thermocycling instructions formatted as above
     volume : str, Unit, optional
+        Volume contained in wells being thermocycled
     dataref : str, optional
+        Name of dataref representing read data if performing qPCR
     dyes : list, optional
+        Dye to utilize for qPCR reading
     melting : str, Unit, optional
+        Temperature at which to perform a melting curve
 
     Raises
     ------
@@ -185,7 +191,7 @@ class Incubate(Instruction):
         Temperature at which to incubate specified container
     duration : Unit, str
         Length of time to incubate container
-    shaking : bool
+    shaking : bool, optional
         Specify whether or not to shake container if available at the specified
         temperature
 
@@ -389,7 +395,7 @@ class Cover(Instruction):
     ----------
     ref : str
         Container to be convered
-    lid : {"standard", "universal", "low-evaporation"}
+    lid : {"standard", "universal", "low-evaporation"}, optional
         Type of lid to cover container with
 
     """

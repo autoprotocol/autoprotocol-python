@@ -266,37 +266,78 @@ class Protocol(object):
                  repetitions=10, flowrate="100:microliter/second"):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step.
+        is used between each transfer step by default unless one_tip is True.
 
         Parameters
         ----------
+        source : Well, WellGroup
+            Well or wells to transfer liquid from.  If multiple source wells
+            are supplied and one_source is set to True, liquid will be
+            transfered from each source well specified as long as it contains
+            sufficient volume. Otherwise, the number of source wells specified
+            must match the number of destination wells specified and liquid
+            will be transfered from each source well to its corresponding
+            destination well.
+        dest : Well, WellGroup
+            Well or WellGroup to which to transfer liquid.  The number of
+            destination wells must match the number of source wells specified
+            unless one_source is set to True.
+        volume : str, Unit, list
+            The volume(s) of liquid to be transferred from source wells to
+            destination wells.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of destination wells given unless
+            the same volume is to be transferred to each destination well.
+        one_source : bool, optional
+            Specify whether liquid is to be transferred to destination wells
+            from a group of wells all containing the same substance.
+        one_tip : bool, optional
+            Specify whether all transfer steps will use the same tip or not.
+        mix_after : bool, optional
+            Specify whether to mix the liquid in the destination well after
+            liquid is transferred.
+        mix_before : bool, optional
+            Specify whether to mix the liquid in the destination well before
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before and/or after each transfer step.
+        repetitions : int, optional
+            Number of times to aspirate and dispense in order to mix
+            liquid in a wells before and/or after each transfer step.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before and/or after each
+            transfer step
+
 
         Raises
         ------
         RuntimeError
+            If more than one volume is specified as a list but the list length
+            does not match the number of destination wells given.
+        RuntimeError
             if transferring from WellGroup to WellGroup that have different
-            number of wells
-        RuntimeError
-            if volume is passed as anything other than a string in the format
-            "value:unit" or as a Unit object
-        RuntimeError
-            if source and/or destination wells are passed as anything other
-            than Well or WellGroup objects
+            number of wells and one_source is not True
 
         """
-        volume = [Unit.fromstring(volume)]
         source = WellGroup(source)
         dest = WellGroup(dest)
+        volume = [Unit.fromstring(volume)]
         opts = []
-        if len(volume) != len(dest.wells):
+        if len(volume) == 1:
             volume = volume * len(dest.wells)
+        else:
+            raise RuntimeError("Unless the same volume of liquid is being "
+                               "transferred to each destination well, each "
+                               "destination well must have a corresponding "
+                               "volume")
         if (len(source.wells) != len (dest.wells)) and not one_source:
             raise RuntimeError("To transfer liquid from multiple wells "
                                "containing the same source, set one_source to "
                                "True.  Otherwise, you must specify the same "
                                "number of source and destinationi wells to "
                                "do a one-to-one transfer.")
-        elif one_source:
+        else:
             sources = []
             for idx, d in enumerate(dest.wells):
                 for s in source.wells:

@@ -56,48 +56,6 @@ class Pipette(Instruction):
             "groups": groups
         })
 
-    @staticmethod
-    def _transferGroup(src, dest, vol, mix_after=False,
-                       mix_vol=None, repetitions=10,
-                       flowrate="100:microliter/second"):
-
-        group = {
-            "from": src,
-            "to": dest,
-            "volume": vol,
-        }
-        if mix_after:
-            group["mix_after"] = {
-                "volume": mix_vol,
-                "repetitions": repetitions,
-                "speed": flowrate
-            }
-        return group
-
-    @staticmethod
-    def transfers(srcs, dests, vols, mix_after=False,
-                  mix_vol=None, repetitions=10,
-                  flowrate="100:microliter/second"):
-        """
-        Return a valid list of pipette transfer groups.  This can be passed
-        directly to the Pipette constructor as the "groups" argument.
-
-        Parameters
-        ----------
-        srcs : list
-            List of ":ref/:well" to use as the transfer sources.
-        dests : list
-            List of ":ref/:well" to use as the transfer destinations
-        vols : list
-            List of volumes in microliters.  These should be bare numbers.
-
-        """
-        return [{
-            "transfer": [Pipette._transferGroup(s, d, v, mix_after, mix_vol or v,
-                                                repetitions, flowrate) for
-                         (s, d, v) in zip(srcs, dests, vols)],
-        }]
-
 
 class Spin(Instruction):
     def __init__(self, ref, speed, duration):
@@ -290,14 +248,14 @@ class GelSeparate(Instruction):
                 'agarose(12,1.2%)', 'agarose(8,0.8%)']
     LADDERS = ['ladder1', 'ladder2']
 
-    def __init__(self, ref, matrix, ladder, duration, dataref):
+    def __init__(self, wells, matrix, ladder, duration, dataref):
         if matrix not in self.MATRICES:
             raise ValueError("specified `matrix` not contained in: %s" % ", ".join(self.MATRICES))
         if ladder not in self.LADDERS:
             raise ValueError("specified `ladder` not contained in: %s" % ", ".join(self.LADDERS))
         super(GelSeparate, self).__init__({
             "op": "gel_separate",
-            "ref": ref,
+            "objects": wells,
             "matrix": matrix,
             "ladder": ladder,
             "duration": duration,

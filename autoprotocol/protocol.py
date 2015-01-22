@@ -203,7 +203,7 @@ class Protocol(object):
 
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
-                 flowrate="100:microliter/second"):
+                   flowrate="100:microliter/second"):
         """
         Distribute liquid from source well(s) to destination wells(s)
 
@@ -333,8 +333,9 @@ class Protocol(object):
         """
         source = WellGroup(source)
         dest = WellGroup(dest)
-        volume = [Unit.fromstring(volume)]
         opts = []
+        if isinstance(volume,str):
+            volume = [Unit.fromstring(volume)]
         if len(volume) == 1:
             volume = volume * len(dest.wells)
         else:
@@ -365,32 +366,31 @@ class Protocol(object):
                               mix_vol, repetitions, flowrate)
                 self.transfer(s, d, diff, one_source, one_tip, mix_after,
                               mix_vol, repetitions, flowrate)
-            else:
-                xfer = {
-                    "from": s,
-                    "to": d,
-                    "volume": v
+            xfer = {
+                "from": s,
+                "to": d,
+                "volume": v
+            }
+            if mix_before:
+                xfer["mix_before"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
                 }
-                if mix_before:
-                    xfer["mix_before"] = {
-                        "volume": mix_vol,
-                        "repetitions": repetitions,
-                        "speed": flowrate
-                    }
-                if mix_after:
-                    xfer["mix_after"] = {
-                        "volume": mix_vol,
-                        "repetitions": repetitions,
-                        "speed": flowrate
-                    }
-                else:
-                    opts.append(xfer)
-                    d.set_volume(v)
+            if mix_after:
+                xfer["mix_after"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
+            else:
+                opts.append(xfer)
+                d.set_volume(v)
         if one_tip:
             self.append(Pipette([{"transfer": opts}]))
         else:
             for x in opts:
-                self.pipette([{"transfer": x}])
+                self.pipette([{"transfer": [x]}])
 
 
     def serial_dilute_rowwise(self, source, well_group, vol,
@@ -788,7 +788,7 @@ class Protocol(object):
 
         Returns
         -------
-        distirbutes : list
+        distributes : list
             List of distribute groups
 
         Raises
@@ -805,13 +805,13 @@ class Protocol(object):
         distributes = []
         src_group = WellGroup(src_group)
         dst_group = WellGroup(dst_group)
-        if isinstance(volume, list) and len(volume) != len(dst_group.wells):
-            raise RuntimeError("List length of volumes provided for distribution"
+        if isinstance(volume, list):
+            if len(volume) != len(dst_group.wells):
+                raise RuntimeError("List length of volumes provided for distribution"
                                " does not match the number of destination wells")
-        elif not isinstance(volume, list):
-            volume = [Unit.fromstring(volume)]*len(dst_group.wells)
-        else:
             volume = [Unit.fromstring(x) for x in volume]
+        else:
+            volume = [Unit.fromstring(volume)]*len(dst_group.wells)
         for d,v in list(zip(dst_group.wells, volume)):
             if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
@@ -827,7 +827,7 @@ class Protocol(object):
                 })
             distributes[-1]["to"].append({
                 "well": d,
-                "volume": str(v)
+                "volume": v
             })
             src.volume -= v
             if d.volume:

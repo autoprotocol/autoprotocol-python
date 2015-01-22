@@ -334,7 +334,7 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
-        if isinstance(volume,str):
+        if isinstance(volume,str) or isinstance(volume,Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
         elif isinstance(volume, list) and len(volume) == len(dest.wells):
             volume = map(lambda x: Unit.fromstring(x), volume)

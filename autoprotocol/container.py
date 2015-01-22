@@ -18,8 +18,7 @@ class Well(object):
     def __init__(self, container, index):
         self.container = container
         self.index = index
-        self.volume = Unit(self.container.container_type.well_volume_ul,
-                           "microliter")
+        self.volume = None
 
     def set_volume(self, vol):
         """

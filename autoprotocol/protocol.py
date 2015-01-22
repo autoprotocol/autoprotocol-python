@@ -334,7 +334,7 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
-        if isinstance(volume,str) or isinstance(volume,Unit):
+        if isinstance(volume,str) or isinstance(volume, Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
         elif isinstance(volume, list) and len(volume) == len(dest.wells):
             volume = map(lambda x: Unit.fromstring(x), volume)
@@ -343,7 +343,7 @@ class Protocol(object):
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume")
-        if (len(source.wells) != len (dest.wells)) and not one_source:
+        if (len(volume) != len (dest.wells)) and (len(dest.wells) != len(volume)) and not one_source:
             raise RuntimeError("To transfer liquid from multiple wells "
                                "containing the same source, set one_source to "
                                "True.  Otherwise, you must specify the same "
@@ -360,7 +360,7 @@ class Protocol(object):
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
                 mix_vol = v
-            elif v > Unit(900, "microliter"):
+            if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(vol) - Unit(900, "microliter")
                 self.transfer(s, d, "900:microliter", mix_after,
                               mix_vol, repetitions, flowrate)
@@ -383,9 +383,13 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
+            opts.append(xfer)
+            if d.volume:
+                d.volume += v
             else:
-                opts.append(xfer)
-                d.set_volume(v)
+                d.volume = v
+            if s.volume:
+                s.volume -= v
         if one_tip:
             self.append(Pipette([{"transfer": opts}]))
         else:

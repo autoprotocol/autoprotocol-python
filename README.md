@@ -32,7 +32,7 @@ reaction_plate = p.ref("reaction_plate", cont_type="96-flat", storage="warm_37")
 p.distribute(medium.well(0), reaction_plate.wells_from(0,4), "190:microliter")
 #transfer bacteria from source wells to reaction wells
 p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4),
-    "10:microliter")
+    ["10:microliter", "20:microliter", "30:microliter", "40:microliter"])
 #incubate bacteria at 37 degrees for 5 hours
 p.incubate(reaction_plate, "warm_37", "5:hour")
 #read absorbance of the first four wells on the reaction plate at 600 nanometers
@@ -70,24 +70,23 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
           "distribute": {
             "to": [
               {
-                "volume": "190:microliter",
+                "volume": "190.0:microliter",
                 "well": "reaction_plate/0"
               },
               {
-                "volume": "190:microliter",
+                "volume": "190.0:microliter",
                 "well": "reaction_plate/1"
               },
               {
-                "volume": "190:microliter",
+                "volume": "190.0:microliter",
                 "well": "reaction_plate/2"
               },
               {
-                "volume": "190:microliter",
+                "volume": "190.0:microliter",
                 "well": "reaction_plate/3"
               }
             ],
-            "from": "medium/0",
-            "allow_carryover": false
+            "from": "medium/0"
           }
         },
         {
@@ -102,27 +101,27 @@ calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.a
         {
           "transfer": [
             {
-              "volume": "10.0:microliter",
+              "volume": "20.0:microliter",
               "to": "reaction_plate/1",
-              "from": "bacteria/1"
+              "from": "bacteria/0"
             }
           ]
         },
         {
           "transfer": [
             {
-              "volume": "10.0:microliter",
+              "volume": "30.0:microliter",
               "to": "reaction_plate/2",
-              "from": "bacteria/2"
+              "from": "bacteria/0"
             }
           ]
         },
         {
           "transfer": [
             {
-              "volume": "10.0:microliter",
+              "volume": "40.0:microliter",
               "to": "reaction_plate/3",
-              "from": "bacteria/3"
+              "from": "bacteria/0"
             }
           ]
         }

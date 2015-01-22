@@ -335,9 +335,9 @@ class Protocol(object):
         dest = WellGroup(dest)
         opts = []
         if isinstance(volume,str):
-            volume = [Unit.fromstring(volume)]
-        if len(volume) == 1:
-            volume = volume * len(dest.wells)
+            volume = [Unit.fromstring(volume)] * len(dest.wells)
+        elif isinstance(volume, list) and len(volume) == len(dest.wells):
+            volume = map(lambda x: Unit.fromstring(x), volume)
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "

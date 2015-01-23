@@ -334,6 +334,8 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
+        if len(source.wells) > 1 and len(dest.wells) == 1:
+            dest = WellGroup(dest.wells * len(source.wells))
         if isinstance(volume,str) or isinstance(volume, Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
         elif isinstance(volume, list) and len(volume) == len(dest.wells):
@@ -349,7 +351,7 @@ class Protocol(object):
                                "True.  Otherwise, you must specify the same "
                                "number of source and destinationi wells to "
                                "do a one-to-one transfer.")
-        else:
+        elif one_source:
             sources = []
             for idx, d in enumerate(dest.wells):
                 for s in source.wells:
@@ -357,6 +359,8 @@ class Protocol(object):
                         sources.append(s)
                         s.volume -= volume[idx]
             source = WellGroup(sources)
+
+
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
                 mix_vol = v
@@ -436,33 +440,33 @@ class Protocol(object):
         source_well = well_group.wells[0]
         begin_dilute = well_group.wells[0]
         end_dilute = well_group.wells[-1]
-        wells_to_dilute = container.wells_from(begin_dilute,
+        wells_to_dilute = well_group[0].container.wells_from(begin_dilute,
                                     end_dilute.index-begin_dilute.index + 1)
-        srcs = []
-        dests = []
+        srcs = WellGroup([])
+        dests = WellGroup([])
         vols = []
         if reverse:
             source_well = well_group.wells[-1]
             begin_dilute = well_group.wells[-1]
             end_dilute = well_group.wells[0]
-            wells_to_dilute = container.wells_from(end_dilute,
+            wells_to_dilute = well_group[0].container.wells_from(end_dilute,
                                     begin_dilute.index-end_dilute.index + 1)
-        self.transfer(source, source_well,
+        self.transfer(source.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), source_well,
                       Unit.fromstring(vol)*Unit(2, "microliter"))
         if reverse:
             while len(wells_to_dilute.wells) >= 2:
                 srcs.append(wells_to_dilute.wells.pop())
                 dests.append(wells_to_dilute.wells[-1])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), dests, vols, mix_after=mix_after)
+
         else:
             for i in range(1, len(wells_to_dilute.wells)):
                 srcs.append(wells_to_dilute.wells[i-1])
                 dests.append(wells_to_dilute[i])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), dests, vols, mix_after=mix_after)
+
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):

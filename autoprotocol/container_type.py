@@ -2,6 +2,12 @@ import re
 from collections import namedtuple
 from .container import Well
 
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
 
 class ContainerType(namedtuple("ContainerType",
                     ["name", "is_tube", "well_count", "well_type",

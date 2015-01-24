@@ -4,6 +4,13 @@ from .unit import Unit
 from .container import WellGroup
 import argparse
 
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 
 def convert_param(protocol, val, type):
     if type == 'aliquot':

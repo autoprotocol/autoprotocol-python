@@ -1,5 +1,11 @@
 import json
 
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
 
 class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON.

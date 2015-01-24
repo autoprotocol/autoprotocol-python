@@ -1,5 +1,12 @@
 from .unit import Unit
 
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 class Well(object):
     """
     A Well object describes a single location within a container.
@@ -127,27 +134,24 @@ class WellGroup(object):
         return self.wells[key]
 
     def __len__(self):
-        """
-        Return the number of Wells in a WellGroup
+        """Return the number of Wells in a WellGroup
 
         """
         return len(self.wells)
 
     def __repr__(self):
-        """
-        Return a string representation of a WellGroup
+        """Return a string representation of a WellGroup
 
         """
         return "WellGroup(%s)" % (str(self.wells))
 
     def __add__(self, other):
         """
-        Append another WellGroup to this WellGroup
+        Append wells from another WellGroup to this WellGroup
 
         Parameters
         ----------
         other : WellGroup
-
 
         """
         if not isinstance(other, WellGroup):

@@ -20,6 +20,11 @@ class ContainerType(namedtuple("ContainerType",
         robot-friendly rowwise integer (left-to-right, top-to-bottom,
         starting at 0 = A1).
 
+        Parameters
+        ----------
+        well_ref : str, int
+          Well reference to be robotized.
+
         """
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
@@ -42,6 +47,11 @@ class ContainerType(namedtuple("ContainerType",
         Return the human readable form of an integer well index based on the
         well format of this ContainerType.
 
+        Parameters
+        ----------
+        well_ref : int
+          Integer well reference to be humanized
+
         """
         row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
@@ -49,6 +59,10 @@ class ContainerType(namedtuple("ContainerType",
     def decompose(self, idx):
         """Return the (col, row) corresponding to the given well index.
 
+        Parameters
+        ----------
+        idx : int, str
+          Well reference to be decomposed.
         """
         idx = self.robotize(idx)
         return (idx / self.col_count, idx % self.col_count)

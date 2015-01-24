@@ -26,6 +26,11 @@ class Well(object):
 
         Used by Protocol.fill_wells().
 
+        Parameters
+        ----------
+        vol : str, Unit
+        Theoretical volume to indicate for this well.
+
         """
 
         if Unit.fromstring(vol) > Unit(self.container.container_type.well_volume_ul,
@@ -41,8 +46,7 @@ class Well(object):
         return self.container.humanize(self.index)
 
     def __repr__(self):
-        """
-
+        """Return a string representation of a Well
         """
         return "Well(%s, %s, %s)" % (str(self.container), str(self.index),
                                      str(self.volume))
@@ -71,9 +75,6 @@ class WellGroup(object):
     def set_volume(self, vol):
         """
         Set the volume of every well in the group to vol.
-        If a WellGroup will be used in a Protocol.distribute() call,
-        the wells in that group must have their volume specified using
-        set_volume().
 
         Parameters
         ----------
@@ -87,14 +88,8 @@ class WellGroup(object):
 
     def indices(self):
         """
-        Return the indices of the wells in the group, given that all of the
-        wells belong to the same container.
-
-        Parameters
-        ----------
-        human : bool, optionally
-            Specify whether list of wells should be in robot (0,1,2...) or
-            humanized ("A1", "A2", "A3"...) form
+        Return the indices of the wells in the group in human-readable form,
+        given that all of the wells belong to the same container.
 
         """
         indices = []
@@ -300,8 +295,8 @@ class Container(object):
 
     def inner_wells(self, columnwise=False):
         """
-        Return a WellGroup of all wells on a plate excluding wells in the top and
-        bottom rows and in the first and last columns
+        Return a WellGroup of all wells on a plate excluding wells in the top
+        and bottom rows and in the first and last columns
 
         """
         num_cols = self.container_type.col_count
@@ -333,7 +328,7 @@ class Container(object):
             Starting well specified as a Well object, a human-readable well
             index or an integer well index
         num : int
-            number of wells to include
+            Number of wells to include
         columnwise : bool, optional
 
         """

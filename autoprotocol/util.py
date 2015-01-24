@@ -1,3 +1,10 @@
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.

@@ -320,7 +320,6 @@ class Protocol(object):
             Speed at which to mix liquid in well before and/or after each
             transfer step
 
-
         Raises
         ------
         RuntimeError
@@ -359,7 +358,6 @@ class Protocol(object):
                         sources.append(s)
                         s.volume -= volume[idx]
             source = WellGroup(sources)
-
 
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
@@ -458,14 +456,16 @@ class Protocol(object):
                 srcs.append(wells_to_dilute.wells.pop())
                 dests.append(wells_to_dilute.wells[-1])
                 vols.append(vol)
-            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), dests, vols, mix_after=mix_after)
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
 
         else:
             for i in range(1, len(wells_to_dilute.wells)):
                 srcs.append(wells_to_dilute.wells[i-1])
                 dests.append(wells_to_dilute[i])
                 vols.append(vol)
-            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), dests, vols, mix_after=mix_after)
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
 
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
@@ -815,8 +815,9 @@ class Protocol(object):
         dst_group = WellGroup(dst_group)
         if isinstance(volume, list):
             if len(volume) != len(dst_group.wells):
-                raise RuntimeError("List length of volumes provided for distribution"
-                               " does not match the number of destination wells")
+                raise RuntimeError("List length of volumes provided for "
+                                   "distribution does not match the number of "
+                                   " destination wells")
             volume = [Unit.fromstring(x) for x in volume]
         else:
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)

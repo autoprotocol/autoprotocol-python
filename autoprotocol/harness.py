@@ -60,45 +60,9 @@ class Manifest(object):
 
 def run(fn, protocol_name=None):
     """
-    Take configuration JSON file from the command line and run the given
-    protocol.
-
-
-    sample_config.json
-
-    .. code-block:: python
-
-        {
-            "parameters": {
-                "sample_plate":{
-                    "id": null,
-                    "type": "96-deep",
-                    "storage": null,
-                    "discard": true
-                },
-                "buffer_vol": "4:microliter"
-            }
-
-        }
-
-    sample.py
-
-    .. code-block:: python
-
-        def sample(protocol, params):
-            protocol.distribute(params.refs["sample_plate"].well("A1"),
-                refs["sample_plate"].wells_from("B1", 12),
-                params["buffer_vol"]
-
-        if __name__ == '__main__':
-            from autoprotocol.harness import run
-            run(sample)
-
-    on command-line:
-
-    .. code-block:: python
-
-        $ python -m sample autoprotocol/config/sample_config.json
+    If no protocol_name is passed, use preview parameters from matching protocol
+    in the manifest.json file to run the given function.  Otherwise, take
+    configuration JSON file from the command line and run the given protocol.
 
     Parameters
     ----------

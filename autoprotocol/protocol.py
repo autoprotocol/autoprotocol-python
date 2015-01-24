@@ -3,6 +3,13 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 
 class Ref(object):
     """Link a ref name (string) to a Container instance.
@@ -21,23 +28,28 @@ class Protocol(object):
 
     Initially, a Protocol has an empty sequence of instructions and no
     referenced containers. To add a reference to a container, use the ref()
-    method, which returns a Container:
+    method, which returns a Container
 
-        my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
-                                cont_type="96-pcr", storage="cold_4")
+        .. code-block:: python
 
-    To add instructions to the protocol, use the helper methods:
+            my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
+                                    cont_type="96-pcr", storage="cold_4")
 
-        protocol.transfer(source=my_plate.well("A1"),
-                          dest=my_plate.well("B4"),
-                          volume="50:microliter")
-        protocol.thermocycle(my_plate, groups=[
-            { "cycles": 1,
-              "steps": [
-                { "temperature": "95:celsius", "duration": "1:hour" }
-                ]
-              }
-            ])
+    To add instructions to the protocol, use the helper methods in this class
+
+        .. code-block:: python
+
+            protocol.transfer(source=my_plate.well("A1"),
+                              dest=my_plate.well("B4"),
+                              volume="50:microliter")
+            protocol.thermocycle(my_plate, groups=[
+                { "cycles": 1,
+                  "steps": [
+                    { "temperature": "95:celsius", "duration": "1:hour" }
+                    ]
+                  }
+                ])
+
     """
 
     def __init__(self, refs=[], instructions=None):
@@ -48,7 +60,8 @@ class Protocol(object):
         self.instructions = instructions if instructions is not None else []
 
     def container_type(self, shortname):
-        """Convert a ContainerType shortname into a ContainerType object.
+        """
+        Convert a ContainerType shortname into a ContainerType object.
 
         Parameters
         ----------
@@ -68,6 +81,7 @@ class Protocol(object):
         ------
         ValueError
             if an unknown ContainerType shortname is passed as a parameter
+
         """
         if shortname in _CONTAINER_TYPES:
             return _CONTAINER_TYPES[shortname]
@@ -78,15 +92,18 @@ class Protocol(object):
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
-        """Append a Ref object to the list of Refs associated with this protocol
+        """
+        Append a Ref object to the list of Refs associated with this protocol
         and returns a Container with the id, container type and storage or
         discard conditions specified.
 
-        Example
-        -------
-        sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
-        sample_ref = ref("sample_plate", id="ct1cxae33lkj",
-                         cont_type="96-pcr", storage="ambient")
+        Ex)
+
+        .. code-block:: python
+
+            sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
+            sample_ref = ref("sample_plate", id="ct1cxae33lkj",
+                             cont_type="96-pcr", storage="ambient")
 
         returns a Container object using Container(None, "96-pcr")
 
@@ -143,13 +160,15 @@ class Protocol(object):
         return container
 
     def append(self, instructions):
-        """Append instruction(s) to the list of Instruction objects associated
+        """
+        Append instruction(s) to the list of Instruction objects associated
         with this protocol
 
         Parameters
         ----------
         instructions : Instruction
             Instruction object to be appended
+
         """
         if type(instructions) is list:
             self.instructions.extend(instructions)
@@ -158,11 +177,14 @@ class Protocol(object):
 
     def as_dict(self):
         """
+        Return the entire protocol as a dictionary.
+
         Returns
         -------
         dict
             dict with keys "refs" and "instructions", each of which contain
             the "refified" contents of their corresponding Protocol attribute
+
         """
         return {
             "refs": dict(map(lambda (k, v): (k, v.opts), self.refs.items())),
@@ -186,8 +208,11 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
-    def distribute(self, source, dest, volume, allow_carryover=False):
-        """Distribute liquid from source well(s) to destination wells(s)
+    def distribute(self, source, dest, volume, allow_carryover=False,
+                   mix_before=False, mix_vol=None, repetitions=10,
+                   flowrate="100:microliter/second"):
+        """
+        Distribute liquid from source well(s) to destination wells(s)
 
         Parameters
         ----------
@@ -197,113 +222,170 @@ class Protocol(object):
             drawn from the wells specified using the fill_wells function
         dest : Well, WellGroup
             Well or wells to distribute liquid to
-        volume : str, Unit
-            volume of liquid to be distributed to each destination well
+        volume : str, Unit, list
+            Volume of liquid to be distributed to each destination well.  If a
+            single string or unit is passed to represent the volume, that volume
+            will be distributed to each destination well.  If a list of volumes
+            is provided, that volume will be distributed to the corresponding
+            well in the WellGroup provided. The length of the volumes list must
+            therefore match the number of wells in the destination WellGroup if
+            destination wells are recieving different volumes.
         allow_carryover : bool, optional
             specify whether the same pipette tip can be used to aspirate more
             liquid from source wells after the previous volume aspirated has
             been depleted
+        mix_before : bool, optional
+            Specify whether to mix the liquid in the destination well before
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before liquid is distributed.
+        repetitions : int, optional
+            Number of times to aspirate and dispense in order to mix
+            liquid in a well before liquid is distributed.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before liquid is distributed
 
         Raises
         ------
         RuntimeError
-            if volume is not expressed either as a string with the format
-            "value:unit" or as a Unit object
+            If no mix volume is specified for the mix_before instruction
+        ValueError
+            If source and destination well(s) is/are not expressed as either
+            Wells or WellGroups
+
         """
         opts = {}
         opts["allow_carryover"] = allow_carryover
-        if isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            dists = self.fill_wells(dest, source, Unit.fromstring(volume))
-            groups = []
-            for d in dists:
-                groups.append(
-                    {"distribute": {
-                        "from": d["from"],
-                        "to": d["to"],
-                        "allow_carryover": allow_carryover
-                    }}
-                )
-            self.pipette(groups)
-        elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            opts["from"] = source
-            opts["to"] = []
-            for well in dest.wells:
-                opts["to"].append(
-                    {"well": well, "volume": volume})
-            self.pipette([{"distribute": opts}])
-        elif isinstance(source, Well) and isinstance(dest, Well):
-            opts["from"] = source
-            opts["to"] = []
-            opts["to"].append({"well": dest,
-                "volume": volume})
-            self.pipette([{"distribute": opts}])
-        else:
-            raise ValueError("source and dest must be WellGroups or Wells")
+        dists = self.fill_wells(dest, source, volume)
+        groups = []
+        for d in dists:
+            opts = {}
+            if mix_before:
+                if not mix_vol:
+                    raise RuntimeError("No mix volume specified for "
+                                       "mix_before")
+                opts["mix_before"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
+            if allow_carryover:
+                opts["allow_carryover"] = allow_carryover
+            opts["from"] = d["from"]
+            opts["to"] = d["to"]
+            groups.append(
+                {"distribute": opts}
+            )
+        self.pipette(groups)
 
-    def transfer(self, source, dest, volume, mix_after=False,
-                 mix_vol="20:microliter", repetitions=10,
-                 flowrate="100:microliter/second", allow_carryover=False):
-        """Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step.
+    def transfer(self, source, dest, volume, one_source=False, one_tip=False,
+                 mix_after=False, mix_before=False, mix_vol=None,
+                 repetitions=10, flowrate="100:microliter/second"):
+        """
+        Transfer liquid from one specific well to another.  A new pipette tip
+        is used between each transfer step by default unless one_tip is True.
 
         Parameters
         ----------
         source : Well, WellGroup
-            Well or wells to transfer liquid from.  Expressing both source and
-            dest as WellGroups appends transfer steps from each well in the
-            source group to the well at the corresponding index in the list of
-            destination wells.
+            Well or wells to transfer liquid from.  If multiple source wells
+            are supplied and one_source is set to True, liquid will be
+            transfered from each source well specified as long as it contains
+            sufficient volume. Otherwise, the number of source wells specified
+            must match the number of destination wells specified and liquid
+            will be transfered from each source well to its corresponding
+            destination well.
         dest : Well, WellGroup
-            Well or wells to transfer liquid to.
-        volume : str, Unit
-            volume of liquid to be transfered from one well to another
+            Well or WellGroup to which to transfer liquid.  The number of
+            destination wells must match the number of source wells specified
+            unless one_source is set to True.
+        volume : str, Unit, list
+            The volume(s) of liquid to be transferred from source wells to
+            destination wells.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of destination wells given unless
+            the same volume is to be transferred to each destination well.
+        one_source : bool, optional
+            Specify whether liquid is to be transferred to destination wells
+            from a group of wells all containing the same substance.
+        one_tip : bool, optional
+            Specify whether all transfer steps will use the same tip or not.
         mix_after : bool, optional
-            set True to mix destination well using the same pipette tip
-        mix_vol : str, optional
-            volume to be aspirated and expelled during mixing
+            Specify whether to mix the liquid in the destination well after
+            liquid is transferred.
+        mix_before : bool, optional
+            Specify whether to mix the liquid in the destination well before
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before and/or after each transfer step.
         repetitions : int, optional
-            mix repititions
-        flowrate : str, optional
-            liquid flow rate during mixing
+            Number of times to aspirate and dispense in order to mix
+            liquid in well before and/or after each transfer step.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before and/or after each
+            transfer step
 
         Raises
         ------
         RuntimeError
+            If more than one volume is specified as a list but the list length
+            does not match the number of destination wells given.
+        RuntimeError
             if transferring from WellGroup to WellGroup that have different
-            number of wells
-        RuntimeError
-            if volume is passed as anything other than a string in the format
-            "value:unit" or as a Unit object
-        RuntimeError
-            if source and/or destination wells are passed as anything other
-            than Well or WellGroup objects
+            number of wells and one_source is not True
+
         """
+        source = WellGroup(source)
+        dest = WellGroup(dest)
         opts = []
-        if isinstance(volume, basestring):
-            volume = Unit.fromstring(volume)
-        if volume > Unit(900,"microliter"):
-            diff = Unit.fromstring(volume) - Unit(900,"microliter")
-            self.transfer(source, dest, "900:microliter", mix_after,
-                mix_vol, repetitions, flowrate)
-            self.transfer(source, dest, diff, mix_after, mix_vol, repetitions,
-                flowrate)
-        elif isinstance(source, WellGroup) and isinstance(dest, WellGroup):
-            if len(source.wells) != len(dest.wells):
-                raise RuntimeError(
-                    "source and destination WellGroups do not have the same "
-                    "number of wells and transfer cannot happen one to one")
-            else:
-                for s,d in zip(source.wells, dest.wells):
-                    self.transfer(s,d,volume)
-        elif isinstance(source, Well) and isinstance(dest, WellGroup):
-            for d in dest.wells:
-                self.transfer(source, d, volume)
-        elif isinstance(source, Well) and isinstance(dest, Well):
+        if len(source.wells) > 1 and len(dest.wells) == 1:
+            dest = WellGroup(dest.wells * len(source.wells))
+        if isinstance(volume,str) or isinstance(volume, Unit):
+            volume = [Unit.fromstring(volume)] * len(dest.wells)
+        elif isinstance(volume, list) and len(volume) == len(dest.wells):
+            volume = map(lambda x: Unit.fromstring(x), volume)
+        else:
+            raise RuntimeError("Unless the same volume of liquid is being "
+                               "transferred to each destination well, each "
+                               "destination well must have a corresponding "
+                               "volume")
+        if (len(volume) != len (dest.wells)) and (len(dest.wells) != len(volume)) and not one_source:
+            raise RuntimeError("To transfer liquid from multiple wells "
+                               "containing the same source, set one_source to "
+                               "True.  Otherwise, you must specify the same "
+                               "number of source and destinationi wells to "
+                               "do a one-to-one transfer.")
+        elif one_source:
+            sources = []
+            for idx, d in enumerate(dest.wells):
+                for s in source.wells:
+                    while s.volume > volume[idx] and (len(sources) < len(dest.wells)):
+                        sources.append(s)
+                        s.volume -= volume[idx]
+            source = WellGroup(sources)
+
+        for s,d,v in list(zip(source.wells, dest.wells, volume)):
+            if mix_after and not mix_vol:
+                mix_vol = v
+            if v > Unit(900, "microliter"):
+                diff = Unit.fromstring(vol) - Unit(900, "microliter")
+                self.transfer(s, d, "900:microliter", mix_after,
+                              mix_vol, repetitions, flowrate)
+                self.transfer(s, d, diff, one_source, one_tip, mix_after,
+                              mix_vol, repetitions, flowrate)
             xfer = {
-                "from": source,
-                "to": dest,
-                "volume": volume
+                "from": s,
+                "to": d,
+                "volume": v
             }
+            if mix_before:
+                xfer["mix_before"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
             if mix_after:
                 xfer["mix_after"] = {
                     "volume": mix_vol,
@@ -311,20 +393,27 @@ class Protocol(object):
                     "speed": flowrate
                 }
             opts.append(xfer)
+            if d.volume:
+                d.volume += v
+            else:
+                d.volume = v
+            if s.volume:
+                s.volume -= v
+        if one_tip:
+            self.append(Pipette([{"transfer": opts}]))
         else:
-            raise RuntimeError("transfer function must take Well or WellGroup "
-                               "objects")
-        if opts:
-            self.pipette([{"transfer": opts}])
+            for x in opts:
+                self.pipette([{"transfer": [x]}])
+
 
     def serial_dilute_rowwise(self, source, well_group, vol,
-                                mix_after=True, reverse=False):
+                              mix_after=True, reverse=False):
         """
         Serial dilute source liquid in specified wells of the container
-        specified. Defaults to dilute from left to right (increasing well index) unless
-        reverse is set to true.  This operation utilizes the transfers() method
-        on Pipette, meaning only one tip is used.  All wells in the WellGroup
-        well_group except for the first well and the last well should already
+        specified. Defaults to dilute from left to right (increasing well index)
+        unless reverse is set to true.  This operation utilizes the transfers()
+        method on Pipette, meaning only one tip is used.  All wells in the
+        WellGroup well_group except for the first and last well should already
         contain the diluent.
 
         Parameters
@@ -342,12 +431,13 @@ class Protocol(object):
             Final volume of each well in the dilution series, most concentrated
             liquid will be transfered to the starting well with double this
             volume
-        mix_after : bool
+        mix_after : bool, optional
             If set to True, each well will be mixed after liquid is transfered
             to it.
-        reverse : bool
+        reverse : bool, optional
             If set to True, liquid will be most concentrated in the well in the
             dilution series with the highest index
+
         """
         if not isinstance(well_group, WellGroup):
             raise RuntimeError("serial_dilute_rowwise() must take a WellGroup "
@@ -355,37 +445,40 @@ class Protocol(object):
         source_well = well_group.wells[0]
         begin_dilute = well_group.wells[0]
         end_dilute = well_group.wells[-1]
-        wells_to_dilute = container.wells_from(begin_dilute,
-            end_dilute.index-begin_dilute.index + 1)
-        srcs = []
-        dests = []
+        wells_to_dilute = well_group[0].container.wells_from(begin_dilute,
+                                    end_dilute.index-begin_dilute.index + 1)
+        srcs = WellGroup([])
+        dests = WellGroup([])
         vols = []
         if reverse:
             source_well = well_group.wells[-1]
             begin_dilute = well_group.wells[-1]
             end_dilute = well_group.wells[0]
-            wells_to_dilute = container.wells_from(end_dilute,
-                begin_dilute.index-end_dilute.index + 1)
-        self.transfer(source, source_well,
-            Unit.fromstring(vol)*Unit(2,"microliter"))
+            wells_to_dilute = well_group[0].container.wells_from(end_dilute,
+                                    begin_dilute.index-end_dilute.index + 1)
+        self.transfer(source.set_volume(Unit.fromstring(vol)*Unit(2, "microliter")), source_well,
+                      Unit.fromstring(vol)*Unit(2, "microliter"))
         if reverse:
             while len(wells_to_dilute.wells) >= 2:
                 srcs.append(wells_to_dilute.wells.pop())
                 dests.append(wells_to_dilute.wells[-1])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
+
         else:
             for i in range(1, len(wells_to_dilute.wells)):
                 srcs.append(wells_to_dilute.wells[i-1])
                 dests.append(wells_to_dilute[i])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
+
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):
-        """Mix specified well using a new pipette tip
+        """
+        Mix specified well using a new pipette tip
 
         Parameters
         ----------
@@ -397,6 +490,7 @@ class Protocol(object):
             flowrate of liquid during mixing
         repetitions : int, optional
             number of times to aspirate and expell liquid during mixing
+
         """
         opts = {
             "well": well,
@@ -414,6 +508,7 @@ class Protocol(object):
         ref : str, Ref
         speed: str, Unit
         duration: str, Unit
+
         """
         self.instructions.append(Spin(ref, speed, duration))
 
@@ -424,23 +519,25 @@ class Protocol(object):
                     melting=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
-        groups being a list of dicts in the form of:
-        "groups": [{
-            "cycles": integer,
-            "steps": [{
-              "duration": duration,
-              "temperature": temperature,
-              "read": boolean // optional (default true)
-            },{
-              "duration": duration,
-              "gradient": {
-                "top": temperature,
-                "bottom": temperature
-              },
-              "read": boolean // optional (default true)
-            }]
-        }],
+        groups being a list of dicts in the formof:
 
+        .. code-block:: python
+
+            "groups": [{
+                "cycles": integer,
+                "steps": [{
+                  "duration": duration,
+                  "temperature": temperature,
+                  "read": boolean // optional (default true)
+                },{
+                  "duration": duration,
+                  "gradient": {
+                    "top": temperature,
+                    "bottom": temperature
+                  },
+                  "read": boolean // optional (default true)
+                }]
+            }],
 
         Parameters
         ----------
@@ -454,17 +551,8 @@ class Protocol(object):
         Raises
         ------
         AttributeError
-            if groups are not in the form of:
-                [{
-                    'cycles':___,
-                    'steps': [
-                        {'temperature':___,"
-                            'duration':___,
-                        },
-                        { ... }
-                    ]},
-                    { ... }, ...
-                }]
+            if groups are not properly formatted
+
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -491,6 +579,7 @@ class Protocol(object):
             total duration of thermocycle protocol
         step_duration : str, Unit, optional
             individual temperature step duration
+
         """
         start_temp = int(Unit.fromstring(start_temp).value)
         end_temp = int(Unit.fromstring(end_temp).value)
@@ -511,6 +600,10 @@ class Protocol(object):
         self.instructions.append(Thermocycle(ref, groups))
 
     def incubate(self, ref, where, duration, shaking=False):
+        '''
+        Move plate to designated thermoisolater or ambient area for incubation
+        for specified duration.
+        '''
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
     def plate_to_mag_adapter(self, ref, duration):
@@ -525,6 +618,7 @@ class Protocol(object):
         duration : str, Unit
             duration for plate to incubate on the magentic adapter (with no
             pipetting occuring)
+
         """
         sep = Pipette([])
         sep.data["x-magnetic_separate"] = {
@@ -543,11 +637,13 @@ class Protocol(object):
         ----------
         ref : str, Ref
             plate to be removed from magentic block
+
         """
         self.instructions.append(Pipette([]))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25):
-        """Reads the absorbance for the indicated wavelength for the indicated
+        """
+        Read the absorbance for the indicated wavelength for the indicated
         wells. Append an Absorbance instruction to the list of instructions for
         this Protocol object.
 
@@ -562,15 +658,17 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+
         """
         if isinstance(wells, WellGroup):
-            wells = wells.indices(human=True)
+            wells = wells.indices()
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes))
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25):
-        """Read the fluoresence for the indicated wavelength for the indicated
+        """
+        Read the fluoresence for the indicated wavelength for the indicated
         wells.  Append a Fluorescence instruction to the list of instructions
         for this Protocol object.
 
@@ -587,6 +685,7 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
@@ -595,23 +694,29 @@ class Protocol(object):
 
     def luminesence(self, ref, wells, dataref):
         """
+        Read luminesence of indicated wells
+
         Parameters
         ----------
         ref : str, Container
         wells : list, WellGroup
             WellGroup or list of wells to be measured
         dataref : str
+
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
-        self.instructions.append(Luminesence(refs, wells, dataref))
+        self.instructions.append(Luminesence(ref, wells, dataref))
 
-    def gel_separate(self, ref, matrix, ladder, duration, dataref):
+    def gel_separate(self, wells, matrix, ladder, duration, dataref):
         """
+        Separate nucleic acids on an agarose gel.
+
         Parameters
         ----------
-        ref : str, Container
-            reference to be gel separated
+        wells : list, WellGroup
+            List of string well references or WellGroup containing wells to be
+            separated on gel
         matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
                   'agarose(12,1.2%)', 'agarose(8,0.8%)'}
             matrix in which to gel separate samples
@@ -619,20 +724,59 @@ class Protocol(object):
             ladder by which to measure separated fragment size
         duration : str, Unit
         dataref : str
+
         """
         self.instructions.append(
-            GelSeparate(ref, matrix, ladder, duration, dataref))
+            GelSeparate(wells, matrix, ladder, duration, dataref))
 
     def seal(self, ref):
+        """
+        Seal indicated container using the automated plate sealer.
+
+        Parameters
+        ----------
+        ref : Ref, str
+            Container to be sealed
+
+        """
         self.instructions.append(Seal(ref))
 
     def unseal(self, ref):
+        """
+        Remove seal from indicated container using the automated plate unsealer.
+
+        Parameters
+        ----------
+        ref : Ref, str
+            Container to be unsealed
+
+        """
         self.instructions.append(Unseal(ref))
 
     def cover(self, ref, lid='standard'):
+        """
+        Place specified lid type on specified container
+
+        Parameters
+        ----------
+        ref : str
+            Container to be convered
+        lid : {"standard", "universal", "low-evaporation"}, optional
+            Type of lid to cover container with
+
+        """
         self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
+        """
+        Remove lid from specified container
+
+        Parameters
+        ----------
+        ref : str
+            Container to remove lid from
+
+        """
         self.instructions.append(Uncover(ref))
 
     def _ref_for_well(self, well):
@@ -644,7 +788,8 @@ class Protocol(object):
                 return k
 
     def fill_wells(self, dst_group, src_group, volume):
-        """Distribute liquid to a WellGroup, sourcing the liquid from a group
+        """
+        Distribute liquid to a WellGroup, sourcing the liquid from a group
         of wells all containing the same substance.
 
         Parameters
@@ -658,41 +803,53 @@ class Protocol(object):
 
         Returns
         -------
-        distirbutes : list
-
+        distributes : list
+            List of distribute groups
 
         Raises
         ------
         RuntimeError
             if source wells run out of liquid before distributing to all
             designated destination wells
+        RuntimeError
+            if length of list of volumes does not match the number of destination
+            wells to be distributed to
 
         """
         src = None
         distributes = []
-
-        for d in dst_group.wells:
-            if len(distributes) == 0 or src.volume < volume:
+        src_group = WellGroup(src_group)
+        dst_group = WellGroup(dst_group)
+        if isinstance(volume, list):
+            if len(volume) != len(dst_group.wells):
+                raise RuntimeError("List length of volumes provided for "
+                                   "distribution does not match the number of "
+                                   " destination wells")
+            volume = [Unit.fromstring(x) for x in volume]
+        else:
+            volume = [Unit.fromstring(volume)]*len(dst_group.wells)
+        for d,v in list(zip(dst_group.wells, volume)):
+            if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
                 src = next(
-                    (w for w in src_group.wells if w.volume > volume), None)
+                    (w for w in src_group.wells if w.volume > v), None)
                 if src is None:
                     raise RuntimeError(
-                        "no well in source group has more than %s" %
-                        str(volume))
+                        "no well in source group has more than %s %s(s)" %
+                        (str(v).rsplit(":")[0],str(v).rsplit(":")[1]))
                 distributes.append({
-                    "from": self._refify(src),
+                    "from": src,
                     "to": []
                 })
             distributes[-1]["to"].append({
-                "well": self._ref_for_well(d),
-                "volume": str(volume)
+                "well": d,
+                "volume": v
             })
-            src.volume -= volume
+            src.volume -= v
             if d.volume:
-                d.volume += volume
+                d.volume += v
             else:
-                d.volume = volume
+                d.volume = v
         return distributes
 
     def _refify(self, op_data):
@@ -714,46 +871,53 @@ class Protocol(object):
     def _ref_containers_and_wells(self, params):
         """Used by harness.run() to process JSON container and well references
 
-        Example
-        -------
+        .. code-block:: python
 
-        parameters = {
-            "sample": {
-                    "id": null,
-                    "type": "micro-1.5",
-                    "storage": "cold_4",
-                    "discard": null
-            },
-            "mastermix_loc": "sample_plate/A1",
-            "samples": [
-                "sample_plate/B1",
-                "sample_plate/B2",
-                "sample_plate/B3",
-                "sample_plate/B4"
-            ]
-        }
+            parameters = {
+                "sample": {
+                        "id": null,
+                        "type": "micro-1.5",
+                        "storage": "cold_4",
+                        "discard": null
+                },
+                "mastermix_loc": "sample_plate/A1",
+                "samples": [
+                    "sample_plate/B1",
+                    "sample_plate/B2",
+                    "sample_plate/B3",
+                    "sample_plate/B4"
+                ]
+            }
 
         protocol.make_well_references(parameters)
 
         returns:
 
-        {
-            "refs":{
-                "sample": Container(None, "micro-1.5")
-            },
-            "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
-            "samples": WellGroup([
-                    protocol.refs["sample_plate"].well("B1"),
-                    protocol.refs["sample_plate"].well("B2"),
-                    protocol.refs["sample_plate"].well("B3"),
-                    protocol.refs["sample_plate"].well("B4")
-                ])
-        }
+        .. code-block:: python
+
+            {
+                "refs":{
+                    "sample": Container(None, "micro-1.5")
+                },
+                "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
+                "samples": WellGroup([
+                        protocol.refs["sample_plate"].well("B1"),
+                        protocol.refs["sample_plate"].well("B2"),
+                        protocol.refs["sample_plate"].well("B3"),
+                        protocol.refs["sample_plate"].well("B4")
+                    ])
+            }
+
+        Parameters
+        ----------
+        params : dict
+            A dictionary of parameters to be passed to a protocol.
+
         """
         parameters = {}
         containers = {}
 
-        #ref containers
+        # ref containers
         for k, v in params.items():
             if isinstance(v, dict):
                 parameters[str(k)] = self._ref_containers_and_wells(v)
@@ -765,7 +929,8 @@ class Protocol(object):
                     discard = v["discard"]
                     if discard and v.get("storage"):
                         raise RuntimeError("You must either specify a storage "
-                            "condition or set discard to true, not both.")
+                                           "condition or set discard to true, "
+                                           "not both.")
                 else:
                     discard = False
                 containers[str(k)] = \

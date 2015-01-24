@@ -1,23 +1,29 @@
+'''
+    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.
 
-    Example
-    -------
+    Ex)
+        sample = {
+            "forks": 6,
+            "spoons": 5,
+            "knives": 3
+        }
 
-    sample = {
-        "forks": 6,
-        "spoons": 5,
-        "knives": 3
-    }
+        print sample["forks"]
+        >>> 6
 
-    print sample["forks"]
-    >>> 6
+        sample = make_dottable_dict(sample)
 
-    sample = make_dottable_dict(sample)
+        print sample.forks
+        >>> 6
 
-    print sample.forks
-    >>> 6
     '''
     def __getattr__(self, attr):
         return self[attr]

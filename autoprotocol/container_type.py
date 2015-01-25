@@ -3,7 +3,7 @@ from collections import namedtuple
 from .container import Well
 
 '''
-    :copyright: 2014 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 

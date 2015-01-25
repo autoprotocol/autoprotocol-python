@@ -297,7 +297,7 @@ class Absorbance(Instruction):
     flashes : int, optional
 
     """
-    def __init__(self, ref, wells, wavelength, dataref, flashes = 25):
+    def __init__(self, ref, wells, wavelength, dataref, flashes=25):
         super(Absorbance, self).__init__({
             "op": "absorbance",
             "object": ref,
@@ -329,7 +329,7 @@ class Fluorescence(Instruction):
     flashes : int, optional
 
     """
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes = 25):
+    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25):
         super(Fluorescence, self).__init__({
             "op": "fluorescence",
             "object": ref,

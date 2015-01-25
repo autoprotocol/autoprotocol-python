@@ -1,5 +1,11 @@
 import json
 
+'''
+    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
 
 class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON.
@@ -27,7 +33,7 @@ class Pipette(Instruction):
 
         For each element in the transfer list, in order, aspirates the specifed
         volume from the source well and dispenses the same volume into the
-         target well.
+        target well.
 
     distribute:
 
@@ -58,6 +64,9 @@ class Pipette(Instruction):
 
 
 class Spin(Instruction):
+    """
+
+    """
     def __init__(self, ref, speed, duration):
         super(Spin, self).__init__({
             "op": "spin",
@@ -70,7 +79,7 @@ class Spin(Instruction):
 class Thermocycle(Instruction):
     """
     Append a Thermocycle instruction to the list of instructions, with
-    groups being a list of dicts in the formof:
+    groups being a list of dicts in the form of:
 
     .. code-block:: python
 
@@ -111,12 +120,12 @@ class Thermocycle(Instruction):
         if groups are not properly formatted
 
     """
-    CHANNEL1_DYES = ["FAM", "SYBR"]
-    CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
-    CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
-    CHANNEL4_DYES = ["CY5", "QUASAR670"]
-    CHANNEL5_DYES = ["QUASAR705"]
-    CHANNEL_DYES = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
+    CHANNEL1_DYES  = ["FAM","SYBR"]
+    CHANNEL2_DYES  = ["VIC","HEX","TET","CALGOLD540"]
+    CHANNEL3_DYES  = ["ROX","TXR","CALRED610"]
+    CHANNEL4_DYES  = ["CY5","QUASAR670"]
+    CHANNEL5_DYES  = ["QUASAR705"]
+    CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
     def __init__(self, ref, groups, volume="25:microliter", dataref=None,
@@ -181,7 +190,7 @@ class Incubate(Instruction):
     """
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
-    until it is next used.d
+    until it is next used in an instruction.
 
     Parameters
     ----------
@@ -288,7 +297,7 @@ class Absorbance(Instruction):
     flashes : int, optional
 
     """
-    def __init__(self, ref, wells, wavelength, dataref, flashes = 25):
+    def __init__(self, ref, wells, wavelength, dataref, flashes=25):
         super(Absorbance, self).__init__({
             "op": "absorbance",
             "object": ref,

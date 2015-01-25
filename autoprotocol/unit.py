@@ -1,6 +1,13 @@
 from __future__ import division
 import operator
 
+'''
+    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 class Unit(object):
     def __init__(self, value, unit):
         self.value = float(value)

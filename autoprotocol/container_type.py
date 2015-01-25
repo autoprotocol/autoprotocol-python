@@ -2,12 +2,19 @@ import re
 from collections import namedtuple
 from .container import Well
 
+'''
+    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
 
 class ContainerType(namedtuple("ContainerType",
                     ["name", "is_tube", "well_count", "well_type",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count","dead_volume_ul"])):
+
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
@@ -19,6 +26,11 @@ class ContainerType(namedtuple("ContainerType",
         Convert a well reference (int, "A1" or int-in-a-string "23") to a
         robot-friendly rowwise integer (left-to-right, top-to-bottom,
         starting at 0 = A1).
+
+        Parameters
+        ----------
+        well_ref : str, int
+          Well reference to be robotized.
 
         """
         if isinstance(well_ref, Well):
@@ -42,6 +54,11 @@ class ContainerType(namedtuple("ContainerType",
         Return the human readable form of an integer well index based on the
         well format of this ContainerType.
 
+        Parameters
+        ----------
+        well_ref : int
+          Integer well reference to be humanized
+
         """
         row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
@@ -49,6 +66,10 @@ class ContainerType(namedtuple("ContainerType",
     def decompose(self, idx):
         """Return the (col, row) corresponding to the given well index.
 
+        Parameters
+        ----------
+        idx : int, str
+          Well reference to be decomposed.
         """
         idx = self.robotize(idx)
         return (idx / self.col_count, idx % self.col_count)
@@ -104,7 +125,7 @@ _CONTAINER_TYPES = {
                             well_count=96,
                             well_type=None,
                             well_depth_mm=None,
-                            well_volume_ul=None,
+                            well_volume_ul=160.0,
                             well_coating=None,
                             sterile=None,
                             is_tube=False,

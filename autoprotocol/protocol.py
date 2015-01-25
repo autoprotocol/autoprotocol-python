@@ -3,6 +3,13 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 
+'''
+    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+'''
+
 
 class Ref(object):
     """Link a ref name (string) to a Container instance.
@@ -201,6 +208,7 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
+
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second"):
@@ -249,7 +257,6 @@ class Protocol(object):
 
         """
         opts = {}
-        opts["allow_carryover"] = allow_carryover
         dists = self.fill_wells(dest, source, volume)
         groups = []
         for d in dists:
@@ -277,7 +284,7 @@ class Protocol(object):
                  repetitions=10, flowrate="100:microliter/second"):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step by default unless one_tip is True.
+        is used between each transfer step.
 
         Parameters
         ----------
@@ -320,7 +327,6 @@ class Protocol(object):
             Speed at which to mix liquid in well before and/or after each
             transfer step
 
-
         Raises
         ------
         RuntimeError
@@ -334,22 +340,24 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
-        if isinstance(volume,str):
-            volume = [Unit.fromstring(volume)]
-        if len(volume) == 1:
-            volume = volume * len(dest.wells)
+        if len(source.wells) > 1 and len(dest.wells) == 1:
+            dest = WellGroup(dest.wells * len(source.wells))
+        if isinstance(volume,str) or isinstance(volume, Unit):
+            volume = [Unit.fromstring(volume)] * len(dest.wells)
+        elif isinstance(volume, list) and len(volume) == len(dest.wells):
+            volume = map(lambda x: Unit.fromstring(x), volume)
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume")
-        if (len(source.wells) != len (dest.wells)) and not one_source:
+        if (len(volume) != len (dest.wells)) and (len(dest.wells) != len(volume)) and not one_source:
             raise RuntimeError("To transfer liquid from multiple wells "
                                "containing the same source, set one_source to "
                                "True.  Otherwise, you must specify the same "
                                "number of source and destinationi wells to "
                                "do a one-to-one transfer.")
-        else:
+        elif one_source:
             sources = []
             for idx, d in enumerate(dest.wells):
                 for s in source.wells:
@@ -357,10 +365,11 @@ class Protocol(object):
                         sources.append(s)
                         s.volume -= volume[idx]
             source = WellGroup(sources)
+
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
                 mix_vol = v
-            elif v > Unit(900, "microliter"):
+            if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(vol) - Unit(900, "microliter")
                 self.transfer(s, d, "900:microliter", mix_after,
                               mix_vol, repetitions, flowrate)
@@ -383,9 +392,13 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
+            opts.append(xfer)
+            if d.volume:
+                d.volume += v
             else:
-                opts.append(xfer)
-                d.set_volume(v)
+                d.volume = v
+            if s.volume:
+                s.volume -= v
         if one_tip:
             self.append(Pipette([{"transfer": opts}]))
         else:
@@ -432,33 +445,36 @@ class Protocol(object):
         source_well = well_group.wells[0]
         begin_dilute = well_group.wells[0]
         end_dilute = well_group.wells[-1]
-        wells_to_dilute = container.wells_from(begin_dilute,
+        wells_to_dilute = well_group[0].container.wells_from(begin_dilute,
                                     end_dilute.index-begin_dilute.index + 1)
-        srcs = []
-        dests = []
+        srcs = WellGroup([])
+        dests = WellGroup([])
         vols = []
         if reverse:
             source_well = well_group.wells[-1]
             begin_dilute = well_group.wells[-1]
             end_dilute = well_group.wells[0]
-            wells_to_dilute = container.wells_from(end_dilute,
+            wells_to_dilute = well_group[0].container.wells_from(end_dilute,
                                     begin_dilute.index-end_dilute.index + 1)
-        self.transfer(source, source_well,
-                      Unit.fromstring(vol)*Unit(2, "microliter"))
+        self.transfer(source.set_volume(Unit.fromstring(vol)*Unit(2,
+                      "microliter")), source_well, Unit.fromstring(vol)*Unit(2,
+                      "microliter"))
         if reverse:
             while len(wells_to_dilute.wells) >= 2:
                 srcs.append(wells_to_dilute.wells.pop())
                 dests.append(wells_to_dilute.wells[-1])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
+
         else:
             for i in range(1, len(wells_to_dilute.wells)):
                 srcs.append(wells_to_dilute.wells[i-1])
                 dests.append(wells_to_dilute[i])
                 vols.append(vol)
-            self.append(Pipette(Pipette.transfers(srcs, dests, vols,
-                                mix_after=mix_after)))
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
+                          "microliter")), dests, vols, mix_after=mix_after)
+
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):
@@ -807,8 +823,9 @@ class Protocol(object):
         dst_group = WellGroup(dst_group)
         if isinstance(volume, list):
             if len(volume) != len(dst_group.wells):
-                raise RuntimeError("List length of volumes provided for distribution"
-                               " does not match the number of destination wells")
+                raise RuntimeError("List length of volumes provided for "
+                                   "distribution does not match the number of "
+                                   " destination wells")
             volume = [Unit.fromstring(x) for x in volume]
         else:
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)

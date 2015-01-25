@@ -7,9 +7,11 @@ class ContainerType(namedtuple("ContainerType",
                     ["name", "is_tube", "well_count", "well_type",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
-                     "shortname", "col_count"])):
-    """The ContainerType class holds the capabilities and properties of a
+                     "shortname", "col_count","dead_volume_ul"])):
+    """
+    The ContainerType class holds the capabilities and properties of a
     particular container type.
+
     """
 
     def robotize(self, well_ref):
@@ -17,6 +19,7 @@ class ContainerType(namedtuple("ContainerType",
         Convert a well reference (int, "A1" or int-in-a-string "23") to a
         robot-friendly rowwise integer (left-to-right, top-to-bottom,
         starting at 0 = A1).
+
         """
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
@@ -35,17 +38,25 @@ class ContainerType(namedtuple("ContainerType",
                 raise Exception("Well must be in A1 format or be an integer")
 
     def humanize(self, well_ref):
+        """
+        Return the human readable form of an integer well index based on the
+        well format of this ContainerType.
+
+        """
         row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):
-        """
-        Return the (col, row) corresponding to the given idx.
+        """Return the (col, row) corresponding to the given well index.
+
         """
         idx = self.robotize(idx)
         return (idx / self.col_count, idx % self.col_count)
 
     def row_count(self):
+        """Return number of rows this ContainerType has.
+
+        """
         return self.well_count / self.col_count
 
 
@@ -61,7 +72,8 @@ _CONTAINER_TYPES = {
                               capabilities=["spin", "incubate", "absorbance",
                                             "fluorescence", "luminescence"],
                               shortname="384-flat",
-                              col_count=24),
+                              col_count=24,
+                              dead_volume_ul=12),
     "384-pcr": ContainerType(name="384-well PCR plate",
                              well_count=384,
                              well_type=None,
@@ -72,7 +84,8 @@ _CONTAINER_TYPES = {
                              is_tube=False,
                              capabilities=["thermocycle", "spin", "incubate"],
                              shortname="384-pcr",
-                             col_count=24),
+                             col_count=24,
+                             dead_volume_ul=8),
     "96-flat": ContainerType(name="96-well flat-bottom plate",
                              well_count=96,
                              well_type=None,
@@ -82,9 +95,11 @@ _CONTAINER_TYPES = {
                              sterile=False,
                              is_tube=False,
                              capabilities=["spin", "incubate", "absorbance",
-                                           "fluorescence", "luminescence"],
+                                           "fluorescence", "luminescence",
+                                           "gel_separate", "sangerseq"],
                              shortname="96-flat",
-                             col_count=12),
+                             col_count=12,
+                             dead_volume_ul=20),
     "96-pcr": ContainerType(name="96-well PCR plate",
                             well_count=96,
                             well_type=None,
@@ -93,9 +108,11 @@ _CONTAINER_TYPES = {
                             well_coating=None,
                             sterile=None,
                             is_tube=False,
-                            capabilities=["thermocycle", "spin", "incubate"],
+                            capabilities=["thermocycle", "spin", "incubate",
+                                          "sangerseq", "gel_separate"],
                             shortname="96-pcr",
-                            col_count=12),
+                            col_count=12,
+                            dead_volume_ul=15),
     "96-deep": ContainerType(name="96-well extended capacity plate",
                              well_count=96,
                              well_type=None,
@@ -103,10 +120,12 @@ _CONTAINER_TYPES = {
                              well_volume_ul=2000.0,
                              well_coating=None,
                              sterile=False,
-                             capabilities=["incubate"],
+                             capabilities=["incubate", "pipette", "sangerseq",
+                                           "spin", "gel_separate"],
                              shortname="96-deep",
                              is_tube=False,
-                             col_count=12),
+                             col_count=12,
+                             dead_volume_ul=15),
     "micro-2.0": ContainerType(name="2mL Microcentrifuge tube",
                                well_count=1,
                                well_type=None,
@@ -114,10 +133,12 @@ _CONTAINER_TYPES = {
                                well_volume_ul=2000.0,
                                well_coating=None,
                                sterile=False,
-                               capabilities=["spin", "incubate"],
+                               capabilities=["spin", "incubate", "pipette",
+                                             "sangerseq", "gel_separate"],
                                shortname="micro-2.0",
                                is_tube=True,
-                               col_count=1),
+                               col_count=1,
+                               dead_volume_ul=15),
     "micro-1.5": ContainerType(name="1.5mL Microcentrifuge tube",
                                well_count=1,
                                well_type=None,
@@ -125,8 +146,10 @@ _CONTAINER_TYPES = {
                                well_volume_ul=1500.0,
                                well_coating=None,
                                sterile=False,
-                               capabilities=["spin", "incubate"],
+                               capabilities=["spin", "incubate", "pipette",
+                                             "sangerseq", "gel_separate"],
                                shortname="micro-1.5",
                                is_tube=True,
-                               col_count=1),
+                               col_count=1,
+                               dead_volume_ul=15),
 }

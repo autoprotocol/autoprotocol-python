@@ -4,7 +4,6 @@ from .unit import Unit
 from .container import WellGroup
 import argparse
 
-
 def convert_param(protocol, val, type):
     if type == 'aliquot':
         container, well_idx = val.split('/')

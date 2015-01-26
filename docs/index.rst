@@ -11,26 +11,26 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: autoprotocol.protocol
-    :members:
+  .. automodule:: autoprotocol.protocol
+      :members:
 
-.. automodule:: autoprotocol.container
-    :members:
+  .. automodule:: autoprotocol.container
+      :members:
 
-.. automodule:: autoprotocol.instruction
-    :members:
+  .. automodule:: autoprotocol.instruction
+      :members:
 
-.. automodule:: autoprotocol.container_type
-    :members:
+  .. automodule:: autoprotocol.container_type
+      :members:
 
-.. automodule:: autoprotocol.unit
-    :members:
+  .. automodule:: autoprotocol.unit
+      :members:
 
-.. automodule:: autoprotocol.util
-    :members:
+  .. automodule:: autoprotocol.util
+      :members:
 
-.. automodule:: autoprotocol.harness
-    :members:
+  .. automodule:: autoprotocol.harness
+      :members:
 
 
 

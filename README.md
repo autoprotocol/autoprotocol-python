@@ -1,5 +1,7 @@
 # Autoprotocol Python
 
+[![Documentation Status](https://readthedocs.org/projects/autoprotocol-python/badge/?version=v2.0.0)](https://readthedocs.org/projects/autoprotocol-python/?badge=v2.0.0)
+
 [Autoprotocol](https://www.autoprotocol.org) is a standard way to express
 experiments in life science. This repository contains a python library for
 generating Autoprotocol.

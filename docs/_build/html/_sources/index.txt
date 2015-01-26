@@ -11,10 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-    ..automodule:: protocol
+  autoprotocol
+  README
+  AUTHORS
+  LICENSE
 
-    .. autoclass:: protocol.Ref
-    .. autoclass:: protocol.Protocol
+
+
 
 
 
@@ -22,6 +25,5 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

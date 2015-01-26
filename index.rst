@@ -6,15 +6,31 @@
 Welcome to Autoprotocol's documentation!
 ========================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
-  autoprotocol
-  README
-  AUTHORS
-  LICENSE
+  autoprotocol.protocol
+
+
+  autoprotocol.container
+
+
+  autoprotocol.instruction
+
+
+  autoprotocol.container_type
+
+
+  autoprotocol.unit
+
+
+  autoprotocol.util
+
+
+  autoprotocol.harness
+
+
+
 
 
 
@@ -22,5 +38,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
+* :ref:`modindex`
 * :ref:`search`
 

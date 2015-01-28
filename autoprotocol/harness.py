@@ -11,6 +11,7 @@ import argparse
 
 '''
 
+
 def convert_param(protocol, val, type):
     if type == 'aliquot':
         container, well_idx = val.split('/')
@@ -24,7 +25,7 @@ def convert_param(protocol, val, type):
             return val
         else:
             return Unit.fromstring(val)
-    elif type == 'integer':
+    elif type in ['integer', 'bool', 'string']:
         return val
 
 
@@ -67,9 +68,10 @@ class Manifest(object):
 
 def run(fn, protocol_name=None):
     """
-    If no protocol_name is passed, use preview parameters from matching protocol
-    in the manifest.json file to run the given function.  Otherwise, take
-    configuration JSON file from the command line and run the given protocol.
+    If no protocol_name is passed, use preview parameters from matching
+    protocol in the manifest.json file to run the given function.  Otherwise,
+    take configuration JSON file from the command line and run the given
+    protocol.
 
     Parameters
     ----------
@@ -94,4 +96,3 @@ def run(fn, protocol_name=None):
     fn(protocol, params)
 
     print json.dumps(protocol.as_dict(), indent=2)
-

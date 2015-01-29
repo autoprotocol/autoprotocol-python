@@ -1,5 +1,7 @@
 # Autoprotocol Python
 
+### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)*
+
 [Autoprotocol](https://www.autoprotocol.org) is a standard way to express
 experiments in life science. This repository contains a python library for
 generating Autoprotocol.
@@ -15,9 +17,10 @@ or, alternatively:
     $ pip install autoprotocol
 
 ## Building a Protocol
-A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methdods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:
+A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:
 
 ```python
+import json
 from autoprotocol.protocol import Protocol
 
 #instantiate new Protocol object
@@ -29,7 +32,7 @@ medium = p.ref("medium", cont_type="micro-1.5", storage="cold_4")
 reaction_plate = p.ref("reaction_plate", cont_type="96-flat", storage="warm_37")
 
 #distribute medium from 1.5mL tube to reaction wells
-p.distribute(medium.well(0), reaction_plate.wells_from(0,4), "190:microliter")
+p.distribute(medium.well(0).set_volume("1000:microliter"), reaction_plate.wells_from(0,4), "190:microliter")
 #transfer bacteria from source wells to reaction wells
 p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4),
     ["10:microliter", "20:microliter", "30:microliter", "40:microliter"])
@@ -38,8 +41,10 @@ p.incubate(reaction_plate, "warm_37", "5:hour")
 #read absorbance of the first four wells on the reaction plate at 600 nanometers
 p.absorbance(reaction_plate, reaction_plate.wells_from(0,4).indices(), "600:nanometer",
     "OD600_reading_01092014")
+
+print json.dumps(p.as_dict(), indent=2)
 ```
-calling `p.as_dict()` on the protocol above (or to pretty print, `json.dumps(p.as_dict, indent=2)`) produces the following autoprotocol:
+The script above produces the following autoprotocol:
 
 ```
 {

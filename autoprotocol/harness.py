@@ -18,6 +18,8 @@ def convert_param(protocol, val, type):
         return protocol.refs[container].container.well(well_idx)
     elif type == 'aliquot+':
         return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
+    elif type == 'aliquot++':
+        return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
     elif type == 'container':
         return protocol.refs[val].container
     elif type in ['volume', 'time', 'temperature']:

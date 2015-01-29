@@ -26,9 +26,25 @@ class Well(object):
         self.container = container
         self.index = index
         self.volume = None
+        self.properties = None
+
+    def set_properties(self, properties):
+        """
+        Set properties for a well/aliquot
+
+        Parameters
+        ----------
+        properties : dict
+            Custom properties for a well in dictionary form.
+
+        """
+        assert isinstance(properties, dict)
+        self.properties = properties
+        return self
 
     def set_volume(self, vol):
-        """Set the theoretical volume of liquid in this well.
+        """
+        Set the theoretical volume of liquid in this well.
 
         Parameters
         ----------

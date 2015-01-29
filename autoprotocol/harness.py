@@ -50,6 +50,8 @@ class ProtocolInfo(object):
             if aqs:
                 for idx, aq in aqs.iteritems():
                     c.well(idx).set_volume(aq['volume'])
+                    if "properties" in aq:
+                        c.well(idx).set_properties(aq.get('properties'))
 
         out_params = {}
         for k, v in params.iteritems():

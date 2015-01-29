@@ -341,7 +341,7 @@ class Fluorescence(Instruction):
         })
 
 
-class Luminesence(Instruction):
+class Luminescence(Instruction):
     """
     Read luminesence of indicated wells
 
@@ -354,8 +354,8 @@ class Luminesence(Instruction):
 
     """
     def __init__(self, ref, wells, dataref):
-        super(Luminesence, self).__init__({
-            "op": "luminesence",
+        super(Luminescence, self).__init__({
+            "op": "luminescence",
             "object": ref,
             "wells": wells,
             "dataref": dataref

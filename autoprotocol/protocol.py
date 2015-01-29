@@ -694,9 +694,9 @@ class Protocol(object):
         self.instructions.append(
             Fluorescence(ref, wells, excitation, emission, dataref, flashes))
 
-    def luminesence(self, ref, wells, dataref):
+    def luminescence(self, ref, wells, dataref):
         """
-        Read luminesence of indicated wells
+        Read luminescence of indicated wells
 
         Parameters
         ----------
@@ -708,7 +708,7 @@ class Protocol(object):
         """
         if isinstance(wells, WellGroup):
             wells = wells.indices()
-        self.instructions.append(Luminesence(ref, wells, dataref))
+        self.instructions.append(Luminescence(ref, wells, dataref))
 
     def gel_separate(self, wells, matrix, ladder, duration, dataref):
         """

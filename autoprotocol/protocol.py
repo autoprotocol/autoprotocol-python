@@ -277,6 +277,7 @@ class Protocol(object):
             groups.append(
                 {"distribute": opts}
             )
+
         self.pipette(groups)
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,

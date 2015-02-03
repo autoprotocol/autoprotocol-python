@@ -54,20 +54,10 @@ class Unit(object):
         return cmp(self.value, other.value)
 
     def __mul__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value * other.value, self.unit)
+        return Unit(self.value * other, self.unit)
 
     def __div__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value / other.value, self.unit)
+        return Unit(self.value / other, self.unit)
 
     def __floordiv__(self, other):
         if not isinstance(other, Unit):

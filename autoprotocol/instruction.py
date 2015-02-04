@@ -62,16 +62,51 @@ class Pipette(Instruction):
             "groups": groups
         })
 
+class Dispense(Instruction):
+    """
+    Dispense specified reagent to specified columns.
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container for reagent to be dispensed to.
+    reagent : {"water", "LB", "LB-amp", "LB-kan", "SOC", "PBS"}
+        Reagent to be dispensed to columns in container.
+    columns : list
+        Columns to be dispensed to, in the form of a list of dicts specifying
+        the column number and the volume to be dispensed to that column.
+        Columns are indexed from 0.
+        [{"column": <column num>, "volume": <volume>}, ...]
+
+    """
+    def __init__(self, ref, reagent, columns):
+        super(Dispense, self).__init__({
+            "op": "dispense",
+            "object": ref,
+            "reagent": reagent,
+            "columns": columns
+        })
 
 class Spin(Instruction):
     """
+    Apply the specified amount of acceleration to a plate using a centrifuge.
+
+    Parameters
+    ----------
+    ref : Ref, str
+        Container to be centrifuged.
+    acceleration : str
+        Amount of acceleration to be applied to the container, expressed in
+        units of "g" or "meter/second^2"
+    duration : str
+        Amount of time to apply acceleration.
 
     """
-    def __init__(self, ref, speed, duration):
+    def __init__(self, ref, acceleration, duration):
         super(Spin, self).__init__({
             "op": "spin",
             "object": ref,
-            "speed": speed,
+            "acceleration": acceleration,
             "duration": duration
         })
 

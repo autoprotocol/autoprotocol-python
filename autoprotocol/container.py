@@ -62,6 +62,7 @@ class Well(object):
 
     def humanize(self):
         """Return humanized ("A1") formatted index of this Well.
+
         """
         return self.container.humanize(self.index)
 

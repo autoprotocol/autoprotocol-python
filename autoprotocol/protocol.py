@@ -13,6 +13,7 @@ from .instruction import *
 
 class Ref(object):
     """Link a ref name (string) to a Container instance.
+
     """
     def __init__(self, name, opts, container):
         assert "/" not in name
@@ -201,6 +202,7 @@ class Protocol(object):
             a list of "distribute" and/or "transfer" instructions to be passed
             to a Pipette object, which is then appended to this protocol's
             instructions attribute
+
         """
         if len(self.instructions) > 0 and \
                 self.instructions[-1].op == 'pipette':
@@ -502,8 +504,49 @@ class Protocol(object):
         }
         self.pipette([{"mix": [opts]}])
 
+    def dispense(self, ref, reagent, columns):
+        """
+        Dispense specified reagent to specified columns.
+
+        Parameters
+        ----------
+        ref : Container, str
+            Container for reagent to be dispensed to.
+        reagent : {"water", "LB", "LB-amp", "LB-kan", "SOC", "PBS"}
+            Reagent to be dispensed to columns in container.
+        columns : list
+            Columns to be dispensed to, in the form of a list of dicts specifying
+            the column number and the volume to be dispensed to that column.
+            Columns are expressed as integers indexed from 0.
+            [{"column": <column num>, "volume": <volume>}, ...]
+
+        """
+        assert isinstance(columns, list)
+        self.instructions.append(Dispense(ref, reagent, columns))
+
+    def dispense_full_plate(self, ref, reagent, volume):
+        """
+        Dispense specified reagent to every well of specified container using the
+        reagent dispenser.
+
+        Parameters
+        ----------
+        ref : Container
+            Container for reagent to be dispensed to.
+        reagent : {"water", "LB", "LB-amp", "LB-kan", "SOC", "PBS"}
+            Reagent to be dispensed to columns in container.
+        volume : Unit, str
+            Volume of reagent to be dispensed to each well
+
+        """
+        columns = []
+        for col in range(0,ref.container_type.col_count):
+            columns.append({"column": col, "volume": volume})
+        self.instructions.append(Dispense(ref, reagent, columns))
+
     def spin(self, ref, speed, duration):
-        """Append a Spin Instruction to the instructions list
+        """
+        Append a Spin Instruction to the instructions list
 
         Parameters
         ----------
@@ -605,11 +648,13 @@ class Protocol(object):
         '''
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
+
         '''
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
     def plate_to_mag_adapter(self, ref, duration):
-        """Transfer a plate to the magnetized slot on the liquid handler
+        """
+        Transfer a plate to the magnetized slot on the liquid handler
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
 
@@ -630,7 +675,8 @@ class Protocol(object):
         self.instructions.append(sep)
 
     def plate_off_mag_adapter(self, ref):
-        """Transfer a plate from the magnetized spot on the liquid handler to a
+        """
+        Transfer a plate from the magnetized spot on the liquid handler to a
         non-magnetized one
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
@@ -871,7 +917,8 @@ class Protocol(object):
             return op_data
 
     def _ref_containers_and_wells(self, params):
-        """Used by harness.run() to process JSON container and well references
+        """
+        Used by harness.run() to process JSON container and well references
 
         .. code-block:: python
 

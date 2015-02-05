@@ -1,2 +1,2 @@
-sphinxcontrib-napoleon==0.2.8
-autoprotocol=2.0.0
+-e git://github.com/autoprotocol/autoprotocol-python.git@master#egg=autoprotocol
+numpydoc

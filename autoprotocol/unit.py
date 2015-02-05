@@ -19,9 +19,9 @@ class Unit(object):
 
     @staticmethod
     def fromstring(s):
-    """Convert a string representation of a unit into a Unit object.
+        """Convert a string representation of a unit into a Unit object.
 
-    """
+        """
         if isinstance(s, Unit):
             return s
         else:

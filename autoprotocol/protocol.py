@@ -723,16 +723,18 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Container
+            Container to plate read.
         wells : list, WellGroup
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
         excitation : str, Unit
-            wavelength of light used to excite the wells indicated
+            Wavelength of light used to excite the wells indicated
         emission : str, Unit
-            wavelength of light to be measured for the indicated wells
+            Wavelength of light to be measured for the indicated wells
         dataref : str
-            name of this specific dataset of measured absorbances
+            Name of this specific dataset of measured absorbances
         flashes : int, optional
+            Number of flashes.
 
         """
         if isinstance(wells, WellGroup):
@@ -747,9 +749,11 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Container
+            Container to plate read.
         wells : list, WellGroup
             WellGroup or list of wells to be measured
         dataref : str
+            Name of this dataset of measured luminescence readings.
 
         """
         if isinstance(wells, WellGroup):
@@ -767,12 +771,13 @@ class Protocol(object):
             separated on gel
         matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
                   'agarose(12,1.2%)', 'agarose(8,0.8%)'}
-            matrix in which to gel separate samples
+            Matrix in which to gel separate samples
         ladder : {'ladder1', 'ladder2'}
-            ladder by which to measure separated fragment size
+            Ladder by which to measure separated fragment size
         duration : str, Unit
+            Length of time to run current through gel.
         dataref : str
-
+            Name of this set of gel separation results.
         """
         self.instructions.append(
             GelSeparate(wells, matrix, ladder, duration, dataref))

@@ -10,7 +10,7 @@ from .container import Well
 '''
 
 class ContainerType(namedtuple("ContainerType",
-                    ["name", "is_tube", "well_count", "well_type",
+                    ["name", "is_tube", "well_count",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
                      "shortname", "col_count","dead_volume_ul"])):
@@ -18,6 +18,31 @@ class ContainerType(namedtuple("ContainerType",
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
+
+    Parameters
+    ----------
+    name : str
+      Full name describing a ContainerType.
+    is_tube : bool
+      Indicates whether a ContainerType is a tube (container with one well)
+    well_count : int
+      Number of wells a ContainerType contains.
+    well_depth_mm : int
+      Depth of well(s) contained in a ContainerType in millimeters.
+    well_volume_ul : int
+      Maximum volume of well(s) contained in a ContainerType in microliters.
+    well_coating : str
+    sterile : bool
+      Indicates whether a ContainerType is sterile
+    capabilities : list
+      List of capabilities associated with a ContainerType.
+    shortname : str
+      Short name used to refer to a ContainerType.
+    col_count : int
+      Number of columns a ContainerType contains.
+    dead_volume_ul : int
+      Volume of liquid that cannot be aspirated from any given well of a
+      ContainerType via liquid-handling
 
     """
 
@@ -84,7 +109,6 @@ class ContainerType(namedtuple("ContainerType",
 _CONTAINER_TYPES = {
     "384-flat": ContainerType(name="384-well UV flat-bottom plate",
                               well_count=384,
-                              well_type=None,
                               well_depth_mm=None,
                               well_volume_ul=112.0,
                               well_coating=None,
@@ -97,7 +121,6 @@ _CONTAINER_TYPES = {
                               dead_volume_ul=12),
     "384-pcr": ContainerType(name="384-well PCR plate",
                              well_count=384,
-                             well_type=None,
                              well_depth_mm=None,
                              well_volume_ul=50.0,
                              well_coating=None,
@@ -109,7 +132,6 @@ _CONTAINER_TYPES = {
                              dead_volume_ul=8),
     "96-flat": ContainerType(name="96-well flat-bottom plate",
                              well_count=96,
-                             well_type=None,
                              well_depth_mm=None,
                              well_volume_ul=360.0,
                              well_coating=None,
@@ -123,7 +145,6 @@ _CONTAINER_TYPES = {
                              dead_volume_ul=20),
     "96-pcr": ContainerType(name="96-well PCR plate",
                             well_count=96,
-                            well_type=None,
                             well_depth_mm=None,
                             well_volume_ul=160.0,
                             well_coating=None,
@@ -136,7 +157,6 @@ _CONTAINER_TYPES = {
                             dead_volume_ul=15),
     "96-deep": ContainerType(name="96-well extended capacity plate",
                              well_count=96,
-                             well_type=None,
                              well_depth_mm=None,
                              well_volume_ul=2000.0,
                              well_coating=None,
@@ -149,7 +169,6 @@ _CONTAINER_TYPES = {
                              dead_volume_ul=15),
     "micro-2.0": ContainerType(name="2mL Microcentrifuge tube",
                                well_count=1,
-                               well_type=None,
                                well_depth_mm=None,
                                well_volume_ul=2000.0,
                                well_coating=None,
@@ -162,7 +181,6 @@ _CONTAINER_TYPES = {
                                dead_volume_ul=15),
     "micro-1.5": ContainerType(name="1.5mL Microcentrifuge tube",
                                well_count=1,
-                               well_type=None,
                                well_depth_mm=None,
                                well_volume_ul=1500.0,
                                well_coating=None,

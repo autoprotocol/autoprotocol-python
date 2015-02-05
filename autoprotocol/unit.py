@@ -9,12 +9,20 @@ import operator
 '''
 
 class Unit(object):
+    """
+    A representation of a measure of volume, duration, temperature, or
+    concentration.
+
+    """
     def __init__(self, value, unit):
         self.value = float(value)
         self.unit = unit
 
     @staticmethod
     def fromstring(s):
+    """Convert a string representation of a unit into a Unit object.
+
+    """
         if isinstance(s, Unit):
             return s
         else:

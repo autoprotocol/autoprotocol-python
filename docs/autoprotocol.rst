@@ -5,11 +5,9 @@ Autoprotocol package
 
 autoprotocol.container
 -----------------------------
-
 .. automodule:: autoprotocol.container
     :members:
-    :undoc-members:
-    :show-inheritance:
+
 
 autoprotocol.container_type
 ---------------------------
@@ -17,7 +15,6 @@ autoprotocol.container_type
 .. automodule:: autoprotocol.container_type
     :members:
     :undoc-members:
-    :show-inheritance:
 
 autoprotocol.harness
 --------------------
@@ -25,7 +22,6 @@ autoprotocol.harness
 .. automodule:: autoprotocol.harness
     :members:
     :undoc-members:
-    :show-inheritance:
 
 autoprotocol.instruction
 ------------------------
@@ -41,7 +37,6 @@ autoprotocol.protocol
 .. automodule:: autoprotocol.protocol
     :members:
     :undoc-members:
-    :show-inheritance:
 
 autoprotocol.unit
 -----------------
@@ -49,7 +44,6 @@ autoprotocol.unit
 .. automodule:: autoprotocol.unit
     :members:
     :undoc-members:
-    :show-inheritance:
 
 autoprotocol.util
 -----------------
@@ -57,4 +51,3 @@ autoprotocol.util
 .. automodule:: autoprotocol.util
     :members:
     :undoc-members:
-    :show-inheritance:

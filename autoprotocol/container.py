@@ -14,12 +14,17 @@ class Well(object):
     Do not construct a Well directly -- retrieve it from the related Container
     object.
 
-    Attributes
+    Parameters
     ----------
     container : Container
-        The Container this well belongs to
+        The Container this well belongs to.
     index : integer
-        The index of this well within the container
+        The index of this well within the container.
+    volume : Unit
+        Theoretical volume of this Well.
+    properties : dict
+        Additional properties of this Well represented as a dictionary.
+
 
     """
     def __init__(self, container, index):
@@ -80,7 +85,7 @@ class WellGroup(object):
 
     Wells in a WellGroup do not necessarily need to be in the same container.
 
-    Attributes
+    Parameters
     ----------
     wells : list
         List of Well objects contained in this WellGroup
@@ -200,10 +205,12 @@ class Container(object):
               num wells, starting at well start, and proceeding along the row (or
               column, if columnwise is specified)
 
-    Attributes
+    Parameters
     ----------
     id : string
+        Alphanumerical identifier for a Container.
     container_type : ContainerType
+        ContainerType associated with a Container.
 
     """
 

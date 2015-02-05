@@ -9,7 +9,10 @@ class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.
 
-    Ex)
+    Example
+    -------
+    .. code-block:: python
+
         sample = {
             "forks": 6,
             "spoons": 5,
@@ -24,6 +27,11 @@ class make_dottable_dict(dict):
         print sample.forks
         >>> 6
 
+    Parameters
+    ----------
+    dict : dict
+        Dictionary to be made dottable.
+
     '''
     def __getattr__(self, attr):
         return self[attr]
@@ -33,6 +41,17 @@ class make_dottable_dict(dict):
 
 
 def deep_merge_params(defaults, override):
+    """Merge two dictionaries while retaining common key-value pairs.
+
+    Parameters
+    ----------
+    defaults : dict
+        Default dictionary to compare with overrides.
+    override : dict
+        Dictionary containing additional keys and/or values to override those
+        corresponding to keys in the defaults dicitonary.
+
+    """
     defaults = make_dottable_dict(defaults.copy())
     for key, value in override.items():
         if isinstance(value, dict):

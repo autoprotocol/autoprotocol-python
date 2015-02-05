@@ -9,8 +9,7 @@ import operator
 '''
 
 class Unit(object):
-    """
-    A representation of a measure of volume, duration, temperature, or
+    """A representation of a measure of volume, duration, temperature, or
     concentration.
 
     """

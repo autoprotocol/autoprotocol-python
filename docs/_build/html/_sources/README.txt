@@ -1,7 +1,7 @@
 README
 ======
 
-_Autoprotocol: http://autoprotocol.org is a standard way to express
+`Autoprotocol <http://autoprotocol.org>`_ is a standard way to express
 experiments in life science. This repository contains a python library for
 generating Autoprotocol.
 

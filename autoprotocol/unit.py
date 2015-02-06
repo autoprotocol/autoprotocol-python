@@ -1,5 +1,6 @@
-from __future__ import division
+from __future__ import division, print_function
 import operator
+import sys
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -54,20 +55,20 @@ class Unit(object):
         return cmp(self.value, other.value)
 
     def __mul__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value * other.value, self.unit)
+        if isinstance(other, Unit):
+            print("WARNING: Unit.__mul__ and __div__ only support scalar "
+                "multiplication. Converting %s to %f" % (other, other.value),
+                file=sys.stderr)
+            other = other.value
+        return Unit(self.value * other, self.unit)
 
     def __div__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value / other.value, self.unit)
+        if isinstance(other, Unit):
+            print("WARNING: Unit.__mul__ and __div__ only support scalar "
+                "multiplication. Converting %s to %f" % (other, other.value),
+                file=sys.stderr)
+            other = other.value
+        return Unit(self.value / other, self.unit)
 
     def __floordiv__(self, other):
         if not isinstance(other, Unit):

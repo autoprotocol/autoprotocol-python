@@ -459,9 +459,9 @@ class Protocol(object):
             end_dilute = well_group.wells[0]
             wells_to_dilute = well_group[0].container.wells_from(end_dilute,
                                     begin_dilute.index-end_dilute.index + 1)
-        self.transfer(source.set_volume(Unit.fromstring(vol)*Unit(2,
-                      "microliter")), source_well, Unit.fromstring(vol)*Unit(2,
-                      "microliter"))
+        self.transfer(source.set_volume(Unit.fromstring(vol)*2),
+                      source_well,
+                      Unit.fromstring(vol)*2)
         if reverse:
             while len(wells_to_dilute.wells) >= 2:
                 srcs.append(wells_to_dilute.wells.pop())
@@ -475,8 +475,7 @@ class Protocol(object):
                 srcs.append(wells_to_dilute.wells[i-1])
                 dests.append(wells_to_dilute[i])
                 vols.append(vol)
-            self.transfer(srcs.set_volume(Unit.fromstring(vol)*Unit(2,
-                          "microliter")), dests, vols, mix_after=mix_after)
+            self.transfer(srcs.set_volume(Unit.fromstring(vol)*2), dests, vols, mix_after=mix_after)
 
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",

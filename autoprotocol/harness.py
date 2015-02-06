@@ -29,6 +29,8 @@ def convert_param(protocol, val, type):
             return Unit.fromstring(val)
     elif type in ['integer', 'bool', 'string']:
         return val
+    elif type == 'decimal':
+        return float(val)
 
 
 class ProtocolInfo(object):

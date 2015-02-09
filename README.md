@@ -1,6 +1,8 @@
 # Autoprotocol Python
 
-### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)*
+### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)* 
+[![Documentation Status](https://readthedocs.org/projects/autoprotocol-python/badge/)](https://readthedocs.org/projects/autoprotocol-python/?badge=latest)
+
 
 [Autoprotocol](https://www.autoprotocol.org) is a standard way to express
 experiments in life science. This repository contains a python library for

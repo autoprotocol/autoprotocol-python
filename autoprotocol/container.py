@@ -338,7 +338,7 @@ class Container(object):
                 inner_wells.extend(wells)
         else:
             col = num_cols
-            for i in range(1,num_rows-1):
+            for i in range(1,num_rows):
                 inner_wells.extend(range(col+1, (col+num_cols)-1))
                 col += num_cols
         inner_wells = map(lambda x: self._wells[x], inner_wells)

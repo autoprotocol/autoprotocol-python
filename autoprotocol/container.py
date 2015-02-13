@@ -337,10 +337,10 @@ class Container(object):
                     wells.append((r*num_cols)+c)
                 inner_wells.extend(wells)
         else:
-            col = num_cols
-            for i in range(1,num_rows):
-                inner_wells.extend(range(col+1, (col+num_cols)-1))
-                col += num_cols
+            well = num_cols
+            for i in range(1,num_rows-1):
+                inner_wells.extend(range(well+1, well+(num_cols-1)))
+                well += num_cols
         inner_wells = map(lambda x: self._wells[x], inner_wells)
         return WellGroup(inner_wells)
 

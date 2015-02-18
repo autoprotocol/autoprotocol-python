@@ -483,8 +483,9 @@ class Protocol(object):
 
         Parameters
         ----------
-        well : str, Well
-            well to be mixed
+        well : str, Well, WellGroup
+            Well(s) to be mixed. If a WellGroup is passed, each well in the
+            group will be mixed using the specified parameters.
         volume : str, Unit, optional
             volume of liquid to be aspirated and expelled during mixing
         speed : str, Unit, optional
@@ -493,13 +494,16 @@ class Protocol(object):
             number of times to aspirate and expell liquid during mixing
 
         """
-        opts = {
-            "well": well,
-            "volume": volume,
-            "speed": speed,
-            "repetitions": repetitions
-        }
-        self.pipette([{"mix": [opts]}])
+        if isinstance(well, Well) or isinstance(well, str):
+            well = WellGroup([well])
+        for w in well.wells:
+            opts = {
+                "well": w,
+                "volume": volume,
+                "speed": speed,
+                "repetitions": repetitions
+            }
+            self.pipette([{"mix": [opts]}])
 
     def dispense(self, ref, reagent, columns):
         """

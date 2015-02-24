@@ -562,7 +562,6 @@ class Protocol(object):
                     volume="10:microliter",
                     dataref=None,
                     dyes=None,
-                    melting=False,
                     melting_start=None,
                     melting_end=None,
                     melting_increment=None,
@@ -615,8 +614,6 @@ class Protocol(object):
             Name of dataref representing read data if performing qPCR
         dyes : list, optional
             Dye to utilize for qPCR reading
-        melting : bool
-            Specify whether parameters for a melting curve should be present
         melting_start: str, Unit
             Temperature at which to start the melting curve.
         melting_end: str, Unit

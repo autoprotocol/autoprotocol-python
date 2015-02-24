@@ -134,6 +134,9 @@ class Thermocycle(Instruction):
             }]
         }],
 
+    To specify a melting curve, all four melting-relevant parameters must have
+    a value.
+
     Parameters
     ----------
     ref : str, Ref
@@ -146,8 +149,6 @@ class Thermocycle(Instruction):
         Name of dataref representing read data if performing qPCR
     dyes : list, optional
         Dye to utilize for qPCR reading
-    melting : bool
-        Specify whether parameters for a melting curve should be present
     melting_start: str, Unit
         Temperature at which to start the melting curve.
     melting_end: str, Unit
@@ -160,8 +161,15 @@ class Thermocycle(Instruction):
 
     Raises
     ------
-    AttributeError
-        if groups are not properly formatted
+    ValueError
+        If one of dataref and dyes is specified but the other isn't.
+    ValueError
+        If all melting curve-related parameters are specified but dyes isn't.
+    ValueError
+        If some melting curve-related parameteres are specified but not all of
+        them.
+    ValueError
+        If invalid dyes are supplied.
 
     """
     CHANNEL1_DYES  = ["FAM","SYBR"]
@@ -173,7 +181,7 @@ class Thermocycle(Instruction):
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
     def __init__(self, ref, groups, volume="25:microliter", dataref=None,
-                 dyes=None, melting=False, melting_start=None, melting_end=None,
+                 dyes=None, melting_start=None, melting_end=None,
                  melting_increment=None, melting_rate=None):
         instruction = {
             "op": "thermocycle",
@@ -182,25 +190,31 @@ class Thermocycle(Instruction):
             "volume": volume
         }
 
+        melting_params = [melting_start, melting_end, melting_increment,
+                          melting_rate]
+        melting = sum([1 for m in melting_params if not m])
+        print melting
+
         if (dyes and not dataref) or (dataref and not dyes):
             raise ValueError("You must specify both a dataref name and the dyes"
                              " to use for qPCR")
-        elif melting and not dyes:
-            raise ValueError("A melting step requires a valid dyes object")
 
-        if melting:
-            if (melting_start and melting_end and melting_increment and
-                melting_rate):
-                instruction["melting"] = {
-                    "start": melting_start,
-                    "end": melting_end,
-                    "increment": melting_increment,
-                    "rate": melting_rate
-                }
-            else:
-                raise ValueError('If "melting" is True you must specify values '
-                                 'for melting_start, melting_end, '
-                                 'melting_increment and melting_rate')
+        if melting == 0:
+            if not dyes:
+                raise ValueError("A melting step requires a valid dyes object")
+            instruction["melting"] = {
+                "start": melting_start,
+                "end": melting_end,
+                "increment": melting_increment,
+                "rate": melting_rate
+            }
+        elif melting < 4 and melting >= 1:
+            raise ValueError('To specify a melt curve, you must specify values '
+                             'for melting_start, melting_end, '
+                             'melting_increment and melting_rate')
+        else:
+            pass
+
         if dyes:
             keys = dyes.keys()
             if Thermocycle.find_invalid_dyes(keys):

@@ -138,7 +138,6 @@ class Protocol(object):
 
         """
         assert name not in self.refs
-        assert storage or discard
         opts = {}
         cont_type = self.container_type(cont_type)
         if id:

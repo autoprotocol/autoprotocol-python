@@ -348,7 +348,8 @@ class Container(object):
         """
         Return a WellGroup of Wells belonging to this Container starting from
         the index indicated (in integer or string form) and including the number
-        of proceeding wells specified
+        of proceeding wells specified.  Wells are counted from the starting well
+        rowwise unless columnwise is True.
 
         Parameters
         ----------
@@ -358,6 +359,8 @@ class Container(object):
         num : int
             Number of wells to include
         columnwise : bool, optional
+            Specifies whether the wells included should be counted columnwise
+            instead of the default rowwise.
 
         """
         start = self.robotize(start)

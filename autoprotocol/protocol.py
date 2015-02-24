@@ -562,7 +562,11 @@ class Protocol(object):
                     volume="10:microliter",
                     dataref=None,
                     dyes=None,
-                    melting=None):
+                    melting=False,
+                    melting_start=None,
+                    melting_end=None,
+                    melting_increment=None,
+                    melting_rate=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
         groups being a list of dicts in the formof:
@@ -585,14 +589,43 @@ class Protocol(object):
                 }]
             }],
 
+        Example usage:
+
+        .. code-block:: python
+
+            p.thermocycle(test_plate, [{"cycles": 1,
+                            "steps": [{
+                                "temperature": "45:celsius",
+                                "duration": "10:minute"}
+                            ]
+                           }],
+              dyes={"SYBR": test_plate.well(0)},
+              melting=True, melting_start="45:celsius", melting_end="55:celsius",
+              melting_increment="2:celsius", melting_rate="2:minute", dataref="test_qpcr")
+
         Parameters
         ----------
         ref : str, Ref
+            Container to be thermocycled
         groups : list of dicts
+            List of thermocycling instructions formatted as above
         volume : str, Unit, optional
+            Volume contained in wells being thermocycled
         dataref : str, optional
+            Name of dataref representing read data if performing qPCR
         dyes : list, optional
-        melting : str, Unit, optional
+            Dye to utilize for qPCR reading
+        melting : bool
+            Specify whether parameters for a melting curve should be present
+        melting_start: str, Unit
+            Temperature at which to start the melting curve.
+        melting_end: str, Unit
+            Temperature at which to end the melting curve.
+        melting_increment: str, Unit
+            Temperature by which to increment the melting curve. Accepted increment
+            values are between 0.1 and 9.9 degrees celsius.
+        melting_rate: str, Unit
+            Specifies the duration of each temperature step in the melting curve.
 
         Raises
         ------
@@ -606,7 +639,9 @@ class Protocol(object):
                 "form of [{'cycles':___, 'steps': [{'temperature':___,"
                 "'duration':___, }]}, { ... }, ...]")
         self.instructions.append(
-            Thermocycle(ref, groups, volume, dataref, dyes, melting))
+            Thermocycle(ref, groups, volume, dataref, dyes, melting,
+                        melting_start, melting_end, melting_increment,
+                        melting_rate))
 
     def thermocycle_ramp(self, ref, start_temp, end_temp, time,
                          step_duration="60:second"):

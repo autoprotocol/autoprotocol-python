@@ -146,8 +146,17 @@ class Thermocycle(Instruction):
         Name of dataref representing read data if performing qPCR
     dyes : list, optional
         Dye to utilize for qPCR reading
-    melting : str, Unit, optional
-        Temperature at which to perform a melting curve
+    melting : bool
+        Specify whether parameters for a melting curve should be present
+    melting_start: str, Unit
+        Temperature at which to start the melting curve.
+    melting_end: str, Unit
+        Temperature at which to end the melting curve.
+    melting_increment: str, Unit
+        Temperature by which to increment the melting curve. Accepted increment
+        values are between 0.1 and 9.9 degrees celsius.
+    melting_rate: str, Unit
+        Specifies the duration of each temperature step in the melting curve.
 
     Raises
     ------
@@ -164,7 +173,8 @@ class Thermocycle(Instruction):
     AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
     def __init__(self, ref, groups, volume="25:microliter", dataref=None,
-                 dyes=None, melting=None):
+                 dyes=None, melting=False, melting_start=None, melting_end=None,
+                 melting_increment=None, melting_rate=None):
         instruction = {
             "op": "thermocycle",
             "object": ref,
@@ -179,7 +189,18 @@ class Thermocycle(Instruction):
             raise ValueError("A melting step requires a valid dyes object")
 
         if melting:
-            instruction["melting"] = melting
+            if (melting_start and melting_end and melting_increment and
+                melting_rate):
+                instruction["melting"] = {
+                    "start": melting_start,
+                    "end": melting_end,
+                    "increment": melting_increment,
+                    "rate": melting_rate
+                }
+            else:
+                raise ValueError('If "melting" is True you must specify values '
+                                 'for melting_start, melting_end, '
+                                 'melting_increment and melting_rate')
         if dyes:
             keys = dyes.keys()
             if Thermocycle.find_invalid_dyes(keys):

@@ -193,12 +193,10 @@ class Thermocycle(Instruction):
         melting_params = [melting_start, melting_end, melting_increment,
                           melting_rate]
         melting = sum([1 for m in melting_params if not m])
-        print melting
 
         if (dyes and not dataref) or (dataref and not dyes):
             raise ValueError("You must specify both a dataref name and the dyes"
                              " to use for qPCR")
-
         if melting == 0:
             if not dyes:
                 raise ValueError("A melting step requires a valid dyes object")

@@ -12,7 +12,13 @@ import argparse
 '''
 
 
-def convert_param(protocol, val, type):
+def convert_param(protocol, val, typeDesc):
+    if isinstance(typeDesc, basestring):
+        typeDesc = {'type': typeDesc}
+    if not val:
+        val = typeDesc['default']
+
+    type = typeDesc['type']
     if type == 'aliquot':
         container, well_idx = val.split('/')
         return protocol.refs[container].container.well(well_idx)

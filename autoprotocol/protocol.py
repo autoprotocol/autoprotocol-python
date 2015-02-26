@@ -635,15 +635,13 @@ class Protocol(object):
                 "form of [{'cycles':___, 'steps': [{'temperature':___,"
                 "'duration':___, }]}, { ... }, ...]")
         self.instructions.append(
-            Thermocycle(ref, groups, volume, dataref, dyes, melting,
-                        melting_start, melting_end, melting_increment,
-                        melting_rate))
+            Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
+                        melting_end, melting_increment, melting_rate))
 
     def thermocycle_ramp(self, ref, start_temp, end_temp, time,
                          step_duration="60:second"):
         """Append instructions representing a thermocyle ramp-up or ramp-down
         protocol based on start_temp and end_temp
-
         Parameters
         ----------
         ref : str, Ref

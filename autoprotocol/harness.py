@@ -16,7 +16,7 @@ def convert_param(protocol, val, typeDesc):
     if isinstance(typeDesc, basestring):
         typeDesc = {'type': typeDesc}
     if not val:
-        val = typeDesc['default']
+        typeDesc['default'] = val
 
     type = typeDesc['type']
     if type == 'aliquot':

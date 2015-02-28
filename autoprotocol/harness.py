@@ -40,7 +40,10 @@ def convert_param(protocol, val, typeDesc):
     elif type == 'container':
         return protocol.refs[val].container
     elif type in ['volume', 'time', 'temperature']:
-        if val in ['ambient', 'warm_37', 'cold_4', 'cold_20']:
+        # TODO: this should be a separate 'condition' type, rather than
+        # overloading 'temperature'.
+        if type == 'temperature' and \
+                val in ['ambient', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
             return val
         else:
             return Unit.fromstring(val)

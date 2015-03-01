@@ -1441,9 +1441,33 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="warm_37")
+
+            # a plate must be sealed/covered before it can be incubated
+            p.seal(sample_plate)
+            p.incubate(sample_plate, "warm_37", "1:hour", shaking=True)
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "object": "sample_plate",
+                  "op": "seal"
+                },
+                {
+                  "duration": "1:hour",
+                  "where": "warm_37",
+                  "object": "sample_plate",
+                  "shaking": true,
+                  "op": "incubate"
+                }
+              ]
 
         '''
         self.instructions.append(Incubate(ref, where, duration, shaking))
@@ -1511,9 +1535,42 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.absorbance(sample_plate, sample_plate.wells_from(0,12).indices(),
+                         "600:nanometer", "test_reading", flashes=50)
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "dataref": "test_reading",
+                  "object": "sample_plate",
+                  "wells": [
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5",
+                    "A6",
+                    "A7",
+                    "A8",
+                    "A9",
+                    "A10",
+                    "A11",
+                    "A12"
+                  ],
+                  "num_flashes": 50,
+                  "wavelength": "600:nanometer",
+                  "op": "absorbance"
+                }
+              ]
 
         Parameters
         ----------

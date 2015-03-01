@@ -1,10 +1,9 @@
 Autoprotocol package
 ====================
 
-
-
 autoprotocol.container
 -----------------------------
+
 .. automodule:: autoprotocol.container
     :members:
     :undoc-members:

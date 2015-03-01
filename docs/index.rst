@@ -9,18 +9,25 @@ Welcome to Autoprotocol's documentation!
 Contents:
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 4
 
   autoprotocol-python library documentation <autoprotocol>
   AUTHORS
   LICENSE
 
+
 `Autoprotocol <http://autoprotocol.org>`_ is a standard way to express
 experiments in life science. This repository contains a python library for
 generating Autoprotocol.
 
-Installation
-------------
+Search the Docs
+---------------
+
+* :ref:`genindex`
+* :ref:`search`
+
+Autoprotocol-Python Installation
+--------------------------------
 .. code-block:: none
 
     $ git clone https://github.com/autoprotocol/autoprotocol-python
@@ -64,7 +71,7 @@ A basic protocol object has empty "refs" and "instructions" stanzas.  Various he
 
   print json.dumps(p.as_dict(), indent=2)
 
-The protocol above produces the following autoprotocol:
+The protocol above produces the following Autoprotocol:
 
 .. code-block:: python
 
@@ -196,9 +203,4 @@ authors listed above for more details.
 
 
 
-Search the Docs
-===============
-
-* :ref:`genindex`
-* :ref:`search`
 

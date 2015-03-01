@@ -81,7 +81,7 @@ class Protocol(object):
         Raises
         ------
         ValueError
-            if an unknown ContainerType shortname is passed as a parameter
+            If an unknown ContainerType shortname is passed as a parameter
 
         """
         if shortname in _CONTAINER_TYPES:
@@ -98,15 +98,42 @@ class Protocol(object):
         and returns a Container with the id, container type and storage or
         discard conditions specified.
 
-        Ex)
+        Example Usage:
 
         .. code-block:: python
 
-            sample_ref = ref("sample_plate", cont_type="96-pcr", discard=True)
-            sample_ref = ref("sample_plate", id="ct1cxae33lkj",
-                             cont_type="96-pcr", storage="ambient")
+            p = Protocol()
 
-        returns a Container object using Container(None, "96-pcr")
+            # ref a new container (no id specified)
+            sample_ref_1 = p.ref("sample_plate_1",
+                                 cont_type="96-pcr",
+                                 discard=True)
+
+            # ref an existing container with a known id
+            sample_ref_2 = p.ref("sample_plate_2",
+                                 id="ct1cxae33lkj",
+                                 cont_type="96-pcr",
+                                 storage="ambient")
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "sample_plate_1": {
+                  "new": "96-pcr",
+                  "discard": true
+                },
+                "sample_plate_2": {
+                  "id": "ct1cxae33lkj",
+                  "store": {
+                    "where": "ambient"
+                  }
+                }
+              },
+              "instructions": []
+            }
 
         Parameters
         ----------
@@ -162,7 +189,29 @@ class Protocol(object):
     def append(self, instructions):
         """
         Append instruction(s) to the list of Instruction objects associated
-        with this protocol
+        with this protocol.  The other functions on Protocol() should be used
+        in lieu of doing this directly.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            p.append(Incubate("sample_plate", "ambient", "1:hour"))
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "duration": "1:hour",
+                  "where": "ambient",
+                  "object": "sample_plate",
+                  "shaking": false,
+                  "op": "incubate"
+                }
+            ]
 
         Parameters
         ----------
@@ -178,6 +227,51 @@ class Protocol(object):
     def as_dict(self):
         """
         Return the entire protocol as a dictionary.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            from autoprotocol.protocol import Protocol
+            import json
+
+            p = Protocol()
+            sample_ref_2 = p.ref("sample_plate_2",
+                                  id="ct1cxae33lkj",
+                                  cont_type="96-pcr",
+                                  storage="ambient")
+            p.seal(sample_ref_2)
+            p.incubate(sample_ref_2, "warm_37", "20:minute")
+
+            print json.dumps(p.as_dict(), indent=2)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "sample_plate_2": {
+                  "id": "ct1cxae33lkj",
+                  "store": {
+                    "where": "ambient"
+                  }
+                }
+              },
+              "instructions": [
+                {
+                  "object": "sample_plate_2",
+                  "op": "seal"
+                },
+                {
+                  "duration": "20:minute",
+                  "where": "warm_37",
+                  "object": "sample_plate_2",
+                  "shaking": false,
+                  "op": "incubate"
+                }
+              ]
+            }
 
         Returns
         -------
@@ -209,12 +303,89 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
-
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second"):
         """
         Distribute liquid from source well(s) to destination wells(s)
+
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+            sample_source = p.ref("sample_source",
+                                  "ct32kj234l21g",
+                                  "micro-1.5",
+                                  storage="cold_20")
+
+            p.distribute(sample_source.well(0),
+                         sample_plate.wells_from(0,8,columnwise=True),
+                         "200:microliter",
+                         mix_before=True,
+                         mix_vol="500:microliter",
+                         repetitions=20)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+              {
+                "groups": [
+                  {
+                    "distribute": {
+                      "to": [
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/0"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/12"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/24"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/36"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/48"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/60"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/72"
+                        },
+                        {
+                          "volume": "150.0:microliter",
+                          "well": "sample_plate/84"
+                        }
+                      ],
+                      "from": "sample_source/0",
+                      "mix_before": {
+                        "volume": "500:microliter",
+                        "repetitions": 20,
+                        "speed": "100:microliter/second"
+                      }
+                    }
+                  }
+                ],
+                "op": "pipette"
+              }
+            ]
 
         Parameters
         ----------
@@ -287,6 +458,113 @@ class Protocol(object):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step.
+
+        Example Usage:
+
+        To encode a set of one-to-one transfers from each well in the first
+        column of a plate to each column of the second row, each with a new tip
+        and different volumes:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 ct32kj234l21g,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            volumes = ["5:microliter", "10:microliter", "15:microliter",
+                       "20:microliter", "25:microliter", "30:microliter",
+                       "35:microliter", "40:microliter"]
+
+            p.transfer(sample_plate.wells_from(0,8,columnwise=True),
+                       sample_plate.wells_from(1,8,columnwise=True),
+                       volumes)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "5.0:microliter",
+                          "to": "sample_plate/1",
+                          "from": "sample_plate/0"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "10.0:microliter",
+                          "to": "sample_plate/13",
+                          "from": "sample_plate/12"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "15.0:microliter",
+                          "to": "sample_plate/25",
+                          "from": "sample_plate/24"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "20.0:microliter",
+                          "to": "sample_plate/37",
+                          "from": "sample_plate/36"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "25.0:microliter",
+                          "to": "sample_plate/49",
+                          "from": "sample_plate/48"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "30.0:microliter",
+                          "to": "sample_plate/61",
+                          "from": "sample_plate/60"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "35.0:microliter",
+                          "to": "sample_plate/73",
+                          "from": "sample_plate/72"
+                        }
+                      ]
+                    },
+                    {
+                      "transfer": [
+                        {
+                          "volume": "40.0:microliter",
+                          "to": "sample_plate/85",
+                          "from": "sample_plate/84"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                }
+            ]
+
 
         Parameters
         ----------
@@ -418,11 +696,172 @@ class Protocol(object):
         WellGroup well_group except for the first and last well should already
         contain the diluent.
 
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+            sample_source = p.ref("sample_source",
+                                  "ct32kj234l21g",
+                                  "micro-1.5",
+                                  storage="cold_20")
+
+            p.serial_dilute_rowwise(sample_source.well(0),
+                                    sample_plate.wells_from(0,12),
+                                    "50:microliter",
+                                    mix_after=True)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "100.0:microliter",
+                          "to": "sample_plate/0",
+                          "from": "sample_source/0"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                },
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/1",
+                          "from": "sample_plate/0",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/2",
+                          "from": "sample_plate/1",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/3",
+                          "from": "sample_plate/2",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/4",
+                          "from": "sample_plate/3",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/5",
+                          "from": "sample_plate/4",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/6",
+                          "from": "sample_plate/5",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/7",
+                          "from": "sample_plate/6",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/8",
+                          "from": "sample_plate/7",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/9",
+                          "from": "sample_plate/8",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/10",
+                          "from": "sample_plate/9",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        },
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "sample_plate/11",
+                          "from": "sample_plate/10",
+                          "mix_after": {
+                            "volume": "50.0:microliter",
+                            "repetitions": 10,
+                            "speed": "100:microliter/second"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                }
+            ]
+
+
+
         Parameters
         ----------
         container : Container
         source : Well
-            Well containing source liquid.  Will be transfered to starting well
+            Well containing source liquid.  Will be transfered to starting well,
             with double the volume specified in parameters
         start_well : Well
             Start of dilution, well containing the highest concentration of
@@ -480,6 +919,43 @@ class Protocol(object):
         """
         Mix specified well using a new pipette tip
 
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_source = p.ref("sample_source",
+                                  None,
+                                  "micro-1.5",
+                                  storage="cold_20")
+
+            p.mix(sample_source.well(0), volume="200:microliter", r
+                  epetitions=25)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    {
+                      "mix": [
+                        {
+                          "volume": "200:microliter",
+                          "well": "sample_source/0",
+                          "repetitions": 25,
+                          "speed": "100:microliter/second"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                }
+              ]
+            }
+
+
         Parameters
         ----------
         well : str, Well, WellGroup
@@ -508,6 +984,95 @@ class Protocol(object):
         """
         Dispense specified reagent to specified columns.
 
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.dispense(sample_plate,
+                       "water",
+                       [{"column": 0, "volume": "10:microliter"},
+                        {"column": 1, "volume": "20:microliter"},
+                        {"column": 2, "volume": "30:microliter"},
+                        {"column": 3, "volume": "40:microliter"},
+                        {"column": 4, "volume": "50:microliter"},
+                        {"column": 5, "volume": "60:microliter"},
+                        {"column": 6, "volume": "70:microliter"},
+                        {"column": 7, "volume": "80:microliter"},
+                        {"column": 8, "volume": "90:microliter"},
+                        {"column": 9, "volume": "100:microliter"},
+                        {"column": 10, "volume": "100:microliter"},
+                        {"column": 11, "volume": "120:microliter"}
+                       ])
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "reagent": "water",
+                  "object": "sample_plate",
+                  "columns": [
+                    {
+                      "column": 0,
+                      "volume": "10:microliter"
+                    },
+                    {
+                      "column": 1,
+                      "volume": "20:microliter"
+                    },
+                    {
+                      "column": 2,
+                      "volume": "30:microliter"
+                    },
+                    {
+                      "column": 3,
+                      "volume": "40:microliter"
+                    },
+                    {
+                      "column": 4,
+                      "volume": "50:microliter"
+                    },
+                    {
+                      "column": 5,
+                      "volume": "60:microliter"
+                    },
+                    {
+                      "column": 6,
+                      "volume": "70:microliter"
+                    },
+                    {
+                      "column": 7,
+                      "volume": "80:microliter"
+                    },
+                    {
+                      "column": 8,
+                      "volume": "90:microliter"
+                    },
+                    {
+                      "column": 9,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 10,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 11,
+                      "volume": "120:microliter"
+                    }
+                  ],
+                  "op": "dispense"
+                }
+              ]
+
         Parameters
         ----------
         ref : Container, str
@@ -526,8 +1091,86 @@ class Protocol(object):
 
     def dispense_full_plate(self, ref, reagent, volume):
         """
-        Dispense specified reagent to every well of specified container using the
-        reagent dispenser.
+        Dispense specified reagent to every well of specified container using
+        the reagent dispenser.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.dispense_full_plate(sample_plate,
+                       "water",
+                       "100:microliter")
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "reagent": "water",
+                  "object": "sample_plate",
+                  "columns": [
+                    {
+                      "column": 0,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 1,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 2,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 3,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 4,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 5,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 6,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 7,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 8,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 9,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 10,
+                      "volume": "100:microliter"
+                    },
+                    {
+                      "column": 11,
+                      "volume": "100:microliter"
+                    }
+                  ],
+                  "op": "dispense"
+                }
+            ]
+
+
 
         Parameters
         ----------
@@ -544,18 +1187,47 @@ class Protocol(object):
             columns.append({"column": col, "volume": volume})
         self.instructions.append(Dispense(ref, reagent, columns))
 
-    def spin(self, ref, speed, duration):
+    def spin(self, ref, acceleration, duration):
         """
-        Append a Spin Instruction to the instructions list
+        Apply acceleration to a container.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.spin(sample_plate, "700:meter/second^2", "20:minute")
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "acceleration": "700:g",
+                  "duration": "20:minute",
+                  "object": "sample_plate",
+                  "op": "spin"
+                }
+            ]
 
         Parameters
         ----------
         ref : str, Ref
-        speed: str, Unit
+            The plate to be centrifuged.
+        acceleration: str, Unit
+            Acceleration to be applied to the plate, in units of `g` or
+            `meter/second^2`
         duration: str, Unit
+            Length of time that accelleration should be applied
 
         """
-        self.instructions.append(Spin(ref, speed, duration))
+        self.instructions.append(Spin(ref, acceleration, duration))
 
     def thermocycle(self, ref, groups,
                     volume="10:microliter",
@@ -587,19 +1259,106 @@ class Protocol(object):
                 }]
             }],
 
-        Example usage:
+        Example Usage:
+
+        To thermocycle a container according to the protocol:
+            * 1 cycle:
+                * 95 degrees for 5 minutes
+            * 30 cycles:
+                * 95 degrees for 30 seconds
+                * 56 degrees for 20 seconds
+                * 72 degrees for 30 seconds
+            * 1 cycle:
+                * 72 degrees for 10 minutes
 
         .. code-block:: python
 
-            p.thermocycle(test_plate, [{"cycles": 1,
-                            "steps": [{
-                                "temperature": "45:celsius",
-                                "duration": "10:minute"}
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="warm_37")
+
+            # a plate must be sealed before it can be thermocycled
+            p.seal(sample_plate)
+
+            p.thermocycle(sample_plate,
+                   [
+                    {"cycles": 1,
+                     "steps": [{
+                        "temperature": "95:celsius",
+                        "duration": "5:minute",
+                        }]
+                     },
+                     {"cycles": 35,
+                         "steps": [
+                            {"temperature": "95:celsius",
+                             "duration": "30:second"},
+                            {"temperature": "56:celsius",
+                             "duration": "30:second"},
+                            {"temperature": "72:celsius",
+                             "duration": "20:second"}
                             ]
-                           }],
-              dyes={"SYBR": test_plate.well(0)},
-              melting=True, melting_start="45:celsius", melting_end="55:celsius",
-              melting_increment="2:celsius", melting_rate="2:minute", dataref="test_qpcr")
+                    },
+                        {"cycles": 1,
+                            "steps": [
+                            {"temperature": "72:celsius", "duration":"10:minute"}]
+                        }
+                   ])
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "object": "sample_plate",
+                  "op": "seal"
+                },
+                {
+                  "volume": "10:microliter",
+                  "dataref": null,
+                  "object": "sample_plate",
+                  "groups": [
+                    {
+                      "cycles": 1,
+                      "steps": [
+                        {
+                          "duration": "5:minute",
+                          "temperature": "95:celsius"
+                        }
+                      ]
+                    },
+                    {
+                      "cycles": 35,
+                      "steps": [
+                        {
+                          "duration": "30:second",
+                          "temperature": "95:celsius"
+                        },
+                        {
+                          "duration": "30:second",
+                          "temperature": "56:celsius"
+                        },
+                        {
+                          "duration": "20:second",
+                          "temperature": "72:celsius"
+                        }
+                      ]
+                    },
+                    {
+                      "cycles": 1,
+                      "steps": [
+                        {
+                          "duration": "10:minute",
+                          "temperature": "72:celsius"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "thermocycle"
+                }
+              ]
 
         Parameters
         ----------
@@ -654,7 +1413,6 @@ class Protocol(object):
             total duration of thermocycle protocol
         step_duration : str, Unit, optional
             individual temperature step duration
-
         """
         start_temp = int(Unit.fromstring(start_temp).value)
         end_temp = int(Unit.fromstring(end_temp).value)
@@ -679,6 +1437,14 @@ class Protocol(object):
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
 
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
         '''
         self.instructions.append(Incubate(ref, where, duration, shaking))
 
@@ -687,6 +1453,14 @@ class Protocol(object):
         Transfer a plate to the magnetized slot on the liquid handler
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -711,6 +1485,14 @@ class Protocol(object):
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
 
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
         Parameters
         ----------
         ref : str, Ref
@@ -724,6 +1506,14 @@ class Protocol(object):
         Read the absorbance for the indicated wavelength for the indicated
         wells. Append an Absorbance instruction to the list of instructions for
         this Protocol object.
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -750,6 +1540,14 @@ class Protocol(object):
         wells.  Append a Fluorescence instruction to the list of instructions
         for this Protocol object.
 
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
         Parameters
         ----------
         ref : str, Container
@@ -774,7 +1572,15 @@ class Protocol(object):
 
     def luminescence(self, ref, wells, dataref):
         """
-        Read luminescence of indicated wells
+        Read luminescence of indicated wells.
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -793,6 +1599,14 @@ class Protocol(object):
     def gel_separate(self, wells, matrix, ladder, duration, dataref):
         """
         Separate nucleic acids on an agarose gel.
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -816,6 +1630,14 @@ class Protocol(object):
         """
         Seal indicated container using the automated plate sealer.
 
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
         Parameters
         ----------
         ref : Ref, str
@@ -828,6 +1650,14 @@ class Protocol(object):
         """
         Remove seal from indicated container using the automated plate unsealer.
 
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
         Parameters
         ----------
         ref : Ref, str
@@ -839,6 +1669,14 @@ class Protocol(object):
     def cover(self, ref, lid='standard'):
         """
         Place specified lid type on specified container
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -853,6 +1691,14 @@ class Protocol(object):
     def uncover(self, ref):
         """
         Remove lid from specified container
+
+        Example Usage:
+
+        .. code-block:: python
+
+        Autoprotocol Output:
+
+        .. code-block:: json
 
         Parameters
         ----------
@@ -870,7 +1716,8 @@ class Protocol(object):
             if v.container is container:
                 return k
 
-    def fill_wells(self, dst_group, src_group, volume):
+    @staticmethod
+    def fill_wells(dst_group, src_group, volume):
         """
         Distribute liquid to a WellGroup, sourcing the liquid from a group
         of wells all containing the same substance.
@@ -899,6 +1746,7 @@ class Protocol(object):
             wells to be distributed to
 
         """
+
         src = None
         distributes = []
         src_group = WellGroup(src_group)

@@ -12,13 +12,24 @@ import argparse
 '''
 
 
+def param_default(typeDesc):
+    if typeDesc['type'] in ['aliquot+', 'aliquot++']:
+        return []
+    else:
+        return None
+
+
 def convert_param(protocol, val, typeDesc):
+    if val is None:
+        return None
+
     if isinstance(typeDesc, basestring):
         typeDesc = {'type': typeDesc}
     if not val:
-        val = typeDesc.get('default')
+        val = typeDesc.get('default') or param_default(typeDesc)
 
     type = typeDesc['type']
+
     if type == 'aliquot':
         container, well_idx = val.split('/')
         return protocol.refs[container].container.well(well_idx)
@@ -33,10 +44,16 @@ def convert_param(protocol, val, typeDesc):
             return val
         else:
             return Unit.fromstring(val)
-    elif type in ['integer', 'bool', 'string']:
-        return val
+    elif type in 'bool':
+        return bool(val)
+    elif type == 'string':
+        return str(val)
+    elif type == 'integer':
+        return int(val)
     elif type == 'decimal':
         return float(val)
+    else:
+        raise ValueError("Unknown input type %r" % type)
 
 
 class ProtocolInfo(object):
@@ -62,8 +79,8 @@ class ProtocolInfo(object):
                         c.well(idx).set_properties(aq.get('properties'))
 
         out_params = {}
-        for k, v in params.iteritems():
-            out_params[k] = convert_param(protocol, v, self.input_types[k])
+        for k, typeDesc in self.input_types.iteritems():
+            out_params[k] = convert_param(protocol, params.get(k), typeDesc)
 
         return out_params
 

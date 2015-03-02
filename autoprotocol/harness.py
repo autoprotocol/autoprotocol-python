@@ -13,8 +13,15 @@ import argparse
 
 
 def param_default(typeDesc):
-    if typeDesc['type'] in ['aliquot+', 'aliquot++']:
+    if isinstance(typeDesc, basestring):
+        typeDesc = {'type': typeDesc}
+    if typeDesc['type'] in ['aliquot+', 'aliquot++', 'group+']:
         return []
+    elif typeDesc['type'] == 'group':
+        return {
+            k: param_default(v)
+            for k, v in typeDesc['inputs'].iteritems()
+        }
     else:
         return None
 
@@ -55,6 +62,16 @@ def convert_param(protocol, val, typeDesc):
         return int(val)
     elif type == 'decimal':
         return float(val)
+    elif type == 'group':
+        return {
+            k: convert_param(protocol, val.get(k), subTypeDesc)
+            for k, subTypeDesc in typeDesc['inputs'].iteritems()
+            }
+    elif type == 'group+':
+        return [{
+            k: convert_param(protocol, x.get(k), subTypeDesc)
+            for k, subTypeDesc in typeDesc['inputs'].iteritems()
+            } for x in val]
     else:
         raise ValueError("Unknown input type %r" % type)
 

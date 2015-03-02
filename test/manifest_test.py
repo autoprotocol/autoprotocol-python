@@ -1,6 +1,6 @@
 import unittest
 from autoprotocol.harness import ProtocolInfo
-from autoprotocol import Protocol, Unit
+from autoprotocol import Protocol, Unit, Well
 
 
 class ManifestTest(unittest.TestCase):
@@ -12,11 +12,11 @@ class ManifestTest(unittest.TestCase):
             'name': 'Test Empty',
             'inputs': {}
         })
-        empty_parsed = protocol_info.parse(self.protocol, {
+        parsed = protocol_info.parse(self.protocol, {
             'refs': {},
             'parameters': {}
         })
-        self.assertEqual({}, empty_parsed)
+        self.assertEqual({}, parsed)
 
     def test_basic_types(self):
         protocol_info = ProtocolInfo({
@@ -28,7 +28,7 @@ class ManifestTest(unittest.TestCase):
                 'decimal': 'decimal'
             }
         })
-        empty_parsed = protocol_info.parse(self.protocol, {
+        parsed = protocol_info.parse(self.protocol, {
             'refs': {},
             'parameters': {
                 'bool': True,
@@ -42,7 +42,7 @@ class ManifestTest(unittest.TestCase):
             'string': 'test',
             'integer': 3,
             'decimal': 2.1
-        }, empty_parsed)
+        }, parsed)
 
     def test_unit_types(self):
         protocol_info = ProtocolInfo({
@@ -53,7 +53,7 @@ class ManifestTest(unittest.TestCase):
                 'temperature': 'temperature'
             }
         })
-        empty_parsed = protocol_info.parse(self.protocol, {
+        parsed = protocol_info.parse(self.protocol, {
             'refs': {},
             'parameters': {
                 'volume': '3:microliter',
@@ -65,4 +65,61 @@ class ManifestTest(unittest.TestCase):
             'volume': Unit.fromstring('3:microliter'),
             'time': Unit.fromstring('30:second'),
             'temperature': Unit.fromstring('25:celsius')
-        }, empty_parsed)
+        }, parsed)
+
+    def test_group(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Types',
+            'inputs': {
+                'group_test': {
+                    'type': 'group',
+                    'inputs': {
+                        'test': 'aliquot'
+                    }
+                }
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {
+                'ct1test': {'id': 'ct1test', 'type': '96-pcr', 'discard': True}
+            },
+            'parameters': {
+                'group_test': {
+                    'test': 'ct1test/0'
+                }
+            }
+        })
+        self.assertTrue(isinstance(parsed['group_test'], dict))
+        self.assertTrue('test' in parsed['group_test'])
+        self.assertTrue(isinstance(parsed['group_test']['test'], Well))
+
+    def test_multigroup(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Types',
+            'inputs': {
+                'group_test': {
+                    'type': 'group+',
+                    'inputs': {
+                        'test': 'aliquot'
+                    }
+                }
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {
+                'ct1test': {'id': 'ct1test', 'type': '96-pcr', 'discard': True}
+            },
+            'parameters': {
+                'group_test': [
+                    {'test': 'ct1test/0'},
+                    {'test': 'ct1test/1'}
+                ]
+            }
+        })
+        self.assertTrue(isinstance(parsed['group_test'], list))
+        self.assertEqual(2, len(parsed['group_test']))
+        self.assertTrue('test' in parsed['group_test'][0])
+        self.assertTrue(isinstance(parsed['group_test'][0]['test'], Well))
+        self.assertTrue('test' in parsed['group_test'][1])
+        self.assertTrue(isinstance(parsed['group_test'][1]['test'], Well))
+        self.assertEqual(1, parsed['group_test'][1]['test'].index)

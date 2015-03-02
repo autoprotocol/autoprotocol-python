@@ -33,23 +33,72 @@ class Protocol(object):
 
         .. code-block:: python
 
-            my_plate = protocol.ref("my_plate", id="ct1xae8jabbe6",
+            p = Protocol()
+            my_plate = p.ref("my_plate", id="ct1xae8jabbe6",
                                     cont_type="96-pcr", storage="cold_4")
 
     To add instructions to the protocol, use the helper methods in this class
 
         .. code-block:: python
 
-            protocol.transfer(source=my_plate.well("A1"),
-                              dest=my_plate.well("B4"),
-                              volume="50:microliter")
-            protocol.thermocycle(my_plate, groups=[
-                { "cycles": 1,
-                  "steps": [
-                    { "temperature": "95:celsius", "duration": "1:hour" }
-                    ]
+            p.transfer(source=my_plate.well("A1"),
+                       dest=my_plate.well("B4"),
+                       volume="50:microliter")
+            p.thermocycle(my_plate, groups=[
+                          { "cycles": 1,
+                            "steps": [
+                              { "temperature": "95:celsius",
+                                "duration": "1:hour"
+                              }]
+                          }])
+
+    Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "my_plate": {
+                  "id": "ct1xae8jabbe6",
+                  "store": {
+                    "where": "cold_4"
                   }
-                ])
+                }
+              },
+              "instructions": [
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "50.0:microliter",
+                          "to": "my_plate/15",
+                          "from": "my_plate/0"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                },
+                {
+                  "volume": "10:microliter",
+                  "dataref": null,
+                  "object": "my_plate",
+                  "groups": [
+                    {
+                      "cycles": 1,
+                      "steps": [
+                        {
+                          "duration": "1:hour",
+                          "temperature": "95:celsius"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "thermocycle"
+                }
+              ]
+            }
 
     """
 
@@ -68,7 +117,7 @@ class Protocol(object):
         ----------
         shortname : {"384-flat", "384-pcr", "96-flat", "96-pcr", "96-deep",
                     "micro-2.0", "micro-1.5"}
-            string representing one of the ContainerTypes in the
+            String representing one of the ContainerTypes in the
             _CONTAINER_TYPES dictionary
 
         Returns
@@ -929,8 +978,8 @@ class Protocol(object):
                                   "micro-1.5",
                                   storage="cold_20")
 
-            p.mix(sample_source.well(0), volume="200:microliter", r
-                  epetitions=25)
+            p.mix(sample_source.well(0), volume="200:microliter",
+                  repetitions=25)
 
         Autoprotocol Output:
 
@@ -1006,7 +1055,7 @@ class Protocol(object):
                         {"column": 7, "volume": "80:microliter"},
                         {"column": 8, "volume": "90:microliter"},
                         {"column": 9, "volume": "100:microliter"},
-                        {"column": 10, "volume": "100:microliter"},
+                        {"column": 10, "volume": "110:microliter"},
                         {"column": 11, "volume": "120:microliter"}
                        ])
 
@@ -1091,8 +1140,8 @@ class Protocol(object):
 
     def dispense_full_plate(self, ref, reagent, volume):
         """
-        Dispense specified reagent to every well of specified container using
-        the reagent dispenser.
+        Dispense the specified amount of the specified reagent to every well
+        of a container using a reagent dispenser.
 
         Example Usage:
 
@@ -1105,8 +1154,8 @@ class Protocol(object):
                                  storage="warm_37")
 
             p.dispense_full_plate(sample_plate,
-                       "water",
-                       "100:microliter")
+                                  "water",
+                                  "100:microliter")
 
         Autoprotocol Output:
 
@@ -1283,28 +1332,28 @@ class Protocol(object):
             p.seal(sample_plate)
 
             p.thermocycle(sample_plate,
-                   [
-                    {"cycles": 1,
-                     "steps": [{
-                        "temperature": "95:celsius",
-                        "duration": "5:minute",
-                        }]
-                     },
-                     {"cycles": 35,
-                         "steps": [
-                            {"temperature": "95:celsius",
-                             "duration": "30:second"},
-                            {"temperature": "56:celsius",
-                             "duration": "30:second"},
-                            {"temperature": "72:celsius",
-                             "duration": "20:second"}
-                            ]
-                    },
-                        {"cycles": 1,
-                            "steps": [
-                            {"temperature": "72:celsius", "duration":"10:minute"}]
-                        }
-                   ])
+                          [
+                           {"cycles": 1,
+                            "steps": [{
+                               "temperature": "95:celsius",
+                               "duration": "5:minute",
+                               }]
+                            },
+                            {"cycles": 35,
+                                "steps": [
+                                   {"temperature": "95:celsius",
+                                    "duration": "30:second"},
+                                   {"temperature": "56:celsius",
+                                    "duration": "30:second"},
+                                   {"temperature": "72:celsius",
+                                    "duration": "20:second"}
+                                   ]
+                           },
+                               {"cycles": 1,
+                                   "steps": [
+                                   {"temperature": "72:celsius", "duration":"10:minute"}]
+                               }
+                          ])
 
         Autoprotocol Output:
 
@@ -1401,6 +1450,7 @@ class Protocol(object):
                          step_duration="60:second"):
         """Append instructions representing a thermocyle ramp-up or ramp-down
         protocol based on start_temp and end_temp
+
         Parameters
         ----------
         ref : str, Ref
@@ -1541,7 +1591,7 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
-            p.absorbance(sample_plate, sample_plate.wells_from(0,12).indices(),
+            p.absorbance(sample_plate, sample_plate.wells_from(0,12),
                          "600:nanometer", "test_reading", flashes=50)
 
         Autoprotocol Output:
@@ -1601,9 +1651,44 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.fluorescence(sample_plate, sample_plate.wells_from(0,12),
+                           excitation="587:nanometer", emission="610:nanometer",
+                           dataref="test_reading")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "dataref": "test_reading",
+                  "excitation": "587:nanometer",
+                  "object": "sample_plate",
+                  "emission": "610:nanometer",
+                  "wells": [
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5",
+                    "A6",
+                    "A7",
+                    "A8",
+                    "A9",
+                    "A10",
+                    "A11",
+                    "A12"
+                  ],
+                  "num_flashes": 25,
+                  "op": "fluorescence"
+                }
+              ]
 
         Parameters
         ----------
@@ -1635,9 +1720,40 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.luminescence(sample_plate, sample_plate.wells_from(0,12),
+                           "test_reading")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "dataref": "test_reading",
+                  "object": "sample_plate",
+                  "wells": [
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5",
+                    "A6",
+                    "A7",
+                    "A8",
+                    "A9",
+                    "A10",
+                    "A11",
+                    "A12"
+                  ],
+                  "op": "luminescence"
+                }
+              ]
 
         Parameters
         ----------
@@ -1661,9 +1777,42 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.gel_separate(sample_plate.wells_from(0,12), "agarose(96,2.0%)",
+                           "ladder1", "11:minute", "genotyping_030214")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "dataref": "genotyping_030214",
+                  "matrix": "agarose(96,2.0%)",
+                  "ladder": "ladder1",
+                  "objects": [
+                    "sample_plate/0",
+                    "sample_plate/1",
+                    "sample_plate/2",
+                    "sample_plate/3",
+                    "sample_plate/4",
+                    "sample_plate/5",
+                    "sample_plate/6",
+                    "sample_plate/7",
+                    "sample_plate/8",
+                    "sample_plate/9",
+                    "sample_plate/10",
+                    "sample_plate/11"
+                  ],
+                  "duration": "11:minute",
+                  "op": "gel_separate"
+                }
+            ]
 
         Parameters
         ----------
@@ -1691,9 +1840,24 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.seal(sample_plate)
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "object": "sample_plate",
+                  "op": "seal"
+                }
+              ]
 
         Parameters
         ----------
@@ -1711,9 +1875,30 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+            # a plate must be sealed to be unsealed
+            p.seal(sample_plate)
+
+            p.unseal(sample_plate)
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "object": "sample_plate",
+                  "op": "seal"
+                },
+                {
+                  "object": "sample_plate",
+                  "op": "unseal"
+                }
+              ]
 
         Parameters
         ----------
@@ -1731,9 +1916,24 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+            p.cover(sample_plate, lid="universal")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "lid": "universal",
+                  "object": "sample_plate",
+                  "op": "cover"
+                }
+              ]
 
         Parameters
         ----------
@@ -1753,9 +1953,31 @@ class Protocol(object):
 
         .. code-block:: python
 
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+            # a plate must have a cover to be uncovered
+            p.cover(sample_plate, lid="universal")
+
+            p.uncover(sample_plate)
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+            "instructions": [
+                {
+                  "lid": "universal",
+                  "object": "sample_plate",
+                  "op": "cover"
+                },
+                {
+                  "object": "sample_plate",
+                  "op": "uncover"
+                }
+              ]
 
         Parameters
         ----------
@@ -1878,7 +2100,7 @@ class Protocol(object):
                 ]
             }
 
-        protocol.make_well_references(parameters)
+            protocol.make_well_references(parameters)
 
         returns:
 

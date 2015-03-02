@@ -6,5 +6,6 @@ setup(
     author='Tali Herzka',
     author_email="tali@transcriptic.com",
     version='2.0.1',
+    test_suite='test',
     packages=['autoprotocol']
 )

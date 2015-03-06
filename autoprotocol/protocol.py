@@ -1111,7 +1111,7 @@ class Protocol(object):
                     },
                     {
                       "column": 10,
-                      "volume": "100:microliter"
+                      "volume": "110:microliter"
                     },
                     {
                       "column": 11,

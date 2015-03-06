@@ -32,7 +32,7 @@ def convert_param(protocol, val, typeDesc):
 
     if isinstance(typeDesc, basestring):
         typeDesc = {'type': typeDesc}
-    if not val:
+    if val is None:
         val = typeDesc.get('default') or param_default(typeDesc)
 
     type = typeDesc['type']

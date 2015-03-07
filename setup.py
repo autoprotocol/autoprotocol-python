@@ -4,6 +4,7 @@ setup(
     name='autoprotocol',
     url='http://github.com/autoprotocol/autoprotocol-python',
     author='Tali Herzka',
+    description='Python library for generating Autoprotocol',
     author_email="tali@transcriptic.com",
     version='2.0.1',
     test_suite='test',

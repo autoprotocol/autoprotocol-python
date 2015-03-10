@@ -1,4 +1,8 @@
 from .unit import Unit
+import sys
+
+if sys.version_info[0] >= 3:
+    xrange = range
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS

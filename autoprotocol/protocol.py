@@ -331,7 +331,7 @@ class Protocol(object):
         """
         return {
             "refs": dict(
-                (k, v.opts)
+                (key, value.opts)
                 for key, value in self.refs.items()
             ),
             "instructions": map(lambda x: self._refify(x.data),

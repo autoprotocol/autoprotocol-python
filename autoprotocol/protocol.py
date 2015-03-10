@@ -330,7 +330,10 @@ class Protocol(object):
 
         """
         return {
-            "refs": dict(map(lambda (k, v): (k, v.opts), self.refs.items())),
+            "refs": dict(
+                (key, value.opts)
+                for key, value in self.refs.items()
+            ),
             "instructions": map(lambda x: self._refify(x.data),
                                 self.instructions)
         }
@@ -1991,7 +1994,8 @@ class Protocol(object):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 
     def _ref_for_container(self, container):
-        for k, v in self.refs.iteritems():
+        for k in self.refs:
+            v = self.refs[k]
             if v.container is container:
                 return k
 

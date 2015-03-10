@@ -243,12 +243,13 @@ class Thermocycle(Instruction):
         """
 
         dye_names = reduce(lambda x, y: x.union(y),
-                           [set(v) for v in well_map.itervalues()])
+                           [set(well_map[k]) for k in well_map])
         if Thermocycle.find_invalid_dyes(dye_names):
             raise ValueError("thermocycle instruction supplied the following "
                              "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
         dye_map = {dye: [] for dye in dye_names}
-        for well, dyes in well_map.iteritems():
+        for well in well_map:
+            dyes = well_map[well]
             for dye in dyes:
                 dye_map[dye] += [well]
         return dye_map

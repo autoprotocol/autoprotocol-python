@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 from .protocol import Protocol
 from .unit import Unit
@@ -19,8 +20,8 @@ def param_default(typeDesc):
         return []
     elif typeDesc['type'] == 'group':
         return {
-            k: param_default(v)
-            for k, v in typeDesc['inputs'].iteritems()
+            k: param_default(typeDesc['inputs'][k])
+            for k, v in typeDesc['inputs']
         }
     else:
         return None
@@ -30,8 +31,12 @@ def convert_param(protocol, val, typeDesc):
     if val is None:
         return None
 
-    if isinstance(typeDesc, basestring):
-        typeDesc = {'type': typeDesc}
+    try:
+        if isinstance(typeDesc, basestring):
+            typeDesc = {'type': typeDesc}
+    except NameError:
+        if isinstance(typeDesc, str):
+            typeDesc = {'type': typeDesc}
     if val is None:
         val = typeDesc.get('default') or param_default(typeDesc)
 
@@ -64,13 +69,13 @@ def convert_param(protocol, val, typeDesc):
         return float(val)
     elif type == 'group':
         return {
-            k: convert_param(protocol, val.get(k), subTypeDesc)
-            for k, subTypeDesc in typeDesc['inputs'].iteritems()
+            k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
+            for k in typeDesc['inputs']
             }
     elif type == 'group+':
         return [{
-            k: convert_param(protocol, x.get(k), subTypeDesc)
-            for k, subTypeDesc in typeDesc['inputs'].iteritems()
+            k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
+            for k in typeDesc['inputs']
             } for x in val]
     else:
         raise ValueError("Unknown input type %r" % type)
@@ -84,7 +89,8 @@ class ProtocolInfo(object):
         refs = inputs['refs']
         params = inputs['parameters']
 
-        for name, ref in refs.iteritems():
+        for name in refs:
+            ref = refs[name]
             c = protocol.ref(
                 name,
                 ref.get('id'),
@@ -93,13 +99,15 @@ class ProtocolInfo(object):
                 discard=ref.get('discard'))
             aqs = ref.get('aliquots')
             if aqs:
-                for idx, aq in aqs.iteritems():
+                for idx in aqs:
+                    aq = aqs[idx]
                     c.well(idx).set_volume(aq['volume'])
                     if "properties" in aq:
                         c.well(idx).set_properties(aq.get('properties'))
 
         out_params = {}
-        for k, typeDesc in self.input_types.iteritems():
+        for k in self.input_types:
+            typeDesc = self.input_types[k]
             out_params[k] = convert_param(protocol, params.get(k), typeDesc)
 
         return out_params
@@ -144,4 +152,4 @@ def run(fn, protocol_name=None):
 
     fn(protocol, params)
 
-    print json.dumps(protocol.as_dict(), indent=2)
+    print(json.dumps(protocol.as_dict(), indent=2))

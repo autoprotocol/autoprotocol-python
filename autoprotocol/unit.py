@@ -47,11 +47,22 @@ class Unit(object):
         else:
             return Unit(self.value - other.value, self.unit)
 
-    def __cmp__(self, other):
+    def _check_type(self, other):
         if not isinstance(other, Unit):
             raise ValueError("Both operands must be of type Unit")
         elif self.unit != other.unit:
             raise ValueError("unit %s is not %s" % (self.unit, other.unit))
+
+    def __lt__(self, other):
+        self._check_type(other)
+        return self.value < other.value
+
+    def __eq__(self, other):
+        self._check_type(other)
+        return self.value == other.value
+
+    def __cmp__(self, other):
+        self._check_type(other)
         return cmp(self.value, other.value)
 
     def __mul__(self, other):

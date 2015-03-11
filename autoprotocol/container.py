@@ -35,7 +35,7 @@ class Well(object):
         self.container = container
         self.index = index
         self.volume = None
-        self.properties = None
+        self.properties = {}
 
     def set_properties(self, properties):
         """
@@ -48,7 +48,25 @@ class Well(object):
 
         """
         assert isinstance(properties, dict)
-        self.properties = properties
+        if len(self.properties.keys()) > 0:
+            self.add_properties(properties)
+        else:
+            self.properties = properties
+        return self
+
+    def add_properties(self, properties):
+        """
+        Add a property to the properies attribute of a Well
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to add to a Well
+
+        """
+        assert isinstance(properties, dict)
+        for key, value in properties.items():
+            self.properties[key] = value
         return self
 
     def set_volume(self, vol):
@@ -102,6 +120,21 @@ class WellGroup(object):
         elif isinstance(wells, WellGroup):
             wells = wells.wells
         self.wells = wells
+
+    def set_properties(self, properties):
+        """
+        Set the same properties for each well in a WellGroup
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to set on well(s)
+
+        """
+        assert isinstance(properties, dict)
+        for w in self.wells:
+            w.set_properties(properties)
+        return self
 
     def set_volume(self, vol):
         """

@@ -147,8 +147,8 @@ class Thermocycle(Instruction):
         Volume contained in wells being thermocycled
     dataref : str, optional
         Name of dataref representing read data if performing qPCR
-    dyes : list, optional
-        Dye to utilize for qPCR reading
+    dyes : dict, optional
+        Dictionary mapping dye types to the wells they're used in
     melting_start: str, Unit
         Temperature at which to start the melting curve.
     melting_end: str, Unit

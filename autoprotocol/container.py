@@ -276,6 +276,8 @@ class Container(object):
         Return a WellGroup containing references to wells corresponding to the
         index or indices given.
 
+        Parameters
+        ----------
         args : str, int, list
             Reference or list of references to a well index either as an integer
             or a string

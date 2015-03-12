@@ -1,10 +1,6 @@
 README
 ======
 
-`Autoprotocol <http://autoprotocol.org>`_ is a standard way to express
-experiments in life science. This repository contains a python library for
-generating Autoprotocol.
-
 Installation
 ------------
 .. code-block:: none
@@ -22,7 +18,7 @@ or, alternatively:
 Building a Protocol
 -------------------
 
-A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methdods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:
+A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:
 
 .. code-block:: python
 

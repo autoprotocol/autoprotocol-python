@@ -20,7 +20,22 @@ class Unit(object):
 
     @staticmethod
     def fromstring(s):
-        """Convert a string representation of a unit into a Unit object.
+        """
+        Convert a string representation of a unit into a Unit object.
+
+        Example
+        -------
+
+        .. code-block:: python
+
+            Unit.fromstring("10:microliter")
+
+        becomes
+
+        .. code-block:: python
+
+            Unit(10, "microliter")
+
 
         """
         if isinstance(s, Unit):

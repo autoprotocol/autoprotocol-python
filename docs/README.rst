@@ -1,10 +1,6 @@
 README
 ======
 
-`Autoprotocol <http://autoprotocol.org>`_ is a standard way to express
-experiments in life science. This repository contains a python library for
-generating Autoprotocol.
-
 Installation
 ------------
 .. code-block:: none

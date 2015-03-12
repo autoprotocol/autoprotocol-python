@@ -28,6 +28,19 @@ def param_default(typeDesc):
 
 
 def convert_param(protocol, val, typeDesc):
+    """
+    Convert parameters based on their input types
+
+    Parameters
+    ----------
+    protocol : Protocol
+        Protocol object being parsed.
+    val : str, int, bool, dict, list
+        Parameter value to be converted.
+    typeDesc : dict, str
+        Description of input type.
+
+    """
     if val is None:
         return None
 
@@ -114,6 +127,35 @@ class ProtocolInfo(object):
 
 
 class Manifest(object):
+    """
+    Object representation of a manifest.json file
+
+    Parameters
+    ----------
+    object : JSON object
+        A manifest.json file with the following format:
+
+        .. code-block:: json
+
+            {
+              "version": "1.0.0",
+              "format": "python",
+              "license": "MIT",
+              "description": "This is a protocol.",
+              "protocols": [
+                {
+                  "name": "SampleProtocol",
+                  "command_string": "python sample_protocol.py",
+                  "preview": {
+                    "refs":{},
+                    "parameters": {},
+                  "inputs": {},
+                  "dependencies": []
+                }
+              ]
+            }
+
+    """
     def __init__(self, json):
         self.version = json['version']
         self.protocols = json['protocols']
@@ -125,14 +167,17 @@ class Manifest(object):
 
 def run(fn, protocol_name=None):
     """
-    If no protocol_name is passed, use preview parameters from matching
-    protocol in the manifest.json file to run the given function.  Otherwise,
-    take configuration JSON file from the command line and run the given
-    protocol.
+    Run the protocol specified by the function.
+
+    If protocol_name is passed, use preview parameters from the protocol with
+    the matching "name" value in the manifest.json file to run the given
+    function.  Otherwise, take configuration JSON file from the command line
+    and run the given function.
 
     Parameters
     ----------
     fn : function
+        Function that generates Autoprotocol
 
     """
     parser = argparse.ArgumentParser()

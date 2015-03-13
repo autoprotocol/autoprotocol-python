@@ -229,11 +229,12 @@ unit.Unit
 ~~~~~~~~~
 
 .. autoclass:: autoprotocol.unit.Unit
+    :members:
 
-Unit.fromstring()
-^^^^^^^^^^^^^^^^^
+.. Unit.fromstring()
+.. ^^^^^^^^^^^^^^^^^
 
-.. automethod:: autoprotocol.unit.Unit.fromstring
+.. .. automethod:: autoprotocol.unit.Unit.fromstring
 
 
 autoprotocol.util

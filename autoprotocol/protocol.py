@@ -776,6 +776,60 @@ class Protocol(object):
         raise RuntimeError("Stamping is not supported for the container "
                            "types provided")
 
+    def sangerseq(self, cont, wells, dataref):
+      """
+      Send the indicated wells of the container specified for Sanger sequencing.
+      The specified wells should already contain the appropriate mix for
+      sequencing, including primers and DNA according to the instructions
+      provided by the vendor.
+
+      Example Usage:
+
+      .. code-block:: python
+
+        p = Protocol()
+        sample_plate = p.ref("sample_plate",
+                             None,
+                             "96-flat",
+                             storage="warm_37")
+
+        p.sangerseq(sample_plate,
+                    sample_plate.wells_from(0,5).indices(),
+                    "seq_data_022415")
+
+      Autoprotocol Output:
+
+      .. code-block json
+
+      "instructions": [
+          {
+            "dataref": "seq_data_022415",
+            "object": "sample_plate",
+            "wells": [
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5"
+            ],
+            "op": "sangerseq"
+          }
+        ]
+
+
+      Parameters
+      ----------
+      cont : Container, str
+        Container with well(s) that contain material to be sequenced.
+      wells : list of str
+        Well indices of the container that contain appropriate materials to be
+        sent for sequencing.
+      dataref : str
+        Name of sequencing dataset that will be returned.
+
+      """
+      self.instructions.append(SangerSeq(cont, wells, dataref))
+
     def serial_dilute_rowwise(self, source, well_group, vol,
                               mix_after=True, reverse=False):
         """

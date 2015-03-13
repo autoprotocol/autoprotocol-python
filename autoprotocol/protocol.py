@@ -792,9 +792,6 @@ class Protocol(object):
                     },
                     { ... }
 
-
-
-
       Parameters
       ----------
       source_plate : Container, list of Containers
@@ -1916,7 +1913,7 @@ class Protocol(object):
             wells = wells.indices()
         self.instructions.append(Luminescence(ref, wells, dataref))
 
-    def gel_separate(self, wells, matrix, ladder, duration, dataref):
+    def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
         """
         Separate nucleic acids on an agarose gel.
 
@@ -1930,8 +1927,9 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
-            p.gel_separate(sample_plate.wells_from(0,12), "agarose(96,2.0%)",
-                           "ladder1", "11:minute", "genotyping_030214")
+            p.gel_separate(sample_plate.wells_from(0,12), "10:microliter",
+                           "agarose(8,2.0%)", "ladder1", "11:minute",
+                           "genotyping_030214")
 
         Autoprotocol Output:
 
@@ -1940,7 +1938,8 @@ class Protocol(object):
             "instructions": [
                 {
                   "dataref": "genotyping_030214",
-                  "matrix": "agarose(96,2.0%)",
+                  "matrix": "agarose(8,2.0%)",
+                  "volume": "10:microliter",
                   "ladder": "ladder1",
                   "objects": [
                     "sample_plate/0",
@@ -1965,9 +1964,11 @@ class Protocol(object):
         ----------
         wells : list, WellGroup
             List of string well references or WellGroup containing wells to be
-            separated on gel
-        matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
-                  'agarose(12,1.2%)', 'agarose(8,0.8%)'}
+            separated on gel.
+        volume : str, Unit
+            Volume of liquid to be transferred from each well specified to a
+            lane of the gel.
+        matrix : {'agarose(8,2%)', 'agarose(8,1.2%)', 'agarose(8,0.8%)'}
             Matrix in which to gel separate samples
         ladder : {'ladder1', 'ladder2'}
             Ladder by which to measure separated fragment size
@@ -1977,7 +1978,7 @@ class Protocol(object):
             Name of this set of gel separation results.
         """
         self.instructions.append(
-            GelSeparate(wells, matrix, ladder, duration, dataref))
+            GelSeparate(wells, volume, matrix, ladder, duration, dataref))
 
     def seal(self, ref):
         """

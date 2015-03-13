@@ -21,7 +21,7 @@ def param_default(typeDesc):
     elif typeDesc['type'] == 'group':
         return {
             k: param_default(typeDesc['inputs'][k])
-            for k, v in typeDesc['inputs']
+            for k, v in typeDesc['inputs'].items()
         }
     else:
         return None
@@ -41,9 +41,6 @@ def convert_param(protocol, val, typeDesc):
         Description of input type.
 
     """
-    if val is None:
-        return None
-
     try:
         if isinstance(typeDesc, basestring):
             typeDesc = {'type': typeDesc}
@@ -52,6 +49,8 @@ def convert_param(protocol, val, typeDesc):
             typeDesc = {'type': typeDesc}
     if val is None:
         val = typeDesc.get('default') or param_default(typeDesc)
+    if val is None:  # still None?
+        return None
 
     type = typeDesc['type']
 

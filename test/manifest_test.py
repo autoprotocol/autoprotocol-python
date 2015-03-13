@@ -1,6 +1,6 @@
 import unittest
 from autoprotocol.harness import ProtocolInfo
-from autoprotocol import Protocol, Unit, Well
+from autoprotocol import Protocol, Unit, Well, WellGroup
 
 
 class ManifestTest(unittest.TestCase):
@@ -123,3 +123,77 @@ class ManifestTest(unittest.TestCase):
         self.assertTrue('test' in parsed['group_test'][1])
         self.assertTrue(isinstance(parsed['group_test'][1]['test'], Well))
         self.assertEqual(1, parsed['group_test'][1]['test'].index)
+
+    def test_blank_default(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Blank Defaults',
+            'inputs': {
+                'int': 'integer',
+                'str': 'string',
+                'bool': 'bool',
+                'decimal': 'decimal',
+                'volume': 'volume',
+                'temperature': 'temperature',
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {},
+            'parameters': {}
+        })
+        self.assertIsNone(parsed['int'])
+        self.assertIsNone(parsed['str'])
+        self.assertIsNone(parsed['bool'])
+        self.assertIsNone(parsed['decimal'])
+        self.assertIsNone(parsed['volume'])
+        self.assertIsNone(parsed['temperature'])
+
+    def test_ref_default(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Blank Defaults',
+            'inputs': {
+                'aliquot': 'aliquot',
+                'aliquot+': 'aliquot+',
+                'aliquot++': 'aliquot++',
+                'container': 'container',
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {},
+            'parameters': {}
+        })
+        self.assertIsNone(parsed['aliquot'])
+        self.assertIsNone(parsed['container'])
+        self.assertIsInstance(parsed['aliquot+'], WellGroup)
+        self.assertEqual(0, len(parsed['aliquot+']))
+        self.assertEqual([], parsed['aliquot++'])
+
+    def test_group_default(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Blank Defaults',
+            'inputs': {
+                'group': {
+                    'type': 'group',
+                    'inputs': {
+                        'bool': 'bool',
+                        'aliquot': 'aliquot',
+                        'aliquot+': 'aliquot+'
+                    }
+                },
+                'group+': {
+                    'type': 'group+',
+                    'inputs': {
+                        'bool': 'bool'
+                    }
+                }
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {},
+            'parameters': {}
+        })
+        self.assertIsInstance(parsed['group'], dict)
+        self.assertIsNone(parsed['group']['bool'])
+        self.assertIsNone(parsed['group']['aliquot'])
+        self.assertIsInstance(parsed['group']['aliquot+'], WellGroup)
+        self.assertEqual(0, len(parsed['group']['aliquot+']))
+        self.assertEqual([], parsed['group+'])

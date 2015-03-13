@@ -58,7 +58,6 @@ Protocol.spin()
 ^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.spin
 
-
 Protocol.thermocycle()
 ^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.thermocycle

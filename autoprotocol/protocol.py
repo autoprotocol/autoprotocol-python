@@ -743,6 +743,58 @@ class Protocol(object):
       to the corersponding well on the destination plate using a 96-channel
       liquid handler.
 
+      Example Usage:
+      --------------
+
+      .. code-block python
+
+        p = Protocol()
+
+        source_plate = p.ref("source", None, "96-flat", discard=True)
+        dest_plate = p.ref("dest", None, "96-flat", discard=True)
+
+        p.stamp(source_plate, dest_plate, "10:microliter")
+
+      Autoprotocol Output
+      -------------------
+
+      .. code-block json
+
+        "instructions": [
+            {
+              "groups": [
+                {
+                  "transfer": [
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/0",
+                      "from": "source/0"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/1",
+                      "from": "source/1"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/2",
+                      "from": "source/2"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/3",
+                      "from": "source/3"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/4",
+                      "from": "source/4"
+                    },
+                    { ... }
+
+
+
+
       Parameters
       ----------
       source_plate : Container, list of Containers

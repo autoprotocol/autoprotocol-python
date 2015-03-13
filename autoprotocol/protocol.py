@@ -737,6 +737,44 @@ class Protocol(object):
             for x in opts:
                 self.pipette([{"transfer": [x]}])
 
+    def stamp(self, source_plate, dest_plate, volume):
+      """
+      Move the specified volume of liquid from every well on the source plate
+      to the corersponding well on the destination plate using a 96-channel
+      liquid handler.
+
+      Parameters
+      ----------
+      source_plate : Container, list of Containers
+        96- or 384-well plate(s) to source liquid from
+      dest_plate : Container, list of Containers
+        96- or 384-well plate(s) to source liquid from
+      volume : str, Unit
+        Volume of liquid to move from source plate(s) to destination plate(s)
+
+      """
+      if source_plate.container_type.well_count == 96:
+        if dest_plate.container_type.well_count == 96:
+          self.transfer(source_plate.all_wells(),
+                        dest_plate.all_wells(),
+                        volume,
+                        one_tip=True)
+        elif dest_plate.container_type.well_count == 384:
+          for i in range(0,4):
+            self.transfer(source_plate.all_wells(),
+                          dest_plate.quadrant(i),
+                          volume,
+                          one_tip=True)
+      elif source_plate.container_type.well_count == 384:
+        if dest_plate.container_type.well_count == 384:
+          for i in range(0,4):
+            self.transfer(source_plate.quadrant(i),
+                          dest_plate.quadrant(i),
+                          volume,
+                          one_tip=True)
+      else:
+        raise RuntimeError("Stamping is not supported for the container "
+                           "types provided")
 
     def serial_dilute_rowwise(self, source, well_group, vol,
                               mix_after=True, reverse=False):

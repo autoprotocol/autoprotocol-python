@@ -36,6 +36,10 @@ class Unit(object):
 
             Unit(10, "microliter")
 
+        Parameters
+        ----------
+        s : str
+            String in the format of "value:unit"
 
         """
         if isinstance(s, Unit):

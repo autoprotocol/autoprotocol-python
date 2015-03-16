@@ -737,6 +737,147 @@ class Protocol(object):
             for x in opts:
                 self.pipette([{"transfer": [x]}])
 
+    def stamp(self, source_plate, dest_plate, volume):
+      """
+      Move the specified volume of liquid from every well on the source plate
+      to the corersponding well on the destination plate using a 96-channel
+      liquid handler.
+
+      Example Usage:
+      --------------
+
+      .. code-block python
+
+        p = Protocol()
+
+        source_plate = p.ref("source", None, "96-flat", discard=True)
+        dest_plate = p.ref("dest", None, "96-flat", discard=True)
+
+        p.stamp(source_plate, dest_plate, "10:microliter")
+
+      Autoprotocol Output
+      -------------------
+
+      .. code-block json
+
+        "instructions": [
+            {
+              "groups": [
+                {
+                  "transfer": [
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/0",
+                      "from": "source/0"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/1",
+                      "from": "source/1"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/2",
+                      "from": "source/2"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/3",
+                      "from": "source/3"
+                    },
+                    {
+                      "volume": "10.0:microliter",
+                      "to": "dest/4",
+                      "from": "source/4"
+                    },
+                    { ... }
+
+      Parameters
+      ----------
+      source_plate : Container, list of Containers
+        96- or 384-well plate(s) to source liquid from
+      dest_plate : Container, list of Containers
+        96- or 384-well plate(s) to source liquid from
+      volume : str, Unit
+        Volume of liquid to move from source plate(s) to destination plate(s)
+
+      """
+      if source_plate.container_type.well_count == 96:
+        if dest_plate.container_type.well_count == 96:
+          self.transfer(source_plate.all_wells(),
+                        dest_plate.all_wells(),
+                        volume,
+                        one_tip=True)
+        elif dest_plate.container_type.well_count == 384:
+          for i in range(0,4):
+            self.transfer(source_plate.all_wells(),
+                          dest_plate.quadrant(i),
+                          volume,
+                          one_tip=True)
+      elif source_plate.container_type.well_count == 384:
+        if dest_plate.container_type.well_count == 384:
+          for i in range(0,4):
+            self.transfer(source_plate.quadrant(i),
+                          dest_plate.quadrant(i),
+                          volume,
+                          one_tip=True)
+      else:
+        raise RuntimeError("Stamping is not supported for the container "
+                           "types provided")
+
+    def sangerseq(self, cont, wells, dataref):
+      """
+      Send the indicated wells of the container specified for Sanger sequencing.
+      The specified wells should already contain the appropriate mix for
+      sequencing, including primers and DNA according to the instructions
+      provided by the vendor.
+
+      Example Usage:
+
+      .. code-block:: python
+
+        p = Protocol()
+        sample_plate = p.ref("sample_plate",
+                             None,
+                             "96-flat",
+                             storage="warm_37")
+
+        p.sangerseq(sample_plate,
+                    sample_plate.wells_from(0,5).indices(),
+                    "seq_data_022415")
+
+      Autoprotocol Output:
+
+      .. code-block json
+
+      "instructions": [
+          {
+            "dataref": "seq_data_022415",
+            "object": "sample_plate",
+            "wells": [
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5"
+            ],
+            "op": "sangerseq"
+          }
+        ]
+
+
+      Parameters
+      ----------
+      cont : Container, str
+        Container with well(s) that contain material to be sequenced.
+      wells : list of str
+        Well indices of the container that contain appropriate materials to be
+        sent for sequencing.
+      dataref : str
+        Name of sequencing dataset that will be returned.
+
+      """
+      self.instructions.append(SangerSeq(cont, wells, dataref))
 
     def serial_dilute_rowwise(self, source, well_group, vol,
                               mix_after=True, reverse=False):
@@ -1772,7 +1913,7 @@ class Protocol(object):
             wells = wells.indices()
         self.instructions.append(Luminescence(ref, wells, dataref))
 
-    def gel_separate(self, wells, matrix, ladder, duration, dataref):
+    def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
         """
         Separate nucleic acids on an agarose gel.
 
@@ -1786,8 +1927,9 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
-            p.gel_separate(sample_plate.wells_from(0,12), "agarose(96,2.0%)",
-                           "ladder1", "11:minute", "genotyping_030214")
+            p.gel_separate(sample_plate.wells_from(0,12), "10:microliter",
+                           "agarose(8,2.0%)", "ladder1", "11:minute",
+                           "genotyping_030214")
 
         Autoprotocol Output:
 
@@ -1796,7 +1938,8 @@ class Protocol(object):
             "instructions": [
                 {
                   "dataref": "genotyping_030214",
-                  "matrix": "agarose(96,2.0%)",
+                  "matrix": "agarose(8,2.0%)",
+                  "volume": "10:microliter",
                   "ladder": "ladder1",
                   "objects": [
                     "sample_plate/0",
@@ -1821,9 +1964,11 @@ class Protocol(object):
         ----------
         wells : list, WellGroup
             List of string well references or WellGroup containing wells to be
-            separated on gel
-        matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
-                  'agarose(12,1.2%)', 'agarose(8,0.8%)'}
+            separated on gel.
+        volume : str, Unit
+            Volume of liquid to be transferred from each well specified to a
+            lane of the gel.
+        matrix : {'agarose(8,2%)', 'agarose(8,1.2%)', 'agarose(8,0.8%)'}
             Matrix in which to gel separate samples
         ladder : {'ladder1', 'ladder2'}
             Ladder by which to measure separated fragment size
@@ -1833,7 +1978,7 @@ class Protocol(object):
             Name of this set of gel separation results.
         """
         self.instructions.append(
-            GelSeparate(wells, matrix, ladder, duration, dataref))
+            GelSeparate(wells, volume, matrix, ladder, duration, dataref))
 
     def seal(self, ref):
         """

@@ -292,20 +292,27 @@ class Incubate(Instruction):
 
 class SangerSeq(Instruction):
     """
-    Sequence specified object
+    Send the indicated wells of the container specified for Sanger sequencing.
+    The specified wells should already contain the appropriate mix for
+    sequencing, including primers and DNA according to the instructions
+    provided by the vendor.
 
     Parameters
     ----------
-    ref : Ref, str
-        Container containing samples to sequence
+    cont : Container, str
+      Container with well(s) that contain material to be sequenced.
+    wells : list of str
+      Well indices of the container that contain appropriate materials to be
+      sent for sequencing.
     dataref : str
-        Name for set of sequencing data to be returned
+      Name of sequencing dataset that will be returned.
 
     """
-    def __init__(self, ref, dataref):
+    def __init__(self, obj, wells, dataref):
         super(SangerSeq, self).__init__({
             "op": "sangerseq",
-            "object": ref,
+            "object": obj,
+            "wells": wells,
             "dataref": dataref
         })
 
@@ -328,18 +335,12 @@ class GelSeparate(Instruction):
         Name of dataset containing fragment sizes returned
 
     """
-    MATRICES = ['agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)',
-                'agarose(12,1.2%)', 'agarose(8,0.8%)']
-    LADDERS = ['ladder1', 'ladder2']
 
-    def __init__(self, wells, matrix, ladder, duration, dataref):
-        if matrix not in self.MATRICES:
-            raise ValueError("specified `matrix` not contained in: %s" % ", ".join(self.MATRICES))
-        if ladder not in self.LADDERS:
-            raise ValueError("specified `ladder` not contained in: %s" % ", ".join(self.LADDERS))
+    def __init__(self, wells, volume, matrix, ladder, duration, dataref):
         super(GelSeparate, self).__init__({
             "op": "gel_separate",
             "objects": wells,
+            "volume": volume,
             "matrix": matrix,
             "ladder": ladder,
             "duration": duration,

@@ -408,3 +408,16 @@ class Container(object):
             num_rows = self.container_type.row_count()
             start = col * num_rows + row
         return WellGroup(self.all_wells(columnwise).wells[start:start + num])
+
+    def quadrant(self, quad):
+        assert self.container_type.well_count == 384
+        assert quad in [0,1,2,3], "Quadrant number must be between 0 and 3."
+
+        start_well = [0,1,24,25]
+        wells = []
+
+        for row_offset in xrange(start_well[quad], 384, 48):
+            for col_offset in xrange(0, 24, 2):
+                wells.append(row_offset + col_offset)
+        return WellGroup([self.well(w) for w in wells])
+

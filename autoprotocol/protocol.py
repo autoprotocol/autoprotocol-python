@@ -1980,7 +1980,7 @@ class Protocol(object):
         self.instructions.append(
             GelSeparate(wells, volume, matrix, ladder, duration, dataref))
 
-    def seal(self, ref):
+    def seal(self, ref, type="ultra-clear"):
         """
         Seal indicated container using the automated plate sealer.
 
@@ -2003,6 +2003,7 @@ class Protocol(object):
             "instructions": [
                 {
                   "object": "sample_plate",
+                  "type": "ultra-clear"
                   "op": "seal"
                 }
               ]
@@ -2010,10 +2011,12 @@ class Protocol(object):
         Parameters
         ----------
         ref : Ref, str
-            Container to be sealed
+          Container to be sealed
+        type : str
+          Seal type to be used, such as "ultra-clear" or "foil".
 
         """
-        self.instructions.append(Seal(ref))
+        self.instructions.append(Seal(ref, type))
 
     def unseal(self, ref):
         """

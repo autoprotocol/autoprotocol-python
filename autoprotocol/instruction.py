@@ -442,10 +442,11 @@ class Seal(Instruction):
         Container to be sealed
 
     """
-    def __init__(self, ref):
+    def __init__(self, ref, type="ultra-clear"):
         super(Seal, self).__init__({
             "op": "seal",
-            "object": ref
+            "object": ref,
+            "type": type
         })
 
 

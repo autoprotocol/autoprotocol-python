@@ -654,6 +654,7 @@ class FlowAnalyze(Instruction):
 
         super(FlowAnalyze, self).__init__(flow_instr)
 
+
 class Oligosynthesize(Instruction):
     """
     Parameters
@@ -686,3 +687,54 @@ class Oligosynthesize(Instruction):
                 "op": "oligosynthesize",
                 "oligos": oligos
             })
+
+
+class Spread(Instruction):
+    """
+    Spread the specified volume of the source aliquot across the surace of the
+    agar contained in the object container
+
+    Parameters
+    ----------
+    source : str, Well
+        Source of material to spread on agar
+    dest : str, Well
+        Reference to destination location (plate containing agar)
+    volume : str, Unit
+        Volume of source material to spread on agar
+
+    """
+    def __init__(self, source, dest, volume):
+        super(Spread, self).__init__({
+            "op": "spread",
+            "from": source,
+            "to": dest,
+            "volume": volume
+        })
+
+
+class Autopick(Instruction):
+    """
+    Pick at least `min_count` colonies from the location specified in "from" to
+    the location(s) specified in "to" in the order that they are specified
+    until there are no more colonies available. If there are fewer than
+    `min_count` colonies detected, the instruction will fail.
+
+    Parameters
+    ----------
+    source : str, Well
+        Reference to plate containing agar and colonies to pick
+    dests : list of str, list of Well
+        List of destination(s) for picked colonies
+    min_count : int, optional
+        Minimum number of colonies to detect in order to continue with
+        autopicking
+
+    """
+    def __init__(self, source, dests, min_count=1):
+        super(Autopick, self).__init__({
+            "op": "autopick",
+            "from": source,
+            "to": dests,
+            "min_colony_count": min_count
+        })

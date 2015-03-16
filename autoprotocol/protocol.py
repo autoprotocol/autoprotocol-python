@@ -2679,6 +2679,55 @@ class Protocol(object):
         """
         self.instructions.append(Oligosynthesize(oligos))
 
+    def spread(self, source, dest, volume):
+      """
+      Spread the specified volume of the source aliquot across the surace of the
+      agar contained in the object container
+
+      Example Usage:
+      --------------
+
+      Autoprotocol Output:
+      -------------------
+
+      Parameters
+      ----------
+      source : str, Well
+          Source of material to spread on agar
+      dest : str, Well
+          Reference to destination location (plate containing agar)
+      volume : str, Unit
+          Volume of source material to spread on agar
+
+      """
+      self.instructions.append(Spread(source, dest, volume))
+
+    def autopick(self, source, dests, min_count=1):
+      """
+      Pick at least `min_count` colonies from the location specified in "from" to
+      the location(s) specified in "to" in the order that they are specified
+      until there are no more colonies available. If there are fewer than
+      `min_count` colonies detected, the instruction will fail.
+
+      Example Usage:
+      --------------
+
+      Autoprotocol Output:
+      -------------------
+
+      Parameters
+      ----------
+      source : str, Well
+          Reference to plate containing agar and colonies to pick
+      dests : list of str, list of Well
+          List of destination(s) for picked colonies
+      min_count : int, optional
+          Minimum number of colonies to detect in order to continue with
+          autopicking
+
+      """
+      self.instructions.append(Autopick(source, dests, min_count))
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

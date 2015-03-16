@@ -38,6 +38,14 @@ Protocol.transfer()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.transfer
 
+Protocol.dispense()
+^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.dispense
+
+Protocol.dispense_full_plate()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.dispense_full_plate
+
 Protocol.stamp()
 ^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.stamp
@@ -49,10 +57,6 @@ Protocol.sangersequence()
 Protocol.mix()
 ^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.mix
-
-Protocol.dispense()
-^^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.dispense
 
 Protocol.spin()
 ^^^^^^^^^^^^^^^

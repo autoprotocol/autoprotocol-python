@@ -2003,6 +2003,7 @@ class Protocol(object):
             "instructions": [
                 {
                   "object": "sample_plate",
+                  "type": "ultra-clear"
                   "op": "seal"
                 }
               ]

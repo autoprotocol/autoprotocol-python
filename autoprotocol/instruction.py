@@ -276,7 +276,7 @@ class Incubate(Instruction):
     """
     WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
 
-    def __init__(self, ref, where, duration, shaking=False):
+    def __init__(self, ref, where, duration, shaking=False, co2=0):
         if where not in self.WHERE:
             raise ValueError("Specified `where` not contained in: %s" % ", ".join(self.WHERE))
         if where == "ambient" and shaking:
@@ -286,7 +286,8 @@ class Incubate(Instruction):
             "object": ref,
             "where": where,
             "duration": duration,
-            "shaking": shaking
+            "shaking": shaking,
+            "co2": co2
         })
 
 

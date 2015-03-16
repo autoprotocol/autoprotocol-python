@@ -1626,7 +1626,7 @@ class Protocol(object):
 
         self.instructions.append(Thermocycle(ref, groups))
 
-    def incubate(self, ref, where, duration, shaking=False):
+    def incubate(self, ref, where, duration, shaking=False, co2=0):
         '''
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
@@ -1659,12 +1659,13 @@ class Protocol(object):
                   "where": "warm_37",
                   "object": "sample_plate",
                   "shaking": true,
-                  "op": "incubate"
+                  "op": "incubate",
+                  "co2": 0
                 }
               ]
 
         '''
-        self.instructions.append(Incubate(ref, where, duration, shaking))
+        self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
     def plate_to_mag_adapter(self, ref, duration):
         """

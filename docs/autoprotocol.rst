@@ -141,7 +141,7 @@ Container.all_wells()
 
 Container.wells_from()
 ^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.container.Container.all_wells
+.. automethod:: autoprotocol.container.Container.wells_from
 
 Container.inner_wells()
 ^^^^^^^^^^^^^^^^^^^^^^^

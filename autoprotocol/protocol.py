@@ -338,23 +338,6 @@ class Protocol(object):
                                 self.instructions)
         }
 
-    def pipette(self, groups):
-        """Append given pipette groups to the protocol
-
-        Parameters
-        ----------
-        groups : list of dicts
-            a list of "distribute" and/or "transfer" instructions to be passed
-            to a Pipette object, which is then appended to this protocol's
-            instructions attribute
-
-        """
-        if len(self.instructions) > 0 and \
-                self.instructions[-1].op == 'pipette':
-            self.instructions[-1].groups += groups
-        else:
-            self.instructions.append(Pipette(groups))
-
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second"):
@@ -502,7 +485,7 @@ class Protocol(object):
                 {"distribute": opts}
             )
 
-        self.pipette(groups)
+        self._pipette(groups)
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
@@ -735,7 +718,7 @@ class Protocol(object):
             self.append(Pipette([{"transfer": opts}]))
         else:
             for x in opts:
-                self.pipette([{"transfer": [x]}])
+                self._pipette([{"transfer": [x]}])
 
     def stamp(self, source_plate, dest_plate, volume):
       """
@@ -2214,6 +2197,16 @@ class Protocol(object):
             else:
                 d.volume = v
         return distributes
+
+    def _pipette(self, groups):
+        """Append given pipette groups to the protocol
+
+        """
+        if len(self.instructions) > 0 and \
+                self.instructions[-1].op == 'pipette':
+            self.instructions[-1].groups += groups
+        else:
+            self.instructions.append(Pipette(groups))
 
     def _refify(self, op_data):
         if type(op_data) is dict:

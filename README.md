@@ -17,6 +17,8 @@ generating Autoprotocol.
 or, alternatively:
 
     $ pip install autoprotocol
+    
+**check the releases tab on this repository to see the latest release that will be downloaded, to be completely up to date it's saftest to clone and install this repository as above**
 
 ## Building a Protocol
 A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:

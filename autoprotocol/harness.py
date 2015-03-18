@@ -4,6 +4,12 @@ from .protocol import Protocol
 from .unit import Unit
 from .container import WellGroup
 import argparse
+import sys
+
+if sys.version_info[0] >= 3:
+    string_type = str
+else:
+    string_type = basestring
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -14,12 +20,8 @@ import argparse
 
 
 def param_default(typeDesc):
-    try:
-        if isinstance(typeDesc, basestring):
-            typeDesc = {'type': typeDesc}
-    except NameError:
-        if isinstance(typeDesc, str):
-            typeDesc = {'type': typeDesc}
+    if isinstance(typeDesc, string_type):
+        typeDesc = {'type': typeDesc}
     if typeDesc['type'] in ['aliquot+', 'aliquot++', 'group+']:
         return []
     elif typeDesc['type'] == 'group':
@@ -45,12 +47,8 @@ def convert_param(protocol, val, typeDesc):
         Description of input type.
 
     """
-    try:
-        if isinstance(typeDesc, basestring):
-            typeDesc = {'type': typeDesc}
-    except NameError:
-        if isinstance(typeDesc, str):
-            typeDesc = {'type': typeDesc}
+    if isinstance(typeDesc, string_type):
+        typeDesc = {'type': typeDesc}
     if val is None:
         val = typeDesc.get('default') or param_default(typeDesc)
     if val is None:  # still None?

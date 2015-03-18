@@ -76,6 +76,10 @@ class Unit(object):
         self._check_type(other)
         return self.value < other.value
 
+    def __le__(self, other):
+        self._check_type(other)
+        return self.value <= other.value
+
     def __eq__(self, other):
         self._check_type(other)
         return self.value == other.value
@@ -99,6 +103,9 @@ class Unit(object):
                 file=sys.stderr)
             other = other.value
         return Unit(self.value / other, self.unit)
+
+    def __truediv__(self, other):
+        return self.__div__(other)
 
     def __floordiv__(self, other):
         if not isinstance(other, Unit):

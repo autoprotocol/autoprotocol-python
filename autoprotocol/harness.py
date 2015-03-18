@@ -14,8 +14,12 @@ import argparse
 
 
 def param_default(typeDesc):
-    if isinstance(typeDesc, basestring):
-        typeDesc = {'type': typeDesc}
+    try:
+        if isinstance(typeDesc, basestring):
+            typeDesc = {'type': typeDesc}
+    except NameError:
+        if isinstance(typeDesc, str):
+            typeDesc = {'type': typeDesc}
     if typeDesc['type'] in ['aliquot+', 'aliquot++', 'group+']:
         return []
     elif typeDesc['type'] == 'group':

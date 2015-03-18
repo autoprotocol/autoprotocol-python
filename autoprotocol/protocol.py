@@ -334,8 +334,8 @@ class Protocol(object):
                 (key, value.opts)
                 for key, value in self.refs.items()
             ),
-            "instructions": map(lambda x: self._refify(x.data),
-                                self.instructions)
+            "instructions": list(map(lambda x: self._refify(x.data),
+                                     self.instructions))
         }
 
     def distribute(self, source, dest, volume, allow_carryover=False,

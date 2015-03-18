@@ -10,7 +10,7 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(Unit(-10, 'microliter'), u1 - u2)
         self.assertEqual(Unit(10, 'microliter'), u2 - u1)
         self.assertEqual(Unit(600,'microliter'), u2 * u1.value)
-        self.assertEqual(Unit(1.5, 'microliter'), u2/u1.value)
+        self.assertEqual(Unit(1.5, 'microliter'), u2 / u1.value)
         self.assertEqual(Unit(1, 'microliter'), u2//u1)
 
     def test_comparison(self):
@@ -39,4 +39,3 @@ class UnitMathTestCase(unittest.TestCase):
 
     def test_fromstring(self):
         self.assertEqual(Unit.fromstring("20:microliter"), Unit(20,'microliter'))
-

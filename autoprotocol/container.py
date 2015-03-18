@@ -353,7 +353,7 @@ class Container(object):
         """
         if columnwise:
             num_cols = self.container_type.col_count
-            num_rows = self.container_type.well_count / num_cols
+            num_rows = self.container_type.well_count // num_cols
             return WellGroup([self._wells[row * num_cols + col]
                               for col in xrange(num_cols)
                               for row in xrange(num_rows)])
@@ -420,4 +420,3 @@ class Container(object):
             for col_offset in xrange(0, 24, 2):
                 wells.append(row_offset + col_offset)
         return WellGroup([self.well(w) for w in wells])
-

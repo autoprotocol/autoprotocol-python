@@ -1154,7 +1154,7 @@ class Protocol(object):
                 "speed": speed,
                 "repetitions": repetitions
             }
-            self.pipette([{"mix": [opts]}])
+            self._pipette([{"mix": [opts]}])
 
     def dispense(self, ref, reagent, columns):
         """

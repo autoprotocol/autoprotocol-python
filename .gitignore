@@ -27,4 +27,5 @@ config/
 venv/
 htmlcov/
 .coverage
+coverage.xml
 .tox/

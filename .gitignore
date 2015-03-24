@@ -24,3 +24,6 @@ var/
 *.egg
 config/
 *.html
+htmlcov/
+.coverage
+.tox/

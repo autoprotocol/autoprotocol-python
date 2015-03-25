@@ -16,8 +16,10 @@ import argparse
 def param_default(typeDesc):
     if isinstance(typeDesc, basestring):
         typeDesc = {'type': typeDesc}
-    if typeDesc['type'] in ['aliquot+', 'aliquot++', 'group+']:
+    if typeDesc['type'] in ['aliquot+', 'aliquot++']:
         return []
+    elif typeDesc['type'] == 'group+':
+        return [{}]
     elif typeDesc['type'] == 'group':
         return {
             k: param_default(typeDesc['inputs'][k])

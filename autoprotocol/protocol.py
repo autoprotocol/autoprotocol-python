@@ -774,12 +774,22 @@ class Protocol(object):
           self.transfer(source.all_wells(),
                         dest.all_wells(),
                         volume,
+                        mix_before = mix_before,
+                        mix_after = mix_after,
+                        mix_vol = mix_vol,
+                        repetitions = repetitions,
+                        flowrate = flowrate,
                         one_tip=True)
         elif dest.container_type.well_count == 384:
           if quad in [0, 1, 2, 3]:
             self.transfer(source.all_wells(),
                           dest.quadrant(quad),
                           volume,
+                          mix_before = mix_before,
+                          mix_after = mix_after,
+                          mix_vol = mix_vol,
+                          repetitions = repetitions,
+                          flowrate = flowrate,
                           one_tip=True)
           else:
             raise RuntimeError("""You must specify a quadrant number when

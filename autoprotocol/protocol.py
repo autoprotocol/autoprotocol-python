@@ -726,8 +726,15 @@ class Protocol(object):
       to the corersponding well on the destination plate using a 96-channel
       liquid handler.
 
+      The following stamping configurations are supported:
+      - 384-well plate to 384-well plate
+      - 96-well plate to 96-well plate
+      - one 394-well plate to one 96-well plate (quad parameter must be specified)
+      - one 384-well plate to multiple 96-well plates (dest must be a list)
+      - one 96-well plate to one 384-well plate (quad parameter must be specified)
+      - multiple 96-well plates to one 384-well plate (source must be a list)
+
       Example Usage:
-      --------------
 
       .. code-block python
 
@@ -738,8 +745,7 @@ class Protocol(object):
 
         p.stamp(source, dest, "10:microliter")
 
-      Autoprotocol Output
-      -------------------
+      Autoprotocol Output:
 
       .. code-block json
 
@@ -871,20 +877,20 @@ class Protocol(object):
 
       .. code-block json
 
-      "instructions": [
-          {
-            "dataref": "seq_data_022415",
-            "object": "sample_plate",
-            "wells": [
-              "A1",
-              "A2",
-              "A3",
-              "A4",
-              "A5"
-            ],
-            "op": "sangerseq"
-          }
-        ]
+        "instructions": [
+            {
+              "dataref": "seq_data_022415",
+              "object": "sample_plate",
+              "wells": [
+                "A1",
+                "A2",
+                "A3",
+                "A4",
+                "A5"
+              ],
+              "op": "sangerseq"
+            }
+          ]
 
 
       Parameters

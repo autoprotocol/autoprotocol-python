@@ -26,10 +26,6 @@ Protocol.as_dict()
 ^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.as_dict
 
-Protocol.pipette()
-^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.pipette
-
 Protocol.distribute()
 ^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.distribute
@@ -50,9 +46,9 @@ Protocol.stamp()
 ^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.stamp
 
-Protocol.sangersequence()
+Protocol.sangerseq()
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.sangersequence
+.. automethod:: autoprotocol.protocol.Protocol.sangerseq
 
 Protocol.mix()
 ^^^^^^^^^^^^^^

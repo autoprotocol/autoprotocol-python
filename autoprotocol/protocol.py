@@ -727,6 +727,7 @@ class Protocol(object):
       liquid handler.
 
       The following stamping configurations are supported:
+
       - 384-well plate to 384-well plate
       - 96-well plate to 96-well plate
       - one 394-well plate to one 96-well plate (quad parameter must be specified)

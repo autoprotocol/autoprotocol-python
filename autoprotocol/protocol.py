@@ -736,7 +736,7 @@ class Protocol(object):
 
       Example Usage:
 
-      .. code-block python
+      .. code-block:: python
 
         p = Protocol()
 
@@ -747,7 +747,7 @@ class Protocol(object):
 
       Autoprotocol Output:
 
-      .. code-block json
+      .. code-block:: json
 
         "instructions": [
             {
@@ -875,7 +875,7 @@ class Protocol(object):
 
       Autoprotocol Output:
 
-      .. code-block json
+      .. code-block:: json
 
         "instructions": [
             {

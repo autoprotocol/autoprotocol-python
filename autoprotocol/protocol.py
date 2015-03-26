@@ -720,28 +720,34 @@ class Protocol(object):
             for x in opts:
                 self._pipette([{"transfer": [x]}])
 
-    def stamp(self, source_plate, dest_plate, volume):
+    def stamp(self, source, dest, volume, quad=None):
       """
       Move the specified volume of liquid from every well on the source plate
       to the corersponding well on the destination plate using a 96-channel
       liquid handler.
 
-      Example Usage:
-      --------------
+      The following stamping configurations are supported:
+      - 384-well plate to 384-well plate
+      - 96-well plate to 96-well plate
+      - one 394-well plate to one 96-well plate (quad parameter must be specified)
+      - one 384-well plate to multiple 96-well plates (dest must be a list)
+      - one 96-well plate to one 384-well plate (quad parameter must be specified)
+      - multiple 96-well plates to one 384-well plate (source must be a list)
 
-      .. code-block python
+      Example Usage:
+
+      .. code-block:: python
 
         p = Protocol()
 
-        source_plate = p.ref("source", None, "96-flat", discard=True)
-        dest_plate = p.ref("dest", None, "96-flat", discard=True)
+        source = p.ref("source", None, "96-flat", discard=True)
+        dest = p.ref("dest", None, "96-flat", discard=True)
 
-        p.stamp(source_plate, dest_plate, "10:microliter")
+        p.stamp(source, dest, "10:microliter")
 
-      Autoprotocol Output
-      -------------------
+      Autoprotocol Output:
 
-      .. code-block json
+      .. code-block:: json
 
         "instructions": [
             {
@@ -768,42 +774,80 @@ class Protocol(object):
                       "to": "dest/3",
                       "from": "source/3"
                     },
-                    {
-                      "volume": "10.0:microliter",
-                      "to": "dest/4",
-                      "from": "source/4"
-                    },
                     { ... }
 
       Parameters
       ----------
-      source_plate : Container, list of Containers
+      source : Container, list of Containers
         96- or 384-well plate(s) to source liquid from
-      dest_plate : Container, list of Containers
+      dest : Container, list of Containers
         96- or 384-well plate(s) to source liquid from
       volume : str, Unit
         Volume of liquid to move from source plate(s) to destination plate(s)
+      quad : int
+        Quadrant of 384 well plate to transfer liquid to when source is a
+        96-well plate.
 
       """
-      if source_plate.container_type.well_count == 96:
-        if dest_plate.container_type.well_count == 96:
-          self.transfer(source_plate.all_wells(),
-                        dest_plate.all_wells(),
+      if isinstance(source, list):
+        assert len(source) <= 4
+        for x in source:
+          assert x.container_type.well_count == 96
+        if dest.container_type.well_count == 384:
+          txs = []
+          for i, plate in enumerate(source):
+            for x, well in enumerate(plate.all_wells().wells):
+              txs.append({"to": dest.quadrant(i).wells[x],
+                          "from": well,
+                          "volume": volume})
+          self.append(Pipette([{"transfer": txs}]))
+        else:
+          raise RuntimeError("Stamping is not supported for the container "
+                           "types provided")
+      elif source.container_type.well_count == 96:
+        if dest.container_type.well_count == 96:
+          self.transfer(source.all_wells(),
+                        dest.all_wells(),
                         volume,
                         one_tip=True)
-        elif dest_plate.container_type.well_count == 384:
-          for i in range(0,4):
-            self.transfer(source_plate.all_wells(),
-                          dest_plate.quadrant(i),
+        elif dest.container_type.well_count == 384:
+          if quad in [0, 1, 2, 3]:
+            self.transfer(source.all_wells(),
+                          dest.quadrant(quad),
                           volume,
                           one_tip=True)
-      elif source_plate.container_type.well_count == 384:
-        if dest_plate.container_type.well_count == 384:
-          for i in range(0,4):
-            self.transfer(source_plate.quadrant(i),
-                          dest_plate.quadrant(i),
+          else:
+            raise RuntimeError("""You must specify a quadrant number when
+                               transferring liquid from one 96-well plate
+                               into a 384-well plate""")
+      elif isinstance(dest, list):
+        assert len(dest) <= 4
+        for x in dest:
+          assert x.container_type.well_count == 96
+        if source.container_type.well_count == 384:
+          txs = []
+          for i, plate in enumerate(dest):
+            for x, well in enumerate(plate.all_wells().wells):
+              txs.append({"to": well,
+                          "from": source.quadrant(i).wells[x],
+                          "volume": volume})
+          self.append(Pipette([{"transfer": txs}]))
+      elif source.container_type.well_count == 384:
+        if dest.container_type.well_count == 384:
+          self.transfer(source.all_wells(),
+                          dest.all_wells(),
                           volume,
                           one_tip=True)
+        elif dest.container_type.well_count == 96:
+          if quad in [0, 1, 2, 3]:
+            self.transfer(source.quadrant(quad),
+                          dest.all_wells(),
+                          volume,
+                          one_tip=True)
+          else:
+            raise RuntimeError("""You must specify a quadrant number when
+                               transferring liquid from a 384-well plate
+                               into one 96-well plate""")
       else:
         raise RuntimeError("Stamping is not supported for the container "
                            "types provided")
@@ -831,22 +875,22 @@ class Protocol(object):
 
       Autoprotocol Output:
 
-      .. code-block json
+      .. code-block:: json
 
-      "instructions": [
-          {
-            "dataref": "seq_data_022415",
-            "object": "sample_plate",
-            "wells": [
-              "A1",
-              "A2",
-              "A3",
-              "A4",
-              "A5"
-            ],
-            "op": "sangerseq"
-          }
-        ]
+        "instructions": [
+            {
+              "dataref": "seq_data_022415",
+              "object": "sample_plate",
+              "wells": [
+                "A1",
+                "A2",
+                "A3",
+                "A4",
+                "A5"
+              ],
+              "op": "sangerseq"
+            }
+          ]
 
 
       Parameters

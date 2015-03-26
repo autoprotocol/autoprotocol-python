@@ -26,10 +26,6 @@ Protocol.as_dict()
 ^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.as_dict
 
-Protocol.pipette()
-^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.pipette
-
 Protocol.distribute()
 ^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.distribute
@@ -38,19 +34,29 @@ Protocol.transfer()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.transfer
 
-Protocol.mix()
-^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.mix
-
 Protocol.dispense()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.dispense
 
+Protocol.dispense_full_plate()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.dispense_full_plate
+
+Protocol.stamp()
+^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.stamp
+
+Protocol.sangerseq()
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.sangerseq
+
+Protocol.mix()
+^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.mix
 
 Protocol.spin()
 ^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.spin
-
 
 Protocol.thermocycle()
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -131,7 +137,7 @@ Container.all_wells()
 
 Container.wells_from()
 ^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.container.Container.all_wells
+.. automethod:: autoprotocol.container.Container.wells_from
 
 Container.inner_wells()
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,12 +235,11 @@ unit.Unit
 ~~~~~~~~~
 
 .. autoclass:: autoprotocol.unit.Unit
-    :members:
 
-.. Unit.fromstring()
-.. ^^^^^^^^^^^^^^^^^
+Unit.fromstring()
+^^^^^^^^^^^^^^^^^
 
-.. .. automethod:: autoprotocol.unit.Unit.fromstring
+.. automethod:: autoprotocol.unit.Unit.fromstring
 
 
 autoprotocol.util

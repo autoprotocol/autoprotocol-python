@@ -764,6 +764,12 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
+              if dest.quadrant(i).wells[x].volume:
+                dest.quadrant(i).wells[x].volume += volume
+              else:
+                  dest.quadrant(i).wells[x].volume = volume
+              if well.volume:
+                  well.volume -= volume
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
         else:
@@ -819,8 +825,17 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
+              if well.volume:
+                well.volume += volume
+              else:
+                  well.volume = volume
+              if source.quadrant(i).wells[x].volume:
+                  source.quadrant(i).wells[x].volume -= volume
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
+        else:
+          raise RuntimeError("Stamping is not supported for the container "
+                             "types provided")
       elif source.container_type.well_count == 384:
         if dest.container_type.well_count == 384:
           self.transfer(source.all_wells(),

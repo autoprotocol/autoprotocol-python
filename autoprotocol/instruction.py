@@ -287,7 +287,7 @@ class Incubate(Instruction):
             "where": where,
             "duration": duration,
             "shaking": shaking,
-            "co2": co2
+            "co2_percent": co2
         })
 
 

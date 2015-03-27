@@ -1688,7 +1688,7 @@ class Protocol(object):
                   "object": "sample_plate",
                   "shaking": true,
                   "op": "incubate",
-                  "co2": 0
+                  "co2_percent": 0
                 }
               ]
 

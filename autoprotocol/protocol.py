@@ -492,13 +492,10 @@ class Protocol(object):
                  repetitions=10, flowrate="100:microliter/second"):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step.
+        is used between each transfer step unless the "one_tip" parameter
+        is set to True.
 
         Example Usage:
-
-        To encode a set of one-to-one transfers from each well in the first
-        column of a plate to each column of the second row, each with a new tip
-        and different volumes:
 
         .. code-block:: python
 
@@ -508,6 +505,21 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
+
+            # a basic one-to-one transfer:
+            p.transfer(sample_plate.well("B3"),
+                       sample_plate.well("C3"),
+                       "20:microliter")
+
+            # using a basic transfer in a loop:
+            for i in xrange(1, 12):
+              p.transfer(sample_plate.well(i-1),
+                         sample_plate.well(i),
+                         "10:microliter")
+
+            # transfer liquid from each well in the first column of a 96-well
+            # plate to each well of the second column using a new tip and
+            # a different volume each time:
             volumes = ["5:microliter", "10:microliter", "15:microliter",
                        "20:microliter", "25:microliter", "30:microliter",
                        "35:microliter", "40:microliter"]
@@ -516,89 +528,20 @@ class Protocol(object):
                        sample_plate.wells_from(1,8,columnwise=True),
                        volumes)
 
-        Autoprotocol Output:
+            # transfer liquid from wells A1 and A2 (which both contain the same
+            # source) into each of the following 10 wells:
+            p.transfer(sample_plate.wells_from("A1", 2),
+                       sample_plate.wells_from("A3", 10),
+                       "10:microliter",
+                       one_source=True)
 
-        .. code-block:: json
-
-            "instructions": [
-                {
-                  "groups": [
-                    {
-                      "transfer": [
-                        {
-                          "volume": "5.0:microliter",
-                          "to": "sample_plate/1",
-                          "from": "sample_plate/0"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "10.0:microliter",
-                          "to": "sample_plate/13",
-                          "from": "sample_plate/12"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "15.0:microliter",
-                          "to": "sample_plate/25",
-                          "from": "sample_plate/24"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "20.0:microliter",
-                          "to": "sample_plate/37",
-                          "from": "sample_plate/36"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "25.0:microliter",
-                          "to": "sample_plate/49",
-                          "from": "sample_plate/48"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "30.0:microliter",
-                          "to": "sample_plate/61",
-                          "from": "sample_plate/60"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "35.0:microliter",
-                          "to": "sample_plate/73",
-                          "from": "sample_plate/72"
-                        }
-                      ]
-                    },
-                    {
-                      "transfer": [
-                        {
-                          "volume": "40.0:microliter",
-                          "to": "sample_plate/85",
-                          "from": "sample_plate/84"
-                        }
-                      ]
-                    }
-                  ],
-                  "op": "pipette"
-                }
-            ]
+            # transfer liquid from wells containing the same source to multiple
+            # other wells without discarding the tip in between:
+            p.transfer(sample_plate.wells_from("A1", 2),
+                       sample_plate.wells_from("A3", 10),
+                       "10:microliter",
+                       one_source=True,
+                       one_tip=True)
 
 
         Parameters
@@ -655,8 +598,7 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
-        if len(source.wells) > 1 and len(dest.wells) == 1:
-            dest = WellGroup(dest.wells * len(source.wells))
+
         if isinstance(volume,str) or isinstance(volume, Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
         elif isinstance(volume, list) and len(volume) == len(dest.wells):
@@ -665,20 +607,24 @@ class Protocol(object):
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
-                               "volume")
-        if (len(volume) != len (dest.wells)) and (len(dest.wells) != len(volume)) and not one_source:
-            raise RuntimeError("To transfer liquid from multiple wells "
+                               "volume in the form of a list")
+        if (len(source.wells) != len (dest.wells)) and not one_source:
+            raise RuntimeError("To transfer liquid from one well or multiple wells "
                                "containing the same source, set one_source to "
                                "True.  Otherwise, you must specify the same "
-                               "number of source and destinationi wells to "
+                               "number of source and destination wells to "
                                "do a one-to-one transfer.")
-        elif one_source:
+        if one_source:
             sources = []
             for idx, d in enumerate(dest.wells):
                 for s in source.wells:
-                    while s.volume > volume[idx] and (len(sources) < len(dest.wells)):
+                    while s.volume >= volume[idx] and (len(sources) <= len(dest.wells)):
                         sources.append(s)
                         s.volume -= volume[idx]
+                if len(sources) < len(dest.wells):
+                  raise RuntimeError("There is not enough volume in the "
+                                     "source well(s) specified to complete the "
+                                     "transfers")
             source = WellGroup(sources)
 
         for s,d,v in list(zip(source.wells, dest.wells, volume)):

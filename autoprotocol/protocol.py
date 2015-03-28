@@ -599,6 +599,8 @@ class Protocol(object):
         dest = WellGroup(dest)
         opts = []
 
+        if len(dest.wells) > 1 and len(source.wells) == 1:
+            source = WellGroup(source.wells * len(dest.wells))
         if isinstance(volume,str) or isinstance(volume, Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
         elif isinstance(volume, list) and len(volume) == len(dest.wells):

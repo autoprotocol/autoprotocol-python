@@ -65,7 +65,7 @@ def convert_param(protocol, val, typeDesc):
         return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
     elif type == 'container':
         return protocol.refs[val].container
-    elif type in ['volume', 'time', 'temperature']:
+    elif type in ['volume', 'time', 'temperature', 'length']:
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.
         if type == 'temperature' and \

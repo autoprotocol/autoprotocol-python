@@ -2685,10 +2685,10 @@ class Protocol(object):
       agar contained in the object container
 
       Example Usage:
-      --------------
+
 
       Autoprotocol Output:
-      -------------------
+
 
       Parameters
       ----------
@@ -2710,10 +2710,10 @@ class Protocol(object):
       `min_count` colonies detected, the instruction will fail.
 
       Example Usage:
-      --------------
+
 
       Autoprotocol Output:
-      -------------------
+
 
       Parameters
       ----------

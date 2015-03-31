@@ -632,12 +632,6 @@ class Protocol(object):
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
                 mix_vol = v
-            if v > Unit(900, "microliter"):
-                diff = Unit.fromstring(vol) - Unit(900, "microliter")
-                self.transfer(s, d, "900:microliter", mix_after,
-                              mix_vol, repetitions, flowrate)
-                self.transfer(s, d, diff, one_source, one_tip, mix_after,
-                              mix_vol, repetitions, flowrate)
             xfer = {
                 "from": s,
                 "to": d,

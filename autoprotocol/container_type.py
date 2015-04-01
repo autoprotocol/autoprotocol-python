@@ -153,7 +153,7 @@ _CONTAINER_TYPES = {
                              capabilities=["spin", "incubate", "absorbance",
                                            "fluorescence", "luminescence",
                                            "gel_separate", "sangerseq"],
-                             shortname="96-flat",
+                             shortname="96-flat-uv",
                              col_count=12,
                              dead_volume_ul=25),
     "96-pcr": ContainerType(name="96-well PCR plate",

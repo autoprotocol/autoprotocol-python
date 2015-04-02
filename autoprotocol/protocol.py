@@ -2023,8 +2023,15 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
-        self.instructions.append(
-            GelSeparate(wells, volume, matrix, ladder, duration, dataref))
+        if len(wells) > 8:
+          datarefs = 1
+          for x in xrange(0,len(wells), 8):
+            self.gel_separate(wells[x:x+8], volume, matrix, ladder, duration,
+                              "%s_%d" % (dataref, datarefs))
+            datarefs += 1
+        else:
+          self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
+                                               duration, dataref))
 
     def seal(self, ref, type="ultra-clear"):
         """

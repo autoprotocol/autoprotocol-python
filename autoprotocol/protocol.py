@@ -657,7 +657,7 @@ class Protocol(object):
             if s.volume:
                 s.volume -= v
         if one_tip:
-            self._pipette([{"transfer": opts}])
+          self.append(Pipette([{"transfer": opts}]))
         else:
             for x in opts:
                 self._pipette([{"transfer": [x]}])

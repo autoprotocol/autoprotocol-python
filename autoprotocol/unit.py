@@ -102,9 +102,5 @@ class Unit(object):
         return Unit(operator.iadd(self.value,other.value), self.unit)
 
     def __isub__(self,other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(operator.isub(self.value,other.value), self.unit)
+        self._check_type(other)
+        return Unit(operator.isub(self.value,other.value), self.unit)

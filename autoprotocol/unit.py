@@ -62,12 +62,8 @@ class Unit(object):
         return Unit(self.value + other.value, self.unit)
 
     def __sub__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value - other.value, self.unit)
+        self._check_type(other)
+        return Unit(self.value - other.value, self.unit)
 
     def __lt__(self, other):
         self._check_type(other)

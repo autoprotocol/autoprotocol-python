@@ -326,9 +326,9 @@ class GelSeparate(Instruction):
     ----------
     ref : Ref, str
         Container containing samples to gel Separate
-    matrix : {'agarose(96,2.0%)', 'agarose(48,4.0%)', 'agarose(48,2.0%)', 'agarose(12,1.2%)', 'agarose(8,0.8%)'}
+    matrix : str
         Agarose concentration and number of wells on gel used for separation
-    ladder : {"ladder1", "ladder2"}
+    ladder : str
         Size range of ladder to be used to compare band size to
     duration : Unit, str
         Length of time to run gel separation

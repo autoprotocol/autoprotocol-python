@@ -1974,7 +1974,7 @@ class Protocol(object):
                                  storage="warm_37")
 
             p.gel_separate(sample_plate.wells_from(0,12), "10:microliter",
-                           "agarose(8,2.0%)", "ladder1", "11:minute",
+                           "agarose(8,0.8%)", "ladder1", "11:minute",
                            "genotyping_030214")
 
         Autoprotocol Output:
@@ -1984,7 +1984,7 @@ class Protocol(object):
             "instructions": [
                 {
                   "dataref": "genotyping_030214",
-                  "matrix": "agarose(8,2.0%)",
+                  "matrix": "agarose(8,0.8%)",
                   "volume": "10:microliter",
                   "ladder": "ladder1",
                   "objects": [
@@ -2014,9 +2014,9 @@ class Protocol(object):
         volume : str, Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
-        matrix : {'agarose(8,2%)', 'agarose(8,1.2%)', 'agarose(8,0.8%)'}
-            Matrix in which to gel separate samples
-        ladder : {'ladder1', 'ladder2'}
+        matrix : str
+            Matrix (gel) in which to gel separate samples
+        ladder : str
             Ladder by which to measure separated fragment size
         duration : str, Unit
             Length of time to run current through gel.

@@ -507,3 +507,148 @@ class Uncover(Instruction):
             "op": "uncover",
             "object": ref
         })
+
+class FlowAnalyze(Instruction):
+    """
+    Perform flow cytometry.The instruction will be executed within the voltage
+    range specified for each channel, optimized for the best sample
+    separation/distribution that can be achieved within these limits. The
+    vendor will specify the device that this instruction is executed on and
+    which excitation and emission spectra are available. At least one negative
+    control is required, which will be used to define data acquisition
+    parameters as well as to determine any autofluorescent properties for the
+    sample set. Additional negative positive control samples are optional.
+    Positive control samples will be used to optimize single color signals and,
+    if desired, to minimize bleed into other channels.
+
+
+    For each sample this instruction asks you to specify the `volume` and/or
+    `captured_events`. Vendors might also require `captured_events` in case
+    their device does not support volumetric sample intake. If both conditions
+    are supported, the vendor will specify if data will be collected only until
+    the first one is met or until both conditions are fulfilled.
+
+    Example Usage:
+
+
+    Autoprotocol Output:
+
+    Parameters
+    ----------
+    dataref : str
+        Name of flow analysis dataset generated.
+    FSC : dict
+        Dictionary containing FSC channel parameters in the form of:
+
+        .. code-block:: json
+
+            {
+              "voltage_range": {
+                "low": "230:volt",
+                "high": "280:volt"
+                },
+              "area": true,             //default: true
+              "height": true,           //default: true
+              "weight": false           //default: false
+            }
+
+    SSC : dict
+        Dictionary of SSC channel parameters in the form of:
+
+        .. code-block:: json
+
+            {
+              "voltage_range": {
+                "low": <voltage>,
+                "high": <voltage>"
+                },
+              "area": true,             //default: true
+              "height": true,           //default: false
+              "weight": false           //default: false
+            }
+
+    neg_controls : list of dicts
+        List of negative control wells in the form of:
+
+        .. code-block:: json
+
+            {
+                "well": well,
+                "volume": volume,
+                "captured_events": integer,     // optional, default infinity
+                "channel": [channel_name]
+            }
+
+        at least one negative control is required.
+    samples : list of dicts
+        List of samples in the form of:
+
+        .. code-block:: json
+
+            {
+                "well": well,
+                "volume": volume,
+                "captured_events": integer,     // optional, default infinity
+            }
+
+        at least one sample is required
+    colors : list of dicts, optional
+        Optional list of colors in the form of:
+
+        .. code-block:: json
+
+        [{
+          "name": "FitC",
+          "emission_wavelength": "495:nanometer",
+          "excitation_wavelength": "519:nanometer",
+          "voltage_range": {
+            "low": <voltage>,
+            "high": <voltage>
+          },
+          "area": true,             //default: true
+          "height": false,          //default: false
+          "weight": false           //default: false
+        }, ... ]
+
+
+    pos_controls : list of dicts, optional
+        Optional list of positive control wells in the form of:
+
+        .. code-block:: json
+
+            [{
+                "well": well,
+                "volume": volume,
+                "captured_events": integer,     // optional, default infinity
+                "channel": [channel_name],
+                "minimize_bleed": [{            // optional
+                  "from": color,
+                  "to": [color]
+                }, ...
+            ]
+
+    """
+    def __init__(self,
+                 dataref,
+                 FSC,
+                 SSC,
+                 neg_controls,
+                 samples,
+                 colors=None,
+                 pos_controls=None):
+        flow_instr = {
+                "op": "flow_analyze",
+                "dataref": dataref,
+                "channels": {}
+            }
+        assert FSC and SSC, "You must include parameters for FSC and SSC channels."
+        flow_instr["channels"]["FSC"] = FSC
+        flow_instr["channels"]["SSC"] = SSC
+        flow_instr["negative_controls"] = neg_controls
+        flow_instr["samples"] = samples
+        if colors:
+            flow_instr["channels"]["colors"] = colors
+        if pos_controls:
+            flow_instr["positive_controls"] = pos_controls
+
+        super(FlowAnalyze, self).__init__(flow_instr)

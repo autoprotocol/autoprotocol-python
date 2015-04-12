@@ -102,6 +102,10 @@ Protocol.flow_analyze()
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.flow_analyze
 
+Protocol.oligosynthesize()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.oligosynthesize
+
 protocol.Ref
 ~~~~~~~~~~~~
 

@@ -2315,6 +2315,66 @@ class Protocol(object):
       self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
                                            samples, colors, pos_controls))
 
+    def oligosynthesize(self, oligos):
+        """
+        Specify a list of oligonucleotides to be synthesized and a destination for each product.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            oligo_1 = p.ref("oligo_1", None, "micro-1.5", discard=True)
+
+            p.oligosynthesize([{"sequence": "CATGGTCCCCTGCACAGG",
+                                "destination": oligo_1.well(0),
+                                "scale": "25nm",
+                                "purification": "standard"}])
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "oligos": [
+                    {
+                      "destination": "oligo_1/0",
+                      "sequence": "CATGGTCCCCTGCACAGG",
+                      "scale": "25nm",
+                      "purification": "standard"
+                    }
+                  ],
+                  "op": "oligosynthesize"
+                }
+              ]
+
+        Parameters
+        ----------
+        oligos : list of dicts
+            List of oligonucleotides to synthesize.  Each dictionary should
+            contain the oligo's sequence, destination, scale and purification
+
+            .. code-block:: json
+
+                [
+                    {
+                      "destination": "my_plate/A1",
+                      "sequence": "GATCRYMKSWHBVDN",
+                        // - standard IUPAC base codes
+                        // - IDT also allows rX (RNA), mX (2' O-methyl RNA), and
+                        //   X*/rX*/mX* (phosphorothioated)
+                        // - they also allow inline annotations for modifications,
+                        //   eg "GCGACTC/3Phos/" for a 3' phosphorylation
+                        //   eg "aggg/iAzideN/cgcgc" for an internal modification
+                      "scale": "25nm" | "100nm" | "250nm" | "1um",
+                      "purification": "standard" | "page" | "hplc",
+                        // default: standard
+                    },
+                    ...
+                ]
+        """
+        self.instructions.append(Oligosynthesize(oligos))
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

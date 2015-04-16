@@ -583,10 +583,6 @@ class Protocol(object):
 
         .. code-block:: python
 
-            from autoprotocol.protocol import Protocol
-            from internal.xpipette import *
-            import json
-
             p = Protocol()
             sample_plate = p.ref("sample", None, "96-pcr", discard=True)
 

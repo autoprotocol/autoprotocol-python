@@ -196,4 +196,4 @@ class ManifestTest(unittest.TestCase):
         self.assertIsNone(parsed['group']['aliquot'])
         self.assertIsInstance(parsed['group']['aliquot+'], WellGroup)
         self.assertEqual(0, len(parsed['group']['aliquot+']))
-        self.assertEqual([], parsed['group+'])
+        self.assertEqual([{'bool': None}], parsed['group+'])

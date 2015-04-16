@@ -522,7 +522,7 @@ class Protocol(object):
 
         self._pipette(groups)
 
-    def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
+    def aspirate_source(self, depth=None, aspirate_speed=None, cal_volume=None,
                         primer_vol=None):
         '''
         Set parameters for aspirating from source well before a transfer or
@@ -548,7 +548,7 @@ class Protocol(object):
         self._assign(source, "primer_vol", primer_vol)
         return source
 
-    def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
+    def dispense_target(self, depth=None, dispense_speed=None, cal_volume=None):
         '''
         Set parameters for dispensing to a target well during a transfer or
         distribute.
@@ -575,7 +575,7 @@ class Protocol(object):
         self._assign(target, "volume", cal_volume)
         return target
 
-    def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None):
+    def distribute_target(self, dst_loc, volume, dispense_speed=None, dispense_target=None):
         '''
         Set parameters target wells of a distrbute instruction.
 
@@ -681,7 +681,7 @@ class Protocol(object):
         self._assign(distribute, "x_dispense_target", dispense_target)
         return distribute
 
-    def depth(relation, lld = None, distance = None):
+    def depth(self, relation, lld = None, distance = None):
         """
         Return a stanza specifying pipette tip depth for aspirating or dispensing.
 

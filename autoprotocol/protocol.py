@@ -2586,18 +2586,18 @@ class Protocol(object):
 
           .. code-block:: json
 
-          [{
-            "name": "FitC",
-            "emission_wavelength": "495:nanometer",
-            "excitation_wavelength": "519:nanometer",
-            "voltage_range": {
-              "low": <voltage>,
-              "high": <voltage>
-            },
-            "area": true,             //default: true
-            "height": false,          //default: false
-            "weight": false           //default: false
-          }, ... ]
+            [{
+              "name": "FitC",
+              "emission_wavelength": "495:nanometer",
+              "excitation_wavelength": "519:nanometer",
+              "voltage_range": {
+                "low": <voltage>,
+                "high": <voltage>
+              },
+              "area": true,             //default: true
+              "height": false,          //default: false
+              "weight": false           //default: false
+            }, ... ]
 
       pos_controls : list of dicts, optional
           Optional list of positive control wells in the form of:

@@ -492,7 +492,7 @@ class Protocol(object):
 
         """
         opts = {}
-        dists = self.fill_wells(dest, source, volume)
+        dists = self.fill_wells(dest, source, volume, distribute_target)
         groups = []
         for d in dists:
             opts = {}
@@ -509,14 +509,14 @@ class Protocol(object):
                 opts["allow_carryover"] = allow_carryover
             opts["from"] = d["from"]
             opts["to"] = d["to"]
-            _assign(opts, "aspirate_speed", aspirate_speed)
-            _assign(opts, "allow_carryover", allow_carryover)
-            _assign(opts, "x_aspirate_source", aspirate_source)
-            _assign(opts, "x_pre_buffer", pre_buffer)
-            _assign(opts, "x_disposal_vol", disposal_vol)
-            _assign(opts, "x_transit_vol", transit_vol)
-            _assign(opts, "x_blowout_buffer", blowout_buffer)
-            _assign(opts, "x_tip_type", tip_type)
+            self._assign(opts, "aspirate_speed", aspirate_speed)
+            self._assign(opts, "allow_carryover", allow_carryover)
+            self._assign(opts, "x_aspirate_source", aspirate_source)
+            self._assign(opts, "x_pre_buffer", pre_buffer)
+            self._assign(opts, "x_disposal_vol", disposal_vol)
+            self._assign(opts, "x_transit_vol", transit_vol)
+            self._assign(opts, "x_blowout_buffer", blowout_buffer)
+            self._assign(opts, "x_tip_type", tip_type)
 
             groups.append({"distribute": opts})
 
@@ -542,10 +542,10 @@ class Protocol(object):
             (source well)
         '''
         source = {}
-        _assign(source, "depth", depth)
-        _assign(source, "aspirate_speed", aspirate_speed)
-        _assign(source, "volume", cal_volume)
-        _assign(source, "primer_vol", primer_vol)
+        self._assign(source, "depth", depth)
+        self._assign(source, "aspirate_speed", aspirate_speed)
+        self._assign(source, "volume", cal_volume)
+        self._assign(source, "primer_vol", primer_vol)
         return source
 
     def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
@@ -570,9 +570,9 @@ class Protocol(object):
             Calibrated volume to be dispensed to target well
         '''
         target = {}
-        _assign(target, "depth", depth)
-        _assign(target, "dispense_speed", dispense_speed)
-        _assign(target, "volume", cal_volume)
+        self._assign(target, "depth", depth)
+        self._assign(target, "dispense_speed", dispense_speed)
+        self._assign(target, "volume", cal_volume)
         return target
 
     def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None):
@@ -677,8 +677,8 @@ class Protocol(object):
             "well": dst_loc,
             "volume": volume
         }
-        _assign(distribute, "dispense_speed", dispense_speed)
-        _assign(distribute, "x_dispense_target", dispense_target)
+        self._assign(distribute, "dispense_speed", dispense_speed)
+        self._assign(distribute, "x_dispense_target", dispense_target)
         return distribute
 
     def depth(relation, lld = None, distance = None):
@@ -699,8 +699,8 @@ class Protocol(object):
         if relation not in valid_depths:
             raise RuntimeError("Invalid depth relation")
         depth = {"method":relation}
-        _assign(depth,"lld",lld)
-        _assign(depth,"distance",distance)
+        self._assign(depth,"lld",lld)
+        self._assign(depth,"distance",distance)
         return depth
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
@@ -891,14 +891,14 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
-            _assign(xfer, "aspirate_speed", aspirate_speed)
-            _assign(xfer, "dispense_speed", dispense_speed)
-            _assign(xfer, "x_aspirate_source", aspirate_source)
-            _assign(xfer, "x_dispense_target", dispense_target)
-            _assign(xfer, "x_pre_buffer", pre_buffer)
-            _assign(xfer, "x_disposal_vol", disposal_vol)
-            _assign(xfer, "x_transit_vol", transit_vol)
-            _assign(xfer, "x_blowout_buffer", blowout_buffer)
+            self._assign(xfer, "aspirate_speed", aspirate_speed)
+            self._assign(xfer, "dispense_speed", dispense_speed)
+            self._assign(xfer, "x_aspirate_source", aspirate_source)
+            self._assign(xfer, "x_dispense_target", dispense_target)
+            self._assign(xfer, "x_pre_buffer", pre_buffer)
+            self._assign(xfer, "x_disposal_vol", disposal_vol)
+            self._assign(xfer, "x_transit_vol", transit_vol)
+            self._assign(xfer, "x_blowout_buffer", blowout_buffer)
 
             opts.append(xfer)
             if d.volume:
@@ -908,21 +908,24 @@ class Protocol(object):
             if s.volume:
                 s.volume -= v
         trans = {}
-        assign(trans, "x_tip_type", tip_type)
+        self._assign(trans, "x_tip_type", tip_type)
         if one_tip:
             trans["transfer"] = opts
             self.append(Pipette([trans]))
         else:
             for x in opts:
                 trans = {}
-                assign(trans, "x_tip_type", tip_type)
+                self._assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
                 self._pipette([trans])
 
 
     def stamp(self, source, dest, volume, quad=None, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,
-              flowrate="100:microliter/second"):
+              flowrate="100:microliter/second", aspirate_speed=None,
+            dispense_speed=None, aspirate_source=None,
+            dispense_target=None, pre_buffer=None, disposal_vol=None,
+            transit_vol=None, blowout_buffer=None):
       """
       Move the specified volume of liquid from every well on the source plate
       to the corersponding well on the destination plate using a 96-channel
@@ -1032,6 +1035,14 @@ class Protocol(object):
                   dest.quadrant(i).wells[x].volume = volume
               if well.volume:
                   well.volume -= volume
+              self._assign(xfer, "aspirate_speed", aspirate_speed)
+              self._assign(xfer, "dispense_speed", dispense_speed)
+              self._assign(xfer, "x_aspirate_source", aspirate_source)
+              self._assign(xfer, "x_dispense_target", dispense_target)
+              self._assign(xfer, "x_pre_buffer", pre_buffer)
+              self._assign(xfer, "x_disposal_vol", disposal_vol)
+              self._assign(xfer, "x_transit_vol", transit_vol)
+              self._assign(xfer, "x_blowout_buffer", blowout_buffer)
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
         else:
@@ -1042,6 +1053,14 @@ class Protocol(object):
           self.transfer(source.all_wells(),
                         dest.all_wells(),
                         volume,
+                        aspirate_speed,
+                        dispense_speed,
+                        aspirate_source,
+                        dispense_target,
+                        pre_buffer,
+                        disposal_vol,
+                        transit_vol,
+                        blowout_buffer,
                         mix_before = mix_before,
                         mix_after = mix_after,
                         mix_vol = mix_vol,
@@ -1053,6 +1072,14 @@ class Protocol(object):
             self.transfer(source.all_wells(),
                           dest.quadrant(quad),
                           volume,
+                          aspirate_speed,
+                          dispense_speed,
+                          aspirate_source,
+                          dispense_target,
+                          pre_buffer,
+                          disposal_vol,
+                          transit_vol,
+                          blowout_buffer,
                           mix_before = mix_before,
                           mix_after = mix_after,
                           mix_vol = mix_vol,
@@ -1093,6 +1120,14 @@ class Protocol(object):
                   well.volume = volume
               if source.quadrant(i).wells[x].volume:
                   source.quadrant(i).wells[x].volume -= volume
+              self._assign(xfer, "aspirate_speed", aspirate_speed)
+              self._assign(xfer, "dispense_speed", dispense_speed)
+              self._assign(xfer, "x_aspirate_source", aspirate_source)
+              self._assign(xfer, "x_dispense_target", dispense_target)
+              self._assign(xfer, "x_pre_buffer", pre_buffer)
+              self._assign(xfer, "x_disposal_vol", disposal_vol)
+              self._assign(xfer, "x_transit_vol", transit_vol)
+              self._assign(xfer, "x_blowout_buffer", blowout_buffer)
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
         else:
@@ -1103,6 +1138,14 @@ class Protocol(object):
           self.transfer(source.all_wells(),
                         dest.all_wells(),
                         volume,
+                        aspirate_speed,
+                        dispense_speed,
+                        aspirate_source,
+                        dispense_target,
+                        pre_buffer,
+                        disposal_vol,
+                        transit_vol,
+                        blowout_buffer,
                         mix_before = mix_before,
                         mix_after = mix_after,
                         mix_vol = mix_vol,
@@ -1114,6 +1157,14 @@ class Protocol(object):
             self.transfer(source.quadrant(quad),
                           dest.all_wells(),
                           volume,
+                          aspirate_speed,
+                          dispense_speed,
+                          aspirate_source,
+                          dispense_target,
+                          pre_buffer,
+                          disposal_vol,
+                          transit_vol,
+                          blowout_buffer,
                           mix_before = mix_before,
                           mix_after = mix_after,
                           mix_vol = mix_vol,
@@ -2642,7 +2693,7 @@ class Protocol(object):
                 return k
 
     @staticmethod
-    def fill_wells(dst_group, src_group, volume):
+    def fill_wells(dst_group, src_group, volume, distribute_target):
         """
         Distribute liquid to a WellGroup, sourcing the liquid from a group
         of wells all containing the same substance.
@@ -2697,10 +2748,12 @@ class Protocol(object):
                     "from": src,
                     "to": []
                 })
-            distributes[-1]["to"].append({
-                "well": d,
-                "volume": v
-            })
+            opts = {
+              "well": d,
+              "volume": v
+            }
+            self._assign(opts, "distribute_target", distribute_target)
+            distributes[-1]["to"].append(opts)
             src.volume -= v
             if d.volume:
                 d.volume += v
@@ -2734,7 +2787,7 @@ class Protocol(object):
         else:
             return op_data
 
-    def _assign(obj, key, var):
+    def _assign(self, obj, key, var):
         if var is not None:
             obj[key] = var
 

@@ -610,7 +610,7 @@ class Protocol(object):
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume in the form of a list")
-        if (len(source.wells) != len (dest.wells)) and not one_source:
+        if (len(source.wells) != len(dest.wells)) and not one_source:
             raise RuntimeError("To transfer liquid from one well or multiple wells "
                                "containing the same source, set one_source to "
                                "True.  Otherwise, you must specify the same "

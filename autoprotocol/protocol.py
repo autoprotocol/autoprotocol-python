@@ -2752,7 +2752,8 @@ class Protocol(object):
               "well": d,
               "volume": v
             }
-            self._assign(opts, "distribute_target", distribute_target)
+            if distribute_target:
+              opts["distribute_target"] = distribute_target
             distributes[-1]["to"].append(opts)
             src.volume -= v
             if d.volume:

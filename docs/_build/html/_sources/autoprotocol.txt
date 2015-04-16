@@ -98,6 +98,10 @@ Protocol.uncover()
 ^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.uncover
 
+Protocol.oligosynthesize()
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.oligosynthesize
+
 protocol.Ref
 ~~~~~~~~~~~~
 

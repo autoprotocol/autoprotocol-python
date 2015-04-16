@@ -508,6 +508,7 @@ class Uncover(Instruction):
             "object": ref
         })
 
+
 class FlowAnalyze(Instruction):
     """
     Perform flow cytometry.The instruction will be executed within the voltage
@@ -652,3 +653,36 @@ class FlowAnalyze(Instruction):
             flow_instr["positive_controls"] = pos_controls
 
         super(FlowAnalyze, self).__init__(flow_instr)
+
+class Oligosynthesize(Instruction):
+    """
+    Parameters
+    ----------
+    oligos : list of dicts
+        List of oligonucleotides to synthesize.  Each dictionary should
+        contain the oligo's sequence, destination, scale and purification
+
+        .. code-block:: json
+
+            [
+                {
+                  "destination": "my_plate/A1",
+                  "sequence": "GATCRYMKSWHBVDN",
+                    // - standard IUPAC base codes
+                    // - IDT also allows rX (RNA), mX (2' O-methyl RNA), and
+                    //   X*/rX*/mX* (phosphorothioated)
+                    // - they also allow inline annotations for modifications,
+                    //   eg "GCGACTC/3Phos/" for a 3' phosphorylation
+                    //   eg "aggg/iAzideN/cgcgc" for an internal modification
+                  "scale": "25nm" | "100nm" | "250nm" | "1um",
+                  "purification": "standard" | "page" | "hplc",
+                    // default: standard
+                },
+                ...
+            ]
+    """
+    def __init__(self, oligos):
+        super(Oligosynthesize, self).__init__({
+                "op": "oligosynthesize",
+                "oligos": oligos
+            })

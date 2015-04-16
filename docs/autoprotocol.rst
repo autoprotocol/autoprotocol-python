@@ -98,6 +98,10 @@ Protocol.uncover()
 ^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.uncover
 
+Protocol.flow_analyze()
+^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.flow_analyze
+
 protocol.Ref
 ~~~~~~~~~~~~
 
@@ -269,45 +273,3 @@ harness.Manifest
 .. autoclass:: autoprotocol.harness.Manifest
 
 
-.. autoprotocol.container_type
-.. ---------------------------
-
-.. .. automodule:: autoprotocol.container_type
-..     :members:
-..     :show-inheritance:
-
-.. autoprotocol.harness
-.. --------------------
-
-.. .. automodule:: autoprotocol.harness
-..     :members:
-..     :show-inheritance:
-
-.. autoprotocol.instruction
-.. ------------------------
-
-.. .. automodule:: autoprotocol.instruction
-..     :members:
-..     :show-inheritance:
-
-.. autoprotocol.protocol
-.. ---------------------
-
-.. .. automodule:: autoprotocol.protocol
-..     :members:
-..     :show-inheritance:
-
-
-.. autoprotocol.unit
-.. -----------------
-
-.. .. automodule:: autoprotocol.unit
-..     :members:
-..     :show-inheritance:
-
-.. autoprotocol.util
-.. -----------------
-
-.. .. automodule:: autoprotocol.util
-..     :members:
-..     :show-inheritance:

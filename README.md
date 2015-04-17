@@ -1,6 +1,6 @@
 # Autoprotocol Python
 
-### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)* 
+### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)*
 [![Documentation Status](https://readthedocs.org/projects/autoprotocol-python/badge/)](https://readthedocs.org/projects/autoprotocol-python/?badge=latest)
 
 
@@ -17,7 +17,7 @@ generating Autoprotocol.
 or, alternatively:
 
     $ pip install autoprotocol
-    
+
 **check the releases tab on this repository to see the latest release that will be downloaded, to be completely up to date it's safest to clone and install this repository as above**
 
 ## Building a Protocol
@@ -167,9 +167,10 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also write an email to us if you want to discuss ideas or
 bugs.
 
+- Tali Herzka: tali@transcriptic.com
+- Vanessa Biggers: vanessa@transcriptic.com
 - Max Hodak: max@transcriptic.com
 - Jeremy Apthorp: jeremy@transcriptic.com
-- Tali Herzka: tali@transcriptic.com
 
 autoprotocol-python is BSD licensed (see LICENSE). Before we can accept your
 pull request, we require that you sign a CLA (Contributor License Agreement)

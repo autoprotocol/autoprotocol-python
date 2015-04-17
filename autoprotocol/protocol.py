@@ -743,9 +743,9 @@ class Protocol(object):
     def stamp(self, source, dest, volume, quad=None, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,
               flowrate="100:microliter/second", aspirate_speed=None,
-            dispense_speed=None, aspirate_source=None,
-            dispense_target=None, pre_buffer=None, disposal_vol=None,
-            transit_vol=None, blowout_buffer=None):
+              dispense_speed=None, aspirate_source=None,
+              dispense_target=None, pre_buffer=None, disposal_vol=None,
+              transit_vol=None, blowout_buffer=None):
       """
       Move the specified volume of liquid from every well on the source plate
       to the corersponding well on the destination plate using a 96-channel
@@ -837,6 +837,8 @@ class Protocol(object):
               xfer["to"] = dest.quadrant(i).wells[x]
               xfer["from"] = well
               xfer["volume"] = volume
+              if not mix_vol:
+                mix_vol = volume
               if mix_before:
                 xfer["mix_before"] = {
                     "volume": mix_vol,
@@ -873,6 +875,13 @@ class Protocol(object):
           self.transfer(source.all_wells(),
                         dest.all_wells(),
                         volume,
+                        False,
+                        True,
+                        mix_after,
+                        mix_before,
+                        mix_vol,
+                        repetitions,
+                        flowrate,
                         aspirate_speed,
                         dispense_speed,
                         aspirate_source,
@@ -881,17 +890,19 @@ class Protocol(object):
                         disposal_vol,
                         transit_vol,
                         blowout_buffer,
-                        mix_before = mix_before,
-                        mix_after = mix_after,
-                        mix_vol = mix_vol,
-                        repetitions = repetitions,
-                        flowrate = flowrate,
-                        one_tip=True)
+                        None)
         elif dest.container_type.well_count == 384:
           if quad in [0, 1, 2, 3]:
             self.transfer(source.all_wells(),
                           dest.quadrant(quad),
                           volume,
+                          False,
+                          True,
+                          mix_after,
+                          mix_before,
+                          mix_vol,
+                          repetitions,
+                          flowrate,
                           aspirate_speed,
                           dispense_speed,
                           aspirate_source,
@@ -900,12 +911,7 @@ class Protocol(object):
                           disposal_vol,
                           transit_vol,
                           blowout_buffer,
-                          mix_before = mix_before,
-                          mix_after = mix_after,
-                          mix_vol = mix_vol,
-                          repetitions = repetitions,
-                          flowrate = flowrate,
-                          one_tip=True)
+                          None)
           else:
             raise RuntimeError("""You must specify a quadrant number when
                                transferring liquid from one 96-well plate
@@ -922,6 +928,8 @@ class Protocol(object):
               xfer["to"] = well
               xfer["from"] = source.quadrant(i).wells[x]
               xfer["volume"] = volume
+              if not mix_vol:
+                mix_vol = volume
               if mix_before:
                 xfer["mix_before"] = {
                     "volume": mix_vol,
@@ -958,6 +966,13 @@ class Protocol(object):
           self.transfer(source.all_wells(),
                         dest.all_wells(),
                         volume,
+                        False,
+                        True,
+                        mix_after,
+                        mix_before,
+                        mix_vol,
+                        repetitions,
+                        flowrate,
                         aspirate_speed,
                         dispense_speed,
                         aspirate_source,
@@ -966,17 +981,19 @@ class Protocol(object):
                         disposal_vol,
                         transit_vol,
                         blowout_buffer,
-                        mix_before = mix_before,
-                        mix_after = mix_after,
-                        mix_vol = mix_vol,
-                        repetitions = repetitions,
-                        flowrate = flowrate,
-                        one_tip=True)
+                        None)
         elif dest.container_type.well_count == 96:
           if quad in [0, 1, 2, 3]:
             self.transfer(source.quadrant(quad),
                           dest.all_wells(),
                           volume,
+                          False,
+                          True,
+                          mix_after,
+                          mix_before,
+                          mix_vol,
+                          repetitions,
+                          flowrate,
                           aspirate_speed,
                           dispense_speed,
                           aspirate_source,
@@ -985,12 +1002,7 @@ class Protocol(object):
                           disposal_vol,
                           transit_vol,
                           blowout_buffer,
-                          mix_before = mix_before,
-                          mix_after = mix_after,
-                          mix_vol = mix_vol,
-                          repetitions = repetitions,
-                          flowrate = flowrate,
-                          one_tip=True)
+                          None)
           else:
             raise RuntimeError("""You must specify a quadrant number when
                                transferring liquid from a 384-well plate

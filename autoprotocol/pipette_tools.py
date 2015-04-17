@@ -153,29 +153,6 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
     assign(distribute, "x_dispense_target", dispense_target)
     return distribute
 
-def depth(relation, lld = None, distance = None):
-    """
-    Return a stanza specifying pipette tip depth for aspirating or dispensing.
-
-    Parameters
-    ----------
-    relation : str
-      Relative position from which to measure distance of the pipette tip
-    lld : str, optional
-      Method of liquid level detection
-    distance : str, unit
-      Distance compared to position set by relation parameter,
-      measured in millimeters
-
-    """
-    valid_depths = set(["ll_surface", "ll_following", "ll_top", "ll_bottom"])
-    if relation not in valid_depths:
-        raise RuntimeError("Invalid depth relation")
-    depth = {"method":relation}
-    assign(depth,"lld",lld)
-    assign(depth,"distance",distance)
-    return depth
-
 def depth(relation, lld = None, distance = "0.0:meter"):
     """
     Return a stanza specifying pipette tip depth for aspirating or dispensing.

@@ -9,13 +9,15 @@ def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
     depth : fn, optional
         Depth at which to aspirate liquid from a well.
     aspirate_speed : dict
-        Dictionary specifying the "start" and "max" speed of aspiration
+        Dictionary specifying the "start" and "max" speed of aspiration, speeds
+        are expressed as "value:microliter/second"
     cal_volume : str, Unit, optional
         Calibrated volume to aspirate from a well.
     primer_vol : str, Unit
         An amount of liquid that is aspirated in addition to the nominal volume
         specified and then re-dispensed into the well the tip is aspirating from
         (source well)
+
     '''
     source = {}
     assign(source, "depth", depth)
@@ -44,6 +46,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
 
     cal_volume : str, Unit, optional
         Calibrated volume to be dispensed to target well
+
     '''
     target = {}
     assign(target, "depth", depth)

@@ -2,6 +2,7 @@ from .container import Container, Well, WellGroup
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
+from .pipette_tools import assign
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -509,195 +510,18 @@ class Protocol(object):
                 opts["allow_carryover"] = allow_carryover
             opts["from"] = d["from"]
             opts["to"] = d["to"]
-            self._assign(opts, "aspirate_speed", aspirate_speed)
-            self._assign(opts, "allow_carryover", allow_carryover)
-            self._assign(opts, "x_aspirate_source", aspirate_source)
-            self._assign(opts, "x_pre_buffer", pre_buffer)
-            self._assign(opts, "x_disposal_vol", disposal_vol)
-            self._assign(opts, "x_transit_vol", transit_vol)
-            self._assign(opts, "x_blowout_buffer", blowout_buffer)
-            self._assign(opts, "x_tip_type", tip_type)
+            assign(opts, "aspirate_speed", aspirate_speed)
+            assign(opts, "allow_carryover", allow_carryover)
+            assign(opts, "x_aspirate_source", aspirate_source)
+            assign(opts, "x_pre_buffer", pre_buffer)
+            assign(opts, "x_disposal_vol", disposal_vol)
+            assign(opts, "x_transit_vol", transit_vol)
+            assign(opts, "x_blowout_buffer", blowout_buffer)
+            assign(opts, "x_tip_type", tip_type)
 
             groups.append({"distribute": opts})
 
         self._pipette(groups)
-
-    def aspirate_source(self, depth=None, aspirate_speed=None, cal_volume=None,
-                        primer_vol=None):
-        '''
-        Set parameters for aspirating from source well before a transfer or
-        distribute.
-
-        Parameters
-        ----------
-        depth : fn, optional
-            Depth at which to aspirate liquid from a well.
-        aspirate_speed : dict
-            Dictionary specifying the "start" and "max" speed of aspiration
-        cal_volume : str, Unit, optional
-            Calibrated volume to aspirate from a well.
-        primer_vol : str, Unit
-            An amount of liquid that is aspirated in addition to the nominal volume
-            specified and then re-dispensed into the well the tip is aspirating from
-            (source well)
-        '''
-        source = {}
-        self._assign(source, "depth", depth)
-        self._assign(source, "aspirate_speed", aspirate_speed)
-        self._assign(source, "volume", cal_volume)
-        self._assign(source, "primer_vol", primer_vol)
-        return source
-
-    def dispense_target(self, depth=None, dispense_speed=None, cal_volume=None):
-        '''
-        Set parameters for dispensing to a target well during a transfer or
-        distribute.
-
-        Parameters
-        ----------
-        depth : fn, optional
-            Depth at which to dispense liquid into target well
-        dispense_speed : dict
-            Dictionary specifying the "start" and "max" dispense speed.
-            .. code-block:: json
-
-              {
-                "start": "50:microliver/second",
-                "max": "150:microliter/second"
-              }
-
-        cal_volume : str, Unit, optional
-            Calibrated volume to be dispensed to target well
-        '''
-        target = {}
-        self._assign(target, "depth", depth)
-        self._assign(target, "dispense_speed", dispense_speed)
-        self._assign(target, "volume", cal_volume)
-        return target
-
-    def distribute_target(self, dst_loc, volume, dispense_speed=None, dispense_target=None):
-        '''
-        Set parameters target wells of a distrbute instruction.
-
-        Example usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            sample_plate = p.ref("sample", None, "96-pcr", discard=True)
-
-            distribute_targets = []
-
-            distribute_targets.append(
-                distribute_target(sample_plate.well(1), "20:microliter",
-                                  dispense_speed="120:microliter/second",
-                                  dispense_target= dispense_target(depth=depth("ll_surface")))
-                )
-
-            distribute_targets.append(
-                distribute_target(sample_plate.well(2), "50:microliter",
-                                  dispense_speed="50:microliter/second")
-                )
-
-            p.append(Pipette([
-                            {"distribute": {
-                                "from": sample_plate.well(0),
-                                "to": distribute_targets
-                                }
-                            }]))
-
-        outputs:
-
-        .. code-block:: json
-
-            {
-              "refs": {
-                "sample": {
-                  "new": "96-pcr",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                {
-                  "groups": [
-                    {
-                      "distribute": {
-                        "to": [
-                          {
-                            "volume": "20:microliter",
-                            "dispense_speed": "120:microliter/second",
-                            "well": "sample/1",
-                            "x_dispense_target": {
-                              "depth": {
-                                "method": "ll_surface"
-                              }
-                            }
-                          },
-                          {
-                            "volume": "50:microliter",
-                            "dispense_speed": "50:microliter/second",
-                            "well": "sample/2"
-                          }
-                        ],
-                        "from": "sample/0"
-                      }
-                    }
-                  ],
-                  "op": "pipette"
-                }
-              ]
-            }
-
-
-        Parameters
-        ----------
-        dst_loc : Well, str
-            Well (target) to distribute liquid to.
-        volume : str, unit
-            Nominal volume of liquid to dispense to the target well.
-        dispense_speed : dict
-            Dictionary specifying the "start" and "max" dispense speed
-            .. code-block:: json
-
-              {
-                "start": "50:microliver/second",
-                "max": "150:microliter/second"
-              }
-
-        dispense_target : fn, optional
-            May not be specified if dispense_speed is specified.  Allows further
-            configuration of dispense parameters such as depth.
-
-        '''
-        distribute = {
-            "well": dst_loc,
-            "volume": volume
-        }
-        self._assign(distribute, "dispense_speed", dispense_speed)
-        self._assign(distribute, "x_dispense_target", dispense_target)
-        return distribute
-
-    def depth(self, relation, lld = None, distance = None):
-        """
-        Return a stanza specifying pipette tip depth for aspirating or dispensing.
-
-        Parameters
-        ----------
-        relation : str
-          Relative position from which to measure distance of the pipette tip
-        lld : str, optional
-          Method of liquid level detection
-        distance : str, unit
-          Distance compared to position set by relation parameter, measured in millimeters
-
-        """
-        valid_depths = set(["ll_surface", "ll_following", "ll_top", "ll_bottom"])
-        if relation not in valid_depths:
-            raise RuntimeError("Invalid depth relation")
-        depth = {"method":relation}
-        self._assign(depth,"lld",lld)
-        self._assign(depth,"distance",distance)
-        return depth
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
@@ -887,14 +711,14 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
-            self._assign(xfer, "aspirate_speed", aspirate_speed)
-            self._assign(xfer, "dispense_speed", dispense_speed)
-            self._assign(xfer, "x_aspirate_source", aspirate_source)
-            self._assign(xfer, "x_dispense_target", dispense_target)
-            self._assign(xfer, "x_pre_buffer", pre_buffer)
-            self._assign(xfer, "x_disposal_vol", disposal_vol)
-            self._assign(xfer, "x_transit_vol", transit_vol)
-            self._assign(xfer, "x_blowout_buffer", blowout_buffer)
+            assign(xfer, "aspirate_speed", aspirate_speed)
+            assign(xfer, "dispense_speed", dispense_speed)
+            assign(xfer, "x_aspirate_source", aspirate_source)
+            assign(xfer, "x_dispense_target", dispense_target)
+            assign(xfer, "x_pre_buffer", pre_buffer)
+            assign(xfer, "x_disposal_vol", disposal_vol)
+            assign(xfer, "x_transit_vol", transit_vol)
+            assign(xfer, "x_blowout_buffer", blowout_buffer)
 
             opts.append(xfer)
             if d.volume:
@@ -904,14 +728,14 @@ class Protocol(object):
             if s.volume:
                 s.volume -= v
         trans = {}
-        self._assign(trans, "x_tip_type", tip_type)
+        assign(trans, "x_tip_type", tip_type)
         if one_tip:
             trans["transfer"] = opts
             self.append(Pipette([trans]))
         else:
             for x in opts:
                 trans = {}
-                self._assign(trans, "x_tip_type", tip_type)
+                assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
                 self._pipette([trans])
 
@@ -1031,14 +855,14 @@ class Protocol(object):
                   dest.quadrant(i).wells[x].volume = volume
               if well.volume:
                   well.volume -= volume
-              self._assign(xfer, "aspirate_speed", aspirate_speed)
-              self._assign(xfer, "dispense_speed", dispense_speed)
-              self._assign(xfer, "x_aspirate_source", aspirate_source)
-              self._assign(xfer, "x_dispense_target", dispense_target)
-              self._assign(xfer, "x_pre_buffer", pre_buffer)
-              self._assign(xfer, "x_disposal_vol", disposal_vol)
-              self._assign(xfer, "x_transit_vol", transit_vol)
-              self._assign(xfer, "x_blowout_buffer", blowout_buffer)
+              assign(xfer, "aspirate_speed", aspirate_speed)
+              assign(xfer, "dispense_speed", dispense_speed)
+              assign(xfer, "x_aspirate_source", aspirate_source)
+              assign(xfer, "x_dispense_target", dispense_target)
+              assign(xfer, "x_pre_buffer", pre_buffer)
+              assign(xfer, "x_disposal_vol", disposal_vol)
+              assign(xfer, "x_transit_vol", transit_vol)
+              assign(xfer, "x_blowout_buffer", blowout_buffer)
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
         else:
@@ -1116,14 +940,14 @@ class Protocol(object):
                   well.volume = volume
               if source.quadrant(i).wells[x].volume:
                   source.quadrant(i).wells[x].volume -= volume
-              self._assign(xfer, "aspirate_speed", aspirate_speed)
-              self._assign(xfer, "dispense_speed", dispense_speed)
-              self._assign(xfer, "x_aspirate_source", aspirate_source)
-              self._assign(xfer, "x_dispense_target", dispense_target)
-              self._assign(xfer, "x_pre_buffer", pre_buffer)
-              self._assign(xfer, "x_disposal_vol", disposal_vol)
-              self._assign(xfer, "x_transit_vol", transit_vol)
-              self._assign(xfer, "x_blowout_buffer", blowout_buffer)
+              assign(xfer, "aspirate_speed", aspirate_speed)
+              assign(xfer, "dispense_speed", dispense_speed)
+              assign(xfer, "x_aspirate_source", aspirate_source)
+              assign(xfer, "x_dispense_target", dispense_target)
+              assign(xfer, "x_pre_buffer", pre_buffer)
+              assign(xfer, "x_disposal_vol", disposal_vol)
+              assign(xfer, "x_transit_vol", transit_vol)
+              assign(xfer, "x_blowout_buffer", blowout_buffer)
               txs.append(xfer)
           self.append(Pipette([{"transfer": txs}]))
         else:
@@ -2832,10 +2656,6 @@ class Protocol(object):
             return str(op_data)
         else:
             return op_data
-
-    def _assign(self, obj, key, var):
-        if var is not None:
-            obj[key] = var
 
     def _ref_containers_and_wells(self, params):
         """

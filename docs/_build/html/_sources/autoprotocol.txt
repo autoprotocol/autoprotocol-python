@@ -102,6 +102,15 @@ Protocol.oligosynthesize()
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.oligosynthesize
 
+Protocol.spread()
+^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.spread
+
+Protocol.autopick()
+^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.autopick
+
+
 protocol.Ref
 ~~~~~~~~~~~~
 

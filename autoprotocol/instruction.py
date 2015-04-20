@@ -70,7 +70,7 @@ class Dispense(Instruction):
     ----------
     ref : Ref, str
         Container for reagent to be dispensed to.
-    reagent : {"water", "LB", "LB-amp", "LB-kan", "SOC", "PBS"}
+    reagent : str
         Reagent to be dispensed to columns in container.
     columns : list
         Columns to be dispensed to, in the form of a list of dicts specifying

@@ -832,41 +832,7 @@ class Protocol(object):
         if dest.container_type.well_count == 384:
           txs = []
           for i, plate in enumerate(source):
-            for x, well in enumerate(plate.all_wells().wells):
-              xfer = {}
-              xfer["to"] = dest.quadrant(i).wells[x]
-              xfer["from"] = well
-              xfer["volume"] = volume
-              if not mix_vol:
-                mix_vol = volume
-              if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-              if mix_after:
-                xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-              if dest.quadrant(i).wells[x].volume:
-                dest.quadrant(i).wells[x].volume += volume
-              else:
-                  dest.quadrant(i).wells[x].volume = volume
-              if well.volume:
-                  well.volume -= volume
-              assign(xfer, "aspirate_speed", aspirate_speed)
-              assign(xfer, "dispense_speed", dispense_speed)
-              assign(xfer, "x_aspirate_source", aspirate_source)
-              assign(xfer, "x_dispense_target", dispense_target)
-              assign(xfer, "x_pre_buffer", pre_buffer)
-              assign(xfer, "x_disposal_vol", disposal_vol)
-              assign(xfer, "x_transit_vol", transit_vol)
-              assign(xfer, "x_blowout_buffer", blowout_buffer)
-              txs.append(xfer)
-          self.append(Pipette([{"transfer": txs}]))
+            self.stamp(plate, dest, volume, quad = i)
         else:
           raise RuntimeError("Stamping is not supported for the container "
                            "types provided")

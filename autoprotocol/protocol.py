@@ -2130,10 +2130,11 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
-        if len(wells) > 8:
+        max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        if len(wells) > max_well:
           datarefs = 1
-          for x in xrange(0,len(wells), 8):
-            self.gel_separate(wells[x:x+8], volume, matrix, ladder, duration,
+          for x in xrange(0, len(wells), max_well):
+            self.gel_separate(wells[x:x+max_well], volume, matrix, ladder, duration,
                               "%s_%d" % (dataref, datarefs))
             datarefs += 1
         else:

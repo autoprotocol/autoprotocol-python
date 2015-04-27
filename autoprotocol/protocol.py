@@ -684,7 +684,6 @@ class Protocol(object):
                 for s in source.wells:
                     while s.volume >= volume[idx] and (len(sources) <= len(dest.wells)):
                         sources.append(s)
-                        s.volume -= volume[idx]
                 if len(sources) < len(dest.wells):
                   raise RuntimeError("There is not enough volume in the "
                                      "source well(s) specified to complete the "

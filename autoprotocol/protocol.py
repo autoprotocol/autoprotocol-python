@@ -344,7 +344,7 @@ class Protocol(object):
                    flowrate="100:microliter/second", aspirate_speed=None,
                    aspirate_source=None, distribute_target=None, pre_buffer=None,
                    disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                   tip_type=None):
+                   tip_type=None, grouped=True):
         """
         Distribute liquid from source well(s) to destination wells(s)
 
@@ -521,14 +521,18 @@ class Protocol(object):
 
             groups.append({"distribute": opts})
 
-        self._pipette(groups)
+        if grouped:
+          self._pipette(groups)
+        else:
+          self.append(Pipette(groups))
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
                  repetitions=10, flowrate="100:microliter/second",
                  aspirate_speed=None, dispense_speed=None, aspirate_source=None,
                  dispense_target=None, pre_buffer=None, disposal_vol=None,
-                 transit_vol=None, blowout_buffer=None, tip_type=None):
+                 transit_vol=None, blowout_buffer=None, tip_type=None,
+                 grouped=True):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step unless the "one_tip" parameter
@@ -732,13 +736,19 @@ class Protocol(object):
         assign(trans, "x_tip_type", tip_type)
         if one_tip:
             trans["transfer"] = opts
-            self.append(Pipette([trans]))
+            if grouped:
+              self._pipette([trans])
+            else:
+              self.append(Pipette([trans]))
         else:
             for x in opts:
                 trans = {}
                 assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
-                self._pipette([trans])
+                if grouped:
+                  self._pipette([trans])
+                else:
+                  self.append(Pipette([trans]))
 
 
     def stamp(self, source, dest, volume, quad=None, mix_before=False,

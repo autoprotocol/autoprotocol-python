@@ -91,6 +91,20 @@ def convert_param(protocol, val, typeDesc):
             k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
             for k in typeDesc['inputs']
             } for x in val]
+    elif type == 'thermocycle':
+        return [
+            {
+                'cycles': g['cycles'],
+                'steps': [
+                    {
+                        'duration': Unit.fromstring(s['duration']),
+                        'temperature': Unit.fromstring(s['temperature'])
+                    }
+                    for s in g['steps']
+                ]
+            }
+            for g in val
+        ]
     else:
         raise ValueError("Unknown input type %r" % type)
 

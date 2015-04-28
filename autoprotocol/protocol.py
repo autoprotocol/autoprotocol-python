@@ -344,7 +344,7 @@ class Protocol(object):
                    flowrate="100:microliter/second", aspirate_speed=None,
                    aspirate_source=None, distribute_target=None, pre_buffer=None,
                    disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                   tip_type=None, grouped=True):
+                   tip_type=None, new_group=True):
         """
         Distribute liquid from source well(s) to destination wells(s)
 
@@ -521,7 +521,7 @@ class Protocol(object):
 
             groups.append({"distribute": opts})
 
-        if grouped:
+        if new_group:
           self._pipette(groups)
         else:
           self.append(Pipette(groups))
@@ -532,7 +532,7 @@ class Protocol(object):
                  aspirate_speed=None, dispense_speed=None, aspirate_source=None,
                  dispense_target=None, pre_buffer=None, disposal_vol=None,
                  transit_vol=None, blowout_buffer=None, tip_type=None,
-                 grouped=True):
+                 new_group=True):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step unless the "one_tip" parameter
@@ -736,7 +736,7 @@ class Protocol(object):
         assign(trans, "x_tip_type", tip_type)
         if one_tip:
             trans["transfer"] = opts
-            if grouped:
+            if new_group:
               self._pipette([trans])
             else:
               self.append(Pipette([trans]))
@@ -745,7 +745,7 @@ class Protocol(object):
                 trans = {}
                 assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
-                if grouped:
+                if new_group:
                   self._pipette([trans])
                 else:
                   self.append(Pipette([trans]))

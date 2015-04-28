@@ -661,7 +661,7 @@ class Protocol(object):
         dest = WellGroup(dest)
         opts = []
 
-        if len(dest.wells) > 1 and len(source.wells) == 1:
+        if len(dest.wells) > 1 and len(source.wells) == 1 and not one_source:
             source = WellGroup(source.wells * len(dest.wells))
         if isinstance(volume,str) or isinstance(volume, Unit):
             volume = [Unit.fromstring(volume)] * len(dest.wells)
@@ -2530,6 +2530,8 @@ class Protocol(object):
           autopicking
 
       """
+      if isinstance(dests, Well) or isinstance(dests, str):
+        dests = [dests]
       self.instructions.append(Autopick(source, dests, min_count))
 
     def _ref_for_well(self, well):

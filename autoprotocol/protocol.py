@@ -344,7 +344,7 @@ class Protocol(object):
                    flowrate="100:microliter/second", aspirate_speed=None,
                    aspirate_source=None, distribute_target=None, pre_buffer=None,
                    disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                   tip_type=None, new_group=True):
+                   tip_type=None, new_group=False):
         """
         Distribute liquid from source well(s) to destination wells(s)
 
@@ -522,9 +522,9 @@ class Protocol(object):
             groups.append({"distribute": opts})
 
         if new_group:
-          self._pipette(groups)
-        else:
           self.append(Pipette(groups))
+        else:
+          self._pipette(groups)
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
@@ -532,7 +532,7 @@ class Protocol(object):
                  aspirate_speed=None, dispense_speed=None, aspirate_source=None,
                  dispense_target=None, pre_buffer=None, disposal_vol=None,
                  transit_vol=None, blowout_buffer=None, tip_type=None,
-                 new_group=True):
+                 new_group=False):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step unless the "one_tip" parameter
@@ -737,18 +737,18 @@ class Protocol(object):
         if one_tip:
             trans["transfer"] = opts
             if new_group:
-              self._pipette([trans])
-            else:
               self.append(Pipette([trans]))
+            else:
+              self._pipette([trans])
         else:
             for x in opts:
                 trans = {}
                 assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
                 if new_group:
-                  self._pipette([trans])
-                else:
                   self.append(Pipette([trans]))
+                else:
+                  self._pipette([trans])
 
 
     def stamp(self, source, dest, volume, quad=None, mix_before=False,

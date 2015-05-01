@@ -46,6 +46,14 @@ Protocol.stamp()
 ^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.stamp
 
+Protocol.plate_to_mag_adapter()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.plate_to_mag_adapter
+
+Protocol.plate_off_mag_adapter()
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.plate_off_mag_adapter
+
 Protocol.sangerseq()
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.sangerseq

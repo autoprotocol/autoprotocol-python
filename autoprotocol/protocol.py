@@ -1832,7 +1832,9 @@ class Protocol(object):
 
     def plate_to_mag_adapter(self, ref, duration):
         """
-        Transfer a plate to the magnetized slot on the liquid handler
+        Transfer a plate to the magnetized slot on the liquid handler.
+        Duration is the length of time to incubate the plate on the magnetic
+        block before the pipetting operation takes place.
 
         Magnetic adapter instructions MUST be followed by Pipette instructions
 
@@ -1840,9 +1842,31 @@ class Protocol(object):
 
         .. code-block:: python
 
+          p.plate_to_mag_adapter(sample_plate, "5:minutes")
+          p.transfer(sample_plate.well(0), sample_plate.well(1), "12:microliter")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+          {
+            "groups": [
+              {
+                "transfer": [
+                  {
+                    "volume": "12.0:microliter",
+                    "to": "sample_plate/1",
+                    "from": "sample_plate/0"
+                  }
+                ]
+              }
+            ],
+            "x-magnetic_separate": {
+              "duration": "5:minute",
+              "object": "sample_plate"
+            },
+            "op": "pipette"
+          }
 
         Parameters
         ----------
@@ -1871,9 +1895,47 @@ class Protocol(object):
 
         .. code-block:: python
 
+          p.plate_to_mag_adapter(sample_plate, "5:minutes")
+          p.transfer(sample_plate.well(0), sample_plate.well(1), "12:microliter")
+          p.plate_off_mag_adapter(sample_plate)
+          p.transfer(sample_plate.well(13), sample_plate.well(1), "12:microliter")
+
         Autoprotocol Output:
 
         .. code-block:: json
+
+          {
+            "groups": [
+              {
+                "transfer": [
+                  {
+                    "volume": "12.0:microliter",
+                    "to": "sample_plate/1",
+                    "from": "sample_plate/0"
+                  }
+                ]
+              }
+            ],
+            "x-magnetic_separate": {
+              "duration": "5:minute",
+              "object": "sample_plate"
+            },
+            "op": "pipette"
+          },
+          {
+            "groups": [
+              {
+                "transfer": [
+                  {
+                    "volume": "12.0:microliter",
+                    "to": "sample_plate/1",
+                    "from": "sample_plate/13"
+                  }
+                ]
+              }
+            ],
+            "op": "pipette"
+          }
 
         Parameters
         ----------

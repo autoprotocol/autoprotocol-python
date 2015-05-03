@@ -51,26 +51,19 @@ class Unit(object):
     def __str__(self):
         return ":".join([str(self.value), self.unit])
 
-    def __add__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value + other.value, self.unit)
-    def __sub__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value - other.value, self.unit)
-
     def _check_type(self, other):
         if not isinstance(other, Unit):
             raise ValueError("Both operands must be of type Unit")
         elif self.unit != other.unit:
             raise ValueError("unit %s is not %s" % (self.unit, other.unit))
+
+    def __add__(self, other):
+        self._check_type(other)
+        return Unit(self.value + other.value, self.unit)
+
+    def __sub__(self, other):
+        self._check_type(other)
+        return Unit(self.value - other.value, self.unit)
 
     def __lt__(self, other):
         self._check_type(other)
@@ -108,25 +101,13 @@ class Unit(object):
         return self.__div__(other)
 
     def __floordiv__(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(self.value // other.value, self.unit)
+        self._check_type(other)
+        return Unit(self.value // other.value, self.unit)
 
     def __iadd__(self,other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(operator.iadd(self.value,other.value), self.unit)
+        self._check_type(other)
+        return Unit(operator.iadd(self.value,other.value), self.unit)
 
     def __isub__(self,other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-        else:
-            return Unit(operator.isub(self.value,other.value), self.unit)
+        self._check_type(other)
+        return Unit(operator.isub(self.value,other.value), self.unit)

@@ -1,4 +1,6 @@
+
 import unittest
+
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.instruction import Instruction, Thermocycle, Incubate, Pipette, Spin
 from autoprotocol.container_type import ContainerType
@@ -11,8 +13,39 @@ class ProtocolMultipleExistTestCase(unittest.TestCase):
         p2 = Protocol()
 
         p1.spin("dummy_ref", "2000:rpm", "560:second")
-        self.assertEqual(len(p2.instructions), 0,
-            "incorrect number of instructions in empty protocol")
+        self.assertEqual(
+            len(p2.instructions), 0,
+            "incorrect number of instructions in empty protocol",
+        )
+
+
+class ProtocolContainerTypeTestCase(unittest.TestCase):
+    def test_container_type(self):
+        p = Protocol()
+        names = [
+            "384-flat",
+            "384-pcr",
+            "96-flat",
+            "96-pcr",
+            "96-deep",
+            "micro-2.0",
+            "micro-1.5",
+        ]
+        for name in names:
+            self.assertIsInstance(
+                p.container_type(name),
+                ContainerType,
+            )
+
+        container = p.container_type("384-flat")
+        self.assertIsInstance(
+            p.container_type(container),
+            ContainerType,
+        )
+
+        with self.assertRaises(ValueError):
+            p.container_type("111-unknown")
+
 
 class ProtocolBasicTestCase(unittest.TestCase):
     def runTest(self):
@@ -42,35 +75,61 @@ class ProtocolBasicTestCase(unittest.TestCase):
         self.assertEqual(protocol.instructions[1].op, "incubate")
         self.assertEqual(protocol.instructions[1].duration, "30:minute")
 
+
 class ProtocolAppendTestCase(unittest.TestCase):
     def runTest(self):
         p = Protocol()
-        self.assertEqual(len(p.instructions), 0,
-            "should not be any instructions before appending to empty protocol")
+        self.assertEqual(
+            len(p.instructions), 0,
+            "should not be any instructions before appending to empty protocol",
+        )
 
         p.append(Spin("dummy_ref", "100:meter/second^2", "60:second"))
-        self.assertEqual(len(p.instructions), 1,
-            "incorrect number of instructions after single instruction append")
-        self.assertEqual(p.instructions[0].op, "spin",
-            "incorrect instruction appended")
+        self.assertEqual(
+            len(p.instructions), 1,
+            "incorrect number of instructions after single instruction append",
+        )
+        self.assertEqual(
+            p.instructions[0].op, "spin",
+            "incorrect instruction appended",
+        )
 
         p.append([
                     Incubate("dummy_ref", "ambient", "30:second"),
                     Spin("dummy_ref", "2000:rpm", "120:second")
                 ])
-        self.assertEqual(len(p.instructions), 3,
-            "incorrect number of instructions after appending instruction list")
-        self.assertEqual(p.instructions[1].op, "incubate",
-            "incorrect instruction order after list append")
-        self.assertEqual(p.instructions[2].op, "spin",
-            "incorrect instruction at end after list append.")
+        self.assertEqual(
+            len(p.instructions), 3,
+            "incorrect number of instructions after appending instruction list",
+        )
+        self.assertEqual(
+            p.instructions[1].op, "incubate",
+            "incorrect instruction order after list append",
+        )
+        self.assertEqual(
+            p.instructions[2].op, "spin",
+            "incorrect instruction at end after list append.",
+        )
+
 
 class RefTestCase(unittest.TestCase):
+    def test_assign_init(self):
+        ref = Ref("test", None, "96-flat")
+        p = Protocol(
+            refs=[ref],
+        )
+        self.assertEqual(
+            p.refs,
+            {"test": ref},
+        )
+
+
     def test_slashes_not_allowed(self):
         p = Protocol()
         with self.assertRaises(AssertionError):
             p.ref("test/bar", None, "96-flat", discard=True)
         self.assertEqual(0, len(p.refs))
+
 
     def test_duplicates_not_allowed(self):
         p = Protocol()
@@ -79,6 +138,7 @@ class RefTestCase(unittest.TestCase):
             p.ref("test", None, "96-flat", storage="cold_20")
         self.assertTrue(p.refs["test"].opts["discard"])
         self.assertFalse("where" in p.refs["test"].opts)
+
 
 class ThermocycleTestCase(unittest.TestCase):
     def test_thermocycle_append(self):
@@ -98,6 +158,7 @@ class ThermocycleTestCase(unittest.TestCase):
         ], "20:microliter")
         self.assertEqual(len(t.groups), 3, 'incorrect number of groups')
         self.assertEqual(t.volume, "20:microliter")
+
 
     def test_thermocycle_dyes_and_datarefs(self):
         self.assertRaises(ValueError,
@@ -170,6 +231,7 @@ class DistributeTestCase(unittest.TestCase):
         self.assertTrue(5, c.well(1).volume.value)
         self.assertTrue(15, c.well(0).volume.value)
 
+
     def test_distribute_multiple_wells(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
@@ -182,6 +244,7 @@ class DistributeTestCase(unittest.TestCase):
         for w in c.wells_from(1,3):
             self.assertTrue(5, w.volume.value)
         self.assertTrue(5, c.well(0).volume.value)
+
 
     def test_fill_wells(self):
         p = Protocol()

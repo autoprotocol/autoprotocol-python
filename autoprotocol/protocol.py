@@ -134,10 +134,10 @@ class Protocol(object):
             If an unknown ContainerType shortname is passed as a parameter
 
         """
-        if shortname in _CONTAINER_TYPES:
-            return _CONTAINER_TYPES[shortname]
-        elif isinstance(shortname, ContainerType):
+        if isinstance(shortname, ContainerType):
             return shortname
+        elif shortname in _CONTAINER_TYPES:
+            return _CONTAINER_TYPES[shortname]
         else:
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))

@@ -25,3 +25,7 @@ var/
 config/
 *.html
 venv/
+htmlcov/
+.coverage
+coverage.xml
+.tox/

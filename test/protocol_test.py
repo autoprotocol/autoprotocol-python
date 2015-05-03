@@ -166,7 +166,7 @@ class DistributeTestCase(unittest.TestCase):
                      "5:microliter")
         self.assertEqual(1, len(p.instructions))
         self.assertEqual("distribute",
-                         p.as_dict()["instructions"][0]["groups"][0].keys()[0])
+                         list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
         self.assertTrue(5, c.well(1).volume.value)
         self.assertTrue(15, c.well(0).volume.value)
 
@@ -178,7 +178,7 @@ class DistributeTestCase(unittest.TestCase):
                      "5:microliter")
         self.assertEqual(1, len(p.instructions))
         self.assertEqual("distribute",
-                         p.as_dict()["instructions"][0]["groups"][0].keys()[0])
+                         list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
         for w in c.wells_from(1,3):
             self.assertTrue(5, w.volume.value)
         self.assertTrue(5, c.well(0).volume.value)
@@ -226,4 +226,3 @@ class RefifyTestCase(unittest.TestCase):
         i = 24
         self.assertEqual("randomstring", p._refify(s))
         self.assertEqual(24, p._refify(i))
-

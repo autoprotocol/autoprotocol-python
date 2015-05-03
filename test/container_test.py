@@ -1,6 +1,10 @@
+import sys
 import unittest
 from autoprotocol.container_type import ContainerType
 from autoprotocol.container import Container, Well
+
+if sys.version_info[0] >= 3:
+    xrange = range
 
 dummy_type = ContainerType(name="dummy",
                            well_count=15,
@@ -86,9 +90,9 @@ class WellPropertyTestCase(unittest.TestCase):
         c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
         self.assertIsInstance(c.well(0).properties, dict)
         self.assertEqual(["Concentration"],
-                         c.well(0).properties.keys())
+                         list(c.well(0).properties.keys()))
         self.assertEqual(["40:nanogram/microliter"],
-                         c.well(0).properties.values())
+                         list(c.well(0).properties.values()))
 
     def test_add_properties(self):
         c = Container(None, dummy_type)
@@ -110,4 +114,3 @@ class WellPropertyTestCase(unittest.TestCase):
         for well in group:
             self.assertTrue("property1" in well.properties)
             self.assertTrue("property2" in well.properties)
-

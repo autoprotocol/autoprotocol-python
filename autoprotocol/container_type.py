@@ -97,13 +97,13 @@ class ContainerType(namedtuple("ContainerType",
           Well reference to be decomposed.
         """
         idx = self.robotize(idx)
-        return (idx / self.col_count, idx % self.col_count)
+        return (idx // self.col_count, idx % self.col_count)
 
     def row_count(self):
         """Return number of rows this ContainerType has.
 
         """
-        return self.well_count / self.col_count
+        return self.well_count // self.col_count
 
 
 _CONTAINER_TYPES = {

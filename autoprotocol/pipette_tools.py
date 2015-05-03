@@ -1,3 +1,7 @@
+
+import sys
+
+
 def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
                     primer_vol=None):
     '''
@@ -26,6 +30,7 @@ def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
     assign(source, "primer_vol", primer_vol)
     return source
 
+
 def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     '''
     Set parameters for dispensing to a target well during a transfer or
@@ -40,7 +45,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
         .. code-block:: json
 
           {
-            "start": "50:microliver/second",
+            "start": "50:microliter/second",
             "max": "150:microliter/second"
           }
 
@@ -53,6 +58,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     assign(target, "dispense_speed", dispense_speed)
     assign(target, "volume", cal_volume)
     return target
+
 
 def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None):
     '''
@@ -139,7 +145,7 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
         .. code-block:: json
 
           {
-            "start": "50:microliver/second",
+            "start": "50:microliter/second",
             "max": "150:microliter/second"
           }
 
@@ -155,6 +161,7 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
     assign(distribute, "dispense_speed", dispense_speed)
     assign(distribute, "x_dispense_target", dispense_target)
     return distribute
+
 
 def depth(relation, lld = None, distance = "0.0:meter"):
     """
@@ -172,14 +179,14 @@ def depth(relation, lld = None, distance = "0.0:meter"):
     """
     valid_depths = set(["ll_surface", "ll_following", "ll_top", "ll_bottom"])
     if relation not in valid_depths:
-        print("Invalid depth:",relation)
+        print("Invalid depth:", relation)
         sys.exit()
-    depth = {"method":relation}
-    assign(depth,"lld",lld)
-    assign(depth,"distance",distance)
+    depth = {"method": relation}
+    assign(depth, "lld", lld)
+    assign(depth, "distance", distance)
     return depth
+
 
 def assign(obj, key, var):
     if var is not None:
         obj[key] = var
-

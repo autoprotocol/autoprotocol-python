@@ -796,20 +796,44 @@ class Protocol(object):
         p.stamp(96well_2, 384well_1, "10:microliter", quad=0)
 
         # 384-well to multiple 96-well plates:
-        p.stamp(384well_2, [96well_1, 96well_2, 96well_3, 96well_4],
+        p.stamp(384well_2,
+                [{"container":96well_1, "quadrant": 0},
+                 {"container":96well_2, "quadrant": 1},
+                 {"container":96well_3, "quadrant": 2},
+                 {"container":96well_4} "quadrant": 3}],
                 "10:microliter")
 
         # combine multiple 96-well plates into one 384-well:
-        p.stamp([96well_1, 96well_2, 96well_3, 96well_4], 384well_2,
+        p.stamp([{"container":96well_1, "quadrant": 0},
+                 {"container":96well_2, "quadrant": 1},
+                 {"container":96well_3, "quadrant": 2},
+                 {"container":96well_4} "quadrant": 3}],
+                384well_2,
                 "10:microliter")
 
 
       Parameters
       ----------
-      source : Container, list of Containers
-        96- or 384-well plate(s) to source liquid from
-      dest : Container, list of Containers
-        96- or 384-well plate(s) to source liquid from
+      source : Container, list of dicts
+        96- or 384-well plate(s) to source liquid from.  To specify more than
+        one 96-well plate as a source for a 384-well plate, you must specify
+        them as a list of dicts in the form of
+
+        .. code-block:: json
+
+            {"container": <container>, "quadrant": <quadrant>}
+
+        and specify the destination quadrant
+      dest : Container, list of dicts
+        96- or 384-well plate(s) to transfer liquid to.  To specify more than
+        one 96-well plate as a source for a 384-well plate, you must specify
+        them as a list of dicts in the form of
+
+        .. code-block:: json
+
+            {"container": <container>, "quadrant": <quadrant>}
+
+        and specify the destination quadrant
       volume : str, Unit
         Volume of liquid to move from source plate(s) to destination plate(s)
       quad : int
@@ -835,17 +859,33 @@ class Protocol(object):
         transfer step
 
       """
+
       if isinstance(source, list):
         assert len(source) <= 4
         for x in source:
-          assert x.container_type.well_count == 96
+          assert x["container"].container_type.well_count == 96
         if dest.container_type.well_count == 384:
-          txs = []
-          for i, plate in enumerate(source):
-            self.stamp(plate, dest, volume, quad = i)
-        else:
-          raise RuntimeError("Stamping is not supported for the container "
-                           "types provided")
+          for s in source:
+            self.transfer(s["container"].all_wells(),
+                        dest.quadrant(s["quadrant"]),
+                        volume,
+                        False,
+                        True,
+                        mix_after,
+                        mix_before,
+                        mix_vol,
+                        repetitions,
+                        flowrate,
+                        aspirate_speed,
+                        dispense_speed,
+                        aspirate_source,
+                        dispense_target,
+                        pre_buffer,
+                        disposal_vol,
+                        transit_vol,
+                        blowout_buffer,
+                        None,
+                        new_group=True)
       elif source.container_type.well_count == 96:
         if dest.container_type.well_count == 96:
           self.transfer(source.all_wells(),
@@ -866,77 +906,38 @@ class Protocol(object):
                         disposal_vol,
                         transit_vol,
                         blowout_buffer,
-                        None)
-        elif dest.container_type.well_count == 384:
-          if quad in [0, 1, 2, 3]:
-            self.transfer(source.all_wells(),
-                          dest.quadrant(quad),
-                          volume,
-                          False,
-                          True,
-                          mix_after,
-                          mix_before,
-                          mix_vol,
-                          repetitions,
-                          flowrate,
-                          aspirate_speed,
-                          dispense_speed,
-                          aspirate_source,
-                          dispense_target,
-                          pre_buffer,
-                          disposal_vol,
-                          transit_vol,
-                          blowout_buffer,
-                          None)
-          else:
-            raise RuntimeError("""You must specify a quadrant number when
-                               transferring liquid from one 96-well plate
-                               into a 384-well plate""")
+                        None, new_group=True)
+        else:
+          raise RuntimeError("When transferring liquid from a 96-well container "
+                             "to a 384-well container, you must specify the "
+                             "source as a list of dictionaries in the form of "
+                             "[{'container': <container>, 'quadrant': <quadrant>}]")
       elif isinstance(dest, list):
         assert len(dest) <= 4
         for x in dest:
-          assert x.container_type.well_count == 96
+          assert x["container"].container_type.well_count == 96
         if source.container_type.well_count == 384:
-          txs = []
-          for i, plate in enumerate(dest):
-            for x, well in enumerate(plate.all_wells().wells):
-              xfer = {}
-              xfer["to"] = well
-              xfer["from"] = source.quadrant(i).wells[x]
-              xfer["volume"] = volume
-              if not mix_vol:
-                mix_vol = volume
-              if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-              if mix_after:
-                xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-              if well.volume:
-                well.volume += volume
-              else:
-                  well.volume = volume
-              if source.quadrant(i).wells[x].volume:
-                  source.quadrant(i).wells[x].volume -= volume
-              assign(xfer, "aspirate_speed", aspirate_speed)
-              assign(xfer, "dispense_speed", dispense_speed)
-              assign(xfer, "x_aspirate_source", aspirate_source)
-              assign(xfer, "x_dispense_target", dispense_target)
-              assign(xfer, "x_pre_buffer", pre_buffer)
-              assign(xfer, "x_disposal_vol", disposal_vol)
-              assign(xfer, "x_transit_vol", transit_vol)
-              assign(xfer, "x_blowout_buffer", blowout_buffer)
-              txs.append(xfer)
-          self.append(Pipette([{"transfer": txs}]))
-        else:
-          raise RuntimeError("Stamping is not supported for the container "
-                             "types provided")
+          for d in dest:
+            self.transfer(source.quadrant(d["quadrant"]),
+                        d["container"].all_wells(),
+                        volume,
+                        False,
+                        True,
+                        mix_after,
+                        mix_before,
+                        mix_vol,
+                        repetitions,
+                        flowrate,
+                        aspirate_speed,
+                        dispense_speed,
+                        aspirate_source,
+                        dispense_target,
+                        pre_buffer,
+                        disposal_vol,
+                        transit_vol,
+                        blowout_buffer,
+                        None,
+                        new_group=True)
       elif source.container_type.well_count == 384:
         if dest.container_type.well_count == 384:
           self.transfer(source.all_wells(),
@@ -957,32 +958,8 @@ class Protocol(object):
                         disposal_vol,
                         transit_vol,
                         blowout_buffer,
-                        None)
-        elif dest.container_type.well_count == 96:
-          if quad in [0, 1, 2, 3]:
-            self.transfer(source.quadrant(quad),
-                          dest.all_wells(),
-                          volume,
-                          False,
-                          True,
-                          mix_after,
-                          mix_before,
-                          mix_vol,
-                          repetitions,
-                          flowrate,
-                          aspirate_speed,
-                          dispense_speed,
-                          aspirate_source,
-                          dispense_target,
-                          pre_buffer,
-                          disposal_vol,
-                          transit_vol,
-                          blowout_buffer,
-                          None)
-          else:
-            raise RuntimeError("""You must specify a quadrant number when
-                               transferring liquid from a 384-well plate
-                               into one 96-well plate""")
+                        None,
+                        new_group=True)
       else:
         raise RuntimeError("Stamping is not supported for the container "
                            "types provided")

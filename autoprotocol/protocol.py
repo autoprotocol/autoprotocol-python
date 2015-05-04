@@ -750,7 +750,7 @@ class Protocol(object):
                   self._pipette([trans])
 
 
-    def stamp(self, source, dest, volume, quad=None, mix_before=False,
+    def stamp(self, source, dest, volume, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,
               flowrate="100:microliter/second", aspirate_speed=None,
               dispense_speed=None, aspirate_source=None,
@@ -862,30 +862,30 @@ class Protocol(object):
 
       if isinstance(source, list):
         assert len(source) <= 4
+        assert dest.container_type.well_count == 384, "You can only transfer the contents of multiple 96-well plates to a 384-well container"
         for x in source:
           assert x["container"].container_type.well_count == 96
-        if dest.container_type.well_count == 384:
-          for s in source:
-            self.transfer(s["container"].all_wells(),
-                        dest.quadrant(s["quadrant"]),
-                        volume,
-                        False,
-                        True,
-                        mix_after,
-                        mix_before,
-                        mix_vol,
-                        repetitions,
-                        flowrate,
-                        aspirate_speed,
-                        dispense_speed,
-                        aspirate_source,
-                        dispense_target,
-                        pre_buffer,
-                        disposal_vol,
-                        transit_vol,
-                        blowout_buffer,
-                        None,
-                        new_group=True)
+        for s in source:
+          self.transfer(s["container"].all_wells(),
+                      dest.quadrant(s["quadrant"]),
+                      volume,
+                      False,
+                      True,
+                      mix_after,
+                      mix_before,
+                      mix_vol,
+                      repetitions,
+                      flowrate,
+                      aspirate_speed,
+                      dispense_speed,
+                      aspirate_source,
+                      dispense_target,
+                      pre_buffer,
+                      disposal_vol,
+                      transit_vol,
+                      blowout_buffer,
+                      None,
+                      new_group=True)
       elif source.container_type.well_count == 96:
         if dest.container_type.well_count == 96:
           self.transfer(source.all_wells(),
@@ -914,30 +914,30 @@ class Protocol(object):
                              "[{'container': <container>, 'quadrant': <quadrant>}]")
       elif isinstance(dest, list):
         assert len(dest) <= 4
+        assert source.container_type.well_count == 384, "You can only transfer the contents of a 384-well container to multiple 96-well containers"
         for x in dest:
           assert x["container"].container_type.well_count == 96
-        if source.container_type.well_count == 384:
-          for d in dest:
-            self.transfer(source.quadrant(d["quadrant"]),
-                        d["container"].all_wells(),
-                        volume,
-                        False,
-                        True,
-                        mix_after,
-                        mix_before,
-                        mix_vol,
-                        repetitions,
-                        flowrate,
-                        aspirate_speed,
-                        dispense_speed,
-                        aspirate_source,
-                        dispense_target,
-                        pre_buffer,
-                        disposal_vol,
-                        transit_vol,
-                        blowout_buffer,
-                        None,
-                        new_group=True)
+        for d in dest:
+          self.transfer(source.quadrant(d["quadrant"]),
+                      d["container"].all_wells(),
+                      volume,
+                      False,
+                      True,
+                      mix_after,
+                      mix_before,
+                      mix_vol,
+                      repetitions,
+                      flowrate,
+                      aspirate_speed,
+                      dispense_speed,
+                      aspirate_source,
+                      dispense_target,
+                      pre_buffer,
+                      disposal_vol,
+                      transit_vol,
+                      blowout_buffer,
+                      None,
+                      new_group=True)
       elif source.container_type.well_count == 384:
         if dest.container_type.well_count == 384:
           self.transfer(source.all_wells(),

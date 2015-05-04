@@ -17,7 +17,6 @@ class Ref(object):
 
     """
     def __init__(self, name, opts, container):
-        assert "/" not in name
         self.name = name
         self.opts = opts
         self.container = container

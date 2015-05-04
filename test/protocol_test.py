@@ -131,6 +131,12 @@ class RefTestCase(unittest.TestCase):
         self.assertEqual(0, len(p.refs))
 
 
+    def test_bad_storage(self):
+        p = Protocol()
+        with self.assertRaises(ValueError):
+            p.ref("test", None, "96-flat", storage="bad")
+
+
     def test_duplicates_not_allowed(self):
         p = Protocol()
         p.ref("test", None, "96-flat", discard=True)
@@ -138,6 +144,47 @@ class RefTestCase(unittest.TestCase):
             p.ref("test", None, "96-flat", storage="cold_20")
         self.assertTrue(p.refs["test"].opts["discard"])
         self.assertFalse("where" in p.refs["test"].opts)
+
+
+    def test_ref_containers_and_wells(self):
+        p = Protocol()
+        p.ref("sample_plate", None, "96-flat", discard=True)
+        params = {
+            "sample": {
+                "id": None,
+                "type": "micro-1.5",
+                "storage": "cold_4",
+                "discard": None,
+            },
+            "mastermix_loc": "sample_plate/A1",
+            "samples": [
+                "sample_plate/B1",
+                "sample_plate/B2",
+                "sample_plate/B3",
+                "sample_plate/B4"
+            ],
+        }
+        proto = p._ref_containers_and_wells(
+            params,
+        )
+        parameters = {
+            "refs": {
+                "sample": Container(None, p.container_type("micro-1.5"))
+            },
+            "mastermix_loc": p.refs["sample_plate"].container.well("A1"),
+            "sample": params["sample"],
+            "samples": WellGroup([
+                p.refs["sample_plate"].container.well("B1"),
+                p.refs["sample_plate"].container.well("B2"),
+                p.refs["sample_plate"].container.well("B3"),
+                p.refs["sample_plate"].container.well("B4"),
+            ])
+        }
+
+        self.assertEqual(
+            proto,
+            parameters,
+        )
 
 
 class ThermocycleTestCase(unittest.TestCase):

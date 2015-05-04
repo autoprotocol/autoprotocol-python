@@ -2782,25 +2782,28 @@ class Protocol(object):
                              discard=discard)
             else:
                 parameters[str(k)] = v
+
         parameters["refs"] = containers
 
-
-        #ref wells (must be done after reffing containers)
+        # ref wells (must be done after reffing containers)
         for k, v in params.items():
             if isinstance(v, list) and "/" in str(v[0]):
                 group = WellGroup([])
+
                 for w in v:
-                    cont = w.rsplit("/")[0].encode('utf-8')
-                    well = w.rsplit("/")[1].encode('utf-8')
+                    cont, well = w.rsplit("/", 1)
                     group.append(self.refs[cont].container.well(well))
+
                 parameters[str(k)] = group
             elif "/" in str(v):
                 ref_name = v.rsplit("/")[0]
+
                 if not ref_name in self.refs:
                     raise RuntimeError(
                         "Parameters contain well references to "
                         "a container that isn't referenced in this protocol: "
                         "'%s'." % ref_name)
+
                 if v.rsplit("/")[1] == "all_wells":
                     parameters[str(k)] = self.refs[ref_name].container.all_wells()
                 else:

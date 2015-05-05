@@ -101,6 +101,11 @@ class Well(object):
                                      str(self.volume))
 
 
+    def __eq__(self, other):
+        return self.container == other.container and \
+            self.index == other.index
+
+
 class WellGroup(object):
     """
     A logical grouping of Wells.
@@ -216,6 +221,10 @@ class WellGroup(object):
         if not isinstance(other, WellGroup):
             raise RuntimeError("You can only add WellGroups together")
         return WellGroup(self.wells + other.wells)
+
+
+    def __eq__(self, other):
+        return self.wells == other.wells
 
 
 class Container(object):
@@ -423,3 +432,8 @@ class Container(object):
             for col_offset in xrange(0, 24, 2):
                 wells.append(row_offset + col_offset)
         return WellGroup([self.well(w) for w in wells])
+
+
+    def __eq__(self, other):
+        return self.id == other.id and \
+            self.container_type == other.container_type

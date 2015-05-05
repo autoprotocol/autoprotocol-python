@@ -861,31 +861,34 @@ class Protocol(object):
       """
 
       if isinstance(source, list):
-        assert len(source) <= 4
-        assert dest.container_type.well_count == 384, "You can only transfer the contents of multiple 96-well plates to a 384-well container"
-        for x in source:
-          assert x["container"].container_type.well_count == 96
-        for s in source:
-          self.transfer(s["container"].all_wells(),
-                      dest.quadrant(s["quadrant"]),
-                      volume,
-                      False,
-                      True,
-                      mix_after,
-                      mix_before,
-                      mix_vol,
-                      repetitions,
-                      flowrate,
-                      aspirate_speed,
-                      dispense_speed,
-                      aspirate_source,
-                      dispense_target,
-                      pre_buffer,
-                      disposal_vol,
-                      transit_vol,
-                      blowout_buffer,
-                      None,
-                      new_group=True)
+        if len(source) == 1 and dest.container_type.well_count == 96:
+          self.stamp(source[0]["container"], dest, volume)
+        else:
+          assert len(source) <= 4
+          assert dest.container_type.well_count == 384, "You can only transfer the contents of multiple 96-well plates to a 384-well container"
+          for x in source:
+            assert x["container"].container_type.well_count == 96
+          for s in source:
+            self.transfer(s["container"].all_wells(),
+                        dest.quadrant(s["quadrant"]),
+                        volume,
+                        False,
+                        True,
+                        mix_after,
+                        mix_before,
+                        mix_vol,
+                        repetitions,
+                        flowrate,
+                        aspirate_speed,
+                        dispense_speed,
+                        aspirate_source,
+                        dispense_target,
+                        pre_buffer,
+                        disposal_vol,
+                        transit_vol,
+                        blowout_buffer,
+                        None,
+                        new_group=True)
       elif source.container_type.well_count == 96:
         if dest.container_type.well_count == 96:
           self.transfer(source.all_wells(),

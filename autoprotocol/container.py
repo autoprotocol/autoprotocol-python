@@ -283,6 +283,9 @@ class Container(object):
             or a string
 
         """
+        if isinstance(args[0], list):
+            args = args[0]
+
         return WellGroup([self.well(i) for i in args])
 
     def robotize(self, well_ref):

@@ -133,10 +133,10 @@ class Protocol(object):
             If an unknown ContainerType shortname is passed as a parameter
 
         """
-        if shortname in _CONTAINER_TYPES:
-            return _CONTAINER_TYPES[shortname]
-        elif isinstance(shortname, ContainerType):
+        if isinstance(shortname, ContainerType):
             return shortname
+        elif shortname in _CONTAINER_TYPES:
+            return _CONTAINER_TYPES[shortname]
         else:
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
@@ -521,9 +521,9 @@ class Protocol(object):
             groups.append({"distribute": opts})
 
         if new_group:
-          self.append(Pipette(groups))
+            self.append(Pipette(groups))
         else:
-          self._pipette(groups)
+            self._pipette(groups)
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
@@ -615,7 +615,7 @@ class Protocol(object):
             Specify whether to mix the liquid in the destination well after
             liquid is transferred.
         mix_before : bool, optional
-            Specify whether to mix the liquid in the destination well before
+            Specify whether to mix the liquid in the source well before
             liquid is transferred.
         mix_vol : str, Unit, optional
             Volume to aspirate and dispense in order to mix liquid in a wells
@@ -663,39 +663,49 @@ class Protocol(object):
         source = WellGroup(source)
         dest = WellGroup(dest)
         opts = []
+        len_source = len(source.wells)
+        len_dest = len(dest.wells)
 
-        if len(dest.wells) > 1 and len(source.wells) == 1 and not one_source:
-            source = WellGroup(source.wells * len(dest.wells))
-        if isinstance(volume,str) or isinstance(volume, Unit):
-            volume = [Unit.fromstring(volume)] * len(dest.wells)
-        elif isinstance(volume, list) and len(volume) == len(dest.wells):
+        if len_dest > 1 and len_source == 1 and not one_source:
+            source = WellGroup(source.wells * len_dest)
+        if len_dest == 1 and len_source > 1 and not one_source:
+            dest = WellGroup(dest.wells * len_source)
+        if isinstance(volume, str) or isinstance(volume, Unit):
+            if len_dest == 1:
+                volume = [Unit.fromstring(volume)] * len_source
+            else:
+                volume = [Unit.fromstring(volume)] * len_dest
+
+        elif isinstance(volume, list) and len(volume) == len_dest:
             volume = map(lambda x: Unit.fromstring(x), volume)
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume in the form of a list")
-        if (len(source.wells) != len(dest.wells)) and not one_source:
+        if (len_source != len_dest) and not (one_source or len_dest == 1):
             raise RuntimeError("To transfer liquid from one well or multiple wells "
                                "containing the same source, set one_source to "
-                               "True.  Otherwise, you must specify the same "
+                               "True. To transfer liquid from multiple wells to a "
+                               "single destination well, specify only one destination"
+                               " well. Otherwise, you must specify the same "
                                "number of source and destination wells to "
                                "do a one-to-one transfer.")
         if one_source:
             sources = []
             for idx, d in enumerate(dest.wells):
-              for s in source.wells:
-                vol = s.volume
-                while vol >= volume[idx] and (len(sources) < len(dest.wells)):
-                  sources.append(s)
-                  vol -= volume[idx]
-              if len(sources) < len(dest.wells):
-                  raise RuntimeError("There is not enough volume in the "
-                                     "source well(s) specified to complete the "
-                                     "transfers")
-            source = WellGroup(sources)
+                for s in source.wells:
+                    vol = s.volume
+                    while vol >= volume[idx] and (len(sources) < len_dest):
+                        sources.append(s)
+                        vol -= volume[idx]
+                if len(sources) < len_dest:
+                    raise RuntimeError("There is not enough volume in the "
+                                       "source well(s) specified to complete the "
+                                       "transfers")
+                source = WellGroup(sources)
 
-        for s,d,v in list(zip(source.wells, dest.wells, volume)):
+        for s, d, v in list(zip(source.wells, dest.wells, volume)):
             if mix_after and not mix_vol:
                 mix_vol = v
             xfer = {
@@ -736,19 +746,18 @@ class Protocol(object):
         if one_tip:
             trans["transfer"] = opts
             if new_group:
-              self.append(Pipette([trans]))
+                self.append(Pipette([trans]))
             else:
-              self._pipette([trans])
+                self._pipette([trans])
         else:
             for x in opts:
                 trans = {}
                 assign(trans, "x_tip_type", tip_type)
                 trans["transfer"] = [x]
                 if new_group:
-                  self.append(Pipette([trans]))
+                    self.append(Pipette([trans]))
                 else:
-                  self._pipette([trans])
-
+                    self._pipette([trans])
 
     def stamp(self, source, dest, volume, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,
@@ -2761,25 +2770,28 @@ class Protocol(object):
                              discard=discard)
             else:
                 parameters[str(k)] = v
+
         parameters["refs"] = containers
 
-
-        #ref wells (must be done after reffing containers)
+        # ref wells (must be done after reffing containers)
         for k, v in params.items():
             if isinstance(v, list) and "/" in str(v[0]):
                 group = WellGroup([])
+
                 for w in v:
-                    cont = w.rsplit("/")[0].encode('utf-8')
-                    well = w.rsplit("/")[1].encode('utf-8')
+                    cont, well = w.rsplit("/", 1)
                     group.append(self.refs[cont].container.well(well))
+
                 parameters[str(k)] = group
             elif "/" in str(v):
                 ref_name = v.rsplit("/")[0]
+
                 if not ref_name in self.refs:
                     raise RuntimeError(
                         "Parameters contain well references to "
                         "a container that isn't referenced in this protocol: "
                         "'%s'." % ref_name)
+
                 if v.rsplit("/")[1] == "all_wells":
                     parameters[str(k)] = self.refs[ref_name].container.all_wells()
                 else:

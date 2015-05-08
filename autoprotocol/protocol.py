@@ -668,6 +668,7 @@ class Protocol(object):
 
         if len_dest > 1 and len_source == 1 and not one_source:
             source = WellGroup(source.wells * len_dest)
+            len_source = len(source.wells)
         if len_dest == 1 and len_source > 1 and not one_source:
             dest = WellGroup(dest.wells * len_source)
         if isinstance(volume, str) or isinstance(volume, Unit):

@@ -671,6 +671,7 @@ class Protocol(object):
             len_source = len(source.wells)
         if len_dest == 1 and len_source > 1 and not one_source:
             dest = WellGroup(dest.wells * len_source)
+            len_dest = len(dest.wells)
         if isinstance(volume, str) or isinstance(volume, Unit):
             if len_dest == 1:
                 volume = [Unit.fromstring(volume)] * len_source
@@ -684,7 +685,7 @@ class Protocol(object):
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume in the form of a list")
-        if (len_source != len_dest) and not (one_source or len_dest == 1):
+        if (len_source != len_dest) and not one_source:
             raise RuntimeError("To transfer liquid from one well or multiple wells "
                                "containing the same source, set one_source to "
                                "True. To transfer liquid from multiple wells to a "

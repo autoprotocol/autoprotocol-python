@@ -311,7 +311,7 @@ class SangerSeq(Instruction):
     """
     def __init__(self, obj, wells, dataref):
         super(SangerSeq, self).__init__({
-            "op": "sangerseq",
+            "op": "sanger_sequence",
             "object": obj,
             "wells": wells,
             "dataref": dataref

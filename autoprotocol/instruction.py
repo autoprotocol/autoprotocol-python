@@ -476,11 +476,11 @@ class Cover(Instruction):
     ----------
     ref : str
         Container to be convered
-    lid : {"standard", "universal", "low-evaporation"}, optional
+    lid : {"standard", "universal", "low_evaporation"}, optional
         Type of lid to cover container with
 
     """
-    LIDS = ["standard", "universal", "low-evaporation"]
+    LIDS = ["standard", "universal", "low_evaporation"]
 
     def __init__(self, ref, lid="standard"):
         if lid and lid not in self.LIDS:

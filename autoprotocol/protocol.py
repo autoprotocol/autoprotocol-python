@@ -2303,7 +2303,7 @@ class Protocol(object):
         ----------
         ref : str
             Container to be convered
-        lid : {"standard", "universal", "low-evaporation"}, optional
+        lid : {"standard", "universal", "low_evaporation"}, optional
             Type of lid to cover container with
 
         """

@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 
+#### Fixed 
+- typo in sanger_sequence instruction
 
 
 ## v2.0.4 - 2015-05-05

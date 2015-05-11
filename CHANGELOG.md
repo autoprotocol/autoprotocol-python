@@ -21,13 +21,13 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ### Changed
 - `gel_separate` generates instructions taking wells and matrix type passed
+- `stamp`ing to or from multiple containers now requires that the source or dest variable be passed as a list of `[{"container": <container>, "quadrant": <quadrant>}, ...]`
 
 ### Removed
 - references to specific reagents for `dispense()`
 
 ### Fixed
 - Transfering liquid from `one_source` actually works now
-- `stamp`ing to or from multiple containers now requires that the source or dest variable be passed as a list of `[{"container": <container>, "quadrant": <quadrant>}, ...]`
 
 ## v2.0.3 - 2015-04-17
 

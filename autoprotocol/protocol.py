@@ -2555,6 +2555,13 @@ class Protocol(object):
           Volume of source material to spread on agar
 
       """
+      volume = Unit.fromstring(volume)
+      if dest.volume:
+        dest.volume += volume
+      else:
+        dest.volume = volume
+      if source.volume:
+        source.volume -= volume
       self.instructions.append(Spread(source, dest, volume))
 
     def autopick(self, source, dests, min_count=1):

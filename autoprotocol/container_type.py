@@ -164,7 +164,7 @@ _CONTAINER_TYPES = {
                             sterile=None,
                             is_tube=False,
                             capabilities=["thermocycle", "spin", "incubate",
-                                          "sangerseq", "gel_separate"],
+                                          "sanger_sequence", "gel_separate"],
                             shortname="96-pcr",
                             col_count=12,
                             dead_volume_ul=15),

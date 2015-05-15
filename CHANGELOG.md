@@ -4,12 +4,14 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 
-#### Fixed 
+### Fixed
 - typo in sanger_sequence instruction
+
+### Added
+- volume adjustment when `spread()`ing
 
 
 ## v2.0.4 - 2015-05-05
-
 
 ### Added
 - More Python3 Compatibility

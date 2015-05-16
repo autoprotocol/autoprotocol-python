@@ -2592,6 +2592,9 @@ class Protocol(object):
         dests = [dests]
       self.instructions.append(Autopick(source, dests, min_count))
 
+    def image_plate(self, ref, mode, dataref):
+      self.instructions.append(ImagePlate(ref, mode, dataref))
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

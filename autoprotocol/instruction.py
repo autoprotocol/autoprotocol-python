@@ -738,3 +738,24 @@ class Autopick(Instruction):
             "to": dests,
             "min_colony_count": min_count
         })
+
+class ImagePlate(Instruction):
+    """
+    Capture an image of the specified container.
+
+    Parameters
+    ----------
+    ref : str
+        Container to take image of
+    mode : str
+        Imaging mode (currently supported: "top")
+    dataref : str
+        Name of data reference of resulting image
+    """
+    def __init__(self, ref, mode, dataref):
+        super(ImagePlate, self).__init__({
+            "op": "image_plate",
+            "object": ref,
+            "mode": mode,
+            "dataref": dataref
+            })

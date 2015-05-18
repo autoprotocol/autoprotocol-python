@@ -66,12 +66,6 @@ class ProtocolAppendTestCase(unittest.TestCase):
             "incorrect instruction at end after list append.")
 
 class RefTestCase(unittest.TestCase):
-    def test_slashes_not_allowed(self):
-        p = Protocol()
-        with self.assertRaises(AssertionError):
-            p.ref("test/bar", None, "96-flat", discard=True)
-        self.assertEqual(0, len(p.refs))
-
     def test_duplicates_not_allowed(self):
         p = Protocol()
         p.ref("test", None, "96-flat", discard=True)

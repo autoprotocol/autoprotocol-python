@@ -122,6 +122,10 @@ Protocol.autopick()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.autopick
 
+Protocol.image_plate()
+^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.image_plate
+
 
 protocol.Ref
 ~~~~~~~~~~~~

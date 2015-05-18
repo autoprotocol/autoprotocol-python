@@ -751,6 +751,7 @@ class ImagePlate(Instruction):
         Imaging mode (currently supported: "top")
     dataref : str
         Name of data reference of resulting image
+
     """
     def __init__(self, ref, mode, dataref):
         super(ImagePlate, self).__init__({

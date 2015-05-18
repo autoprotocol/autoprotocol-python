@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ### Added
 - volume adjustment when `spread()`ing
+- `ImagePlate()` class and `image_plate()` Protocol method for taking images of containers
 
 
 ## v2.0.4 - 2015-05-05

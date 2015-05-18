@@ -2593,19 +2593,19 @@ class Protocol(object):
       self.instructions.append(Autopick(source, dests, min_count))
 
     def image_plate(self, ref, mode, dataref):
-    """
-    Capture an image of the specified container.
+      """
+      Capture an image of the specified container.
 
-    Parameters
-    ----------
-    ref : str, Container
-        Container to take image of
-    mode : str
-        Imaging mode (currently supported: "top")
-    dataref : str
-        Name of data reference of resulting image
+      Parameters
+      ----------
+      ref : str, Container
+          Container to take image of
+      mode : str
+          Imaging mode (currently supported: "top")
+      dataref : str
+          Name of data reference of resulting image
 
-    """
+      """
       self.instructions.append(ImagePlate(ref, mode, dataref))
 
     def _ref_for_well(self, well):

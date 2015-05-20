@@ -3,7 +3,7 @@
 This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
-
+---
 ### Fixed
 - typo in sanger_sequence instruction
 
@@ -14,7 +14,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 
 ## v2.0.4 - 2015-05-05
-
+---
 ### Added
 - More Python3 Compatibility
 - specify `Wells` on a container using `container.wells(1,2,3)`or `container.wells([1,2,3])`
@@ -34,8 +34,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 - Transfering liquid from `one_source` actually works now
 
 ## v2.0.3 - 2015-04-17
-
-
+---
 ### Added
 - At least some Python3 compatibility
 - Container.properties is an empty hash by default
@@ -69,7 +68,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 
 ## v2.0.2 - 2015-03-06
-
+---
 ### Added
 - autoprotocol and JSON output examples for almost everything in docs
 - link to library documentation at readthedocs.org to README
@@ -78,7 +77,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 - a wild test appeared!
 
 ## v2.0.1 - 2015-02-06
-
+---
 ### Added
 - properties attribute to `Well`, along with `set_properties()` method
 - aliquot++, integer, boolean input types to harness.py
@@ -97,7 +96,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 - spelling of luminescence :(
 
 ## v2.0.0 - 2014-01-24
-
+---
 ### Added
 - harness.py for parameter conversion
 - NumPy style docstrings for most methods
@@ -112,8 +111,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 - static methods `Pipette.transfers()` and `Pipette._transferGroup()`
 
 ## v1.0.0 - 2014-01-22
-
-- generatlly outdated version that no one should look at anymore
+---
+- generally outdated version that no one should look at anymore
 
 
 

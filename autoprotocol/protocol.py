@@ -749,6 +749,115 @@ class Protocol(object):
                 else:
                   self._pipette([trans])
 
+    def consolidate(self, sources, dest, volumes, allow_carryover=False,
+                    mix_after=False, mix_vol=None,
+                    flowrate="100:microliter/second", repetitions=10,
+                    aspirate_speed=None, dispense_speed=None, aspirate_source=None,
+                    dispense_target=None, pre_buffer=None, transit_vol=None,
+                    blowout_buffer=None, tip_type=None, new_group=False):
+      """
+      Aspirates from each source well, in order, the volume specified, then
+      dispenses the sum volume into the target well. Be aware that the same tip
+      will be used to aspirate from all the source wells, so if you want to
+      avoid contaminating any of them you should use a separate transfer group.
+      Consolidate is limited by the maximum volume of the disposable tip. If the
+      total volume you want to dispense into the target well exceeds the volume
+      that will fit in one tip, you must either specify `allow_carryover` to allow
+      the tip to carry on pipetting from the source wells after it has touched
+      the target well, or break up your operation into multiple groups with
+      separate tips.
+
+      Parameters
+        ----------
+        sources : Well, WellGroup
+            Well or wells to transfer liquid from.
+        dest : Well
+            Well to which to transfer consolidated liquid.
+        volume : str, Unit, list
+            The volume(s) of liquid to be transferred from source well(s) to
+            destination well.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of source wells given.
+        mix_after : bool, optional
+            Specify whether to mix the liquid in the destination well after
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before and/or after each transfer step.
+        repetitions : int, optional
+            Number of times to aspirate and dispense in order to mix
+            liquid in well before and/or after each transfer step.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before and/or after each
+            transfer step
+        aspirate speed : str, Unit, optional
+            Speed at which to aspirate liquid from source well.  May not be
+            specified if aspirate_source is also specified. By default this is the
+            maximum aspiration speed, with the start speed being half of the speed
+            specified.
+        dispense_speed : str, Unit, optional
+            Speed at which to dispense liquid into the destination well.  May not be
+            specified if dispense_target is also specified.
+        aspirate_source : fn, optional
+            Options for aspirating liquid. Can't be specified if aspirate_speed
+            is also specified.
+        dispense_target : fn, optional
+            Same but opposite of aspirate_source
+        pre_buffer : str, Unit, optional
+            Volume of air aspirated before aspirating liquid
+        transit_vol : str, Unit, optional
+            Volume of air aspirated after aspirating liquid to reduce presence of
+            bubbles at pipette tip
+        blowout_buffer : bool, optional
+            If true the operation will dispense the pre_buffer along with the
+            dispense volume cannot be true if disposal_vol is specified
+      """
+      assert isinstance(dest, Well) or isinstance(dest, str),(
+        "You can only consolidate liquid into one destination well.")
+      cons={"consolidate": {}}
+      assign(cons["consolidate"], "to", dest)
+      from_wells = []
+      if isinstance(sources, Well) or isinstance(sources, str):
+        sources = [sources]
+      if isinstance(volumes, list):
+        assert len(volumes) == len(sources), ("If supplying consolidate volumes"
+                                             " as a list, its length must "
+                                             "match the number of source wells"
+                                             " specified")
+        volumes = [Unit.fromstring(v) for v in volumes]
+      else:
+        volumes = [Unit.fromstring(volumes)] * len(sources)
+      for s,v in zip(sources, volumes):
+        fromw = {}
+        fromw["well"] = s
+        fromw["volume"] = v
+        assign(fromw, "aspirate_speed", aspirate_speed)
+        assign(fromw, "x_aspirate_source", aspirate_source)
+        from_wells.append(fromw)
+        if dest.volume:
+          dest.volume += v
+        else:
+          dest.volume = v
+        if s.volume:
+          s.volume -= v
+      assign(cons["consolidate"], "from", from_wells)
+      if mix_after:
+        cons["consolidate"]["mix_after"] = {
+            "volume": mix_vol,
+            "repetitions": repetitions,
+            "speed": flowrate
+        }
+      assign(cons["consolidate"], "allow_carryover", allow_carryover)
+      assign(cons["consolidate"], "dispense_speed", dispense_speed)
+      assign(cons["consolidate"], "x_dispense_target", dispense_target)
+      assign(cons["consolidate"], "x_pre_buffer", pre_buffer)
+      assign(cons["consolidate"], "x_transit_vol", transit_vol)
+      assign(cons["consolidate"], "x_blowout_buffer", blowout_buffer)
+      assign(cons["consolidate"], "x_tip_type", tip_type)
+      if new_group:
+        self.append(Pipette([cons]))
+      else:
+        self._pipette([cons])
 
     def stamp(self, source, dest, volume, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,

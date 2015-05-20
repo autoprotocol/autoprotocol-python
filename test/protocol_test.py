@@ -3,6 +3,8 @@ from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.instruction import Instruction, Thermocycle, Incubate, Pipette, Spin
 from autoprotocol.container_type import ContainerType
 from autoprotocol.container import Container, WellGroup, Well
+from autoprotocol.unit import Unit
+import json
 
 
 class ProtocolMultipleExistTestCase(unittest.TestCase):
@@ -197,6 +199,61 @@ class DistributeTestCase(unittest.TestCase):
         p.distribute(c.well("A1").set_volume("20:microliter"), c.well("A2"), "5:microliter")
         self.assertTrue("distribute" in p.instructions[-1].groups[-1])
 
+class TransferTestCase(unittest.TestCase):
+    def test_single_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.transfer(c.well(0), c.well(1), "20:microliter")
+        self.assertEqual(Unit(20,"microliter"), c.well(1).volume)
+        self.assertEqual(None, c.well(0).volume)
+        self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+
+    def test_multiple_transfers(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.transfer(c.wells_from(0,2), c.wells_from(2,2), "20:microliter")
+        self.assertEqual(c.well(2).volume, c.well(3).volume)
+        self.assertEqual(2, len(p.instructions[0].groups))
+
+    def test_one_tip(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.transfer(c.wells_from(0,2), c.wells_from(2,2), "20:microliter",
+            one_tip=True)
+        self.assertEqual(c.well(2).volume, c.well(3).volume)
+        self.assertEqual(1, len(p.instructions[0].groups))
+
+
+    def test_one_source(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(ValueError):
+            p.transfer(c.wells_from(0,2),
+                   c.wells_from(2,2), "40:microliter", one_source=True)
+        with self.assertRaises(RuntimeError):
+            p.transfer(c.wells_from(0,2).set_volume("1:microliter"),
+                       c.wells_from(1,5), "10:microliter", one_source=True)
+        p.transfer(c.wells_from(0,2).set_volume("50:microliter"),
+                   c.wells_from(2,2), "40:microliter", one_source=True)
+        self.assertEqual(2, len(p.instructions[0].groups))
+        self.assertFalse(p.instructions[0].groups[0]["transfer"][0]["from"] == p.instructions[0].groups[1]["transfer"][0]["from"])
+
+class ConsolidateTestCase(unittest.TestCase):
+    def test_multiple_sources(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(AssertionError):
+            p.consolidate(c.wells_from(0,3), c.wells_from(2,3), "10:microliter")
+            p.consolidate(c.wells_from(0,3), c.well(4), ["10:microliter"])
+        p.consolidate(c.wells_from(0,3), c.well(4), "10:microliter")
+        self.assertEqual(Unit(30,"microliter"), c.well(4).volume)
+        self.assertEqual(3, len(p.instructions[0].groups[0]["consolidate"]["from"]))
+
+    def test_one_source(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.consolidate(c.well(0), c.well(4), "30:microliter")
+        self.assertEqual(Unit(30,"microliter"), c.well(4).volume)
 
 class RefifyTestCase(unittest.TestCase):
     def test_refifying_various(self):

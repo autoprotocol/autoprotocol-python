@@ -34,6 +34,10 @@ Protocol.transfer()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.transfer
 
+Protocol.consolidate()
+^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.consolidate
+
 Protocol.dispense()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.dispense

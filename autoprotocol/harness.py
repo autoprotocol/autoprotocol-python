@@ -59,7 +59,8 @@ def convert_param(protocol, val, typeDesc):
     type = typeDesc['type']
 
     if type == 'aliquot':
-        container, well_idx = val.split('/')
+        container = ('/').join(val.split('/')[0:-1])
+        well_idx = val.split('/')[-1]
         return protocol.refs[container].container.well(well_idx)
     elif type == 'aliquot+':
         return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])

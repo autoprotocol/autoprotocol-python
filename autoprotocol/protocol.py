@@ -696,6 +696,19 @@ class Protocol(object):
             source = WellGroup(sources)
 
         for s,d,v in list(zip(source.wells, dest.wells, volume)):
+            if v >= Unit(900, "microliter"):
+                diff = Unit.fromstring(v) - Unit(800, "microliter")
+                self.transfer(s, d, "800:microliter")
+                while diff > Unit(0, "microliter"):
+                  self.transfer(s, d, diff, one_source, one_tip,
+                   mix_after, mix_before, mix_vol,
+                   repetitions, flowrate,aspirate_speed, dispense_speed, aspirate_source,
+                   dispense_target, pre_buffer, disposal_vol,
+                   transit_vol, blowout_buffer, tip_type,
+                   new_group)
+                  diff -= diff
+
+                break
             if mix_after and not mix_vol:
                 mix_vol = v
             xfer = {

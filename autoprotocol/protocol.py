@@ -721,6 +721,7 @@ class Protocol(object):
                   diff -= diff
 
                 break
+
             if mix_after and not mix_vol:
                 mix_vol = v
             xfer = {

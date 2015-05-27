@@ -12,6 +12,7 @@ Added
 - `ImagePlate()` class and `image_plate()` Protocol method for taking images of containers
 - add `consolidate()` Protocol method and accompanying tests
 - support for ref names with slashes in them in `harness.py`
+- `1-flat` plate type
 - brought back recursively transferring volumes over 900 microliters
 
 ## v2.0.4 - 2015-05-05

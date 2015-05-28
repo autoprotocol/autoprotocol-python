@@ -14,6 +14,7 @@ Added
 - support for ref names with slashes in them in `harness.py`
 - `1-flat` plate type
 - brought back recursively transferring volumes over 900 microliters
+- allow transfer from multiple sources to one destination
 
 ## v2.0.4 - 2015-05-05
 ---

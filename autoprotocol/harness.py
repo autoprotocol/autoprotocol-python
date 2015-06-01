@@ -78,7 +78,7 @@ def convert_param(protocol, val, typeDesc):
             return Unit.fromstring(val)
     elif type in 'bool':
         return bool(val)
-    elif type == 'string':
+    elif type in ['string', 'choice']:
         return str(val)
     elif type == 'integer':
         return int(val)

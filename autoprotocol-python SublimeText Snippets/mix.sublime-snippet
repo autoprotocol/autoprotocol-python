@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+mix(${1:well}, ${2:volume}, speed="${3:100:microliter/second}", repetitions=${4:10})
+]]></content>
+    <tabTrigger>mix</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

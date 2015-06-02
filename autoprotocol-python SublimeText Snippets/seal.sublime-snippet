@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+seal(${1:ref})
+]]></content>
+    <tabTrigger>seal</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

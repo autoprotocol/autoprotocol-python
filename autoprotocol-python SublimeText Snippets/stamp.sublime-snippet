@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+stamp(${1:source}, ${2:dest}, ${3:volume}, quad=${4:None})
+]]></content>
+    <tabTrigger>stamp</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

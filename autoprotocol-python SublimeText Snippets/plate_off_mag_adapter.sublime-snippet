@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+plate_off_mag_adapter(${1:ref})
+]]></content>
+    <tabTrigger>plate_off_mag_adapter</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

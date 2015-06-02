@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+absorbance(${1:ref}, ${2:wells}, ${3:wavelength}, ${4:dataref})
+]]></content>
+    <tabTrigger>absorbance</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

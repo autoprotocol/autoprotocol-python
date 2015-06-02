@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[transfer(${1:source}, ${2:dest}, ${3:volume})]]></content>
+    <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+    <tabTrigger>transfer</tabTrigger>
+    <!-- Optional: Set a scope to limit where the snippet will trigger -->
+    <scope>source.python</scope>
+</snippet>

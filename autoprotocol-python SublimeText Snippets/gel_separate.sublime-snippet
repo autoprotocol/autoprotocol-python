@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+gel_separate(${1:wells}, ${2:volume}, ${3:matrix}, ${4:ladder}, ${5:duration}, ${6:dataref})
+]]></content>
+    <tabTrigger>gel_separate</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

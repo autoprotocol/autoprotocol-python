@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+make_dottable_dict(${1:dict})
+]]></content>
+    <tabTrigger>make_dottable_dict</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

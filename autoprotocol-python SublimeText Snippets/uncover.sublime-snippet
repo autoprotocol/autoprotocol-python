@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+uncover(${1:ref})
+]]></content>
+    <tabTrigger>uncover</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

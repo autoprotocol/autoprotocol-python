@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+quadrant(${1:quad})
+]]></content>
+    <tabTrigger>quadrant</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

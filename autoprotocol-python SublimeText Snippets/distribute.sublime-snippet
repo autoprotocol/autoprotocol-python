@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+distribute(${1:source}, ${2:dest}, ${3:volume}, allow_carryover=${4:False})
+]]></content>
+    <tabTrigger>distribute</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

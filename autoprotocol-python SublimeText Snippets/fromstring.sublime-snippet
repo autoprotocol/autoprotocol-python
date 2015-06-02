@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+fromstring(${1:s})
+]]></content>
+    <tabTrigger>fromstring</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

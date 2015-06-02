@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+plate_to_mag_adapter(${1:ref}, ${2:duration})
+]]></content>
+    <tabTrigger>plate_to_mag_adapter</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

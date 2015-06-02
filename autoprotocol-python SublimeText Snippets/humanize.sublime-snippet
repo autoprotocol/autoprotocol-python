@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+humanize(${1:well_ref})
+]]></content>
+    <tabTrigger>humanize</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+set_volume(${1:vol})
+]]></content>
+    <tabTrigger>set_volume</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

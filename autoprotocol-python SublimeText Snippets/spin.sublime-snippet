@@ -1,0 +1,7 @@
+<snippet>
+    <content><![CDATA[
+spin(${1:ref}, ${2:acceleration}, ${3:duration})
+]]></content>
+    <tabTrigger>spin</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

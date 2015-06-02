@@ -160,6 +160,9 @@ The script above produces the following autoprotocol:
   ]
 }
 ```
+## Extras
+
+A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User` (replace with the version of Sublime Text you're using if it's not 3).
 
 ## Contributing
 

@@ -1,0 +1,13 @@
+<snippet>
+    <content><![CDATA[
+thermocycle(${1:ref}, [${2:{
+	"cycles": 1,
+	"steps": [{}}]
+	}],
+	volume=${3:volume},
+	dataref=${4:None},
+	dyes=${5:None})
+]]></content>
+    <tabTrigger>thermocycle</tabTrigger>
+    <scope>source.python</scope>
+</snippet>

@@ -11,10 +11,11 @@ Added
 - volume adjustment when `spread()`ing
 - `ImagePlate()` class and `image_plate()` Protocol method for taking images of containers
 - add `consolidate()` Protocol method and accompanying tests
-- support for ref names with slashes in them in `harness.py`
-- `1-flat` plate type
+- support for container names with slashes in them in `harness.py`
+- `1-flat` plate type to `_CONTAINER_TYPES`
 - brought back recursively transferring volumes over 900 microliters
 - allow transfer from multiple sources to one destination
+- support for `choice` input type in `harness.py`
 
 ## v2.0.4 - 2015-05-05
 ---

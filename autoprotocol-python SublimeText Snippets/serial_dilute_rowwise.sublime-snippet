@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+serial_dilute_rowwise(${1:source}, ${2:well_group}, ${3:vol})
+]]></content>
+    <tabTrigger>serial_dilute_rowwise</tabTrigger>
+</snippet>

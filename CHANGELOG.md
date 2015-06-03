@@ -8,6 +8,7 @@ Fixed
 - typo in sanger_sequence instruction
 
 Added
+- Added folder for sublime text snippets
 - volume adjustment when `spread()`ing
 - `ImagePlate()` class and `image_plate()` Protocol method for taking images of containers
 - add `consolidate()` Protocol method and accompanying tests

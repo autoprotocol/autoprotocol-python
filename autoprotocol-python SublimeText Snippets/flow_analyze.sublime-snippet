@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+flow_analyze(${1:dataref}, ${2:FSC}, ${3:SSC}, ${4:neg_controls}, ${5:samples})
+]]></content>
+    <tabTrigger>flow_analyze</tabTrigger>
+</snippet>

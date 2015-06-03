@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+oligosynthesize(${1:oligos})
+]]></content>
+    <tabTrigger>oligosynthesize</tabTrigger>
+</snippet>

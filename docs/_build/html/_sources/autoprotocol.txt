@@ -34,6 +34,10 @@ Protocol.transfer()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.transfer
 
+Protocol.consolidate()
+^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.consolidate
+
 Protocol.dispense()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.dispense
@@ -122,6 +126,13 @@ Protocol.autopick()
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.autopick
 
+Protocol.image_plate()
+^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.image_plate
+
+Protocol.provision()
+^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.provision
 
 protocol.Ref
 ~~~~~~~~~~~~

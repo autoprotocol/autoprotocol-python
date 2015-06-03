@@ -760,3 +760,40 @@ class ImagePlate(Instruction):
             "mode": mode,
             "dataref": dataref
             })
+
+class Provision(Instruction):
+    """
+    A generic instruction for provisioning a commercial resource from a
+    catalog and defining destination well(s).  A new tip is used for each
+    destination well specified.
+
+    Parameters
+    ----------
+    resource_id : str
+      Resource ID from catalog.
+    dests : Well, WellGroup
+      Destination(s) for specified resource.
+    volumes : str, Unit, list of str, list of Unit
+      Volume(s) to transfer of the resource to each destination well.  If
+      one volume of specified, each destination well recieve that volume of
+      the resource.  If destinations should recieve different volumes, each
+      one should be specified explicitly in a list matching the order of the
+      specified destinations.
+
+    Raises
+    ------
+    TypeError
+      If resource_id is not a string.
+    RuntimeError
+      If length of the list of volumes specified does not match the number of
+      destination wells specified.
+    TypeError
+      If volume is not specified as a string or Unit (or a list of either)
+
+    """
+    def __init__(self, resource_id, dests):
+        super(Provision, self).__init__({
+            "op": "provision",
+            "resource_id": resource_id,
+            "to": dests
+            })

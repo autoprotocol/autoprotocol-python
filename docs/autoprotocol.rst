@@ -130,6 +130,9 @@ Protocol.image_plate()
 ^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.image_plate
 
+Protocol.provision()
+^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.provision
 
 protocol.Ref
 ~~~~~~~~~~~~

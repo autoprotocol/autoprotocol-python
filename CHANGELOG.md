@@ -16,6 +16,7 @@ Added
 - brought back recursively transferring volumes over 900 microliters
 - allow transfer from multiple sources to one destination
 - support for `choice` input type in `harness.py`
+- `provision()` Protocol method
 
 ## v2.0.4 - 2015-05-05
 ---

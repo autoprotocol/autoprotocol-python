@@ -794,49 +794,49 @@ class Protocol(object):
       separate tips.
 
       Parameters
-        ----------
-        sources : Well, WellGroup
-            Well or wells to transfer liquid from.
-        dest : Well
-            Well to which to transfer consolidated liquid.
-        volume : str, Unit, list
-            The volume(s) of liquid to be transferred from source well(s) to
-            destination well.  Volume can be specified as a single string or
-            Unit, or can be given as a list of volumes.  The length of a list
-            of volumes must match the number of source wells given.
-        mix_after : bool, optional
-            Specify whether to mix the liquid in the destination well after
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in a wells
-            before and/or after each transfer step.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in well before and/or after each transfer step.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before and/or after each
-            transfer step
-        aspirate speed : str, Unit, optional
-            Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this is the
-            maximum aspiration speed, with the start speed being half of the speed
-            specified.
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May not be
-            specified if dispense_target is also specified.
-        aspirate_source : fn, optional
-            Options for aspirating liquid. Can't be specified if aspirate_speed
-            is also specified.
-        dispense_target : fn, optional
-            Same but opposite of aspirate_source
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence of
-            bubbles at pipette tip
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume cannot be true if disposal_vol is specified
+      ----------
+      sources : Well, WellGroup
+          Well or wells to transfer liquid from.
+      dest : Well
+          Well to which to transfer consolidated liquid.
+      volume : str, Unit, list
+          The volume(s) of liquid to be transferred from source well(s) to
+          destination well.  Volume can be specified as a single string or
+          Unit, or can be given as a list of volumes.  The length of a list
+          of volumes must match the number of source wells given.
+      mix_after : bool, optional
+          Specify whether to mix the liquid in the destination well after
+          liquid is transferred.
+      mix_vol : str, Unit, optional
+          Volume to aspirate and dispense in order to mix liquid in a wells
+          before and/or after each transfer step.
+      repetitions : int, optional
+          Number of times to aspirate and dispense in order to mix
+          liquid in well before and/or after each transfer step.
+      flowrate : str, Unit, optional
+          Speed at which to mix liquid in well before and/or after each
+          transfer step
+      aspirate speed : str, Unit, optional
+          Speed at which to aspirate liquid from source well.  May not be
+          specified if aspirate_source is also specified. By default this is the
+          maximum aspiration speed, with the start speed being half of the speed
+          specified.
+      dispense_speed : str, Unit, optional
+          Speed at which to dispense liquid into the destination well.  May not be
+          specified if dispense_target is also specified.
+      aspirate_source : fn, optional
+          Options for aspirating liquid. Can't be specified if aspirate_speed
+          is also specified.
+      dispense_target : fn, optional
+          Same but opposite of aspirate_source
+      pre_buffer : str, Unit, optional
+          Volume of air aspirated before aspirating liquid
+      transit_vol : str, Unit, optional
+          Volume of air aspirated after aspirating liquid to reduce presence of
+          bubbles at pipette tip
+      blowout_buffer : bool, optional
+          If true the operation will dispense the pre_buffer along with the
+          dispense volume cannot be true if disposal_vol is specified
       """
       assert isinstance(dest, Well) or isinstance(dest, str),(
         "You can only consolidate liquid into one destination well.")
@@ -2742,6 +2742,72 @@ class Protocol(object):
 
       """
       self.instructions.append(ImagePlate(ref, mode, dataref))
+
+    def provision(self, resource_id, dests, volumes):
+      """
+      A generic instruction for provisioning a commercial resource from a
+      catalog and defining destination well(s).  A new tip is used for each
+      destination well specified.
+
+      Parameters
+      ----------
+      resource_id : str
+        Resource ID from catalog.
+      dests : Well, WellGroup
+        Destination(s) for specified resource.
+      volumes : str, Unit, list of str, list of Unit
+        Volume(s) to transfer of the resource to each destination well.  If
+        one volume of specified, each destination well recieve that volume of
+        the resource.  If destinations should recieve different volumes, each
+        one should be specified explicitly in a list matching the order of the
+        specified destinations.
+
+      Raises
+      ------
+      TypeError
+        If resource_id is not a string.
+      RuntimeError
+        If length of the list of volumes specified does not match the number of
+        destination wells specified.
+      TypeError
+        If volume is not specified as a string or Unit (or a list of either)
+
+      """
+      dest_group = []
+      dests = WellGroup(dests)
+      if not isinstance(resource_id, basestring):
+        raise TypeError("Resource ID must be a string.")
+      if not isinstance(volumes, list):
+        volumes = [Unit.fromstring(volumes)] * len(dests)
+      else:
+        if len(volumes) != len(dests):
+          raise RuntimeError("To provision a resource into multiple "
+                             "destinations with multiple volumes, the list "
+                             "of volumes must correspond with the destinations"
+                             "in length and in order.")
+        volumes = [Unit.fromstring(v) for v in volumes]
+      for v in volumes:
+        if not isinstance(v, (basestring, Unit)):
+          raise TypeError("Volume must be a string or Unit.")
+      for d,v in zip(dests, volumes):
+        if v > Unit(750, "microliter"):
+          diff = v - Unit(750, "microliter")
+          self.provision(resource_id, d, "750:microliter")
+          while diff > Unit(0, "microliter"):
+            self.provision(resource_id, d, diff)
+            diff -= diff
+          break
+
+        xfer = {}
+        xfer["well"] = d
+        xfer["volume"] = v
+        if d.volume:
+          d.volume += v
+        else:
+          d.set_volume(v)
+        dest_group.append(xfer)
+
+        self.instructions.append(Provision(resource_id, dest_group))
 
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)

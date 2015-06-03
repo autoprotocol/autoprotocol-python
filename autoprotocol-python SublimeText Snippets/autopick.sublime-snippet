@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+autopick(${1:source}, ${2:dests}, ${3:min_count=1})
+]]></content>
+    <tabTrigger>autopick</tabTrigger>
+</snippet>

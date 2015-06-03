@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+thermocycle_ramp(${1:ref}, ${2:start_temp}, ${3:end_temp}, ${4:time})
+]]></content>
+    <tabTrigger>thermocycle_ramp</tabTrigger>
+</snippet>

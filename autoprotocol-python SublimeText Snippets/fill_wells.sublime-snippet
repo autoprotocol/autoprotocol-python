@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+fill_wells(${1:dst_group}, ${2:src_group}, ${3:volume}, ${4:distribute_target})
+]]></content>
+    <tabTrigger>fill_wells</tabTrigger>
+</snippet>

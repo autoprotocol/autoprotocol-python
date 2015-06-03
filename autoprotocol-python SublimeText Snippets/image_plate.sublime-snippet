@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[
+image_plate(${1:ref}, ${2:mode}, ${3:dataref})
+]]></content>
+    <tabTrigger>image_plate</tabTrigger>
+</snippet>

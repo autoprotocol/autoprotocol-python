@@ -29,3 +29,6 @@ htmlcov/
 .coverage
 coverage.xml
 .tox/
+_build/
+_static/
+_template/

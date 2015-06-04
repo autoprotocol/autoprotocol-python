@@ -2725,6 +2725,9 @@ class Protocol(object):
       """
       if isinstance(dests, Well) or isinstance(dests, str):
         dests = [dests]
+      if len(dests) < min_count:
+        raise RuntimeError("Your minimum colony count cannot be greater than the"
+                           " number of destination wells specified")
       self.instructions.append(Autopick(source, dests, min_count))
 
     def image_plate(self, ref, mode, dataref):

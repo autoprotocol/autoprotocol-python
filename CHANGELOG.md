@@ -4,9 +4,17 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 ---
+Added
+
+Changed
+
+Removed
+
 Fixed
-- typo in sanger_sequence instruction
-- documentation punctuation and grammar
+
+
+## v2.0.5 - 2015-06-04
+---
 
 Added
 - Added folder for sublime text snippets
@@ -24,6 +32,10 @@ Added
 
 Removed
 - check that a well already exists in a WellGroup
+
+Fixed
+- typo in sanger_sequence instruction
+- documentation punctuation and grammar
 
 ## v2.0.4 - 2015-05-05
 ---

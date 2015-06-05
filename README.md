@@ -32,19 +32,24 @@ p = Protocol()
 
 #append refs (containers) to Protocol object
 bacteria = p.ref("bacteria", cont_type="96-pcr", storage="cold_4")
-medium = p.ref("medium", cont_type="micro-1.5", storage="cold_4")
+media = p.ref("media", cont_type="micro-1.5", storage="cold_4")
 reaction_plate = p.ref("reaction_plate", cont_type="96-flat", storage="warm_37")
 
-#distribute medium from 1.5mL tube to reaction wells
-p.distribute(medium.well(0).set_volume("1000:microliter"), reaction_plate.wells_from(0,4), "190:microliter")
+#distribute media from 1.5mL tube to reaction wells
+p.distribute(media.well(0).set_volume("1000:microliter"),
+             reaction_plate.wells_from(0,4), ["140:microliter",
+             "130:microliter", "120:microliter", "100:microliter"])
+
 #transfer bacteria from source wells to reaction wells
 p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4),
-    ["10:microliter", "20:microliter", "30:microliter", "40:microliter"])
+           ["10:microliter", "20:microliter", "30:microliter", "40:microliter"])
+
 #incubate bacteria at 37 degrees for 5 hours
-p.incubate(reaction_plate, "warm_37", "5:hour")
+p.incubate(reaction_plate, "warm_37", "5:hour", shaking=True)
+
 #read absorbance of the first four wells on the reaction plate at 600 nanometers
 p.absorbance(reaction_plate, reaction_plate.wells_from(0,4).indices(), "600:nanometer",
-    "OD600_reading_01092014")
+             "OD600_reading_01092014")
 
 print json.dumps(p.as_dict(), indent=2)
 ```
@@ -53,7 +58,7 @@ The script above produces the following autoprotocol:
 ```
 {
   "refs": {
-    "medium": {
+    "media": {
       "new": "micro-1.5",
       "store": {
         "where": "cold_4"
@@ -79,23 +84,24 @@ The script above produces the following autoprotocol:
           "distribute": {
             "to": [
               {
-                "volume": "190.0:microliter",
+                "volume": "140.0:microliter",
                 "well": "reaction_plate/0"
               },
               {
-                "volume": "190.0:microliter",
+                "volume": "130.0:microliter",
                 "well": "reaction_plate/1"
               },
               {
-                "volume": "190.0:microliter",
+                "volume": "120.0:microliter",
                 "well": "reaction_plate/2"
               },
               {
-                "volume": "190.0:microliter",
+                "volume": "100.0:microliter",
                 "well": "reaction_plate/3"
               }
             ],
-            "from": "medium/0"
+            "from": "media/0",
+            "allow_carryover": false
           }
         },
         {
@@ -112,7 +118,7 @@ The script above produces the following autoprotocol:
             {
               "volume": "20.0:microliter",
               "to": "reaction_plate/1",
-              "from": "bacteria/0"
+              "from": "bacteria/1"
             }
           ]
         },
@@ -121,7 +127,7 @@ The script above produces the following autoprotocol:
             {
               "volume": "30.0:microliter",
               "to": "reaction_plate/2",
-              "from": "bacteria/0"
+              "from": "bacteria/2"
             }
           ]
         },
@@ -130,7 +136,7 @@ The script above produces the following autoprotocol:
             {
               "volume": "40.0:microliter",
               "to": "reaction_plate/3",
-              "from": "bacteria/0"
+              "from": "bacteria/3"
             }
           ]
         }
@@ -138,10 +144,11 @@ The script above produces the following autoprotocol:
       "op": "pipette"
     },
     {
-      "duration": "5:hour",
       "where": "warm_37",
       "object": "reaction_plate",
-      "shaking": false,
+      "co2_percent": 0,
+      "duration": "5:hour",
+      "shaking": true,
       "op": "incubate"
     },
     {
@@ -167,13 +174,8 @@ A folder of SublimeText snippets for this library is included in this repo.  To 
 ## Contributing
 
 The easiest way to contribute is to fork this repository and submit a pull
-request.  You can also write an email to us if you want to discuss ideas or
-bugs.
-
-- Tali Herzka: tali@transcriptic.com
-- Vanessa Biggers: vanessa@transcriptic.com
-- Max Hodak: max@transcriptic.com
-- Jeremy Apthorp: jeremy@transcriptic.com
+request.  You can also submit an issue or write an email to us at
+support@transcriptic.com if you want to discuss ideas or bugs.
 
 autoprotocol-python is BSD licensed (see LICENSE). Before we can accept your
 pull request, we require that you sign a CLA (Contributor License Agreement)

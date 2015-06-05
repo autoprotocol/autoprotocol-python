@@ -188,9 +188,6 @@ class WellGroup(object):
         """
         if not isinstance(other, Well):
             raise TypeError("Input given is not of type 'Well'.")
-        if other in self.wells:
-            raise RuntimeError("The selected Well is already a part of this \
-                WellGroup.")
         else:
             return self.wells.append(other)
 

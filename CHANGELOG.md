@@ -22,6 +22,9 @@ Added
 - Additional type-checks in various functions
 - More Python3 Compatibility
 
+Removed
+- check that a well already exists in a WellGroup
+
 ## v2.0.4 - 2015-05-05
 ---
 Added

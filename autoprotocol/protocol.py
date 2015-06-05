@@ -3,6 +3,11 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
+import sys
+
+if sys.version_info[0] >= 3:
+    xrange = range
+    basestring = str
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -13,7 +18,8 @@ from .pipette_tools import assign
 
 
 class Ref(object):
-    """Link a ref name (string) to a Container instance.
+    """
+    Link a ref name (string) to a Container instance.
 
     """
     def __init__(self, name, opts, container):
@@ -29,7 +35,7 @@ class Protocol(object):
 
     Initially, a Protocol has an empty sequence of instructions and no
     referenced containers. To add a reference to a container, use the ref()
-    method, which returns a Container
+    method, which returns a Container.
 
         .. code-block:: python
 
@@ -118,7 +124,7 @@ class Protocol(object):
         shortname : {"384-flat", "384-pcr", "96-flat", "96-pcr", "96-deep",
                     "micro-2.0", "micro-1.5"}
             String representing one of the ContainerTypes in the
-            _CONTAINER_TYPES dictionary
+            _CONTAINER_TYPES dictionary.
 
         Returns
         -------
@@ -130,7 +136,7 @@ class Protocol(object):
         Raises
         ------
         ValueError
-            If an unknown ContainerType shortname is passed as a parameter
+            If an unknown ContainerType shortname is passed as a parameter.
 
         """
         if isinstance(shortname, ContainerType):
@@ -187,30 +193,30 @@ class Protocol(object):
         Parameters
         ----------
         name : str
-            name of the container/ref being created
+            name of the container/ref being created.
         id : str
             id of the container being created, from your organization's
             inventory on http://secure.transcriptic.com.  Strings representing
-            ids begin with "ct"
+            ids begin with "ct".
         cont_type : str, ContainerType
-            container type of the Container object that will be generated
+            container type of the Container object that will be generated.
         storage : {"ambient", "cold_20", "cold_4", "warm_37"}, optional
             temperature the container being referenced should be stored at
             after a run is completed.  Either a storage condition must be
             specified or discard must be set to True.
         discard : bool, optional
             if no storage condition is specified and discard is set to True,
-            the container being referenced will be discarded after a run
+            the container being referenced will be discarded after a run.
         Returns
         -------
         container : Container
-            Container object generated from the id and container type provided
+            Container object generated from the id and container type provided.
         Raises
         ------
         ValueError
-            if no container type is provided
+            if no container type is provided.
         ValueError
-            if no discard or storage condition is provided
+            if no discard or storage condition is provided.
 
         """
         assert name not in self.refs
@@ -221,9 +227,9 @@ class Protocol(object):
         else:
             opts["new"] = cont_type.shortname
         if not cont_type:
-            raise ValueError("You a container type must always be specified")
+            raise ValueError("Your container type must always be specified")
         else:
-            container = Container(id, cont_type)
+            container = Container(name, id, cont_type)
         if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and \
                 not discard:
             opts["store"] = {"where": storage}
@@ -265,7 +271,7 @@ class Protocol(object):
         Parameters
         ----------
         instructions : Instruction
-            Instruction object to be appended
+            Instruction object to be appended.
 
         """
         if type(instructions) is list:
@@ -326,7 +332,7 @@ class Protocol(object):
         -------
         dict
             dict with keys "refs" and "instructions", each of which contain
-            the "refified" contents of their corresponding Protocol attribute
+            the "refified" contents of their corresponding Protocol attribute.
 
         """
         return {
@@ -341,9 +347,9 @@ class Protocol(object):
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second", aspirate_speed=None,
-                   aspirate_source=None, distribute_target=None, pre_buffer=None,
-                   disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                   tip_type=None, new_group=False):
+                   aspirate_source=None, distribute_target=None,
+                   pre_buffer=None, disposal_vol=None, transit_vol=None,
+                   blowout_buffer=None, tip_type=None, new_group=False):
         """
         Distribute liquid from source well(s) to destination wells(s)
 
@@ -430,21 +436,22 @@ class Protocol(object):
         source : Well, WellGroup
             Well or wells to distribute liquid from.  If passed as a WellGroup
             with set_volume() called on it, liquid will be automatically be
-            drawn from the wells specified using the fill_wells function
+            drawn from the wells specified using the fill_wells function.
         dest : Well, WellGroup
-            Well or wells to distribute liquid to
+            Well or wells to distribute liquid to.
         volume : str, Unit, list
             Volume of liquid to be distributed to each destination well.  If a
-            single string or unit is passed to represent the volume, that volume
-            will be distributed to each destination well.  If a list of volumes
-            is provided, that volume will be distributed to the corresponding
-            well in the WellGroup provided. The length of the volumes list must
-            therefore match the number of wells in the destination WellGroup if
-            destination wells are recieving different volumes.
+            single string or unit is passed to represent the volume, that
+            volume will be distributed to each destination well.  If a list of
+            volumes is provided, that volume will be distributed to the
+            corresponding well in the WellGroup provided. The length of the
+            volumes list must therefore match the number of wells in the
+            destination WellGroup if destination wells are recieving different
+            volumes.
         allow_carryover : bool, optional
             specify whether the same pipette tip can be used to aspirate more
             liquid from source wells after the previous volume aspirated has
-            been depleted
+            been depleted.
         mix_before : bool, optional
             Specify whether to mix the liquid in the destination well before
             liquid is transferred.
@@ -455,40 +462,41 @@ class Protocol(object):
             Number of times to aspirate and dispense in order to mix
             liquid in a well before liquid is distributed.
         flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before liquid is distributed
+            Speed at which to mix liquid in well before liquid is distributed.
         aspirate speed : str, Unit, optional
             Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this is the
-            maximum aspiration speed, with the start speed being half of the speed
-            specified.
+            specified if aspirate_source is also specified. By default this is
+            the maximum aspiration speed, with the start speed being half of
+            the speed specified.
         aspirate_source : fn, optional
             Can't be specified if aspirate_speed is also specified.
         distribute_target : fn, optional
             A function that contains additional parameters for distributing to
-            target wells including depth, dispense_speed, and calibrated volume.
-            If this parameter is specified, the same parameters will be applied to
-            every destination well.
+            target wells including depth, dispense_speed, and calibrated
+            volume.
+            If this parameter is specified, the same parameters will be
+            applied to every destination well.
             Can't be specified if dispense_speed is also specified.
         pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid
+            Volume of air aspirated before aspirating liquid.
         disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into trash
-            afterwards
+            Volume of extra liquid to aspirate that will be dispensed into
+            trash afterwards.
         transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence of
-            bubbles at pipette tip
+            Volume of air aspirated after aspirating liquid to reduce presence
+            of bubbles at pipette tip.
         blowout_buffer : bool, optional
             If true the operation will dispense the pre_buffer along with the
             dispense volume.
-            Cannot be true if disposal_vol is specified
+            Cannot be true if disposal_vol is specified.
 
         Raises
         ------
         RuntimeError
-            If no mix volume is specified for the mix_before instruction
+            If no mix volume is specified for the mix_before instruction.
         ValueError
             If source and destination well(s) is/are not expressed as either
-            Wells or WellGroups
+            Wells or WellGroups.
 
         """
         opts = {}
@@ -528,10 +536,10 @@ class Protocol(object):
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
                  mix_after=False, mix_before=False, mix_vol=None,
                  repetitions=10, flowrate="100:microliter/second",
-                 aspirate_speed=None, dispense_speed=None, aspirate_source=None,
-                 dispense_target=None, pre_buffer=None, disposal_vol=None,
-                 transit_vol=None, blowout_buffer=None, tip_type=None,
-                 new_group=False):
+                 aspirate_speed=None, dispense_speed=None,
+                 aspirate_source=None, dispense_target=None, pre_buffer=None,
+                 disposal_vol=None, transit_vol=None, blowout_buffer=None,
+                 tip_type=None, new_group=False):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step unless the "one_tip" parameter
@@ -625,30 +633,32 @@ class Protocol(object):
             liquid in well before and/or after each transfer step.
         flowrate : str, Unit, optional
             Speed at which to mix liquid in well before and/or after each
-            transfer step
+            transfer step.
         aspirate speed : str, Unit, optional
             Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this is the
-            maximum aspiration speed, with the start speed being half of the speed
-            specified.
+            specified if aspirate_source is also specified. By default this is
+            the maximum aspiration speed, with the start speed being half of
+            the speed specified.
         dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May not be
-            specified if dispense_target is also specified.
+            Speed at which to dispense liquid into the destination well.  May
+            not be specified if dispense_target is also specified.
         aspirate_source : fn, optional
             Can't be specified if aspirate_speed is also specified.
         dispense_target : fn, optional
-            Same but opposite of  aspirate_source
+            Same but opposite of  aspirate_source.
         pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid
+            Volume of air aspirated before aspirating liquid.
         disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into trash
-            afterwards
+            Volume of extra liquid to aspirate that will be dispensed into
+            trash afterwards.
         transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence of
-            bubbles at pipette tip
+            Volume of air aspirated after aspirating liquid to reduce presence
+            of bubbles at pipette tip.
         blowout_buffer : bool, optional
             If true the operation will dispense the pre_buffer along with the
-            dispense volume cannot be true if disposal_vol is specified
+            dispense volume. Cannot be true if disposal_vol is specified.
+        tip_type : str, optional
+        new_group : bool, optional
 
         Raises
         ------
@@ -656,8 +666,8 @@ class Protocol(object):
             If more than one volume is specified as a list but the list length
             does not match the number of destination wells given.
         RuntimeError
-            if transferring from WellGroup to WellGroup that have different
-            number of wells and one_source is not True
+            If transferring from WellGroup to WellGroup that have different
+            number of wells and one_source is not True.
 
         """
         source = WellGroup(source)
@@ -684,7 +694,7 @@ class Protocol(object):
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
-                               "volume in the form of a list")
+                               "volume in the form of a list.")
         if (len_source != len_dest) and not one_source:
             raise RuntimeError("To transfer liquid from one well or multiple wells "
                                "containing the same source, set one_source to "
@@ -703,22 +713,22 @@ class Protocol(object):
                         vol -= volume[idx]
                 if len(sources) < len_dest:
                     raise RuntimeError("There is not enough volume in the "
-                                       "source well(s) specified to complete the "
-                                       "transfers")
+                                       "source well(s) specified to complete "
+                                       "the transfers.")
                 source = WellGroup(sources)
 
-        for s,d,v in list(zip(source.wells, dest.wells, volume)):
-            if v >= Unit(900, "microliter"):
-                diff = Unit.fromstring(v) - Unit(800, "microliter")
-                self.transfer(s, d, "800:microliter")
+        for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            if v > Unit(750, "microliter"):
+                diff = Unit.fromstring(v) - Unit(750, "microliter")
+                self.transfer(s, d, "750:microliter")
                 while diff > Unit(0, "microliter"):
-                  self.transfer(s, d, diff, one_source, one_tip,
-                   mix_after, mix_before, mix_vol,
-                   repetitions, flowrate,aspirate_speed, dispense_speed, aspirate_source,
+                    self.transfer(s, d, diff, one_source, one_tip,
+                          mix_after, mix_before, mix_vol,
+                    repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
                    dispense_target, pre_buffer, disposal_vol,
                    transit_vol, blowout_buffer, tip_type,
                    new_group)
-                  diff -= diff
+                    diff -= diff
 
                 break
 
@@ -828,15 +838,16 @@ class Protocol(object):
           Options for aspirating liquid. Can't be specified if aspirate_speed
           is also specified.
       dispense_target : fn, optional
-          Same but opposite of aspirate_source
+          Options for dispensing liquid. Can't be specified if dispense_speed
+          is also specified.
       pre_buffer : str, Unit, optional
-          Volume of air aspirated before aspirating liquid
+          Volume of air aspirated before aspirating liquid.
       transit_vol : str, Unit, optional
           Volume of air aspirated after aspirating liquid to reduce presence of
-          bubbles at pipette tip
+          bubbles at pipette tip.
       blowout_buffer : bool, optional
           If true the operation will dispense the pre_buffer along with the
-          dispense volume cannot be true if disposal_vol is specified
+          dispense volume cannot be true if disposal_vol is specified.
       """
       assert isinstance(dest, Well) or isinstance(dest, str),(
         "You can only consolidate liquid into one destination well.")
@@ -991,7 +1002,7 @@ class Protocol(object):
         liquid in well before and/or after each transfer step.
       flowrate : str, Unit, optional
         Speed at which to mix liquid in well before and/or after each
-        transfer step
+        transfer step.
 
       """
 

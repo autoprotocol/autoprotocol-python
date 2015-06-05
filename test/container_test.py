@@ -18,16 +18,17 @@ dummy_type = ContainerType(name="dummy",
                            col_count=5,
                            dead_volume_ul=15)
 
+
 class ContainerWellRefTestCase(unittest.TestCase):
     def setUp(self):
-        self.c = Container(None, dummy_type)
+        self.c = Container("dummy_container", None, dummy_type)
 
     def test_well_ref(self):
         self.assertIsInstance(self.c.well("B4"), Well)
         self.assertIsInstance(self.c.well(14), Well)
 
     def test_decompose(self):
-        self.assertEqual((2,3), self.c.decompose("C4"))
+        self.assertEqual((2, 3), self.c.decompose("C4"))
 
     def test_well_identity(self):
         self.assertIs(self.c.well("A1"), self.c.well(0))
@@ -35,10 +36,27 @@ class ContainerWellRefTestCase(unittest.TestCase):
     def test_humanize(self):
         self.assertEqual("A1", self.c.well(0).humanize())
         self.assertEqual("B3", self.c.well(7).humanize())
+        # check bounds
+        with self.assertRaises(ValueError):
+            self.c.humanize(20)
+            self.c.humanize(-1)
+        # check input type
+        with self.assertRaises(TypeError):
+            self.c.humanize("10")
+            self.c.humanize(self.c.well(0))
+
+    def test_robotize(self):
+        self.assertEqual(0, self.c.robotize("A1"))
+        self.assertEqual(7, self.c.robotize("B3"))
+        # check bounds
+        with self.assertRaises(ValueError):
+            self.c.robotize("A10")
+            self.c.robotize("J1")
+
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):
     def setUp(self):
-        self.c = Container(None, dummy_type)
+        self.c = Container("dummy_container", None, dummy_type)
 
     def test_all_wells(self):
         # all_wells() should return wells in row-dominant order
@@ -70,23 +88,25 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         ws = self.c.wells_from("B3", 6, columnwise=True)
         self.assertEqual([7, 12, 3, 8, 13, 4], [w.index for w in ws])
 
+
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
-        c = Container(None, dummy_type)
+        c = Container("dummy_container", None, dummy_type)
         c.well(0).set_volume("20:microliter")
         self.assertEqual(20, c.well(0).volume.value)
         self.assertEqual("microliter", c.well(0).volume.unit)
         self.assertIs(None, c.well(1).volume)
 
     def test_set_volume_through_group(self):
-        c = Container(None, dummy_type)
+        c = Container("dummy_container", None, dummy_type)
         c.all_wells().set_volume("30:microliter")
         for w in c.all_wells():
             self.assertEqual(30, w.volume.value)
 
+
 class WellPropertyTestCase(unittest.TestCase):
     def test_set_properties(self):
-        c = Container(None, dummy_type)
+        c = Container("dummy_container", None, dummy_type)
         c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
         self.assertIsInstance(c.well(0).properties, dict)
         self.assertEqual(["Concentration"],
@@ -95,20 +115,20 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.values()))
 
     def test_add_properties(self):
-        c = Container(None, dummy_type)
+        c = Container("dummy_container", None, dummy_type)
         c.well(0).add_properties({"nickname": "dummy"})
         self.assertEqual(len(c.well(0).properties.keys()), 1)
         c.well(0).set_properties({"concentration": "12:nanogram/microliter"})
         self.assertEqual(len(c.well(0).properties.keys()), 2)
         c.well(0).add_properties({"property1": "2", "ratio": "1:10"})
         self.assertEqual(len(c.well(0).properties.keys()), 4)
-        self.assertRaises(AssertionError, c.well(0).add_properties,
+        self.assertRaises(TypeError, c.well(0).add_properties,
                           ["property", "value"])
 
     def test_add_properties_wellgroup(self):
-        c = Container(None, dummy_type)
-        group = c.wells_from(0,3).set_properties({"property1": "value1",
-                                         "property2": "value2"})
+        c = Container("dummy_container", None, dummy_type)
+        group = c.wells_from(0, 3).set_properties({"property1": "value1",
+                                                   "property2": "value2"})
         c.well(0).add_properties({"property4": "value4"})
         self.assertEqual(len(c.well(0).properties.keys()), 3)
         for well in group:

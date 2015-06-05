@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ---
 Fixed
 - typo in sanger_sequence instruction
+- documentation punctuation and grammar
 
 Added
 - Added folder for sublime text snippets
@@ -18,6 +19,8 @@ Added
 - allow transfer from multiple sources to one destination
 - support for `choice` input type in `harness.py`
 - `provision()` Protocol method
+- Additional type-checks in various functions
+- More Python3 Compatibility
 
 ## v2.0.4 - 2015-05-05
 ---

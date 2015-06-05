@@ -208,6 +208,11 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
 
+    def test_max_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "micro-2.0", storage="cold_4")
+        p.transfer(c.well(0), c.well(0), "3050:microliter")
+
     def test_multiple_transfers(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)

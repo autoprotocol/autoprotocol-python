@@ -1,22 +1,28 @@
 def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
                     primer_vol=None):
     '''
-    Set parameters for aspirating from source well before a transfer or
-    distribute.
+    Set parameters for aspirating from a source well before a transfer or
+    distribute operation.
 
     Parameters
     ----------
     depth : fn, optional
         Depth at which to aspirate liquid from a well.
     aspirate_speed : dict
-        Dictionary specifying the "start" and "max" speed of aspiration, speeds
-        are expressed as "value:microliter/second"
+        Dictionary specifying the "start" and "max" aspirate speed.
+        .. code-block:: json
+
+          {
+            "start": "50:microliter/second",
+            "max": "150:microliter/second"
+          }
+
     cal_volume : str, Unit, optional
         Calibrated volume to aspirate from a well.
     primer_vol : str, Unit
         An amount of liquid that is aspirated in addition to the nominal volume
-        specified and then re-dispensed into the well the tip is aspirating from
-        (source well)
+        specified and then re-dispensed into the well the tip is aspirating
+        from (source well).
 
     '''
     source = {}
@@ -26,6 +32,7 @@ def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
     assign(source, "primer_vol", primer_vol)
     return source
 
+
 def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     '''
     Set parameters for dispensing to a target well during a transfer or
@@ -34,7 +41,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     Parameters
     ----------
     depth : fn, optional
-        Depth at which to dispense liquid into target well
+        Depth at which to dispense liquid into target well.
     dispense_speed : dict
         Dictionary specifying the "start" and "max" dispense speed.
         .. code-block:: json
@@ -45,7 +52,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
           }
 
     cal_volume : str, Unit, optional
-        Calibrated volume to be dispensed to target well
+        Calibrated volume to be dispensed to target well.
 
     '''
     target = {}
@@ -54,7 +61,9 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     assign(target, "volume", cal_volume)
     return target
 
-def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None):
+
+def distribute_target(dst_loc, volume, dispense_speed=None,
+                      dispense_target=None):
     '''
     Set parameters target wells of a distrbute instruction.
 
@@ -70,7 +79,8 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
         distribute_targets.append(
             distribute_target(sample_plate.well(1), "20:microliter",
                               dispense_speed="120:microliter/second",
-                              dispense_target= dispense_target(depth=depth("ll_surface")))
+                              dispense_target= dispense_target(
+                                depth=depth("ll_surface")))
             )
 
         distribute_targets.append(
@@ -135,7 +145,7 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
     volume : str, unit
         Nominal volume of liquid to dispense to the target well.
     dispense_speed : dict
-        Dictionary specifying the "start" and "max" dispense speed
+        Dictionary specifying the "start" and "max" dispense speed.
         .. code-block:: json
 
           {
@@ -156,30 +166,32 @@ def distribute_target(dst_loc, volume, dispense_speed=None, dispense_target=None
     assign(distribute, "x_dispense_target", dispense_target)
     return distribute
 
-def depth(relation, lld = None, distance = "0.0:meter"):
+
+def depth(relation, lld=None, distance="0.0:meter"):
     """
     Return a stanza specifying pipette tip depth for aspirating or dispensing.
 
     Parameters
     ----------
     relation : str
-      Relative position from which to measure distance of the pipette tip
+      Relative position from which to measure distance of the pipette tip.
     lld : str, optional
-      Method of liquid level detection
+      Method of liquid level detection.
     distance : str, unit
-      Distance compared to position set by relation parameter, measured in millimeters
+      Distance compared to position set by relation parameter, measured
+      in millimeters.
 
     """
     valid_depths = set(["ll_surface", "ll_following", "ll_top", "ll_bottom"])
     if relation not in valid_depths:
-        print("Invalid depth:",relation)
+        print("Invalid depth:", relation)
         sys.exit()
-    depth = {"method":relation}
-    assign(depth,"lld",lld)
-    assign(depth,"distance",distance)
+    depth = {"method": relation}
+    assign(depth, "lld", lld)
+    assign(depth, "distance", distance)
     return depth
+
 
 def assign(obj, key, var):
     if var is not None:
         obj[key] = var
-

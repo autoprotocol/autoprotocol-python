@@ -5,6 +5,7 @@
 
 '''
 
+
 class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.
@@ -13,19 +14,19 @@ class make_dottable_dict(dict):
     -------
     .. code-block:: python
 
-        sample = {
+        >>> sample = {
             "forks": 6,
             "spoons": 5,
             "knives": 3
         }
 
-        print sample["forks"]
-        >>> 6
+        >>> print sample["forks"]
+        6
 
-        sample = make_dottable_dict(sample)
+        >>> sample = make_dottable_dict(sample)
 
-        print sample.forks
-        >>> 6
+        >>> print sample.forks
+        6
 
     Parameters
     ----------

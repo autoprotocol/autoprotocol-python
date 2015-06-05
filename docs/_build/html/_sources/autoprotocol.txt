@@ -130,9 +130,12 @@ Protocol.image_plate()
 ^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.image_plate
 
+<<<<<<< HEAD
 Protocol.provision()
 ^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.provision
+=======
+>>>>>>> Further documentation changes to container, container_type, unit, util, pipette_tools
 
 protocol.Ref
 ~~~~~~~~~~~~

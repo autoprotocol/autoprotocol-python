@@ -1,0 +1,52 @@
+{
+  "version": "1.1.25",
+  "format": "python",
+  "license": "MIT",
+  "protocols": [
+    {
+      "name": "TestMethod",
+      "description": "Test the json parsing function.",
+      "command_string": "python -m testMethod",
+      "inputs": {
+        "my_string": {
+          "type": "string",
+          "description": "Test string."
+        },
+        "my_container": {
+          "type":"container",
+          "description":"Test container."
+        },
+        "my_volume": "volume",
+        "my_length":"length",
+        "my_bool": {
+          "type": "bool",
+          "default": false,
+          "description": "Test bool."
+        }
+      },
+      "preview": {
+        "refs": {
+          "my_container": {
+            "type": "96-pcr",
+            "aliquots": {
+            "0": {"volume": "50:microliter"},
+            "1": {"volume": "50:microliter"},
+            "12": {"volume": "50:microliter"},
+            "95": {"volume": "50:microliter"}
+            },
+            "discard":true
+          }
+        },
+        "parameters": {
+            "my_string": "my_string",
+            "my_container": "my_container",
+            "my_length": "500:nanometer",
+            "my_volume": "15:microliter"
+        }
+      },
+      "dependencies": []
+    }
+  ],
+  "license": "MIT",
+  "format": "python"  
+}

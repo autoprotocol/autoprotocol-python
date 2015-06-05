@@ -3,6 +3,7 @@ import sys
 
 if sys.version_info[0] >= 3:
     xrange = range
+    basestring = str
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -10,6 +11,7 @@ if sys.version_info[0] >= 3:
     :license: BSD, see LICENSE for more details
 
 '''
+
 
 class Well(object):
     """
@@ -25,10 +27,9 @@ class Well(object):
     index : integer
         The index of this well within the container.
     volume : Unit
-        Theoretical volume of this Well.
+        Theoretical volume of this well.
     properties : dict
-        Additional properties of this Well represented as a dictionary.
-
+        Additional properties of this well represented as a dictionary.
 
     """
     def __init__(self, container, index):
@@ -39,15 +40,16 @@ class Well(object):
 
     def set_properties(self, properties):
         """
-        Set properties for a well/aliquot
+        Set properties for a Well.
 
         Parameters
         ----------
         properties : dict
-            Custom properties for a well in dictionary form.
+            Custom properties for a Well in dictionary form.
 
         """
-        assert isinstance(properties, dict)
+        if not isinstance(properties, dict):
+            raise TypeError("Properties is not of type 'dict'.")
         if len(self.properties.keys()) > 0:
             self.add_properties(properties)
         else:
@@ -56,45 +58,51 @@ class Well(object):
 
     def add_properties(self, properties):
         """
-        Add a property to the properies attribute of a Well
+        Add a property to the properties attribute of a Well.
 
         Parameters
         ----------
         properties : dict
-            Dictionary of properties to add to a Well
+            Dictionary of properties to add to a Well.
 
         """
-        assert isinstance(properties, dict)
+        if not isinstance(properties, dict):
+            raise TypeError("Properties given is not of type 'dict'.")
         for key, value in properties.items():
             self.properties[key] = value
         return self
 
     def set_volume(self, vol):
         """
-        Set the theoretical volume of liquid in this well.
+        Set the theoretical volume of liquid in a Well.
 
         Parameters
         ----------
         vol : str, Unit
-        Theoretical volume to indicate for this well.
+            Theoretical volume to indicate for a Well.
 
         """
-
-        if Unit.fromstring(vol) > Unit(self.container.container_type.well_volume_ul,
-                                       "microliter"):
+        if Unit.fromstring(vol) > Unit(
+                self.container.container_type.well_volume_ul, "microliter"):
             raise ValueError("Theoretical volume you are trying to set "
-                             "exceeds the maximum volume of this well")
+                             "exceeds the maximum volume of this well.")
         self.volume = Unit.fromstring(vol)
         return self
 
     def humanize(self):
-        """Return humanized ("A1") formatted index of this Well.
+        """
+        Return the human readable representation of the integer well index
+        given based on the ContainerType of the Well.
+
+        Uses the humanize function from the ContainerType class. Refer to
+        `ContainerType.humanize()`_ for more information.
 
         """
         return self.container.humanize(self.index)
 
     def __repr__(self):
-        """Return a string representation of a Well
+        """
+        Return a string representation of a Well.
 
         """
         return "Well(%s, %s, %s)" % (str(self.container), str(self.index),
@@ -110,7 +118,7 @@ class WellGroup(object):
     Parameters
     ----------
     wells : list
-        List of Well objects contained in this WellGroup
+        List of Well objects contained in this WellGroup.
 
     """
 
@@ -123,15 +131,16 @@ class WellGroup(object):
 
     def set_properties(self, properties):
         """
-        Set the same properties for each well in a WellGroup
+        Set the same properties for each Well in a WellGroup.
 
         Parameters
         ----------
         properties : dict
-            Dictionary of properties to set on well(s)
+            Dictionary of properties to set on Well(s).
 
         """
-        assert isinstance(properties, dict)
+        if not isinstance(properties, dict):
+            raise TypeError("Properties given is not of type 'dict'.")
         for w in self.wells:
             w.set_properties(properties)
         return self
@@ -142,17 +151,17 @@ class WellGroup(object):
 
         Parameters
         ----------
-        vol : str
-            Theoretical volume of each well in the WellGroup
+        vol : Unit, str
+            Theoretical volume of each well in the WellGroup.
 
         """
+        if not isinstance(vol, (Unit, basestring)):
+            raise TypeError("Volume given is not of type Unit or 'str'.")
         for w in self.wells:
             w.set_volume(vol)
         return self
 
-
     def indices(self):
-
         """
         Return the indices of the wells in the group in human-readable form,
         given that all of the wells belong to the same container.
@@ -161,61 +170,72 @@ class WellGroup(object):
         indices = []
         for w in self.wells:
             assert w.container == self.wells[0].container, "All wells in \
-                WellGroup must belong to the same container to get their indices"
+                WellGroup must belong to the same container to get their \
+                indices"
             indices.append(w.humanize())
 
         return indices
 
     def append(self, other):
         """
-        Append another well to this WellGroup
+        Append another well to this WellGroup.
 
         Parameters
         ----------
         other : Well
-            Well to append to the WellGroup
+            Well to append to this WellGroup.
 
         """
+        if not isinstance(other, Well):
+            raise TypeError("Input given is not of type 'Well'.")
         if other in self.wells:
-            raise RuntimeError("That Well is already a part of this WellGroup")
+            raise RuntimeError("The selected Well is already a part of this \
+                WellGroup.")
         else:
             return self.wells.append(other)
 
     def __getitem__(self, key):
         """
-        Return a specific Well from a WellGroup
+        Return a specific Well from a WellGroup.
 
         Parameters
         ----------
         key : int
+            Well reference in robotized form.
 
         """
         return self.wells[key]
 
     def __len__(self):
-        """Return the number of Wells in a WellGroup
+        """
+        Return the number of Wells in a WellGroup.
 
         """
         return len(self.wells)
 
     def __repr__(self):
-        """Return a string representation of a WellGroup
+        """
+        Return a string representation of a WellGroup.
 
         """
         return "WellGroup(%s)" % (str(self.wells))
 
     def __add__(self, other):
         """
-        Append wells from another WellGroup to this WellGroup
+        Append a Well or Wells from another WellGroup to this WellGroup.
 
         Parameters
         ----------
-        other : WellGroup
+        other : Well, WellGroup.
 
         """
-        if not isinstance(other, WellGroup):
-            raise RuntimeError("You can only add WellGroups together")
-        return WellGroup(self.wells + other.wells)
+        if not isinstance(other, (Well, WellGroup)):
+            raise RuntimeError("You can only add a Well or WellGroups \
+                                together.")
+        if isinstance(other, Well):
+            return WellGroup(self.wells.append(other))
+        else:
+            return WellGroup(self.wells + other.wells)
 
 
 class Container(object):
@@ -230,20 +250,12 @@ class Container(object):
     for defining subsets of wells on which to operate. These methods return a
     WellGroup.
 
-        .. code-block:: python
-
-            container.wells(i1, i2, i3, ...):
-              the i1'th, i2'th, i3'th, ... wells
-
-            container.all_wells(columnwise=False):
-              all the wells in the container, optionally arranged columnwise
-
-            container.wells_from(start, num, columnwise=False):
-              num wells, starting at well start, and proceeding along the row (or
-              column, if columnwise is specified)
+    Containers are usually declared using the Protocol.ref method.
 
     Parameters
     ----------
+    name : str
+        name of the container/ref being created.
     id : string
         Alphanumerical identifier for a Container.
     container_type : ContainerType
@@ -251,7 +263,8 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type):
+    def __init__(self, name, id, container_type):
+        self.name = name
         self.id = id
         self.container_type = container_type
         self._wells = [Well(self, idx)
@@ -266,9 +279,12 @@ class Container(object):
         ----------
         i : int, str
             Well reference in the form of an integer (ex: 0) or human-readable
-            string (ex: "A1")
+            string (ex: "A1").
 
         """
+        if not isinstance(i, (int, basestring)):
+            raise TypeError("Well reference given is not of type 'int' or "
+                            "'str'.")
         return self._wells[self.robotize(i)]
 
     def wells(self, *args):
@@ -279,10 +295,14 @@ class Container(object):
         Parameters
         ----------
         args : str, int, list
-            Reference or list of references to a well index either as an integer
-            or a string
+            Reference or list of references to a well index either as an
+            integer or a string.
 
         """
+        if not isinstance(i, (basestring, int, list)):
+            raise TypeError("Well reference given is not of type 'int', 'str'"
+                            "or 'list'.")
+
         if isinstance(args[0], list):
             args = args[0]
 
@@ -291,17 +311,10 @@ class Container(object):
     def robotize(self, well_ref):
         """
         Return the integer representation of the well index given, based on
-        the ContainerType of the Container
+        the ContainerType of the Container.
 
-        Parameters
-        ----------
-        well_ref : str
-            Well index in human-readable form
-
-        Returns
-        -------
-        well_ref : int
-            Well index passed as an integer
+        Uses the robotize function from the ContainerType class. Refer to
+        `ContainerType.robotize()`_ for more information.
 
         """
         return self.container_type.robotize(well_ref)
@@ -309,17 +322,11 @@ class Container(object):
     def humanize(self, well_ref):
         """
         Return the human readable representation of the integer well index
-        given based on the ContainerType of the Container
+        given based on the ContainerType of the Container.
 
-        Parameters
-        ----------
-        well_ref : int
-            Well index in integer form
+        Uses the humanize function from the ContainerType class. Refer to
+        `ContainerType.humanize()`_ for more information.
 
-        Returns
-        -------
-        well_ref : str
-            Well index passed as a string
 
         """
         return self.container_type.humanize(well_ref)
@@ -327,31 +334,23 @@ class Container(object):
     def decompose(self, well_ref):
         """
         Return a tuple representing the column and row number of the well
-        index given based on the ContainerType of the Container
+        index given based on the ContainerType of the Container.
 
-        Parameters
-        ----------
-        well_ref : str, int
-            Well index in either human-readable or integer form
-
-        Returns
-        -------
-        well_ref : tuple
-            tuple containing the column number and row number of the given
-            well_ref
+        Uses the decompose function from the ContainerType class. Refer to
+        `ContainerType.decompose()`_ for more information.
 
         """
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):
         """
-        Return a WellGroup representing all Wells belonging to this Container
+        Return a WellGroup representing all Wells belonging to this Container.
 
         Parameters
         ----------
         columnwise : bool, optional
-            returns the WellGroup columnwise instead of ordered by well index
-            (rowwise)
+            returns the WellGroup columnwise instead of rowwise (ordered by
+            well index).
 
         """
         if columnwise:
@@ -366,22 +365,28 @@ class Container(object):
     def inner_wells(self, columnwise=False):
         """
         Return a WellGroup of all wells on a plate excluding wells in the top
-        and bottom rows and in the first and last columns
+        and bottom rows and in the first and last columns.
+
+        Parameters
+        ----------
+        columnwise : bool, optional
+            returns the WellGroup columnwise instead of rowwise (ordered by
+            well index).
 
         """
         num_cols = self.container_type.col_count
         num_rows = self.container_type.row_count()
         inner_wells = []
         if columnwise:
-            for c in range(1,num_cols-1):
+            for c in xrange(1, num_cols-1):
                 wells = []
-                for r in range(1, num_rows-1):
+                for r in xrange(1, num_rows-1):
                     wells.append((r*num_cols)+c)
                 inner_wells.extend(wells)
         else:
             well = num_cols
-            for i in range(1,num_rows-1):
-                inner_wells.extend(range(well+1, well+(num_cols-1)))
+            for i in xrange(1, num_rows-1):
+                inner_wells.extend(xrange(well+1, well+(num_cols-1)))
                 well += num_cols
         inner_wells = map(lambda x: self._wells[x], inner_wells)
         return WellGroup(inner_wells)
@@ -389,22 +394,28 @@ class Container(object):
     def wells_from(self, start, num, columnwise=False):
         """
         Return a WellGroup of Wells belonging to this Container starting from
-        the index indicated (in integer or string form) and including the number
-        of proceeding wells specified.  Wells are counted from the starting well
-        rowwise unless columnwise is True.
+        the index indicated (in integer or string form) and including the
+        number of proceeding wells specified. Wells are counted from the
+        starting well rowwise unless columnwise is True.
 
         Parameters
         ----------
         start : Well, int, str
             Starting well specified as a Well object, a human-readable well
-            index or an integer well index
+            index or an integer well index.
         num : int
-            Number of wells to include
+            Number of wells to include in the Wellgroup.
         columnwise : bool, optional
             Specifies whether the wells included should be counted columnwise
             instead of the default rowwise.
 
         """
+        if not isinstance(start, (basestring, int, Well)):
+            raise TypeError("Well reference given is not of type 'str',"
+                            "'int', or 'Well'.")
+        if not isinstance(num, (int)):
+            raise TypeError("Number of wells given is not of type 'int'.")
+
         start = self.robotize(start)
         if columnwise:
             row, col = self.decompose(start)
@@ -413,13 +424,36 @@ class Container(object):
         return WellGroup(self.all_wells(columnwise).wells[start:start + num])
 
     def quadrant(self, quad):
-        assert self.container_type.well_count == 384
-        assert quad in [0,1,2,3], "Quadrant number must be between 0 and 3."
+        """
+        Return a WellGroup of Wells corresponding to the selected quadrant of
+        this Container.
 
-        start_well = [0,1,24,25]
+        This is only applicable to 384-well plates.
+
+        Parameters
+        ----------
+        quad : int
+            Specifies the quadrant number of the well (ex. 2)
+
+        """
+        # TODO(Define what each quadrant number corresponds toL)
+        if not isinstance(quad, int):
+            raise TypeError("Quadrant given is not of type 'int'.")
+        assert self.container_type.well_count == 384
+        assert quad in [0, 1, 2, 3], "Quadrant number must be between 0 and 3."
+
+        start_well = [0, 1, 24, 25]
         wells = []
 
         for row_offset in xrange(start_well[quad], 384, 48):
             for col_offset in xrange(0, 24, 2):
                 wells.append(row_offset + col_offset)
         return WellGroup([self.well(w) for w in wells])
+
+    def __repr__(self):
+        """
+        Return a string representation of a Container using the specified name.
+        (ex. Container('my_plate'))
+
+        """
+        return "Container(%s)" % (str(self.name))

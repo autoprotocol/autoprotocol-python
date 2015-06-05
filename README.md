@@ -176,6 +176,6 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also submit an issue or write an email to us at
 support@transcriptic.com if you want to discuss ideas or bugs.
 
-autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.md)). 
+autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.rst)). 
 Before we can accept your pull request, we require that you sign a CLA (Contributor License Agreement)
-allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](https://github.com/autoprotocol/autoprotocol-python/blob/master/AUTHORS.md) for more details.
+allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](https://github.com/autoprotocol/autoprotocol-python/blob/master/AUTHORS.rst) for more details.

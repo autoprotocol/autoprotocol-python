@@ -1,8 +1,6 @@
-# Autoprotocol Python
+# Autoprotocol Python Library
 
-### *[View Library Documentation](http://autoprotocol-python.readthedocs.org/en/latest/)*
-[![Documentation Status](https://readthedocs.org/projects/autoprotocol-python/badge/)](https://readthedocs.org/projects/autoprotocol-python/?badge=latest)
-
+### **[View Library Documentation on readthedocs.org](http://autoprotocol-python.readthedocs.org/en/latest/)**
 
 [Autoprotocol](http://www.autoprotocol.org) is a standard way to express
 experiments in life science. This repository contains a python library for
@@ -18,10 +16,10 @@ or, alternatively:
 
     $ pip install autoprotocol
 
-**check the releases tab on this repository to see the latest release that will be downloaded, to be completely up to date it's safest to clone and install this repository as above**
+**check the releases tab or the [changelog](https://github.com/autoprotocol/autoprotocol-python/blob/master/CHANGELOG.md) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
 
 ## Building a Protocol
-A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are then used to append instructions and refs to the object such as in the simple protocol below:
+A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are used to append Instructions and Refs to the Protocol object such as in the simple protocol below:
 
 ```python
 import json
@@ -53,7 +51,7 @@ p.absorbance(reaction_plate, reaction_plate.wells_from(0,4).indices(), "600:nano
 
 print json.dumps(p.as_dict(), indent=2)
 ```
-The script above produces the following autoprotocol:
+The script above prints the following output to standard out by calling as_dict() on the Protocol object:
 
 ```
 {
@@ -169,7 +167,8 @@ The script above produces the following autoprotocol:
 ```
 ## Extras
 
-A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User` (replace with the version of Sublime Text you're using if it's not 3).
+A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User` 
+(replace with the version of Sublime Text you're using if it's not 3).
 
 ## Contributing
 
@@ -177,7 +176,6 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also submit an issue or write an email to us at
 support@transcriptic.com if you want to discuss ideas or bugs.
 
-autoprotocol-python is BSD licensed (see LICENSE). Before we can accept your
-pull request, we require that you sign a CLA (Contributor License Agreement)
-allowing us to distribute your work under the BSD license. Email one of the
-authors listed above for more details.
+autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.md)). 
+Before we can accept your pull request, we require that you sign a CLA (Contributor License Agreement)
+allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](https://github.com/autoprotocol/autoprotocol-python/blob/master/AUTHORS.md) for more details.

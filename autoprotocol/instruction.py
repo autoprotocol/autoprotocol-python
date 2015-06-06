@@ -797,3 +797,13 @@ class Provision(Instruction):
             "resource_id": resource_id,
             "to": dests
             })
+
+class Stamp(Instruction):
+    def __init__(self, srcs, dests, vols):
+        super(Stamp, self).__init__({
+            "op": "stamp",
+            "transfers": [
+                {"from": fr, "to": to, "volume": vol}
+                    for (fr, to, vol) in zip(srcs, dests, vols)
+             ]
+         })

@@ -296,14 +296,18 @@ class Container(object):
             integer or a string.
 
         """
-        if not isinstance(i, (basestring, int, list)):
-            raise TypeError("Well reference given is not of type 'int', 'str'"
-                            "or 'list'.")
 
         if isinstance(args[0], list):
-            args = args[0]
+            wells = args[0]
+            for a in args[1:]:
+                wells.extend([a])
 
-        return WellGroup([self.well(i) for i in args])
+        for w in wells:
+            if not isinstance(w, (basestring, int, list)):
+                raise TypeError("Well reference given is not of type"
+                                " 'int', 'str' or 'list'.")
+
+        return WellGroup([self.well(w) for w in wells])
 
     def robotize(self, well_ref):
         """

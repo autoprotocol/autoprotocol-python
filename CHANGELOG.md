@@ -11,6 +11,7 @@ Changed
 Removed
 
 Fixed
+- type check in Container.wells
 
 
 ## v2.0.5 - 2015-06-04

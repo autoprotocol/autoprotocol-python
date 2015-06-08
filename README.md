@@ -28,24 +28,27 @@ from autoprotocol.protocol import Protocol
 #instantiate new Protocol object
 p = Protocol()
 
-#append refs (containers) to Protocol object
+# append refs (containers) to Protocol object
 bacteria = p.ref("bacteria", cont_type="96-pcr", storage="cold_4")
 media = p.ref("media", cont_type="micro-1.5", storage="cold_4")
 reaction_plate = p.ref("reaction_plate", cont_type="96-flat", storage="warm_37")
 
-#distribute media from 1.5mL tube to reaction wells
+# distribute media from 1.5mL tube to reaction wells
 p.distribute(media.well(0).set_volume("1000:microliter"),
              reaction_plate.wells_from(0,4), ["140:microliter",
              "130:microliter", "120:microliter", "100:microliter"])
 
-#transfer bacteria from source wells to reaction wells
+# transfer bacteria from source wells to reaction wells
 p.transfer(bacteria.wells_from(0,4), reaction_plate.wells_from(0,4),
            ["10:microliter", "20:microliter", "30:microliter", "40:microliter"])
 
-#incubate bacteria at 37 degrees for 5 hours
+# cover plate
+p.cover(reaction_plate)
+
+# incubate bacteria at 37 degrees for 5 hours
 p.incubate(reaction_plate, "warm_37", "5:hour", shaking=True)
 
-#read absorbance of the first four wells on the reaction plate at 600 nanometers
+# read absorbance of the first four wells on the reaction plate at 600 nanometers
 p.absorbance(reaction_plate, reaction_plate.wells_from(0,4).indices(), "600:nanometer",
              "OD600_reading_01092014")
 
@@ -142,6 +145,11 @@ The script above prints the following output to standard out by calling as_dict(
       "op": "pipette"
     },
     {
+      "lid": "standard",
+      "object": "reaction_plate",
+      "op": "cover"
+    },
+    {
       "where": "warm_37",
       "object": "reaction_plate",
       "co2_percent": 0,
@@ -167,7 +175,7 @@ The script above prints the following output to standard out by calling as_dict(
 ```
 ## Extras
 
-A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User` 
+A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User`
 (replace with the version of Sublime Text you're using if it's not 3).
 
 ## Contributing
@@ -176,6 +184,6 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also submit an issue or write an email to us at
 support@transcriptic.com if you want to discuss ideas or bugs.
 
-autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.rst)). 
+autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.rst)).
 Before we can accept your pull request, we require that you sign a CLA (Contributor License Agreement)
 allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](https://github.com/autoprotocol/autoprotocol-python/blob/master/AUTHORS.rst) for more details.

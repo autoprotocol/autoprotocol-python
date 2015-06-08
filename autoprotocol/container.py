@@ -299,11 +299,13 @@ class Container(object):
 
         if isinstance(args[0], list):
             wells = args[0]
-            for a in args[1:]:
-                if isinstance(a, list):
-                    wells.extend(a)
-                else:
-                    wells.extend([a])
+        else:
+            wells = [args[0]]
+        for a in args[1:]:
+            if isinstance(a, list):
+                wells.extend(a)
+            else:
+                wells.extend([a])
         for w in wells:
             if not isinstance(w, (basestring, int, list)):
                 raise TypeError("Well reference given is not of type"

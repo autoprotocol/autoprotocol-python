@@ -2710,7 +2710,7 @@ class Protocol(object):
         source.volume -= volume
       self.instructions.append(Spread(source, dest, volume))
 
-    def autopick(self, source, dests, min_count=1):
+    def autopick(self, source, dests, min_count=1, criteria={}):
       """
       Pick at least `min_count` colonies from the location specified in "from" to
       the location(s) specified in "to" in the order that they are specified
@@ -2726,9 +2726,11 @@ class Protocol(object):
       Parameters
       ----------
       source : str, Well
-          Reference to plate containing agar and colonies to pick
+        Reference to plate containing agar and colonies to pick
       dests : list of str, list of Well
-          List of destination(s) for picked colonies
+        List of destination(s) for picked colonies
+      criteria : dict
+        Dictionary of autopicking criteria.
       min_count : int, optional
           Minimum number of colonies to detect in order to continue with
           autopicking
@@ -2739,7 +2741,8 @@ class Protocol(object):
       if len(dests) < min_count:
         raise RuntimeError("Your minimum colony count cannot be greater than the"
                            " number of destination wells specified")
-      self.instructions.append(Autopick(source, dests, min_count))
+
+      self.instructions.append(Autopick(source, dests, min_count, criteria))
 
     def image_plate(self, ref, mode, dataref):
       """

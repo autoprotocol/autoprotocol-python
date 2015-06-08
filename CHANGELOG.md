@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ---
 Added
 - `flash_freeze()` Protocol method and Instruction
+- `criteria` field to `Autopick()`
 
 Changed
 

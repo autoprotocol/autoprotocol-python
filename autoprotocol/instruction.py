@@ -731,13 +731,17 @@ class Autopick(Instruction):
         autopicking
 
     """
-    def __init__(self, source, dests, min_count=1):
-        super(Autopick, self).__init__({
+    def __init__(self, source, dests, min_count, criteria):
+        pick = {
             "op": "autopick",
             "from": source,
             "to": dests,
             "min_colony_count": min_count
-        })
+        }
+        if criteria:
+            pick["criteria"] = criteria
+
+        super(Autopick, self).__init__(pick)
 
 class ImagePlate(Instruction):
     """

@@ -797,3 +797,24 @@ class Provision(Instruction):
             "resource_id": resource_id,
             "to": dests
             })
+
+class FlashFreeze(Instruction):
+    """
+    Flash freeze the contents of the specified container by submerging it in
+    liquid nitrogen for the specified amount of time.
+
+    Parameters
+    ----------
+    container : Container, str
+        Container to be flash frozen.
+    duration : str, Unit
+        Duration to submerge specified container in liquid nitrogen.
+
+    """
+
+    def __init__(self, container, duration):
+        super(FlashFreeze, self).__init__({
+            "op": "flash_freeze",
+            "object": container,
+            "duration": duration
+        })

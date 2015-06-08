@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- `flash_freeze()` Protocol method and Instruction
 
 Changed
 

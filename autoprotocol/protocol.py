@@ -2823,6 +2823,22 @@ class Protocol(object):
 
         self.instructions.append(Provision(resource_id, dest_group))
 
+    def flash_freeze(self, container, duration):
+        """
+        Flash freeze the contents of the specified container by submerging it in
+        liquid nitrogen for the specified amount of time.
+
+        Parameters
+        ----------
+        container : Container, str
+          Container to be flash frozen.
+        duration : str, Unit
+          Duration to submerge specified container in liquid nitrogen.
+
+        """
+
+        self.instructions.append(FlashFreeze(container, duration))
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

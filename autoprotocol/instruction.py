@@ -309,13 +309,17 @@ class SangerSeq(Instruction):
       Name of sequencing dataset that will be returned.
 
     """
-    def __init__(self, obj, wells, dataref):
-        super(SangerSeq, self).__init__({
+    def __init__(self, obj, wells, dataref, type, primer):
+        seq = {
             "op": "sanger_sequence",
+            "type": type,
             "object": obj,
             "wells": wells,
             "dataref": dataref
-        })
+        }
+        if primer and type == "rca":
+            seq["primer"] = primer
+        super(SangerSeq, self).__init__(seq)
 
 
 class GelSeparate(Instruction):

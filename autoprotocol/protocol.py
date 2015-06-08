@@ -1113,7 +1113,7 @@ class Protocol(object):
         raise RuntimeError("Stamping is not supported for the container "
                            "types provided")
 
-    def sangerseq(self, cont, wells, dataref):
+    def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
       """
       Send the indicated wells of the container specified for Sanger sequencing.
       The specified wells should already contain the appropriate mix for
@@ -1158,14 +1158,26 @@ class Protocol(object):
       ----------
       cont : Container, str
         Container with well(s) that contain material to be sequenced.
+      type : str
+        Type of sequencing reaction to take place ("standard" or "rca"),
+        defaults to "standard"
       wells : list of str
         Well indices of the container that contain appropriate materials to be
         sent for sequencing.
+      primer : container
+        Tube containing sufficient primer for all RCA reactions
       dataref : str
         Name of sequencing dataset that will be returned.
 
       """
-      self.instructions.append(SangerSeq(cont, wells, dataref))
+      type = type.lower()
+      if type == "rca" and not primer:
+        raise RuntimeError("You must specify the location of primer for RCA"
+                           " sequencing reactions.")
+      if type == "standard" and primer:
+        print("WARNING: Primer only needs to be specified if sequencing"
+              " reaction type is RCA")
+      self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def serial_dilute_rowwise(self, source, well_group, vol,
                               mix_after=True, reverse=False):

@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 - `flash_freeze()` Protocol method and Instruction
 - `criteria` field to `Autopick()`
+- `SangerSeq` now accepts a sequencing `type` of `"rca"` or `"standard"` (defaults to "standard")
 
 Changed
 

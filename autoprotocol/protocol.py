@@ -1668,7 +1668,7 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : {"water", "LB", "LB-amp", "LB-kan", "SOC", "PBS"}
+        reagent : str
             Reagent to be dispensed to columns in container.
         volume : Unit, str
             Volume of reagent to be dispensed to each well

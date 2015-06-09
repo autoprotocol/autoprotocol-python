@@ -229,7 +229,7 @@ class Protocol(object):
         if not cont_type:
             raise ValueError("Your container type must always be specified")
         else:
-            container = Container(name, id, cont_type)
+            container = Container(id, cont_type, name=name)
         if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and \
                 not discard:
             opts["store"] = {"where": storage}
@@ -1165,6 +1165,8 @@ class Protocol(object):
         Well indices of the container that contain appropriate materials to be
         sent for sequencing.
       primer : container
+        Tube containing sufficient primer for all RCA reactions.  This field
+        will be ignored if you specify the sequencing type as "standard".
         Tube containing sufficient primer for all RCA reactions
       dataref : str
         Name of sequencing dataset that will be returned.
@@ -1174,9 +1176,6 @@ class Protocol(object):
       if type == "rca" and not primer:
         raise RuntimeError("You must specify the location of primer for RCA"
                            " sequencing reactions.")
-      if type == "standard" and primer:
-        print("WARNING: Primer only needs to be specified if sequencing"
-              " reaction type is RCA")
       self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def serial_dilute_rowwise(self, source, well_group, vol,
@@ -2722,7 +2721,7 @@ class Protocol(object):
         source.volume -= volume
       self.instructions.append(Spread(source, dest, volume))
 
-    def autopick(self, source, dests, min_count=1, criteria={}):
+    def autopick(self, source, dests, min_count=1, criteria={}, dataref="autopick"):
       """
       Pick at least `min_count` colonies from the location specified in "from" to
       the location(s) specified in "to" in the order that they are specified
@@ -2754,7 +2753,7 @@ class Protocol(object):
         raise RuntimeError("Your minimum colony count cannot be greater than the"
                            " number of destination wells specified")
 
-      self.instructions.append(Autopick(source, dests, min_count, criteria))
+      self.instructions.append(Autopick(source, dests, min_count, criteria, dataref))
 
     def image_plate(self, ref, mode, dataref):
       """

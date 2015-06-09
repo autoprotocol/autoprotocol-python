@@ -735,12 +735,13 @@ class Autopick(Instruction):
         autopicking
 
     """
-    def __init__(self, source, dests, min_count, criteria):
+    def __init__(self, source, dests, min_count, criteria, dataref):
         pick = {
             "op": "autopick",
             "from": source,
             "to": dests,
-            "min_colony_count": min_count
+            "min_colony_count": min_count,
+            "dataref": dataref
         }
         if criteria:
             pick["criteria"] = criteria

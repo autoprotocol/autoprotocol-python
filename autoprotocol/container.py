@@ -260,7 +260,7 @@ class Container(object):
 
     """
 
-    def __init__(self, name, id, container_type):
+    def __init__(self, id, container_type, name=None):
         self.name = name
         self.id = id
         self.container_type = container_type

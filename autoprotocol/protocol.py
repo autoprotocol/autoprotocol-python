@@ -222,22 +222,21 @@ class Protocol(object):
         assert name not in self.refs
         opts = {}
         cont_type = self.container_type(cont_type)
-        if id:
-            opts["id"] = id
+        if id and cont_type:
+          opts["id"] = id
+        elif cont_type:
+          opts["new"] = cont_type.shortname
         else:
-            opts["new"] = cont_type.shortname
-        if not cont_type:
-            raise ValueError("Your container type must always be specified")
-        else:
-            container = Container(id, cont_type, name=name)
-        if storage in ["ambient", "cold_20", "cold_4", "warm_37"] and \
-                not discard:
-            opts["store"] = {"where": storage}
+          raise RuntimeError("If no id is specified, you must specify a "
+                             "container type.")
+        if storage:
+          opts["store"] = {"where": storage}
         elif discard and not storage:
-            opts["discard"] = discard
+          opts["discard"] = discard
         else:
-            raise ValueError("You must specify either a valid storage "
-                             "temperature or set discard=True for a container")
+          raise ValueError("You must specify either a valid storage "
+                           "temperature or set discard=True for a container")
+        container = Container(id, cont_type, name=name)
         self.refs[name] = Ref(name, opts, container)
         return container
 

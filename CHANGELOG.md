@@ -15,6 +15,7 @@ Removed
 
 Fixed
 - type check in Container.wells
+- Error in Protocol.ref() when reffing existing container by ID
 
 
 ## v2.0.5 - 2015-06-04

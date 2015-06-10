@@ -21,7 +21,7 @@ dummy_type = ContainerType(name="dummy",
 
 class ContainerWellRefTestCase(unittest.TestCase):
     def setUp(self):
-        self.c = Container("dummy_container", None, dummy_type)
+        self.c = Container(None, dummy_type)
 
     def test_well_ref(self):
         self.assertIsInstance(self.c.well("B4"), Well)
@@ -56,7 +56,7 @@ class ContainerWellRefTestCase(unittest.TestCase):
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):
     def setUp(self):
-        self.c = Container("dummy_container", None, dummy_type)
+        self.c = Container(None, dummy_type)
 
     def test_all_wells(self):
         # all_wells() should return wells in row-dominant order
@@ -91,14 +91,14 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
 
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
-        c = Container("dummy_container", None, dummy_type)
+        c = Container(None, dummy_type)
         c.well(0).set_volume("20:microliter")
         self.assertEqual(20, c.well(0).volume.value)
         self.assertEqual("microliter", c.well(0).volume.unit)
         self.assertIs(None, c.well(1).volume)
 
     def test_set_volume_through_group(self):
-        c = Container("dummy_container", None, dummy_type)
+        c = Container(None, dummy_type)
         c.all_wells().set_volume("30:microliter")
         for w in c.all_wells():
             self.assertEqual(30, w.volume.value)
@@ -106,7 +106,7 @@ class WellVolumeTestCase(unittest.TestCase):
 
 class WellPropertyTestCase(unittest.TestCase):
     def test_set_properties(self):
-        c = Container("dummy_container", None, dummy_type)
+        c = Container(None, dummy_type)
         c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
         self.assertIsInstance(c.well(0).properties, dict)
         self.assertEqual(["Concentration"],
@@ -115,7 +115,7 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.values()))
 
     def test_add_properties(self):
-        c = Container("dummy_container", None, dummy_type)
+        c = Container(None, dummy_type)
         c.well(0).add_properties({"nickname": "dummy"})
         self.assertEqual(len(c.well(0).properties.keys()), 1)
         c.well(0).set_properties({"concentration": "12:nanogram/microliter"})
@@ -126,7 +126,7 @@ class WellPropertyTestCase(unittest.TestCase):
                           ["property", "value"])
 
     def test_add_properties_wellgroup(self):
-        c = Container("dummy_container", None, dummy_type)
+        c = Container(None, dummy_type)
         group = c.wells_from(0, 3).set_properties({"property1": "value1",
                                                    "property2": "value2"})
         c.well(0).add_properties({"property4": "value4"})

@@ -223,18 +223,18 @@ class Protocol(object):
         opts = {}
         cont_type = self.container_type(cont_type)
         if id and cont_type:
-          opts["id"] = id
+            opts["id"] = id
         elif cont_type:
-          opts["new"] = cont_type.shortname
+            opts["new"] = cont_type.shortname
         else:
-          raise RuntimeError("If no id is specified, you must specify a "
+            raise RuntimeError("If no id is specified, you must specify a "
                              "container type.")
         if storage:
-          opts["store"] = {"where": storage}
+            opts["store"] = {"where": storage}
         elif discard and not storage:
-          opts["discard"] = discard
+            opts["discard"] = discard
         else:
-          raise ValueError("You must specify either a valid storage "
+            raise ValueError("You must specify either a valid storage "
                            "temperature or set discard=True for a container")
         container = Container(id, cont_type, name=name)
         self.refs[name] = Ref(name, opts, container)

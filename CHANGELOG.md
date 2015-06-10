@@ -12,10 +12,12 @@ Added
 Changed
 
 Removed
+- Protocol.thermocycle_ramp()
+- Protocol.serial_dilute_rowwise()
 
 Fixed
 - type check in Container.wells
-- Error in Protocol.ref() when reffing existing container by ID
+- Protocol.ref() behavior when specifying the `id` of an existing container
 
 
 ## v2.0.5 - 2015-06-04

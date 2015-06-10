@@ -2508,70 +2508,75 @@ class Protocol(object):
       self.instructions.append(ImagePlate(ref, mode, dataref))
 
     def provision(self, resource_id, dests, volumes):
-      """
-      A generic instruction for provisioning a commercial resource from a
-      catalog and defining destination well(s).  A new tip is used for each
-      destination well specified.
+        """
+        A generic instruction for provisioning a commercial resource from a
+        catalog and defining destination well(s).  A new tip is used for each
+        destination well specified.
 
-      Parameters
-      ----------
-      resource_id : str
-        Resource ID from catalog.
-      dests : Well, WellGroup
-        Destination(s) for specified resource.
-      volumes : str, Unit, list of str, list of Unit
-        Volume(s) to transfer of the resource to each destination well.  If
-        one volume of specified, each destination well recieve that volume of
-        the resource.  If destinations should recieve different volumes, each
-        one should be specified explicitly in a list matching the order of the
-        specified destinations.
+        Parameters
+        ----------
+        resource_id : str
+          Resource ID from catalog.
+        dests : Well, WellGroup
+          Destination(s) for specified resource.
+        volumes : str, Unit, list of str, list of Unit
+          Volume(s) to transfer of the resource to each destination well.  If
+          one volume of specified, each destination well recieve that volume of
+          the resource.  If destinations should recieve different volumes, each
+          one should be specified explicitly in a list matching the order of the
+          specified destinations.
 
-      Raises
-      ------
-      TypeError
-        If resource_id is not a string.
-      RuntimeError
-        If length of the list of volumes specified does not match the number of
-        destination wells specified.
-      TypeError
-        If volume is not specified as a string or Unit (or a list of either)
+        Raises
+        ------
+        TypeError
+          If resource_id is not a string.
+        RuntimeError
+          If length of the list of volumes specified does not match the number of
+          destination wells specified.
+        TypeError
+          If volume is not specified as a string or Unit (or a list of either)
 
-      """
-      dest_group = []
-      dests = WellGroup(dests)
-      if not isinstance(resource_id, basestring):
-        raise TypeError("Resource ID must be a string.")
-      if not isinstance(volumes, list):
-        volumes = [Unit.fromstring(volumes)] * len(dests)
-      else:
-        if len(volumes) != len(dests):
-          raise RuntimeError("To provision a resource into multiple "
-                             "destinations with multiple volumes, the list "
-                             "of volumes must correspond with the destinations"
-                             "in length and in order.")
-        volumes = [Unit.fromstring(v) for v in volumes]
-      for v in volumes:
-        if not isinstance(v, (basestring, Unit)):
-          raise TypeError("Volume must be a string or Unit.")
-      for d,v in zip(dests, volumes):
-        if v > Unit(750, "microliter"):
-          diff = v - Unit(750, "microliter")
-          self.provision(resource_id, d, "750:microliter")
-          while diff > Unit(0, "microliter"):
-            self.provision(resource_id, d, diff)
-            diff -= diff
-          break
-
-        xfer = {}
-        xfer["well"] = d
-        xfer["volume"] = v
-        if d.volume:
-          d.volume += v
+        """
+        dest_group = []
+        dests = WellGroup(dests)
+        if not isinstance(resource_id, basestring):
+            raise TypeError("Resource ID must be a string.")
+        if not isinstance(volumes, list):
+            volumes = [Unit.fromstring(volumes)] * len(dests)
         else:
-          d.set_volume(v)
-        dest_group.append(xfer)
+            if len(volumes) != len(dests):
+                raise RuntimeError("To provision a resource into multiple "
+                                   "destinations with multiple volumes, the list "
+                                   "of volumes must correspond with the destinations"
+                                   "in length and in order.")
+            volumes = [Unit.fromstring(v) for v in volumes]
+        for v in volumes:
+            if not isinstance(v, (basestring, Unit)):
+                raise TypeError("Volume must be a string or Unit.")
+        for d,v in zip(dests, volumes):
+            if v > Unit(750, "microliter"):
+                diff = v - Unit(750, "microliter")
+                self.provision(resource_id, d, "750:microliter")
+                while diff > Unit(0, "microliter"):
+                    self.provision(resource_id, d, diff)
+                    diff -= diff
+                break
 
-        self.instructions.append(Provision(resource_id, dest_group))
+            xfer = {}
+            xfer["well"] = d
+            xfer["volume"] = v
+            if d.volume:
+                d.volume += v
+            else:
+                d.set_volume(v)
+            dest_group.append(xfer)
+
+            if (self.instructions and self.instructions[-1].op == "provision" and
+                self.instructions[-1].resource_id == resource_id and
+                self.instructions[-1].to[-1]["well"].container == d.container):
+                self.instructions[-1].to.append(xfer)
+            else:
+                self.instructions.append(Provision(resource_id, dest_group))
 
     def flash_freeze(self, container, duration):
         """

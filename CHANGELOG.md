@@ -10,6 +10,7 @@ Added
 - `SangerSeq` now accepts a sequencing `type` of `"rca"` or `"standard"` (defaults to "standard")
 
 Changed
+- collapse Protocol.provision() instructions if they're acting on the same container
 
 Removed
 - Protocol.thermocycle_ramp()

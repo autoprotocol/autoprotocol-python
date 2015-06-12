@@ -107,7 +107,7 @@ class Protocol(object):
         self.refs = {}
         for ref in refs:
             self.refs[ref.name] = ref
-        self.instructions = instructions if instructions is not None else []
+        self.instructions = instructions or []
 
     def container_type(self, shortname):
         """

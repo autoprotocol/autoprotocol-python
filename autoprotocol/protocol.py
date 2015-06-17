@@ -995,60 +995,90 @@ class Protocol(object):
 
         Parameters
         ----------
-        source : Container, list of dicts
-          96- or 384-well plate(s) to source liquid from.  To specify more than
-          one 96-well plate as a source for a 384-well plate, you must specify
-          them as a list of dicts in the form of
-
-          .. code-block:: json
-
-              {"container": <container>, "quadrant": <quadrant>}
-
-          and specify the destination quadrant
-        dest : Container, list of dicts
-          96- or 384-well plate(s) to transfer liquid to.  To specify more than
-          one 96-well plate as a source for a 384-well plate, you must specify
-          them as a list of dicts in the form of
-
-          .. code-block:: json
-
-              {"container": <container>, "quadrant": <quadrant>}
-
-          and specify the destination quadrant
+        source : Container
+            96- or 384-well plate to source liquid from.
+        dest : Container
+            96- or 384-well plate to transfer liquid to.
         volume : str, Unit
-          Volume of liquid to move from source plate(s) to destination plate(s)
-        quad : int
-          Quadrant of 384 well plate to transfer liquid to when source is a
-          96-well plate. Quadrant 0 is every other well starting from well A1,
-          quadrant 1 is every other well starting from well A2, quadrant 2 is
-          every other well starting from well B1, and quadrant 3 is every other
-          well starting from well B2.
+            Volume of liquid to move from source plate to destination plate
+        to_quad : int
+            Quadrant of 384 well plate to transfer liquid to when source is a
+            96-well plate. Quadrant 0 is every other well starting from well A1,
+            quadrant 1 is every other well starting from well A2, quadrant 2 is
+            every other well starting from well B1, and quadrant 3 is every other
+            well starting from well B2.
+        from_quad : int
+            Quadrant of 384 well plate to transfer liquid from when source is a
+            384-well plate.
         mix_after : bool, optional
-          Specify whether to mix the liquid in the destination well after
-          liquid is transferred.
+            Specify whether to mix the liquid in the destination well after
+            liquid is transferred.
         mix_before : bool, optional
-          Specify whether to mix the liquid in the destination well before
-          liquid is transferred.
+            Specify whether to mix the liquid in the destination well before
+            liquid is transferred.
         mix_vol : str, Unit, optional
-          Volume to aspirate and dispense in order to mix liquid in a wells
-          before and/or after each transfer step.
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before and/or after each transfer step.
         repetitions : int, optional
-          Number of times to aspirate and dispense in order to mix
-          liquid in well before and/or after each transfer step.
+            Number of times to aspirate and dispense in order to mix
+            liquid in well before and/or after each transfer step.
         flowrate : str, Unit, optional
-          Speed at which to mix liquid in well before and/or after each
-          transfer step.
+            Speed at which to mix liquid in well before and/or after each
+            transfer step.
+        dispense_speed : str, Unit, optional
+            Speed at which to dispense liquid into the destination well.  May
+            not be specified if dispense_target is also specified.
+        aspirate_source : fn, optional
+            Can't be specified if aspirate_speed is also specified.
+        dispense_target : fn, optional
+            Same but opposite of  aspirate_source.
+        pre_buffer : str, Unit, optional
+            Volume of air aspirated before aspirating liquid.
+        disposal_vol : str, Unit, optional
+            Volume of extra liquid to aspirate that will be dispensed into
+            trash afterwards.
+        transit_vol : str, Unit, optional
+            Volume of air aspirated after aspirating liquid to reduce presence
+            of bubbles at pipette tip.
+        blowout_buffer : bool, optional
+            If true the operation will dispense the pre_buffer along with the
+            dispense volume. Cannot be true if disposal_vol is specified.
+        append : boolean
+            Append this stamp instruction to the previous one.
 
-        Raises
-        ------
-        ValueError
-            If a list of more than 4 source or destination plates is specified.
-        RuntimeError
-            Stamping attempted for containers with an unsupported number
-            of wells.
+            Example
+
+            .. code-block:: python
+
+                p.stamp(wells_96_1, wells_96_2, "10:microliter")
+                p.stamp(wells_96_2, wells_96_3, "10:microliter", append = True)
+
+
+            Autoprotocol Output:
+
+            .. code-block:: json
+
+                "instructions": [
+                    {
+                      "transfers": [
+                        {
+                          "volume": "10.0:microliter",
+                          "to": "wells_96_2/0",
+                          "from": "wells_96_1/0"
+                        },
+                        {
+                          "volume": "10.0:microliter",
+                          "to": "wells_96_3/0",
+                          "from": "wells_96_2/0"
+                        }
+                      ],
+                      "op": "stamp"
+                    }
+                  ]
 
         """
         txs = []
+        volume = Unit.fromstring(volume)
 
         def convert_quad(cont, num = 0):
             if cont.container_type.well_count == 384:
@@ -1079,7 +1109,7 @@ class Protocol(object):
                       "x_blowout_buffer"]
         for x_option in x_opt_list:
             assign(xfer, x_option, eval(x_option[2:]))
-        if not mix_vol:
+        if not mix_vol and (mix_before or mix_after):
             mix_vol = volume * .5
         if mix_before:
                 xfer["mix_before"] = {

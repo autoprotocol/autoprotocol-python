@@ -4,10 +4,10 @@ from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
 import sys
-
 if sys.version_info[0] >= 3:
     xrange = range
     basestring = str
+
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -214,28 +214,32 @@ class Protocol(object):
         Raises
         ------
         ValueError
-            if no container type is provided.
+            if no id is specified and no container type is provided.
         ValueError
             if no discard or storage condition is provided.
 
         """
         assert name not in self.refs
         opts = {}
+
+        # Check container type
         cont_type = self.container_type(cont_type)
         if id and cont_type:
             opts["id"] = id
         elif cont_type:
             opts["new"] = cont_type.shortname
         else:
-            raise RuntimeError("If no id is specified, you must specify a "
+            raise ValueError("If no id is specified, you must specify a "
                              "container type.")
+
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
         else:
             raise ValueError("You must specify either a valid storage "
-                           "temperature or set discard=True for a container")
+                             "condition or set discard=True for a container.")
+
         container = Container(id, cont_type, name=name)
         self.refs[name] = Ref(name, opts, container)
         return container
@@ -350,7 +354,7 @@ class Protocol(object):
                    pre_buffer=None, disposal_vol=None, transit_vol=None,
                    blowout_buffer=None, tip_type=None, new_group=False):
         """
-        Distribute liquid from source well(s) to destination wells(s)
+        Distribute liquid from source well(s) to destination wells(s).
 
 
         Example Usage:
@@ -506,7 +510,7 @@ class Protocol(object):
             if mix_before:
                 if not mix_vol:
                     raise RuntimeError("No mix volume specified for "
-                                       "mix_before")
+                                       "mix_before.")
                 opts["mix_before"] = {
                     "volume": mix_vol,
                     "repetitions": repetitions,
@@ -516,14 +520,16 @@ class Protocol(object):
                 opts["allow_carryover"] = allow_carryover
             opts["from"] = d["from"]
             opts["to"] = d["to"]
-            assign(opts, "aspirate_speed", aspirate_speed)
-            assign(opts, "allow_carryover", allow_carryover)
-            assign(opts, "x_aspirate_source", aspirate_source)
-            assign(opts, "x_pre_buffer", pre_buffer)
-            assign(opts, "x_disposal_vol", disposal_vol)
-            assign(opts, "x_transit_vol", transit_vol)
-            assign(opts, "x_blowout_buffer", blowout_buffer)
-            assign(opts, "x_tip_type", tip_type)
+
+            # Append transfer options
+            opt_list = ["aspirate_speed", "allow_carryover"]
+            for option in opt_list:
+                assign(opts, option, eval(option))
+            x_opt_list = ["x_aspirate_source", "x_pre_buffer",
+                          "x_disposal_vol", "x_transit_vol",
+                          "x_blowout_buffer", "x_tip_type"]
+            for x_option in x_opt_list:
+                assign(opts, x_option, eval(x_option[2:]))
 
             groups.append({"distribute": opts})
 
@@ -657,6 +663,7 @@ class Protocol(object):
             If true the operation will dispense the pre_buffer along with the
             dispense volume. Cannot be true if disposal_vol is specified.
         tip_type : str, optional
+            Type of tip to be used for the transfer operation.
         new_group : bool, optional
 
         Raises
@@ -675,18 +682,31 @@ class Protocol(object):
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
-        if len_dest > 1 and len_source == 1 and not one_source:
-            source = WellGroup(source.wells * len_dest)
-            len_source = len(source.wells)
-        if len_dest == 1 and len_source > 1 and not one_source:
-            dest = WellGroup(dest.wells * len_source)
-            len_dest = len(dest.wells)
-        if isinstance(volume, str) or isinstance(volume, Unit):
+        # Auto-generate well-group if only 1 well specified and using >1 source
+        if not one_source:
+            if len_dest > 1 and len_source == 1:
+                source = WellGroup(source.wells * len_dest)
+                len_source = len(source.wells)
+            if len_dest == 1 and len_source > 1:
+                dest = WellGroup(dest.wells * len_source)
+                len_dest = len(dest.wells)
+            if len_source != len_dest:
+                raise RuntimeError("To transfer liquid from one well or"
+                                   "multiple wells  containing the same"
+                                   "source, set one_source to True. To"
+                                   "transfer liquid from multiple wells to a"
+                                   "single destination well, specify only one "
+                                   "destination well. Otherwise, you must"
+                                   "specify the same number of source and"
+                                   "destination wells to do a one-to-one "
+                                   "transfer.")
+
+        # Auto-generate list from single volume, check if list length matches
+        if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1:
                 volume = [Unit.fromstring(volume)] * len_source
             else:
                 volume = [Unit.fromstring(volume)] * len_dest
-
         elif isinstance(volume, list) and len(volume) == len_dest:
             volume = map(lambda x: Unit.fromstring(x), volume)
         else:
@@ -694,14 +714,8 @@ class Protocol(object):
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume in the form of a list.")
-        if (len_source != len_dest) and not one_source:
-            raise RuntimeError("To transfer liquid from one well or multiple wells "
-                               "containing the same source, set one_source to "
-                               "True. To transfer liquid from multiple wells to a "
-                               "single destination well, specify only one destination"
-                               " well. Otherwise, you must specify the same "
-                               "number of source and destination wells to "
-                               "do a one-to-one transfer.")
+
+        # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
             sources = []
             for idx, d in enumerate(dest.wells):
@@ -722,17 +736,26 @@ class Protocol(object):
                 self.transfer(s, d, "750:microliter")
                 while diff > Unit(0, "microliter"):
                     self.transfer(s, d, diff, one_source, one_tip,
-                          mix_after, mix_before, mix_vol,
-                    repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
-                   dispense_target, pre_buffer, disposal_vol,
-                   transit_vol, blowout_buffer, tip_type,
-                   new_group)
+                                  mix_after, mix_before, mix_vol,
+                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
+                                  dispense_target, pre_buffer, disposal_vol,
+                                  transit_vol, blowout_buffer, tip_type,
+                                  new_group)
                     diff -= diff
 
                 break
 
+            # Volume accounting
             if mix_after and not mix_vol:
                 mix_vol = v
+            if d.volume:
+                d.volume += v
+            else:
+                d.volume = v
+            if s.volume:
+                s.volume -= v
+
+            # Organize transfer options into dictionary (for json parsing)
             xfer = {
                 "from": s,
                 "to": d,
@@ -750,22 +773,18 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
-            assign(xfer, "aspirate_speed", aspirate_speed)
-            assign(xfer, "dispense_speed", dispense_speed)
-            assign(xfer, "x_aspirate_source", aspirate_source)
-            assign(xfer, "x_dispense_target", dispense_target)
-            assign(xfer, "x_pre_buffer", pre_buffer)
-            assign(xfer, "x_disposal_vol", disposal_vol)
-            assign(xfer, "x_transit_vol", transit_vol)
-            assign(xfer, "x_blowout_buffer", blowout_buffer)
+            # Append transfer options
+            opt_list = ["aspirate_speed", "dispense_speed"]
+            for option in opt_list:
+                assign(xfer, option, eval(option))
+            x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                          "x_blowout_buffer"]
+            for x_option in x_opt_list:
+                assign(xfer, x_option, eval(x_option[2:]))
 
             opts.append(xfer)
-            if d.volume:
-                d.volume += v
-            else:
-                d.volume = v
-            if s.volume:
-                s.volume -= v
+
         trans = {}
         assign(trans, "x_tip_type", tip_type)
         if one_tip:
@@ -790,110 +809,129 @@ class Protocol(object):
                     aspirate_speed=None, dispense_speed=None, aspirate_source=None,
                     dispense_target=None, pre_buffer=None, transit_vol=None,
                     blowout_buffer=None, tip_type=None, new_group=False):
-      """
-      Aspirates from each source well, in order, the volume specified, then
-      dispenses the sum volume into the target well. Be aware that the same tip
-      will be used to aspirate from all the source wells, so if you want to
-      avoid contaminating any of them you should use a separate transfer group.
-      Consolidate is limited by the maximum volume of the disposable tip. If the
-      total volume you want to dispense into the target well exceeds the volume
-      that will fit in one tip, you must either specify `allow_carryover` to allow
-      the tip to carry on pipetting from the source wells after it has touched
-      the target well, or break up your operation into multiple groups with
-      separate tips.
+        """
+        Aspirates from each source well, in order, the volume specified, then
+        dispenses the sum volume into the target well. Be aware that the same
+        tip will be used to aspirate from all the source wells, so if you want
+        to avoid contaminating any of them you should use a separate transfer
+        group. Consolidate is limited by the maximum volume of the disposable
+        tip. If the total volume you want to dispense into the target well
+        exceeds the volume that will fit in one tip, you must either specify
+        `allow_carryover` to allow the tip to carry on pipetting from the
+        source wells after it has touched the target well, or break up your
+        operation into multiple groups with separate tips.
 
-      Parameters
-      ----------
-      sources : Well, WellGroup
-          Well or wells to transfer liquid from.
-      dest : Well
-          Well to which to transfer consolidated liquid.
-      volume : str, Unit, list
-          The volume(s) of liquid to be transferred from source well(s) to
-          destination well.  Volume can be specified as a single string or
-          Unit, or can be given as a list of volumes.  The length of a list
-          of volumes must match the number of source wells given.
-      mix_after : bool, optional
-          Specify whether to mix the liquid in the destination well after
-          liquid is transferred.
-      mix_vol : str, Unit, optional
-          Volume to aspirate and dispense in order to mix liquid in a wells
-          before and/or after each transfer step.
-      repetitions : int, optional
-          Number of times to aspirate and dispense in order to mix
-          liquid in well before and/or after each transfer step.
-      flowrate : str, Unit, optional
-          Speed at which to mix liquid in well before and/or after each
-          transfer step
-      aspirate speed : str, Unit, optional
-          Speed at which to aspirate liquid from source well.  May not be
-          specified if aspirate_source is also specified. By default this is the
-          maximum aspiration speed, with the start speed being half of the speed
-          specified.
-      dispense_speed : str, Unit, optional
-          Speed at which to dispense liquid into the destination well.  May not be
-          specified if dispense_target is also specified.
-      aspirate_source : fn, optional
-          Options for aspirating liquid. Can't be specified if aspirate_speed
-          is also specified.
-      dispense_target : fn, optional
-          Options for dispensing liquid. Can't be specified if dispense_speed
-          is also specified.
-      pre_buffer : str, Unit, optional
-          Volume of air aspirated before aspirating liquid.
-      transit_vol : str, Unit, optional
-          Volume of air aspirated after aspirating liquid to reduce presence of
-          bubbles at pipette tip.
-      blowout_buffer : bool, optional
-          If true the operation will dispense the pre_buffer along with the
-          dispense volume cannot be true if disposal_vol is specified.
-      """
-      assert isinstance(dest, Well) or isinstance(dest, str),(
-        "You can only consolidate liquid into one destination well.")
-      cons={"consolidate": {}}
-      assign(cons["consolidate"], "to", dest)
-      from_wells = []
-      if isinstance(sources, Well) or isinstance(sources, str):
-        sources = [sources]
-      if isinstance(volumes, list):
-        assert len(volumes) == len(sources), ("If supplying consolidate volumes"
-                                             " as a list, its length must "
-                                             "match the number of source wells"
-                                             " specified")
-        volumes = [Unit.fromstring(v) for v in volumes]
-      else:
-        volumes = [Unit.fromstring(volumes)] * len(sources)
-      for s,v in zip(sources, volumes):
-        fromw = {}
-        fromw["well"] = s
-        fromw["volume"] = v
-        assign(fromw, "aspirate_speed", aspirate_speed)
-        assign(fromw, "x_aspirate_source", aspirate_source)
-        from_wells.append(fromw)
-        if dest.volume:
-          dest.volume += v
+        Parameters
+        ----------
+        sources : Well, WellGroup
+            Well or wells to transfer liquid from.
+        dest : Well, str
+            Well to which to transfer consolidated liquid.
+        volume : str, Unit, list
+            The volume(s) of liquid to be transferred from source well(s) to
+            destination well.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of source wells given.
+        mix_after : bool, optional
+            Specify whether to mix the liquid in the destination well after
+            liquid is transferred.
+        mix_vol : str, Unit, optional
+            Volume to aspirate and dispense in order to mix liquid in a wells
+            before and/or after each transfer step.
+        repetitions : int, optional
+            Number of times to aspirate and dispense in order to mix
+            liquid in well before and/or after each transfer step.
+        flowrate : str, Unit, optional
+            Speed at which to mix liquid in well before and/or after each
+            transfer step.
+        aspirate speed : str, Unit, optional
+            Speed at which to aspirate liquid from source well.  May not be
+            specified if aspirate_source is also specified. By default this
+            is the maximum aspiration speed, with the start speed being half
+            of the speed specified.
+        dispense_speed : str, Unit, optional
+            Speed at which to dispense liquid into the destination well. May
+            not be specified if dispense_target is also specified.
+        aspirate_source : fn, optional
+            Options for aspirating liquid. Cannot be specified if
+            aspirate_speed is also specified.
+        dispense_target : fn, optional
+            Options for dispensing liquid. Cannot be specified if
+            dispense_speed is also specified.
+        pre_buffer : str, Unit, optional
+            Volume of air aspirated before aspirating liquid.
+        transit_vol : str, Unit, optional
+            Volume of air aspirated after aspirating liquid to reduce
+            presence of bubbles at pipette tip.
+        blowout_buffer : bool, optional
+            If true the operation will dispense the pre_buffer along with the
+            dispense volume cannot be true if disposal_vol is specified.
+
+        Raises
+        ------
+        TypeError
+            If supplying more than one destination well for consolidation.
+        ValueError
+            If a volume list is supplied and the length does not match the
+            number of source wells.
+        """
+        # Check validity of inputs
+        if not isinstance(dest, (Well, str)):
+            raise TypeError("You can only consolidate liquid into one "
+                            "destination well.")
+
+        if isinstance(sources, (Well, basestring)):
+            sources = [sources]
+        if isinstance(volumes, list):
+            if len(volumes) != len(sources):
+                raise ValueError("If supplying consolidate "
+                                 "volumes as a list, its length "
+                                 "must match the number of "
+                                 "source wells specified.")
+            volumes = [Unit.fromstring(v) for v in volumes]
         else:
-          dest.volume = v
-        if s.volume:
-          s.volume -= v
-      assign(cons["consolidate"], "from", from_wells)
-      if mix_after:
-        cons["consolidate"]["mix_after"] = {
-            "volume": mix_vol,
-            "repetitions": repetitions,
-            "speed": flowrate
-        }
-      assign(cons["consolidate"], "allow_carryover", allow_carryover)
-      assign(cons["consolidate"], "dispense_speed", dispense_speed)
-      assign(cons["consolidate"], "x_dispense_target", dispense_target)
-      assign(cons["consolidate"], "x_pre_buffer", pre_buffer)
-      assign(cons["consolidate"], "x_transit_vol", transit_vol)
-      assign(cons["consolidate"], "x_blowout_buffer", blowout_buffer)
-      assign(cons["consolidate"], "x_tip_type", tip_type)
-      if new_group:
-        self.append(Pipette([cons]))
-      else:
-        self._pipette([cons])
+            volumes = [Unit.fromstring(volumes)] * len(sources)
+
+        # Initialize instructions
+        cons = {"consolidate": {}}
+        cons_instr = cons["consolidate"]
+        assign(cons_instr, "to", dest)
+        from_wells = []
+        # Generate instructions for each transfer from source wells
+        for s, v in zip(sources, volumes):
+            source_opts = {}
+            source_opts["well"] = s
+            source_opts["volume"] = v
+            assign(source_opts, "aspirate_speed", aspirate_speed)
+            assign(source_opts, "x_aspirate_source", aspirate_source)
+            from_wells.append(source_opts)
+            if dest.volume:
+                dest.volume += v
+            else:
+                dest.volume = v
+            if s.volume:
+                s.volume -= v
+        assign(cons_instr, "from", from_wells)
+        # Append mix options
+        if mix_after:
+            cons_instr["mix_after"] = {
+              "volume": mix_vol,
+              "repetitions": repetitions,
+              "speed": flowrate
+            }
+        # Append transfer options
+        opt_list = ["allow_carryover", "dispense_speed"]
+        for option in opt_list:
+            assign(cons_instr, option, eval(option))
+        x_opt_list = ["x_dispense_target", "x_pre_buffer",
+                      "x_transit_vol", "x_blowout_buffer", "x_tip_type"]
+        for x_option in x_opt_list:
+            assign(cons_instr, x_option, eval(x_option[2:]))
+        # Create new pipette instruction group if necessary
+        if new_group:
+            self.append(Pipette([cons]))
+        else:
+            self._pipette([cons])
 
     def stamp(self, source, dest, volume, mix_before=False,
               mix_after=False, mix_vol=None, repetitions=10,
@@ -901,282 +939,300 @@ class Protocol(object):
               dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None):
-      """
-      Move the specified volume of liquid from every well on the source plate
-      to the corersponding well on the destination plate using a 96-channel
-      liquid handler.
+        """
+        Move the specified volume of liquid from every well on the source plate
+        to the corersponding well on the destination plate using a 96-channel
+        liquid handler.
 
-      The following stamping configurations are supported:
+        The following stamping configurations are supported:
 
-      - 384-well plate to 384-well plate
-      - 96-well plate to 96-well plate
-      - one 394-well plate to one 96-well plate (quad parameter must be specified)
-      - one 384-well plate to multiple 96-well plates (dest must be a list)
-      - one 96-well plate to one 384-well plate (quad parameter must be specified)
-      - multiple 96-well plates to one 384-well plate (source must be a list)
+        - 384-well plate to 384-well plate
+        - 96-well plate to 96-well plate
+        - one 384-well plate to one 96-well plate (quad parameter must be specified)
+        - one 384-well plate to multiple 96-well plates (dest must be a list)
+        - one 96-well plate to one 384-well plate (quad parameter must be specified)
+        - multiple 96-well plates to one 384-well plate (source must be a list)
 
-      Example Usage:
+        Example Usage:
 
-      .. code-block:: python
+        .. code-block:: python
 
-        p = Protocol()
+          p = Protocol()
 
-        96well_1 = p.ref("source", None, "96-flat", discard=True)
-        96well_2 = p.ref("96_well_", None, "96-flat", discard=True)
-        96well_3 = p.ref("96_well_", None, "96-flat", discard=True)
-        96well_4 = p.ref("source", None, "96-flat", discard=True)
-        384well_1 = p.ref("dest", None, "384-flat", discard=True)
-        384well_2 = p.ref("dest", None, "384-flat", discard=True)
+          96well_1 = p.ref("source", None, "96-flat", discard=True)
+          96well_2 = p.ref("96_well_", None, "96-flat", discard=True)
+          96well_3 = p.ref("96_well_", None, "96-flat", discard=True)
+          96well_4 = p.ref("source", None, "96-flat", discard=True)
+          384well_1 = p.ref("dest", None, "384-flat", discard=True)
+          384well_2 = p.ref("dest", None, "384-flat", discard=True)
 
-        # 96 -> 96:
-        p.stamp(96well_1, 96well_2, "10:microliter")
+          # 96 -> 96:
+          p.stamp(96well_1, 96well_2, "10:microliter")
 
-        # 384 -> 384:
-        p.stamp(384well_1, 384well_2, "10:microliter")
+          # 384 -> 384:
+          p.stamp(384well_1, 384well_2, "10:microliter")
 
-        # 384 -> one 96-well (specific quadrant):
-        p.stamp(384well_1, 96well_1, "10:microliter", quad=2)
+          # 384 -> one 96-well (specific quadrant):
+          p.stamp(384well_1, 96well_1, "10:microliter", quad=2)
 
-        # one 96-well to specific quadrant of 384:
-        p.stamp(96well_2, 384well_1, "10:microliter", quad=0)
+          # one 96-well to specific quadrant of 384:
+          p.stamp(96well_2, 384well_1, "10:microliter", quad=0)
 
-        # 384-well to multiple 96-well plates:
-        p.stamp(384well_2,
-                [{"container":96well_1, "quadrant": 0},
-                 {"container":96well_2, "quadrant": 1},
-                 {"container":96well_3, "quadrant": 2},
-                 {"container":96well_4} "quadrant": 3}],
-                "10:microliter")
+          # 384-well to multiple 96-well plates:
+          p.stamp(384well_2,
+                  [{"container":96well_1, "quadrant": 0},
+                   {"container":96well_2, "quadrant": 1},
+                   {"container":96well_3, "quadrant": 2},
+                   {"container":96well_4, "quadrant": 3}],
+                  "10:microliter")
 
-        # combine multiple 96-well plates into one 384-well:
-        p.stamp([{"container":96well_1, "quadrant": 0},
-                 {"container":96well_2, "quadrant": 1},
-                 {"container":96well_3, "quadrant": 2},
-                 {"container":96well_4} "quadrant": 3}],
-                384well_2,
-                "10:microliter")
+          # combine multiple 96-well plates into one 384-well:
+          p.stamp([{"container":96well_1, "quadrant": 0},
+                   {"container":96well_2, "quadrant": 1},
+                   {"container":96well_3, "quadrant": 2},
+                   {"container":96well_4, "quadrant": 3}],
+                  384well_2,
+                  "10:microliter")
 
 
-      Parameters
-      ----------
-      source : Container, list of dicts
-        96- or 384-well plate(s) to source liquid from.  To specify more than
-        one 96-well plate as a source for a 384-well plate, you must specify
-        them as a list of dicts in the form of
+        Parameters
+        ----------
+        source : Container, list of dicts
+          96- or 384-well plate(s) to source liquid from.  To specify more than
+          one 96-well plate as a source for a 384-well plate, you must specify
+          them as a list of dicts in the form of
 
-        .. code-block:: json
+          .. code-block:: json
 
-            {"container": <container>, "quadrant": <quadrant>}
+              {"container": <container>, "quadrant": <quadrant>}
 
-        and specify the destination quadrant
-      dest : Container, list of dicts
-        96- or 384-well plate(s) to transfer liquid to.  To specify more than
-        one 96-well plate as a source for a 384-well plate, you must specify
-        them as a list of dicts in the form of
+          and specify the destination quadrant
+        dest : Container, list of dicts
+          96- or 384-well plate(s) to transfer liquid to.  To specify more than
+          one 96-well plate as a source for a 384-well plate, you must specify
+          them as a list of dicts in the form of
 
-        .. code-block:: json
+          .. code-block:: json
 
-            {"container": <container>, "quadrant": <quadrant>}
+              {"container": <container>, "quadrant": <quadrant>}
 
-        and specify the destination quadrant
-      volume : str, Unit
-        Volume of liquid to move from source plate(s) to destination plate(s)
-      quad : int
-        Quadrant of 384 well plate to transfer liquid to when source is a
-        96-well plate. Quadrant 0 is every other well starting from well A1,
-        quadrant 1 is every other well starting from well A2, quadrant 2 is
-        every other well starting from well B1, and quadrant 3 is every other
-        well starting from well B2.
-      mix_after : bool, optional
-        Specify whether to mix the liquid in the destination well after
-        liquid is transferred.
-      mix_before : bool, optional
-        Specify whether to mix the liquid in the destination well before
-        liquid is transferred.
-      mix_vol : str, Unit, optional
-        Volume to aspirate and dispense in order to mix liquid in a wells
-        before and/or after each transfer step.
-      repetitions : int, optional
-        Number of times to aspirate and dispense in order to mix
-        liquid in well before and/or after each transfer step.
-      flowrate : str, Unit, optional
-        Speed at which to mix liquid in well before and/or after each
-        transfer step.
+          and specify the destination quadrant
+        volume : str, Unit
+          Volume of liquid to move from source plate(s) to destination plate(s)
+        quad : int
+          Quadrant of 384 well plate to transfer liquid to when source is a
+          96-well plate. Quadrant 0 is every other well starting from well A1,
+          quadrant 1 is every other well starting from well A2, quadrant 2 is
+          every other well starting from well B1, and quadrant 3 is every other
+          well starting from well B2.
+        mix_after : bool, optional
+          Specify whether to mix the liquid in the destination well after
+          liquid is transferred.
+        mix_before : bool, optional
+          Specify whether to mix the liquid in the destination well before
+          liquid is transferred.
+        mix_vol : str, Unit, optional
+          Volume to aspirate and dispense in order to mix liquid in a wells
+          before and/or after each transfer step.
+        repetitions : int, optional
+          Number of times to aspirate and dispense in order to mix
+          liquid in well before and/or after each transfer step.
+        flowrate : str, Unit, optional
+          Speed at which to mix liquid in well before and/or after each
+          transfer step.
 
-      """
+        Raises
+        ------
+        ValueError
+            If a list of more than 4 source or destination plates is specified.
+        ValueError
+            If multiple transfers is attempted to a 96-well plate.
+        RuntimeError
+            Stamping attempted for containers with an unsupported number
+            of wells.
 
-      if isinstance(source, list):
-        if len(source) == 1 and dest.container_type.well_count == 96:
-          self.stamp(source[0]["container"], dest, volume)
-        else:
-          assert len(source) <= 4
-          assert dest.container_type.well_count == 384, "You can only transfer the contents of multiple 96-well plates to a 384-well container"
-          for x in source:
-            assert x["container"].container_type.well_count == 96
-          for s in source:
-            self.transfer(s["container"].all_wells(),
-                        dest.quadrant(s["quadrant"]),
-                        volume,
-                        False,
-                        True,
-                        mix_after,
-                        mix_before,
-                        mix_vol,
-                        repetitions,
-                        flowrate,
-                        aspirate_speed,
-                        dispense_speed,
-                        aspirate_source,
-                        dispense_target,
-                        pre_buffer,
-                        disposal_vol,
-                        transit_vol,
-                        blowout_buffer,
-                        None,
-                        new_group=True)
-      elif source.container_type.well_count == 96:
-        if dest.container_type.well_count == 96:
-          self.transfer(source.all_wells(),
-                        dest.all_wells(),
-                        volume,
-                        False,
-                        True,
-                        mix_after,
-                        mix_before,
-                        mix_vol,
-                        repetitions,
-                        flowrate,
-                        aspirate_speed,
-                        dispense_speed,
-                        aspirate_source,
-                        dispense_target,
-                        pre_buffer,
-                        disposal_vol,
-                        transit_vol,
-                        blowout_buffer,
-                        None, new_group=True)
-        else:
-          raise RuntimeError("When transferring liquid from a 96-well container "
-                             "to a 384-well container, you must specify the "
-                             "source as a list of dictionaries in the form of "
-                             "[{'container': <container>, 'quadrant': <quadrant>}]")
-      elif isinstance(dest, list):
-        assert len(dest) <= 4
-        assert source.container_type.well_count == 384, "You can only transfer the contents of a 384-well container to multiple 96-well containers"
-        for x in dest:
-          assert x["container"].container_type.well_count == 96
-        for d in dest:
-          self.transfer(source.quadrant(d["quadrant"]),
-                      d["container"].all_wells(),
-                      volume,
-                      False,
-                      True,
-                      mix_after,
-                      mix_before,
-                      mix_vol,
-                      repetitions,
-                      flowrate,
-                      aspirate_speed,
-                      dispense_speed,
-                      aspirate_source,
-                      dispense_target,
-                      pre_buffer,
-                      disposal_vol,
-                      transit_vol,
-                      blowout_buffer,
-                      None,
-                      new_group=True)
-      elif source.container_type.well_count == 384:
-        if dest.container_type.well_count == 384:
-          self.transfer(source.all_wells(),
-                        dest.all_wells(),
-                        volume,
-                        False,
-                        True,
-                        mix_after,
-                        mix_before,
-                        mix_vol,
-                        repetitions,
-                        flowrate,
-                        aspirate_speed,
-                        dispense_speed,
-                        aspirate_source,
-                        dispense_target,
-                        pre_buffer,
-                        disposal_vol,
-                        transit_vol,
-                        blowout_buffer,
-                        None,
-                        new_group=True)
-      else:
-        raise RuntimeError("Stamping is not supported for the container "
-                           "types provided")
+        """
+        if isinstance(source, list):
+            if len(source) == 1 and dest.container_type.well_count == 96:
+                self.stamp(source[0]["container"], dest, volume)
+            else:
+                if len(source) > 4 or len(source) < 0:
+                    raise ValueError("Stamping only supports up to 4 source "
+                                     "plates.")
+                if dest.container_type.well_count != 384:
+                    raise ValueError("You can only transfer from multiple "
+                                     "plates to a 384-well container.")
+                for x in source:
+                    if x["container"].container_type.well_count != 96:
+                        raise ValueError("You can only transfer from multiple 96-well plates.")
+                for s in source:
+                    self.transfer(s["container"].all_wells(),
+                                  dest.quadrant(s["quadrant"]),
+                                  volume,
+                                  False,
+                                  True,
+                                  mix_after,
+                                  mix_before,
+                                  mix_vol,
+                                  repetitions,
+                                  flowrate,
+                                  aspirate_speed,
+                                  dispense_speed,
+                                  aspirate_source,
+                                  dispense_target,
+                                  pre_buffer,
+                                  disposal_vol,
+                                  transit_vol,
+                                  blowout_buffer,
+                                  None,
+                                  new_group=True)
+        elif source.container_type.well_count == 96:
+            if dest.container_type.well_count == 96:
+                self.transfer(source.all_wells(),
+                              dest.all_wells(),
+                              volume,
+                              False,
+                              True,
+                              mix_after,
+                              mix_before,
+                              mix_vol,
+                              repetitions,
+                              flowrate,
+                              aspirate_speed,
+                              dispense_speed,
+                              aspirate_source,
+                              dispense_target,
+                              pre_buffer,
+                              disposal_vol,
+                              transit_vol,
+                              blowout_buffer,
+                              None, new_group=True)
+            else:
+                raise RuntimeError("When transferring liquid from a 96-well "
+                                   "container to a 384-well container, you "
+                                   "must specify the source as a list of "
+                                   "dictionaries in the form of "
+                                   "[{'container': <container>, 'quadrant': <quadrant>}].")
+        elif isinstance(dest, list):
+            if len(dest) > 4 or len(dest) < 0:
+                raise ValueError("Stamping only supports up to 4 destination "
+                                 "plates.")
+            if source.container_type.well_count != 384:
+                raise ValueError("You can only transfer the contents of a "
+                                 "384-well container to multiple 96-well "
+                                 "containers.")
+            for x in dest:
+                if x["container"].container_type.well_count != 96:
+                    raise ValueError("You can only transfer to multiple "
+                                     "96-well plates.")
+            for d in dest:
+                self.transfer(source.quadrant(d["quadrant"]),
+                              d["container"].all_wells(),
+                              volume,
+                              False,
+                              True,
+                              mix_after,
+                              mix_before,
+                              mix_vol,
+                              repetitions,
+                              flowrate,
+                              aspirate_speed,
+                              dispense_speed,
+                              aspirate_source,
+                              dispense_target,
+                              pre_buffer,
+                              disposal_vol,
+                              transit_vol,
+                              blowout_buffer,
+                              None,
+                              new_group=True)
+        elif source.container_type.well_count == 384:
+            if dest.container_type.well_count == 384:
+                self.transfer(source.all_wells(),
+                              dest.all_wells(),
+                              volume,
+                              False,
+                              True,
+                              mix_after,
+                              mix_before,
+                              mix_vol,
+                              repetitions,
+                              flowrate,
+                              aspirate_speed,
+                              dispense_speed,
+                              aspirate_source,
+                              dispense_target,
+                              pre_buffer,
+                              disposal_vol,
+                              transit_vol,
+                              blowout_buffer,
+                              None,
+                              new_group=True)
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
-      """
-      Send the indicated wells of the container specified for Sanger sequencing.
-      The specified wells should already contain the appropriate mix for
-      sequencing, including primers and DNA according to the instructions
-      provided by the vendor.
+        """
+        Send the indicated wells of the container specified for Sanger sequencing.
+        The specified wells should already contain the appropriate mix for
+        sequencing, including primers and DNA according to the instructions
+        provided by the vendor.
 
-      Example Usage:
+          Example Usage:
 
-      .. code-block:: python
+          .. code-block:: python
 
-        p = Protocol()
-        sample_plate = p.ref("sample_plate",
-                             None,
-                             "96-flat",
-                             storage="warm_37")
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
 
-        p.sangerseq(sample_plate,
-                    sample_plate.wells_from(0,5).indices(),
-                    "seq_data_022415")
+            p.sangerseq(sample_plate,
+                        sample_plate.wells_from(0,5).indices(),
+                        "seq_data_022415")
 
-      Autoprotocol Output:
+          Autoprotocol Output:
 
-      .. code-block:: json
+          .. code-block:: json
 
-        "instructions": [
-            {
-              "dataref": "seq_data_022415",
-              "object": "sample_plate",
-              "wells": [
-                "A1",
-                "A2",
-                "A3",
-                "A4",
-                "A5"
-              ],
-              "op": "sangerseq"
-            }
-          ]
+            "instructions": [
+                {
+                  "dataref": "seq_data_022415",
+                  "object": "sample_plate",
+                  "wells": [
+                    "A1",
+                    "A2",
+                    "A3",
+                    "A4",
+                    "A5"
+                  ],
+                  "op": "sangerseq"
+                }
+              ]
 
 
-      Parameters
-      ----------
-      cont : Container, str
-        Container with well(s) that contain material to be sequenced.
-      type : str
-        Type of sequencing reaction to take place ("standard" or "rca"),
-        defaults to "standard"
-      wells : list of str
-        Well indices of the container that contain appropriate materials to be
-        sent for sequencing.
-      primer : container
-        Tube containing sufficient primer for all RCA reactions.  This field
-        will be ignored if you specify the sequencing type as "standard".
-        Tube containing sufficient primer for all RCA reactions
-      dataref : str
-        Name of sequencing dataset that will be returned.
+        Parameters
+        ----------
+        cont : Container, str
+          Container with well(s) that contain material to be sequenced.
+        type : str
+          Type of sequencing reaction to take place ("standard" or "rca"),
+          defaults to "standard"
+        wells : list of str
+          Well indices of the container that contain appropriate materials to 
+          be sent for sequencing.
+        primer : container
+          Tube containing sufficient primer for all RCA reactions.  This field
+          will be ignored if you specify the sequencing type as "standard".
+          Tube containing sufficient primer for all RCA reactions
+        dataref : str
+          Name of sequencing dataset that will be returned.
 
-      """
-      type = type.lower()
-      if type == "rca" and not primer:
-        raise RuntimeError("You must specify the location of primer for RCA"
-                           " sequencing reactions.")
-      self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
-
+        """
+        type = type.lower()
+        if type == "rca" and not primer:
+            raise RuntimeError("You must specify the location of primer for "
+                               "RCA sequencing reactions.")
+        self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
             repetitions=10):
@@ -1233,7 +1289,10 @@ class Protocol(object):
             number of times to aspirate and expell liquid during mixing
 
         """
-        if isinstance(well, Well) or isinstance(well, str):
+        if not isinstance(well, (Well, basestring, WellGroup)):
+            raise TypeError("Well given is not of type 'str', 'Well' or "
+                            "'WellGroup'.")
+        if isinstance(well, (Well, basestring)):
             well = WellGroup([well])
         for w in well.wells:
             opts = {
@@ -1350,7 +1409,8 @@ class Protocol(object):
             [{"column": <column num>, "volume": <volume>}, ...]
 
         """
-        assert isinstance(columns, list)
+        if not isinstance(columns, list):
+            raise TypeError("Columns is not of type 'list'.")
         self.instructions.append(Dispense(ref, reagent, columns))
 
     def dispense_full_plate(self, ref, reagent, volume):
@@ -1447,7 +1507,7 @@ class Protocol(object):
 
         """
         columns = []
-        for col in range(0,ref.container_type.col_count):
+        for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
         self.instructions.append(Dispense(ref, reagent, columns))
 
@@ -1486,9 +1546,9 @@ class Protocol(object):
             The plate to be centrifuged.
         acceleration: str, Unit
             Acceleration to be applied to the plate, in units of `g` or
-            `meter/second^2`
+            `meter/second^2`.
         duration: str, Unit
-            Length of time that accelleration should be applied
+            Length of time that acceleration should be applied.
 
         """
         self.instructions.append(Spin(ref, acceleration, duration))
@@ -1641,8 +1701,8 @@ class Protocol(object):
         melting_end: str, Unit
             Temperature at which to end the melting curve.
         melting_increment: str, Unit
-            Temperature by which to increment the melting curve. Accepted increment
-            values are between 0.1 and 9.9 degrees celsius.
+            Temperature by which to increment the melting curve. Accepted 
+            increment values are between 0.1 and 9.9 degrees celsius.
         melting_rate: str, Unit
             Specifies the duration of each temperature step in the melting curve.
 
@@ -1715,7 +1775,8 @@ class Protocol(object):
         .. code-block:: python
 
           p.plate_to_mag_adapter(sample_plate, "5:minutes")
-          p.transfer(sample_plate.well(0), sample_plate.well(1), "12:microliter")
+          p.transfer(sample_plate.well(0), sample_plate.well(1),
+          "12:microliter")
 
         Autoprotocol Output:
 
@@ -2077,14 +2138,14 @@ class Protocol(object):
         """
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
-          datarefs = 1
-          for x in xrange(0, len(wells), max_well):
-            self.gel_separate(wells[x:x+max_well], volume, matrix, ladder, duration,
-                              "%s_%d" % (dataref, datarefs))
-            datarefs += 1
+            datarefs = 1
+            for x in xrange(0, len(wells), max_well):
+                self.gel_separate(wells[x:x+max_well], volume, matrix, ladder,
+                                  duration, "%s_%d" % (dataref, datarefs))
+                datarefs += 1
         else:
-          self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
-                                               duration, dataref))
+            self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
+                                                 duration, dataref))
 
     def seal(self, ref, type="ultra-clear"):
         """
@@ -2126,7 +2187,8 @@ class Protocol(object):
 
     def unseal(self, ref):
         """
-        Remove seal from indicated container using the automated plate unsealer.
+        Remove seal from indicated container using the automated plate
+        unsealer.
 
         Example Usage:
 
@@ -2246,130 +2308,131 @@ class Protocol(object):
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
-      """
-      Perform flow cytometry.The instruction will be executed within the voltage
-      range specified for each channel, optimized for the best sample
-      separation/distribution that can be achieved within these limits. The
-      vendor will specify the device that this instruction is executed on and
-      which excitation and emission spectra are available. At least one negative
-      control is required, which will be used to define data acquisition
-      parameters as well as to determine any autofluorescent properties for the
-      sample set. Additional negative positive control samples are optional.
-      Positive control samples will be used to optimize single color signals and,
-      if desired, to minimize bleed into other channels.
+        """
+        Perform flow cytometry.The instruction will be executed within the voltage
+        range specified for each channel, optimized for the best sample
+        separation/distribution that can be achieved within these limits. The
+        vendor will specify the device that this instruction is executed on and
+        which excitation and emission spectra are available. At least one negative
+        control is required, which will be used to define data acquisition
+        parameters as well as to determine any autofluorescent properties for the
+        sample set. Additional negative positive control samples are optional.
+        Positive control samples will be used to optimize single color signals and,
+        if desired, to minimize bleed into other channels.
 
 
-      For each sample this instruction asks you to specify the `volume` and/or
-      `captured_events`. Vendors might also require `captured_events` in case
-      their device does not support volumetric sample intake. If both conditions
-      are supported, the vendor will specify if data will be collected only until
-      the first one is met or until both conditions are fulfilled.
+        For each sample this instruction asks you to specify the `volume` and/or
+        `captured_events`. Vendors might also require `captured_events` in case
+        their device does not support volumetric sample intake. If both conditions
+        are supported, the vendor will specify if data will be collected only until
+        the first one is met or until both conditions are fulfilled.
 
-      Example Usage:
+        Example Usage:
 
 
-      Autoprotocol Output:
+        Autoprotocol Output:
 
-      Parameters
-      ----------
-      dataref : str
-          Name of flow analysis dataset generated.
-      FSC : dict
-          Dictionary containing FSC channel parameters in the form of:
+        Parameters
+        ----------
+        dataref : str
+            Name of flow analysis dataset generated.
+        FSC : dict
+            Dictionary containing FSC channel parameters in the form of:
 
-          .. code-block:: json
+            .. code-block:: json
 
-              {
-                "voltage_range": {
-                  "low": "230:volt",
-                  "high": "280:volt"
-                  },
-                "area": true,             //default: true
-                "height": true,           //default: true
-                "weight": false           //default: false
-              }
+                {
+                  "voltage_range": {
+                    "low": "230:volt",
+                    "high": "280:volt"
+                    },
+                  "area": true,             //default: true
+                  "height": true,           //default: true
+                  "weight": false           //default: false
+                }
 
-      SSC : dict
-          Dictionary of SSC channel parameters in the form of:
+        SSC : dict
+            Dictionary of SSC channel parameters in the form of:
 
-          .. code-block:: json
+            .. code-block:: json
 
-              {
-                "voltage_range": {
-                  "low": <voltage>,
-                  "high": <voltage>"
-                  },
-                "area": true,             //default: true
-                "height": true,           //default: false
-                "weight": false           //default: false
-              }
+                {
+                  "voltage_range": {
+                    "low": <voltage>,
+                    "high": <voltage>"
+                    },
+                  "area": true,             //default: true
+                  "height": true,           //default: false
+                  "weight": false           //default: false
+                }
 
-      neg_controls : list of dicts
-          List of negative control wells in the form of:
+        neg_controls : list of dicts
+            List of negative control wells in the form of:
 
-          .. code-block:: json
+            .. code-block:: json
 
-              {
-                  "well": well,
-                  "volume": volume,
-                  "captured_events": integer,     // optional, default infinity
-                  "channel": [channel_name]
-              }
+                {
+                    "well": well,
+                    "volume": volume,
+                    "captured_events": integer,     // optional, default infinity
+                    "channel": [channel_name]
+                }
 
-          at least one negative control is required.
-      samples : list of dicts
-          List of samples in the form of:
+            at least one negative control is required.
+        samples : list of dicts
+            List of samples in the form of:
 
-          .. code-block:: json
+            .. code-block:: json
 
-              {
-                  "well": well,
-                  "volume": volume,
-                  "captured_events": integer,     // optional, default infinity
-              }
+                {
+                    "well": well,
+                    "volume": volume,
+                    "captured_events": integer,     // optional, default infinity
+                }
 
-          at least one sample is required
-      colors : list of dicts, optional
-          Optional list of colors in the form of:
+            at least one sample is required
+        colors : list of dicts, optional
+            Optional list of colors in the form of:
 
-          .. code-block:: json
-
-            [{
-              "name": "FitC",
-              "emission_wavelength": "495:nanometer",
-              "excitation_wavelength": "519:nanometer",
-              "voltage_range": {
-                "low": <voltage>,
-                "high": <voltage>
-              },
-              "area": true,             //default: true
-              "height": false,          //default: false
-              "weight": false           //default: false
-            }, ... ]
-
-      pos_controls : list of dicts, optional
-          Optional list of positive control wells in the form of:
-
-          .. code-block:: json
+            .. code-block:: json
 
               [{
-                  "well": well,
-                  "volume": volume,
-                  "captured_events": integer,     // optional, default infinity
-                  "channel": [channel_name],
-                  "minimize_bleed": [{            // optional
-                    "from": color,
-                    "to": [color]
-                  }, ...
-              ]
+                "name": "FitC",
+                "emission_wavelength": "495:nanometer",
+                "excitation_wavelength": "519:nanometer",
+                "voltage_range": {
+                  "low": <voltage>,
+                  "high": <voltage>
+                },
+                "area": true,             //default: true
+                "height": false,          //default: false
+                "weight": false           //default: false
+              }, ... ]
 
-    """
-      self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
-                                           samples, colors, pos_controls))
+        pos_controls : list of dicts, optional
+            Optional list of positive control wells in the form of:
+
+            .. code-block:: json
+
+                [{
+                    "well": well,
+                    "volume": volume,
+                    "captured_events": integer,     // optional, default infinity
+                    "channel": [channel_name],
+                    "minimize_bleed": [{            // optional
+                      "from": color,
+                      "to": [color]
+                    }, ...
+                ]
+
+      """
+        self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
+                                             samples, colors, pos_controls))
 
     def oligosynthesize(self, oligos):
         """
-        Specify a list of oligonucleotides to be synthesized and a destination for each product.
+        Specify a list of oligonucleotides to be synthesized and a destination
+        for each product.
 
         Example Usage:
 
@@ -2428,84 +2491,83 @@ class Protocol(object):
         self.instructions.append(Oligosynthesize(oligos))
 
     def spread(self, source, dest, volume):
-      """
-      Spread the specified volume of the source aliquot across the surace of the
-      agar contained in the object container
+        """
+        Spread the specified volume of the source aliquot across the surface of
+        the agar contained in the object container
 
-      Example Usage:
-
-
-      Autoprotocol Output:
+        Example Usage:
 
 
-      Parameters
-      ----------
-      source : str, Well
-          Source of material to spread on agar
-      dest : str, Well
-          Reference to destination location (plate containing agar)
-      volume : str, Unit
-          Volume of source material to spread on agar
+        Autoprotocol Output:
 
-      """
-      volume = Unit.fromstring(volume)
-      if dest.volume:
-        dest.volume += volume
-      else:
-        dest.volume = volume
-      if source.volume:
-        source.volume -= volume
-      self.instructions.append(Spread(source, dest, volume))
+
+        Parameters
+        ----------
+        source : str, Well
+            Source of material to spread on agar
+        dest : str, Well
+            Reference to destination location (plate containing agar)
+        volume : str, Unit
+            Volume of source material to spread on agar
+
+        """
+        volume = Unit.fromstring(volume)
+        if dest.volume:
+            dest.volume += volume
+        else:
+            dest.volume = volume
+        if source.volume:
+            source.volume -= volume
+        self.instructions.append(Spread(source, dest, volume))
 
     def autopick(self, source, dests, min_count=1, criteria={}, dataref="autopick"):
-      """
-      Pick at least `min_count` colonies from the location specified in "from" to
-      the location(s) specified in "to" in the order that they are specified
-      until there are no more colonies available. If there are fewer than
-      `min_count` colonies detected, the instruction will fail.
+        """
+        Pick at least `min_count` colonies from the location specified in "from" to
+        the location(s) specified in "to" in the order that they are specified
+        until there are no more colonies available. If there are fewer than
+        `min_count` colonies detected, the instruction will fail.
 
-      Example Usage:
+          Example Usage:
 
+          Autoprotocol Output:
 
-      Autoprotocol Output:
+        Parameters
+        ----------
+        source : str, Well
+          Reference to plate containing agar and colonies to pick
+        dests : list of str, list of Well
+          List of destination(s) for picked colonies
+        criteria : dict
+          Dictionary of autopicking criteria.
+        min_count : int, optional
+            Minimum number of colonies to detect in order to continue with
+            autopicking
 
+        """
+        if isinstance(dests, Well) or isinstance(dests, str):
+            dests = [dests]
+        if len(dests) < min_count:
+            raise RuntimeError("Your minimum colony count cannot be greater "
+                               "than the number of destination wells "
+                               "specified.")
 
-      Parameters
-      ----------
-      source : str, Well
-        Reference to plate containing agar and colonies to pick
-      dests : list of str, list of Well
-        List of destination(s) for picked colonies
-      criteria : dict
-        Dictionary of autopicking criteria.
-      min_count : int, optional
-          Minimum number of colonies to detect in order to continue with
-          autopicking
-
-      """
-      if isinstance(dests, Well) or isinstance(dests, str):
-        dests = [dests]
-      if len(dests) < min_count:
-        raise RuntimeError("Your minimum colony count cannot be greater than the"
-                           " number of destination wells specified")
-
-      self.instructions.append(Autopick(source, dests, min_count, criteria, dataref))
+        self.instructions.append(Autopick(source, dests, min_count, criteria, dataref))
 
     def image_plate(self, ref, mode, dataref):
-      """
-      Capture an image of the specified container.
+        """
+        Capture an image of the specified container.
 
-      Parameters
-      ----------
-      ref : str, Container
-          Container to take image of
-      mode : str
-          Imaging mode (currently supported: "top")
-      dataref : str
-          Name of data reference of resulting image
+        Parameters
+        ----------
+        ref : str, Container
+            Container to take image of
+        mode : str
+            Imaging mode (currently supported: "top")
+        dataref : str
+            Name of data reference of resulting image
 
-      """
-      self.instructions.append(ImagePlate(ref, mode, dataref))
+        """
+        self.instructions.append(ImagePlate(ref, mode, dataref))
 
     def provision(self, resource_id, dests, volumes):
         """
@@ -2531,8 +2593,8 @@ class Protocol(object):
         TypeError
           If resource_id is not a string.
         RuntimeError
-          If length of the list of volumes specified does not match the number of
-          destination wells specified.
+          If length of the list of volumes specified does not match the number 
+          of destination wells specified.
         TypeError
           If volume is not specified as a string or Unit (or a list of either)
 
@@ -2546,14 +2608,14 @@ class Protocol(object):
         else:
             if len(volumes) != len(dests):
                 raise RuntimeError("To provision a resource into multiple "
-                                   "destinations with multiple volumes, the list "
-                                   "of volumes must correspond with the destinations"
-                                   "in length and in order.")
+                                   "destinations with multiple volumes, the  "
+                                   "list of volumes must correspond with the "
+                                   "destinations in length and in order.")
             volumes = [Unit.fromstring(v) for v in volumes]
         for v in volumes:
             if not isinstance(v, (basestring, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
-        for d,v in zip(dests, volumes):
+        for d, v in zip(dests, volumes):
             if v > Unit(750, "microliter"):
                 diff = v - Unit(750, "microliter")
                 self.provision(resource_id, d, "750:microliter")
@@ -2580,8 +2642,8 @@ class Protocol(object):
 
     def flash_freeze(self, container, duration):
         """
-        Flash freeze the contents of the specified container by submerging it in
-        liquid nitrogen for the specified amount of time.
+        Flash freeze the contents of the specified container by submerging it
+        in liquid nitrogen for the specified amount of time.
 
         Parameters
         ----------
@@ -2629,8 +2691,8 @@ class Protocol(object):
             if source wells run out of liquid before distributing to all
             designated destination wells
         RuntimeError
-            if length of list of volumes does not match the number of destination
-            wells to be distributed to
+            if length of list of volumes does not match the number of
+            destination wells to be distributed to
 
         """
 
@@ -2646,7 +2708,7 @@ class Protocol(object):
             volume = [Unit.fromstring(x) for x in volume]
         else:
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)
-        for d,v in list(zip(dst_group.wells, volume)):
+        for d, v in list(zip(dst_group.wells, volume)):
             if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
                 src = next(
@@ -2654,7 +2716,7 @@ class Protocol(object):
                 if src is None:
                     raise RuntimeError(
                         "no well in source group has more than %s %s(s)" %
-                        (str(v).rsplit(":")[0],str(v).rsplit(":")[1]))
+                        (str(v).rsplit(":")[0], str(v).rsplit(":")[1]))
                 distributes.append({
                     "from": src,
                     "to": []
@@ -2664,7 +2726,7 @@ class Protocol(object):
               "volume": v
             }
             if distribute_target:
-              opts["distribute_target"] = distribute_target
+                opts["distribute_target"] = distribute_target
             distributes[-1]["to"].append(opts)
             src.volume -= v
             if d.volume:

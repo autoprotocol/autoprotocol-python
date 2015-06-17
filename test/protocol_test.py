@@ -16,6 +16,7 @@ class ProtocolMultipleExistTestCase(unittest.TestCase):
         self.assertEqual(len(p2.instructions), 0,
             "incorrect number of instructions in empty protocol")
 
+
 class ProtocolBasicTestCase(unittest.TestCase):
     def runTest(self):
         protocol = Protocol()
@@ -44,6 +45,7 @@ class ProtocolBasicTestCase(unittest.TestCase):
         self.assertEqual(protocol.instructions[1].op, "incubate")
         self.assertEqual(protocol.instructions[1].duration, "30:minute")
 
+
 class ProtocolAppendTestCase(unittest.TestCase):
     def runTest(self):
         p = Protocol()
@@ -67,6 +69,7 @@ class ProtocolAppendTestCase(unittest.TestCase):
         self.assertEqual(p.instructions[2].op, "spin",
             "incorrect instruction at end after list append.")
 
+
 class RefTestCase(unittest.TestCase):
     def test_duplicates_not_allowed(self):
         p = Protocol()
@@ -75,6 +78,7 @@ class RefTestCase(unittest.TestCase):
             p.ref("test", None, "96-flat", storage="cold_20")
         self.assertTrue(p.refs["test"].opts["discard"])
         self.assertFalse("where" in p.refs["test"].opts)
+
 
 class ThermocycleTestCase(unittest.TestCase):
     def test_thermocycle_append(self):
@@ -170,24 +174,24 @@ class DistributeTestCase(unittest.TestCase):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         p.distribute(c.well(0).set_volume("20:microliter"),
-                     c.wells_from(1,3),
+                     c.wells_from(1, 3),
                      "5:microliter")
         self.assertEqual(1, len(p.instructions))
         self.assertEqual("distribute",
                          list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
-        for w in c.wells_from(1,3):
+        for w in c.wells_from(1, 3):
             self.assertTrue(5, w.volume.value)
         self.assertTrue(5, c.well(0).volume.value)
 
     def test_fill_wells(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        srcs = c.wells_from(1,2).set_volume("100:microliter")
-        dests = c.wells_from(7,4)
+        srcs = c.wells_from(1, 2).set_volume("100:microliter")
+        dests = c.wells_from(7, 4)
         p.distribute(srcs, dests, "30:microliter", allow_carryover=True)
         self.assertEqual(2, len(p.instructions[0].groups))
 
-        #track source vols
+        # track source vols
         self.assertEqual(10, c.well(1).volume.value)
         self.assertEqual(70, c.well(2).volume.value)
 
@@ -195,16 +199,17 @@ class DistributeTestCase(unittest.TestCase):
         self.assertEqual(30, c.well(7).volume.value)
         self.assertIs(None, c.well(6).volume)
 
-        #test distribute from Well to Well
+        # test distribute from Well to Well
         p.distribute(c.well("A1").set_volume("20:microliter"), c.well("A2"), "5:microliter")
         self.assertTrue("distribute" in p.instructions[-1].groups[-1])
+
 
 class TransferTestCase(unittest.TestCase):
     def test_single_transfer(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         p.transfer(c.well(0), c.well(1), "20:microliter")
-        self.assertEqual(Unit(20,"microliter"), c.well(1).volume)
+        self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
 
@@ -216,30 +221,29 @@ class TransferTestCase(unittest.TestCase):
     def test_multiple_transfers(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.wells_from(0,2), c.wells_from(2,2), "20:microliter")
+        p.transfer(c.wells_from(0, 2), c.wells_from(2, 2), "20:microliter")
         self.assertEqual(c.well(2).volume, c.well(3).volume)
         self.assertEqual(2, len(p.instructions[0].groups))
 
     def test_one_tip(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.wells_from(0,2), c.wells_from(2,2), "20:microliter",
+        p.transfer(c.wells_from(0, 2), c.wells_from(2, 2), "20:microliter",
             one_tip=True)
         self.assertEqual(c.well(2).volume, c.well(3).volume)
         self.assertEqual(1, len(p.instructions[0].groups))
-
 
     def test_one_source(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         with self.assertRaises(ValueError):
-            p.transfer(c.wells_from(0,2),
-                   c.wells_from(2,2), "40:microliter", one_source=True)
+            p.transfer(c.wells_from(0, 2),
+                   c.wells_from(2, 2), "40:microliter", one_source=True)
         with self.assertRaises(RuntimeError):
-            p.transfer(c.wells_from(0,2).set_volume("1:microliter"),
-                       c.wells_from(1,5), "10:microliter", one_source=True)
-        p.transfer(c.wells_from(0,2).set_volume("50:microliter"),
-                   c.wells_from(2,2), "40:microliter", one_source=True)
+            p.transfer(c.wells_from(0, 2).set_volume("1:microliter"),
+                       c.wells_from(1, 5), "10:microliter", one_source=True)
+        p.transfer(c.wells_from(0, 2).set_volume("50:microliter"),
+                   c.wells_from(2, 2), "40:microliter", one_source=True)
         self.assertEqual(2, len(p.instructions[0].groups))
         self.assertFalse(p.instructions[0].groups[0]["transfer"][0]["from"] == p.instructions[0].groups[1]["transfer"][0]["from"])
 
@@ -247,18 +251,42 @@ class ConsolidateTestCase(unittest.TestCase):
     def test_multiple_sources(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(AssertionError):
-            p.consolidate(c.wells_from(0,3), c.wells_from(2,3), "10:microliter")
-            p.consolidate(c.wells_from(0,3), c.well(4), ["10:microliter"])
-        p.consolidate(c.wells_from(0,3), c.well(4), "10:microliter")
-        self.assertEqual(Unit(30,"microliter"), c.well(4).volume)
+        with self.assertRaises(TypeError):
+            p.consolidate(c.wells_from(0, 3), c.wells_from(2, 3), "10:microliter")
+        with self.assertRaises(ValueError):
+            p.consolidate(c.wells_from(0, 3), c.well(4), ["10:microliter"])
+        p.consolidate(c.wells_from(0, 3), c.well(4), "10:microliter")
+        self.assertEqual(Unit(30, "microliter"), c.well(4).volume)
         self.assertEqual(3, len(p.instructions[0].groups[0]["consolidate"]["from"]))
 
     def test_one_source(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         p.consolidate(c.well(0), c.well(4), "30:microliter")
-        self.assertEqual(Unit(30,"microliter"), c.well(4).volume)
+        self.assertEqual(Unit(30, "microliter"), c.well(4).volume)
+
+
+class StampTestCase(unittest.TestCase):
+    def test_single_transfers(self):
+        p = Protocol()
+        plate_96_list = []
+        for plate_num in range(5):
+            plate_name = ("test_96_"+str(plate_num))
+            plate_96_list.append(p.ref(plate_name, None, "96-flat", discard=True))
+        plate_384_list = []
+        for plate_num in range(3):
+            plate_name = ("test_384_"+str(plate_num))
+            plate_384_list.append(p.ref(plate_name, None, "384-flat", discard=True))
+        with self.assertRaises(ValueError):
+            # Transfer >4 plates
+            p.stamp(plate_96_list, plate_384_list[0], "10:microliter")
+            p.stamp(plate_384_list[0], plate_96_list, "10:microliter")
+            # Transfer to non-384 well plate
+            p.stamp(plate_96_list[0:4], plate_96_list[5], "10:microliter")
+            # Test transfering from mixture of plate inputs
+            p.stamp(plate_96_list[0:2]+plate_384_list[0], plate_384_list[1], "10:microliter")
+            p.stamp(plate_384_list[1], plate_96_list[0:2]+plate_384_list[0], "10:microliter")
+
 
 class RefifyTestCase(unittest.TestCase):
     def test_refifying_various(self):

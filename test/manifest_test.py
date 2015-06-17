@@ -199,7 +199,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(0, len(parsed['group']['aliquot+']))
         self.assertEqual([{'bool': None}], parsed['group+'])
 
-# Test parsing of local manifest file
+    # Test parsing of local manifest file
     def test_json_parse(self):
         protocol = Protocol()
         manifest_json = open('test/manifest_test.json', 'r').read().decode('utf-8')

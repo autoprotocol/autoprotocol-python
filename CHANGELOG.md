@@ -11,6 +11,8 @@ Changed
 Removed
 
 Fixed
+- fixed indentation 
+- refactored Protocol functions: ref, consolidate, transfer, distribute
 
 ## v2.1.0 - 2015-06-10
 ---

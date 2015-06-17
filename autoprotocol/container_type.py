@@ -184,7 +184,7 @@ class ContainerType(namedtuple("ContainerType",
             well_ref.
 
         """
-        if not isinstance(idx, (int, basestring)):
+        if not isinstance(idx, (int, basestring, Well)):
             raise TypeError("Well index given is not of type 'int' or \
                             'str'.")
         idx = self.robotize(idx)

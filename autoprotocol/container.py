@@ -296,7 +296,6 @@ class Container(object):
             integer or a string.
 
         """
-
         if isinstance(args[0], list):
             wells = args[0]
         else:
@@ -316,12 +315,15 @@ class Container(object):
     def robotize(self, well_ref):
         """
         Return the integer representation of the well index given, based on
-        the ContainerType of the Container.
+        the ContainerType of the Container. 
 
         Uses the robotize function from the ContainerType class. Refer to
         `ContainerType.robotize()`_ for more information.
 
         """
+        if not isinstance(well_ref, (basestring, int, Well)):
+            raise TypeError("Well reference given is not of type 'str' \
+                            'int', or 'Well'.")
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
@@ -332,8 +334,9 @@ class Container(object):
         Uses the humanize function from the ContainerType class. Refer to
         `ContainerType.humanize()`_ for more information.
 
-
         """
+        if not isinstance(well_ref, int):
+            raise TypeError("Well reference given is not of type 'int'.")
         return self.container_type.humanize(well_ref)
 
     def decompose(self, well_ref):
@@ -345,6 +348,9 @@ class Container(object):
         `ContainerType.decompose()`_ for more information.
 
         """
+        if not isinstance(well_ref, (int, basestring, Well)):
+            raise TypeError("Well reference given is not of type 'int', \
+                            'str' or Well.")
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):

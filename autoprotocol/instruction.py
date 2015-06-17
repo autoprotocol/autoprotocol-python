@@ -829,11 +829,8 @@ class FlashFreeze(Instruction):
         })
 
 class Stamp(Instruction):
-    def __init__(self, srcs, dests, vols):
+    def __init__(self, transfers):
         super(Stamp, self).__init__({
             "op": "stamp",
-            "transfers": [
-                {"from": fr, "to": to, "volume": vol}
-                    for (fr, to, vol) in zip(srcs, dests, vols)
-             ]
+            "transfers": transfers
          })

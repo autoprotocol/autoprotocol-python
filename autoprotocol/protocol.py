@@ -1011,20 +1011,20 @@ class Protocol(object):
             Quadrant of 384 well plate to transfer liquid from when source is a
             384-well plate.
         mix_after : bool, optional
-            Specify whether to mix the liquid in the destination well after
+            Specify whether to mix the liquid in destination wells after
             liquid is transferred.
         mix_before : bool, optional
-            Specify whether to mix the liquid in the destination well before
+            Specify whether to mix the liquid in source wells before
             liquid is transferred.
         mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in a wells
-            before and/or after each transfer step.
+            Volume to aspirate and dispense in order to mix liquid in wells
+            before and/or after it is transfered.
         repetitions : int, optional
             Number of times to aspirate and dispense in order to mix
-            liquid in well before and/or after each transfer step.
+            liquid in wells before and/or after it is transfered.
         flowrate : str, Unit, optional
             Speed at which to mix liquid in well before and/or after each
-            transfer step.
+            transfer step in units of "microliter/second".
         dispense_speed : str, Unit, optional
             Speed at which to dispense liquid into the destination well.  May
             not be specified if dispense_target is also specified.
@@ -1090,12 +1090,12 @@ class Protocol(object):
                     return cont.well("B1")
                 elif num == 3:
                     return cont.well("B2")
-            if cont.container_type.well_count == 96:
+            elif cont.container_type.well_count == 96:
                 if num == 0:
                     return cont.well("A1")
-                else:
-                    raise RuntimeError("The only valid quadrant number for "
-                                       "a 96-well plate is 0.")
+            else:
+                raise RuntimeError("The quadrant number supplied is not valid "
+                                   "for the specified container type.")
 
         xfer = {}
         xfer["to"] = convert_quad(dest, to_quad)
@@ -1130,7 +1130,7 @@ class Protocol(object):
             if self.instructions[-1].op == "stamp":
                 self.instructions[-1].transfers.append(xfer)
         else:
-            self.append(Stamp(txs))
+            self.instructions.append(Stamp(txs))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

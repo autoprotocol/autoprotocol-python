@@ -933,7 +933,7 @@ class Protocol(object):
         else:
             self._pipette([cons])
 
-    def stamp(self, source, dest, volume, from_quad = 0, to_quad = 0,
+    def stamp(self, source, dest, volume, from_quad=0, to_quad=0,
               mix_before=False, mix_after=False, mix_vol=None, repetitions=10,
               flowrate="100:microliter/second", aspirate_speed=None,
               dispense_speed=None, aspirate_source=None,
@@ -972,25 +972,26 @@ class Protocol(object):
             p.stamp(wells_96_1, wells_96_2, "10:microliter")
 
             # 384 -> 384:
-            for x in range(0,4):
-                p.stamp(wells_384_1, wells_384_2, "10:microliter", from_quad=x, to_quad=x, append=True)
+            for x in [0, 1, 24, 25]:
+                p.stamp(wells_384_1, wells_384_2, "10:microliter",
+                        from_quad=x, to_quad=x, append=True)
 
             # 384 (specific quadrant) -> one 96-well:
-            p.stamp(wells_384_1, wells_96_1, "10:microliter", from_quad=2)
+            p.stamp(wells_384_1, wells_96_1, "10:microliter", from_quad="A2")
 
             # one 96-well to specific quadrant of 384:
             p.stamp(wells_96_2, wells_384_1, "10:microliter", to_quad=1)
 
             # 384-well to multiple 96-well plates:
-            for i, x in enumerate([wells_96_1, wells_96_2, wells_96_3]):
+            for i,x in zip([0, 1, 24], [wells_96_1, wells_96_2, wells_96_3]):
               p.stamp(wells_384_1, x, "10:microliter", from_quad = i, append=True)
 
             # combine multiple 96-well plates into one 384-well:
-            for i, x in enumerate([wells_96_1, wells_96_2, wells_96_3]):
+            for i, x in zip([0, 1, 24, 25], [wells_96_1, wells_96_2, wells_96_3, wells_96_4]):
               p.stamp(x, wells_384_1, "10:microliter", to_quad = i, append=True)
 
             # combine multiple 96-well plates into one 96-well:
-            for i, x in enumerate([wells_96_1, wells_96_2, wells_96_3]):
+            for x in [wells_96_1, wells_96_2, wells_96_3, wells_96_4]:
               p.stamp(x, wells_96_5, "10:microliter", append=True)
 
         Parameters
@@ -1001,15 +1002,18 @@ class Protocol(object):
             96- or 384-well plate to transfer liquid to.
         volume : str, Unit
             Volume of liquid to move from source plate to destination plate
-        to_quad : int
-            Quadrant of 384 well plate to transfer liquid to when source is a
-            96-well plate. Quadrant 0 is every other well starting from well A1,
-            quadrant 1 is every other well starting from well A2, quadrant 2 is
-            every other well starting from well B1, and quadrant 3 is every other
-            well starting from well B2.
-        from_quad : int
-            Quadrant of 384 well plate to transfer liquid from when source is a
-            384-well plate.
+        to_quad : str, int
+            Well reference referring to the top left well of a plate quadrant
+            on the destination plate. For 96-well plates, "A1" or 0 are the
+            only valid quadrants, for 384-well plates, the four quadrants are
+            referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
+            respectively.
+        from_quad : str, int
+            Well reference referring to the top left well of a plate quadrant
+            on the source plate. For 96-well plates, "A1" or 0 are the
+            only valid quadrants, for 384-well plates, the four quadrants are
+            referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
+            respectively.
         mix_after : bool, optional
             Specify whether to mix the liquid in destination wells after
             liquid is transferred.
@@ -1080,22 +1084,24 @@ class Protocol(object):
         txs = []
         volume = Unit.fromstring(volume)
 
-        def convert_quad(cont, num = 0):
+        def convert_quad(cont, q):
+            if isinstance(q, basestring):
+                q = q.lower()
             if cont.container_type.well_count == 384:
-                if num == 0:
+                if q in [0, "a1"]:
                     return cont.well("A1")
-                elif num == 1:
+                elif q in [1, "a2"]:
                     return cont.well("A2")
-                elif num == 2:
+                elif q in [24, "b1"]:
                     return cont.well("B1")
-                elif num == 3:
+                elif q in [25, "b2"]:
                     return cont.well("B2")
             elif cont.container_type.well_count == 96:
-                if num == 0:
+                if q in [0, "a1"]:
                     return cont.well("A1")
-            else:
-                raise RuntimeError("The quadrant number supplied is not valid "
-                                   "for the specified container type.")
+            raise RuntimeError("The source and/or destination quadrant "
+                                "reference supplied is not valid for the "
+                                "specified container type(s).")
 
         xfer = {}
         xfer["to"] = convert_quad(dest, to_quad)

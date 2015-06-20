@@ -938,7 +938,7 @@ class Protocol(object):
               flowrate="100:microliter/second", aspirate_speed=None,
               dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
-              transit_vol=None, blowout_buffer=None, append = False):
+              transit_vol=None, blowout_buffer=None, append=False):
 
         """
         Move the specified volume of liquid from every well on the source plate
@@ -1048,7 +1048,11 @@ class Protocol(object):
             If true the operation will dispense the pre_buffer along with the
             dispense volume. Cannot be true if disposal_vol is specified.
         append : boolean
-            Append this stamp instruction to the previous one.
+            Append this stamp instruction to the previous one if the previous
+            instruction has one transfer group.  Vendors may determine
+            different behavior for `stamp` instructions containing more than
+            one transfer in its list of "transfers" and should adjust their
+            version of this library accordingly.
 
             Example
 
@@ -1132,8 +1136,9 @@ class Protocol(object):
 
         txs.append(xfer)
 
-        if append and self.instructions:
-            if self.instructions[-1].op == "stamp":
+        if (append and self.instructions and
+            self.instructions[-1].op == "stamp" and
+            len(self.instructions[-1].transfers) == 1):
                 self.instructions[-1].transfers.append(xfer)
         else:
             self.instructions.append(Stamp(txs))

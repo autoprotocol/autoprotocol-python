@@ -5,14 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- `Stamp` class in autoprotocol.instruction
 
 Changed
+- Protocol.stamp() now utilizes the new Autoprotocol `stamp` instruction instead of transfer()
 
 Removed
 
 Fixed
-- fixed indentation 
-- refactored Protocol functions: ref, consolidate, transfer, distribute
+- fixed indentation
+- refactored Protocol methods: ref, consolidate, transfer, distribute
 
 ## v2.1.0 - 2015-06-10
 ---

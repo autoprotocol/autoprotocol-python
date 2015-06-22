@@ -941,6 +941,11 @@ class Protocol(object):
               transit_vol=None, blowout_buffer=None, append=False):
 
         """
+        **Note: the way this method now works is significantly different to the
+        way it has in previous versions, please make sure to read the
+        documentation below and adjust existing scripts utilizing stamp()
+        accordingly**
+
         Move the specified volume of liquid from every well on the source plate
         to the corersponding well on the destination plate using a 96-channel
         liquid handler.

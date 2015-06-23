@@ -952,12 +952,10 @@ class Protocol(object):
 
         The following stamping configurations are supported:
 
-        - 384-well plate to 384-well plate
-        - 96-well plate to 96-well plate
-        - one 384-well plate to one 96-well plate (quad parameter must be specified)
-        - one 384-well plate to multiple 96-well plates (dest must be a list)
-        - one 96-well plate to one 384-well plate (quad parameter must be specified)
-        - multiple 96-well plates to one 384-well or 96-well plate (source must be a list)
+        - 384-well plate to 384-well plate (`from_quad` and `to_quad` must be specified)
+        - 96-well plate to 96-well plate (`from` and `to_quad` are optional)
+        - one 384-well plate to one 96-well plate (`from_quad` must be specified)
+        - one 96-well plate to one 384-well plate (`to_quad` must be specified)
 
         Example Usage:
 

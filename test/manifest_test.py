@@ -125,6 +125,50 @@ class ManifestTest(unittest.TestCase):
         self.assertTrue(isinstance(parsed['group_test'][1]['test'], Well))
         self.assertEqual(1, parsed['group_test'][1]['test'].index)
 
+    def test_group_choice(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Types',
+            'inputs': {
+                'group_test': {
+                    'type': 'group-choice',
+                    'options': [
+                        {
+                            'value': 'a',
+                            'inputs': {
+                                'test': 'aliquot'
+                            }
+                        },
+                        {
+                            'value': 'b'
+                        }
+                    ]
+                }
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {
+                'ct1test': {'id': 'ct1test', 'type': '96-pcr', 'discard': True}
+            },
+            'parameters': {
+                'group_test': {
+                    'value': 'a',
+                    'inputs': {
+                        'a': {
+                            'test': 'ct1test/0'
+                        },
+                        'b': {
+                        }
+                    }
+                }
+            }
+        })
+        self.assertTrue(isinstance(parsed['group_test'], dict))
+        self.assertEqual('a', parsed['group_test']['value'])
+        self.assertTrue('a' in parsed['group_test']['inputs'])
+        self.assertFalse('b' in parsed['group_test']['inputs'])
+        self.assertTrue(
+            isinstance(parsed['group_test']['inputs']['a']['test'], Well))
+
     def test_blank_default(self):
         protocol_info = ProtocolInfo({
             'name': 'Test Basic Blank Defaults',

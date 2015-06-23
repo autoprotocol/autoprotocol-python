@@ -94,6 +94,17 @@ def convert_param(protocol, val, typeDesc):
             k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
             for k in typeDesc['inputs']
             } for x in val]
+    elif type == 'group-choice':
+        return {
+            'value': val['value'],
+            'inputs': {
+                opt['value']: convert_param(
+                    protocol,
+                    val['inputs'].get(opt['value']),
+                    {'type': 'group', 'inputs': opt['inputs']})
+                for opt in typeDesc['options'] if opt['value'] == val['value']
+                }
+        }
     elif type == 'thermocycle':
         return [
             {

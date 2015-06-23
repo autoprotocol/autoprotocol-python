@@ -827,3 +827,10 @@ class FlashFreeze(Instruction):
             "object": container,
             "duration": duration
         })
+
+class Stamp(Instruction):
+    def __init__(self, transfers):
+        super(Stamp, self).__init__({
+            "op": "stamp",
+            "transfers": transfers
+         })

@@ -277,15 +277,10 @@ class StampTestCase(unittest.TestCase):
         for plate_num in range(3):
             plate_name = ("test_384_"+str(plate_num))
             plate_384_list.append(p.ref(plate_name, None, "384-flat", discard=True))
-        with self.assertRaises(ValueError):
-            # Transfer >4 plates
-            p.stamp(plate_96_list, plate_384_list[0], "10:microliter")
-            p.stamp(plate_384_list[0], plate_96_list, "10:microliter")
-            # Transfer to non-384 well plate
-            p.stamp(plate_96_list[0:4], plate_96_list[5], "10:microliter")
-            # Test transfering from mixture of plate inputs
-            p.stamp(plate_96_list[0:2]+plate_384_list[0], plate_384_list[1], "10:microliter")
-            p.stamp(plate_384_list[1], plate_96_list[0:2]+plate_384_list[0], "10:microliter")
+        with self.assertRaises(RuntimeError):
+            # Transfer 4 plates
+            for pl, q in zip(plate_96_list, [0, 1, 24, 26]):
+                p.stamp(pl, plate_384_list[0], "10:microliter", to_quad = q)
 
 
 class RefifyTestCase(unittest.TestCase):

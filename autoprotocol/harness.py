@@ -22,14 +22,34 @@ else:
 def param_default(typeDesc):
     if isinstance(typeDesc, string_type):
         typeDesc = {'type': typeDesc}
+
+    type    = typeDesc['type']
+    default = typeDesc.get('default')
+
+    if default is not None and type != 'group-choice':
+        return default
+
     if typeDesc['type'] in ['aliquot+', 'aliquot++']:
         return []
     elif typeDesc['type'] == 'group+':
         return [{}]
     elif typeDesc['type'] == 'group':
         return {
-            k: param_default(typeDesc['inputs'][k])
+            k: param_default(v)
             for k, v in typeDesc['inputs'].items()
+        }
+    elif typeDesc['type'] == 'group-choice':
+        default_inputs = {}
+        for option in typeDesc.get('options', []):
+            value  = option.get('value')
+            inputs = option.get('inputs')
+            if inputs:
+                group_typedesc = {'type': 'group', 'inputs': inputs}
+                default_inputs[value] = param_default(group_typedesc)
+
+        return {
+            'value': default,
+            'inputs': default_inputs
         }
     else:
         return None
@@ -52,7 +72,7 @@ def convert_param(protocol, val, typeDesc):
     if isinstance(typeDesc, string_type):
         typeDesc = {'type': typeDesc}
     if val is None:
-        val = typeDesc.get('default') or param_default(typeDesc)
+        val = param_default(typeDesc)
     if val is None:  # still None?
         return None
 
@@ -88,12 +108,12 @@ def convert_param(protocol, val, typeDesc):
         return {
             k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
             for k in typeDesc['inputs']
-            }
+        }
     elif type == 'group+':
         return [{
             k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
             for k in typeDesc['inputs']
-            } for x in val]
+        } for x in val]
     elif type == 'group-choice':
         return {
             'value': val['value'],
@@ -103,7 +123,7 @@ def convert_param(protocol, val, typeDesc):
                     val['inputs'].get(opt['value']),
                     {'type': 'group', 'inputs': opt['inputs']})
                 for opt in typeDesc['options'] if opt['value'] == val['value']
-                }
+            }
         }
     elif type == 'thermocycle':
         return [

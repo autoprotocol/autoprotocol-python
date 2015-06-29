@@ -1280,7 +1280,7 @@ class Protocol(object):
             }
             self._pipette([{"mix": [opts]}])
 
-    def dispense(self, ref, reagent, columns):
+    def dispense(self, ref, reagent, columns, speed_percentage=None):
         """
         Dispense specified reagent to specified columns.
 
@@ -1384,13 +1384,20 @@ class Protocol(object):
             the column number and the volume to be dispensed to that column.
             Columns are expressed as integers indexed from 0.
             [{"column": <column num>, "volume": <volume>}, ...]
+        speed_percentage : int, optional
+            Integer between 1 and 100 that represents the percentage of the
+            maximum speed at which liquid is dispensed from the reagent
+            dispenser.
 
         """
+        if (speed_percentage != None and
+           (speed_percentage > 100 or speed_percentage < 1)):
+            raise RuntimeError("Invalid speed percentage specified.")
         if not isinstance(columns, list):
             raise TypeError("Columns is not of type 'list'.")
-        self.instructions.append(Dispense(ref, reagent, columns))
+        self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
 
-    def dispense_full_plate(self, ref, reagent, volume):
+    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None):
         """
         Dispense the specified amount of the specified reagent to every well
         of a container using a reagent dispenser.
@@ -1481,12 +1488,19 @@ class Protocol(object):
             Reagent to be dispensed to columns in container.
         volume : Unit, str
             Volume of reagent to be dispensed to each well
+        speed_percentage : int, optional
+            Integer between 1 and 100 that represents the percentage of the
+            maximum speed at which liquid is dispensed from the reagent
+            dispenser.
 
         """
+        if (speed_percentage != None and
+           (speed_percentage > 100 or speed_percentage < 1)):
+            raise RuntimeError("Invalid speed percentage specified.")
         columns = []
         for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
-        self.instructions.append(Dispense(ref, reagent, columns))
+        self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
 
     def spin(self, ref, acceleration, duration):
         """

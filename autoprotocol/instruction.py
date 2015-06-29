@@ -1,4 +1,6 @@
 import json
+from .pipette_tools import assign
+
 
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
@@ -79,13 +81,16 @@ class Dispense(Instruction):
         [{"column": <column num>, "volume": <volume>}, ...]
 
     """
-    def __init__(self, ref, reagent, columns):
-        super(Dispense, self).__init__({
-            "op": "dispense",
-            "object": ref,
-            "reagent": reagent,
-            "columns": columns
-        })
+    def __init__(self, ref, reagent, columns, speed):
+        disp = {
+                "op": "dispense",
+                "object": ref,
+                "reagent": reagent,
+                "columns": columns
+        }
+        assign(disp, "x_speed_percentage", speed)
+
+        super(Dispense, self).__init__(disp)
 
 class Spin(Instruction):
     """

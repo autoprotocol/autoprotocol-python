@@ -52,6 +52,9 @@ class Unit(object):
     def __str__(self):
         return ":".join([str(self.value), self.unit])
 
+    def __repr__(self):
+        return "Unit(%s, %s)" % (self.value, self.unit)
+
     def _check_type(self, other):
         if not isinstance(other, Unit):
             raise ValueError("Both operands must be of type Unit")

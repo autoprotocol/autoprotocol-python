@@ -1395,6 +1395,15 @@ class Protocol(object):
             raise RuntimeError("Invalid speed percentage specified.")
         if not isinstance(columns, list):
             raise TypeError("Columns is not of type 'list'.")
+        for c in columns:
+            wells = WellGroup(ref.wells_from(c["column"], ref.container_type.row_count(),
+                              columnwise=True))
+            for w in wells:
+              if w.volume:
+                w.volume += Unit.fromstring(c["volume"])
+              else:
+                w.set_volume(c["volume"])
+
         self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
 
     def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None):
@@ -1500,7 +1509,7 @@ class Protocol(object):
         columns = []
         for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
-        self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
+        self.dispense(ref, reagent, columns, speed_percentage)
 
     def spin(self, ref, acceleration, duration):
         """

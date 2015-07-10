@@ -782,8 +782,8 @@ class Protocol(object):
                           "x_blowout_buffer"]
             for x_option in x_opt_list:
                 assign(xfer, x_option, eval(x_option[2:]))
-
-            opts.append(xfer)
+            if v.value > 0:
+              opts.append(xfer)
 
         trans = {}
         assign(trans, "x_tip_type", tip_type)

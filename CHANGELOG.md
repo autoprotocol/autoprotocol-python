@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ---
 Added
 - `Stamp` class in autoprotocol.instruction
+- volume tracking to destination wells when using Protocol.dispense()
+- __repr__ override for Unit class
 
 Changed
 - Protocol.stamp() now utilizes the new Autoprotocol `stamp` instruction instead of transfer()

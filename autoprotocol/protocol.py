@@ -717,18 +717,24 @@ class Protocol(object):
 
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
-            sources = []
-            for idx, d in enumerate(dest.wells):
-                for s in source.wells:
-                    vol = s.volume
-                    while vol >= volume[idx] and (len(sources) < len_dest):
-                        sources.append(s)
-                        vol -= volume[idx]
-                if len(sources) < len_dest:
-                    raise RuntimeError("There is not enough volume in the "
-                                       "source well(s) specified to complete "
-                                       "the transfers.")
-                source = WellGroup(sources)
+          try:
+              sources = []
+              for idx, d in enumerate(dest.wells):
+                  for s in source.wells:
+                      vol = s.volume
+                      while vol >= volume[idx] and (len(sources) < len_dest):
+                          sources.append(s)
+                          vol -= volume[idx]
+              if len(sources) < len_dest:
+                  raise RuntimeError("There is not enough volume in the "
+                                     "source well(s) specified to complete "
+                                     "the transfers.")
+              source = WellGroup(sources)
+          except ValueError:
+            raise RuntimeError("When transferring liquid from multiple wells "
+                               "containing the same substance to multiple "
+                               "other wells, each source Well must have a "
+                               "volume attribute (aliquot) associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             if v > Unit(750, "microliter"):

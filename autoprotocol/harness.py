@@ -92,7 +92,7 @@ def convert_param(protocol, val, typeDesc):
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.
         if type == 'temperature' and \
-                val in ['ambient', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
+                val in ['ambient', 'warm_30', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
             return val
         else:
             return Unit.fromstring(val)

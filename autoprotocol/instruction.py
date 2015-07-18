@@ -279,7 +279,7 @@ class Incubate(Instruction):
         temperature
 
     """
-    WHERE = ["ambient", "warm_37", "cold_4", "cold_20", "cold_80"]
+    WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
 
     def __init__(self, ref, where, duration, shaking=False, co2=0):
         if where not in self.WHERE:

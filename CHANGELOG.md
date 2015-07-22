@@ -1,8 +1,17 @@
 # CHANGELOG
 
 This project adheres to [Semantic Versioning](http://semver.org/)
-
 ## Unreleased
+
+Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v2.2.0 - 2015-07-21
 ---
 Added
 - `Stamp` class in autoprotocol.instruction

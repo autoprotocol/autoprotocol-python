@@ -219,27 +219,29 @@ class Protocol(object):
             if no discard or storage condition is provided.
 
         """
-        assert name not in self.refs
+        if name in self.refs.keys():
+          raise RuntimeError("Two containers within the same protocol cannot "
+                             "have the same name.")
         opts = {}
 
         # Check container type
-        cont_type = self.container_type(cont_type)
-        if id and cont_type:
-            opts["id"] = id
-        elif cont_type:
-            opts["new"] = cont_type.shortname
-        else:
-            raise ValueError("If no id is specified, you must specify a "
-                             "container type.")
+        try:
+          cont_type = self.container_type(cont_type)
+          if id and cont_type:
+              opts["id"] = id
+          elif cont_type:
+              opts["new"] = cont_type.shortname
+        except ValueError:
+          raise RuntimeError("You must specify a ref's container type.")
+
 
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
         else:
-            raise ValueError("You must specify either a valid storage "
-                             "condition or set discard=True for a container.")
-
+            raise RuntimeError("You must specify either a valid storage "
+                             "condition or set discard=True for a Ref.")
         container = Container(id, cont_type, name=name)
         self.refs[name] = Ref(name, opts, container)
         return container

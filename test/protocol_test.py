@@ -74,7 +74,7 @@ class RefTestCase(unittest.TestCase):
     def test_duplicates_not_allowed(self):
         p = Protocol()
         p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             p.ref("test", None, "96-flat", storage="cold_20")
         self.assertTrue(p.refs["test"].opts["discard"])
         self.assertFalse("where" in p.refs["test"].opts)
@@ -236,7 +236,7 @@ class TransferTestCase(unittest.TestCase):
     def test_one_source(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             p.transfer(c.wells_from(0, 2),
                    c.wells_from(2, 2), "40:microliter", one_source=True)
         with self.assertRaises(RuntimeError):

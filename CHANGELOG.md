@@ -17,6 +17,7 @@ Removed
 Fixed
 - fixed indentation
 - refactored Protocol methods: ref, consolidate, transfer, distribute
+- better error handling for transfer() and distribute()
 
 ## v2.1.0 - 2015-06-10
 ---

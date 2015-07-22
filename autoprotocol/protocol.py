@@ -503,7 +503,11 @@ class Protocol(object):
 
         """
         opts = {}
-        dists = self.fill_wells(dest, source, volume, distribute_target)
+        try:
+          dists = self.fill_wells(dest, source, volume, distribute_target)
+        except ValueError:
+          raise RuntimeError("When distributing liquid, source well(s) "
+                             "must have an associated volume (aliquot).")
         groups = []
         for d in dists:
             opts = {}

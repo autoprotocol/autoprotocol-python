@@ -10,6 +10,7 @@ Changed
 Removed
 
 Fixed
+- Error with `provision`ing to multiple wells of the same container
 
 ## v2.2.0 - 2015-07-21
 ---

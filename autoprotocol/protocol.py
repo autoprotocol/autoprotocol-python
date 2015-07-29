@@ -2611,7 +2611,6 @@ class Protocol(object):
           If volume is not specified as a string or Unit (or a list of either)
 
         """
-        dest_group = []
         dests = WellGroup(dests)
         if not isinstance(resource_id, basestring):
             raise TypeError("Resource ID must be a string.")
@@ -2628,13 +2627,14 @@ class Protocol(object):
             if not isinstance(v, (basestring, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
+            dest_group = []
             if v > Unit(750, "microliter"):
                 diff = v - Unit(750, "microliter")
-                self.provision(resource_id, d, "750:microliter")
-                while diff > Unit(0, "microliter"):
+                self.provision(resource_id, d, Unit(750, "microliter"))
+                while diff > Unit(0.0, "microliter"):
                     self.provision(resource_id, d, diff)
                     diff -= diff
-                break
+                continue
 
             xfer = {}
             xfer["well"] = d

@@ -350,15 +350,28 @@ class Protocol(object):
                         outs[n] = {}
                     outs[n][str(well.index)] = {"name": well.name}
 
-        return {
-            "refs": dict(
-                (key, value.opts)
-                for key, value in self.refs.items()
-            ),
-            "instructions": list(map(lambda x: self._refify(x.data),
-                                     self.instructions)),
-            "outs": outs
-        }
+        if outs:
+
+            return {
+                "refs": dict(
+                    (key, value.opts)
+                    for key, value in self.refs.items()
+                ),
+                "instructions": list(map(lambda x: self._refify(x.data),
+                                         self.instructions)),
+                "outs": outs
+            }
+
+        else:
+
+            return {
+                "refs": dict(
+                    (key, value.opts)
+                    for key, value in self.refs.items()
+                ),
+                "instructions": list(map(lambda x: self._refify(x.data),
+                                         self.instructions))
+            }
 
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,

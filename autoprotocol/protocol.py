@@ -744,23 +744,24 @@ class Protocol(object):
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             if v > Unit(750, "microliter"):
-                diff = Unit.fromstring(v) - Unit(750, "microliter")
-                self.transfer(s, d, "750:microliter", one_source, one_tip,
+                diff = Unit.fromstring(v)
+                while diff > Unit(750, "microliter"):
+                    self.transfer(s, d, "750:microliter", one_source, one_tip,
                                   mix_after, mix_before, mix_vol,
                                   repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
                                   dispense_target, pre_buffer, disposal_vol,
                                   transit_vol, blowout_buffer, tip_type,
                                   new_group)
-                while diff > Unit(0, "microliter"):
-                    self.transfer(s, d, diff, one_source, one_tip,
-                                  mix_after, mix_before, mix_vol,
-                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
-                                  dispense_target, pre_buffer, disposal_vol,
-                                  transit_vol, blowout_buffer, tip_type,
-                                  new_group)
-                    diff -= diff
+                    diff -= Unit(750, "microliter")
 
-                break
+                self.transfer(s, d, diff,  one_source, one_tip,
+                                  mix_after, mix_before, mix_vol,
+                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
+                                  dispense_target, pre_buffer, disposal_vol,
+                                  transit_vol, blowout_buffer, tip_type,
+                                  new_group)
+                continue
+
 
             # Volume accounting
             if mix_after and not mix_vol:

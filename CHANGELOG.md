@@ -4,6 +4,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 
 Added
+- name property on Well
+- "outs" section of protocol.  Use Well.set_name() to name an aliquot
 
 Changed
 

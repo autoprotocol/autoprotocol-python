@@ -305,3 +305,14 @@ class RefifyTestCase(unittest.TestCase):
         i = 24
         self.assertEqual("randomstring", p._refify(s))
         self.assertEqual(24, p._refify(i))
+
+class OutsTestCase(unittest.TestCase):
+    def test_outs(self):
+        p = Protocol()
+        self.assertEqual(p.as_dict()['outs'], {})
+        plate = p.ref("plate", None, "96-pcr", discard=True)
+        plate.well(0).set_name("test_well")
+        self.assertTrue(plate.well(0).name == "test_well")
+        self.assertTrue(list(p.as_dict()['outs'].keys()) == ['plate'])
+        self.assertTrue(list(list(p.as_dict()['outs'].values())[0].keys()) == ['0'])
+        self.assertTrue(list(p.as_dict()['outs'].values())[0]['0'] == {'name': 'test_well'})

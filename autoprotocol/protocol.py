@@ -108,11 +108,9 @@ class Protocol(object):
 
     """
 
-    def __init__(self, refs=[], instructions=None):
+    def __init__(self, refs=None, instructions=None):
         super(Protocol, self).__init__()
-        self.refs = {}
-        for ref in refs:
-            self.refs[ref.name] = ref
+        self.refs = refs or {}
         self.instructions = instructions or []
 
     def container_type(self, shortname):
@@ -149,8 +147,8 @@ class Protocol(object):
 
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
         """
-        Append a Ref object to the list of Refs associated with this protocol
-        and returns a Container with the id, container type and storage or
+        Add a Ref object to the dictionary of Refs associated with this protocol
+        and return a Container with the id, container type and storage or
         discard conditions specified.
 
         Example Usage:
@@ -246,6 +244,7 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
+
     def append(self, instructions):
         """
         Append instruction(s) to the list of Instruction objects associated
@@ -340,13 +339,22 @@ class Protocol(object):
             the "refified" contents of their corresponding Protocol attribute.
 
         """
+        outs = {}
+        for n, ref in self.refs.items():
+            for well in ref.container._wells:
+                if well.name:
+                    if n not in outs.keys():
+                        outs[n] = {}
+                    outs[n][str(well.index)] = {"name": well.name}
+
         return {
             "refs": dict(
                 (key, value.opts)
                 for key, value in self.refs.items()
             ),
             "instructions": list(map(lambda x: self._refify(x.data),
-                                     self.instructions))
+                                     self.instructions)),
+            "outs": outs
         }
 
     def distribute(self, source, dest, volume, allow_carryover=False,

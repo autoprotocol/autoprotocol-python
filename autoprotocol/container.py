@@ -36,6 +36,7 @@ class Well(object):
         self.container = container
         self.index = index
         self.volume = None
+        self.name = None
         self.properties = {}
 
     def set_properties(self, properties):
@@ -88,6 +89,27 @@ class Well(object):
                              "exceeds the maximum volume of this well.")
         self.volume = Unit.fromstring(vol)
         return self
+
+    def set_name(self, name):
+        """
+        Set a name for this well for it to be included in a protocol's "outs" section
+
+        Parameters
+        ----------
+        name : str
+            Well name.
+
+        Raises
+        ------
+        TypeError
+            If `name` is not of type str.
+
+        """
+        if not isinstance(name, str):
+            raise TypeError("Well name must be a string.")
+        self.name = name
+        return self
+
 
     def humanize(self):
         """
@@ -315,7 +337,7 @@ class Container(object):
     def robotize(self, well_ref):
         """
         Return the integer representation of the well index given, based on
-        the ContainerType of the Container. 
+        the ContainerType of the Container.
 
         Uses the robotize function from the ContainerType class. Refer to
         `ContainerType.robotize()`_ for more information.

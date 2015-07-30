@@ -134,3 +134,9 @@ class WellPropertyTestCase(unittest.TestCase):
         for well in group:
             self.assertTrue("property1" in well.properties)
             self.assertTrue("property2" in well.properties)
+
+class WellNameTestCase(unittest.TestCase):
+    def test_set_name(self):
+        c = Container(None, dummy_type)
+        c.well(0).set_name("sample")
+        self.assertEqual(c.well(0).name, "sample")

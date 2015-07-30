@@ -246,7 +246,7 @@ class ManifestTest(unittest.TestCase):
     # Test parsing of local manifest file
     def test_json_parse(self):
         protocol = Protocol()
-        manifest_json = open('test/manifest_test.json', 'r').read().decode('utf-8')
+        manifest_json = open('test/manifest_test.json', 'r').read()
         manifest = Manifest(json.loads(manifest_json))
         source = json.loads(manifest_json)['protocols'][0]['preview']
         params = manifest.protocol_info('TestMethod').parse(protocol, source)

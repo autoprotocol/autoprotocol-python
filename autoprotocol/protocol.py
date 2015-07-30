@@ -119,8 +119,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        shortname : {"384-flat", "384-pcr", "96-flat", "96-pcr", "96-deep",
-                    "micro-2.0", "micro-1.5"}
+        shortname : str
             String representing one of the ContainerTypes in the
             _CONTAINER_TYPES dictionary.
 
@@ -205,16 +204,20 @@ class Protocol(object):
         discard : bool, optional
             if no storage condition is specified and discard is set to True,
             the container being referenced will be discarded after a run.
+
         Returns
         -------
         container : Container
             Container object generated from the id and container type provided.
+
         Raises
         ------
-        ValueError
-            if no id is specified and no container type is provided.
-        ValueError
-            if no discard or storage condition is provided.
+        RuntimeError
+            If a container previously referenced in this protocol (existant in refs section) has the same name as the one specified.
+        RuntimeError
+            If no container type is specified.
+        RuntimeError
+            If no valid storage or discard condition is specified.
 
         """
         if name in self.refs.keys():
@@ -2523,8 +2526,40 @@ class Protocol(object):
 
         Example Usage:
 
+        .. code-block:: python
+
+            p = Protocol()
+
+            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
+            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
+
+            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
+
 
         Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "bacteria": {
+                  "new": "micro-1.5",
+                  "discard": true
+                },
+                "agar_plate": {
+                  "new": "1-flat",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                {
+                  "volume": "55.0:microliter",
+                  "to": "agar_plate/0",
+                  "from": "bacteria/0",
+                  "op": "spread"
+                }
+              ]
+            }
 
 
         Parameters
@@ -2569,6 +2604,11 @@ class Protocol(object):
             Minimum number of colonies to detect in order to continue with
             autopicking
 
+        Raises
+        ------
+        RuntimeError
+            If `min_count` is greater than the number of `dests` specified
+
         """
         if isinstance(dests, Well) or isinstance(dests, str):
             dests = [dests]
@@ -2582,6 +2622,60 @@ class Protocol(object):
     def image_plate(self, ref, mode, dataref):
         """
         Capture an image of the specified container.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
+            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
+
+            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
+            p.incubate(agar_plate, "warm_37", "18:hour")
+            p.image_plate(agar_plate, mode="top", dataref="my_plate_image_1")
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "bacteria": {
+                  "new": "micro-1.5",
+                  "discard": true
+                },
+                "agar_plate": {
+                  "new": "1-flat",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                {
+                  "volume": "55.0:microliter",
+                  "to": "agar_plate/0",
+                  "from": "bacteria/0",
+                  "op": "spread"
+                },
+                {
+                  "where": "warm_37",
+                  "object": "agar_plate",
+                  "co2_percent": 0,
+                  "duration": "18:hour",
+                  "shaking": false,
+                  "op": "incubate"
+                },
+                {
+                  "dataref": "my_plate_image_1",
+                  "object": "agar_plate",
+                  "mode": "top",
+                  "op": "image_plate"
+                }
+              ]
+            }
+
 
         Parameters
         ----------
@@ -2670,6 +2764,37 @@ class Protocol(object):
         """
         Flash freeze the contents of the specified container by submerging it
         in liquid nitrogen for the specified amount of time.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            sample = p.ref("liquid_sample", None, "micro-1.5", discard=True)
+            p.flash_freeze(sample, "25:second")
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "liquid_sample": {
+                  "new": "micro-1.5",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                {
+                  "duration": "25:second",
+                  "object": "liquid_sample",
+                  "op": "flash_freeze"
+                }
+              ]
+            }
+
 
         Parameters
         ----------

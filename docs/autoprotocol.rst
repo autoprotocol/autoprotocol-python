@@ -18,6 +18,10 @@ Protocol.ref()
 ^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.ref
 
+Protocol.out()
+^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.out
+
 Protocol.append()
 ^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.append
@@ -134,10 +138,19 @@ Protocol.provision()
 ^^^^^^^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.provision
 
+Protocol.flash_freeze()
+^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: autoprotocol.protocol.Protocol.flash_freeze
+
 protocol.Ref
 ~~~~~~~~~~~~
 
 .. autoclass:: autoprotocol.protocol.Ref
+
+protocol.Out
+~~~~~~~~~~~~
+
+.. autoclass:: autoprotocol.protocol.Out
 
 
 autoprotocol.container

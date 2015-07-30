@@ -210,8 +210,13 @@ class Manifest(object):
         self.protocols = json['protocols']
 
     def protocol_info(self, name):
-        return ProtocolInfo(
-            next(p for p in self.protocols if p['name'] == name))
+        try:
+            return ProtocolInfo(
+                next(p for p in self.protocols if p['name'] == name))
+        except StopIteration:
+            raise RuntimeError("Harness.run(): %s does not match "
+                               "the 'name' field of any protocol in the "
+                               "associated manifest.json file." % name)
 
 
 def run(fn, protocol_name=None):

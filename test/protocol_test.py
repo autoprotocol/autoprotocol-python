@@ -4,6 +4,7 @@ from autoprotocol.instruction import Instruction, Thermocycle, Incubate, Pipette
 from autoprotocol.container_type import ContainerType
 from autoprotocol.container import Container, WellGroup, Well
 from autoprotocol.unit import Unit
+from autoprotocol.pipette_tools import *
 import json
 
 
@@ -212,6 +213,61 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+
+    def test_gt_750uL_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(
+            c.well(0),
+            c.well(1),
+            "1800:microliter"
+            )
+        self.assertEqual(3, len(p.instructions[0].groups))
+        self.assertEqual(
+            Unit(750, 'microliter'),
+            p.instructions[0].groups[0]['transfer'][0]['volume']
+            )
+        self.assertEqual(
+            Unit(750, 'microliter'),
+            p.instructions[0].groups[1]['transfer'][0]['volume']
+            )
+        self.assertEqual(
+            Unit(300, 'microliter'),
+            p.instructions[0].groups[2]['transfer'][0]['volume']
+            )
+
+    def test_gt_750uL_wellgroup_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(
+            c.wells_from(0, 8, columnwise=True),
+            c.wells_from(1, 8, columnwise=True),
+            '1800:microliter'
+            )
+        self.assertEqual(
+            24,
+            len(p.instructions[0].groups)
+            )
+
+    def test_transfer_option_propagation(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(
+            c.well(0),
+            c.well(1),
+            "1800:microliter",
+            aspirate_source=aspirate_source(
+                depth("ll_bottom", distance=".004:meter")
+                )
+            )
+        self.assertEqual(
+            len(p.instructions[0].groups[0]['transfer'][0]),
+            len(p.instructions[0].groups[1]['transfer'][0])
+            )
+        self.assertEqual(
+            len(p.instructions[0].groups[0]['transfer'][0]),
+            len(p.instructions[0].groups[2]['transfer'][0])
+            )
 
     def test_max_transfer(self):
         p = Protocol()

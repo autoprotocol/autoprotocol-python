@@ -1575,7 +1575,7 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "acceleration": "700:g",
+                  "acceleration": "700:meter/second^2",
                   "duration": "20:minute",
                   "object": "sample_plate",
                   "op": "spin"

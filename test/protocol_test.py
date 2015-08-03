@@ -365,7 +365,7 @@ class RefifyTestCase(unittest.TestCase):
 class OutsTestCase(unittest.TestCase):
     def test_outs(self):
         p = Protocol()
-        self.assertEqual(p.as_dict()['outs'], {})
+        self.assertFalse('outs' in p.as_dict())
         plate = p.ref("plate", None, "96-pcr", discard=True)
         plate.well(0).set_name("test_well")
         self.assertTrue(plate.well(0).name == "test_well")

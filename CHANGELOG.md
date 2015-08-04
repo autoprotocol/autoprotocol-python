@@ -13,6 +13,8 @@ Removed
 
 Fixed
 - Error with `provision`ing to multiple wells of the same container
+- Error when `transfer`ing over 750uL
+- Unit scalar multiplication
 
 ## v2.2.0 - 2015-07-21
 ---

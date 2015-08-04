@@ -10,6 +10,7 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(Unit(-10, 'microliter'), u1 - u2)
         self.assertEqual(Unit(10, 'microliter'), u2 - u1)
         self.assertEqual(Unit(600,'microliter'), u2 * u1.value)
+        self.assertEqual(Unit(600,'microliter'), u2.value * u1)
         self.assertEqual(Unit(1.5, 'microliter'), u2 / u1.value)
         self.assertEqual(Unit(1, 'microliter'), u2//u1)
 

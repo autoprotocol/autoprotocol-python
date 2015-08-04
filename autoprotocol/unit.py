@@ -93,6 +93,8 @@ class Unit(object):
             other = other.value
         return Unit(self.value * other, self.unit)
 
+    __rmul__ = __mul__
+
     def __div__(self, other):
         if isinstance(other, Unit):
             print("WARNING: Unit.__mul__ and __div__ only support scalar "

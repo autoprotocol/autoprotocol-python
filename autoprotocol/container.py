@@ -1,4 +1,5 @@
 from .unit import Unit
+from .util import convert_to_ul
 import sys
 
 if sys.version_info[0] >= 3:
@@ -83,11 +84,12 @@ class Well(object):
             Theoretical volume to indicate for a Well.
 
         """
-        if Unit.fromstring(vol) > Unit(
+        v = convert_to_ul(vol)
+        if v > Unit(
                 self.container.container_type.well_volume_ul, "microliter"):
             raise ValueError("Theoretical volume you are trying to set "
                              "exceeds the maximum volume of this well.")
-        self.volume = Unit.fromstring(vol)
+        self.volume = v
         return self
 
     def set_name(self, name):

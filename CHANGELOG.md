@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 - name property on Well
 - "outs" section of protocol.  Use Well.set_name() to name an aliquot
+- unit conversion from milliliters or nanoliters to microliters in `Well.set_volume()`, `Protocol.provision()`, `Protocol.transfer()`, and `Protocol.distribute`
 
 Changed
 

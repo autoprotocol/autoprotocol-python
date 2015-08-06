@@ -3,6 +3,8 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
+from .util import convert_to_ul
+
 import sys
 if sys.version_info[0] >= 3:
     xrange = range
@@ -767,6 +769,7 @@ class Protocol(object):
                                "volume attribute (aliquot) associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
@@ -787,15 +790,8 @@ class Protocol(object):
                 continue
 
 
-            # Volume accounting
             if mix_after and not mix_vol:
                 mix_vol = v
-            if d.volume:
-                d.volume += v
-            else:
-                d.volume = v
-            if s.volume:
-                s.volume -= v
 
             # Organize transfer options into dictionary (for json parsing)
             xfer = {
@@ -803,6 +799,13 @@ class Protocol(object):
                 "to": d,
                 "volume": v
             }
+            # Volume accounting
+            if d.volume:
+                d.volume += v
+            else:
+                d.volume = v
+            if s.volume:
+                s.volume -= v
             if mix_before:
                 xfer["mix_before"] = {
                     "volume": mix_vol,
@@ -2749,6 +2752,7 @@ class Protocol(object):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
             dest_group = []
+            v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = v - Unit(750, "microliter")
                 self.provision(resource_id, d, Unit(750, "microliter"))
@@ -2760,6 +2764,7 @@ class Protocol(object):
             xfer = {}
             xfer["well"] = d
             xfer["volume"] = v
+
             if d.volume:
                 d.volume += v
             else:
@@ -2873,10 +2878,11 @@ class Protocol(object):
         else:
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)
         for d, v in list(zip(dst_group.wells, volume)):
+            v = convert_to_ul(v)
             if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
                 src = next(
-                    (w for w in src_group.wells if w.volume > v), None)
+                    (w for w in src_group.wells if w.volume >= v), None)
                 if src is None:
                     raise RuntimeError(
                         "no well in source group has more than %s %s(s)" %

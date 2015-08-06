@@ -2,6 +2,7 @@ import sys
 import unittest
 from autoprotocol.container_type import ContainerType
 from autoprotocol.container import Container, Well
+from autoprotocol.unit import Unit
 
 if sys.version_info[0] >= 3:
     xrange = range
@@ -103,6 +104,14 @@ class WellVolumeTestCase(unittest.TestCase):
         for w in c.all_wells():
             self.assertEqual(30, w.volume.value)
 
+    def test_set_volume_unit_conv(self):
+        c = Container(None, dummy_type)
+        c.well(0).set_volume("200:nanoliter")
+        self.assertTrue(c.well(0).volume == Unit(0.2, "microliter"))
+        c.well(1).set_volume(".1:milliliter")
+        self.assertTrue(c.well(1).volume == Unit(100, "microliter"))
+        with self.assertRaises(ValueError):
+            c.well(2).set_volume("1:liter")
 
 class WellPropertyTestCase(unittest.TestCase):
     def test_set_properties(self):

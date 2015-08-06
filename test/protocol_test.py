@@ -204,6 +204,17 @@ class DistributeTestCase(unittest.TestCase):
         p.distribute(c.well("A1").set_volume("20:microliter"), c.well("A2"), "5:microliter")
         self.assertTrue("distribute" in p.instructions[-1].groups[-1])
 
+    def test_unit_conversion(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(RuntimeError):
+            with self.assertRaises(ValueError):
+                p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), ".0001:liter")
+        p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), "200:nanoliter")
+        self.assertTrue(str(p.instructions[0].groups[0]["distribute"]["to"][0]["volume"]) == "0.2:microliter")
+        p.distribute(c.well(2).set_volume("100:microliter"), c.well(3), ".1:milliliter", new_group=True)
+        self.assertTrue(str(p.instructions[-1].groups[0]["distribute"]["to"][0]["volume"]) == "100.0:microliter")
+
 
 class TransferTestCase(unittest.TestCase):
     def test_single_transfer(self):
@@ -302,6 +313,16 @@ class TransferTestCase(unittest.TestCase):
                    c.wells_from(2, 2), "40:microliter", one_source=True)
         self.assertEqual(2, len(p.instructions[0].groups))
         self.assertFalse(p.instructions[0].groups[0]["transfer"][0]["from"] == p.instructions[0].groups[1]["transfer"][0]["from"])
+
+    def test_unit_conversion(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(ValueError):
+            p.transfer(c.well(0), c.well(1), "1:liter")
+        p.transfer(c.well(0), c.well(1), "200:nanoliter")
+        self.assertTrue(str(p.instructions[0].groups[0]['transfer'][0]['volume']) == "0.2:microliter")
+        p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
+        self.assertTrue(str(p.instructions[-1].groups[0]['transfer'][0]['volume']) == "500.0:microliter")
 
 class ConsolidateTestCase(unittest.TestCase):
     def test_multiple_sources(self):

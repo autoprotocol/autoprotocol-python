@@ -1,9 +1,23 @@
+from .unit import Unit
 '''
     :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 '''
+
+def convert_to_ul(vol):
+    v = Unit.fromstring(vol)
+    if v.unit == "nanoliter":
+        v = Unit(v.value/1000, "microliter")
+    elif v.unit == "milliliter":
+        v = Unit(v.value*1000, "microliter")
+    elif v.unit == "microliter":
+        v = v
+    else:
+        raise ValueError("The unit you're trying to convert to microliters "
+                         "is invalid.")
+    return v
 
 
 class make_dottable_dict(dict):

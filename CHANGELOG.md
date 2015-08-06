@@ -1,7 +1,20 @@
 # CHANGELOG
 
 This project adheres to [Semantic Versioning](http://semver.org/)
+
+
 ## Unreleased
+---
+Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v2.2.1 - 2015-08-06
+---
 
 Added
 - name property on Well

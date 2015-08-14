@@ -1051,13 +1051,13 @@ class Protocol(object):
         volume : str, Unit
             Volume of liquid to move from source plate to destination plate
         to_quad : str, int
-            Well reference referring to the top left well of a plate quadrant
+            Well index referring to the top left well of a plate quadrant
             on the destination plate. For 96-well plates, "A1" or 0 are the
             only valid quadrants, for 384-well plates, the four quadrants are
             referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
             respectively.
         from_quad : str, int
-            Well reference referring to the top left well of a plate quadrant
+            Well index referring to the top left well of a plate quadrant
             on the source plate. For 96-well plates, "A1" or 0 are the
             only valid quadrants, for 384-well plates, the four quadrants are
             referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
@@ -1135,29 +1135,9 @@ class Protocol(object):
         """
         txs = []
         volume = Unit.fromstring(volume)
-
-        def convert_quad(cont, q):
-            if isinstance(q, basestring):
-                q = q.lower()
-            if cont.container_type.well_count == 384:
-                if q in [0, "a1"]:
-                    return cont.well("A1")
-                elif q in [1, "a2"]:
-                    return cont.well("A2")
-                elif q in [24, "b1"]:
-                    return cont.well("B1")
-                elif q in [25, "b2"]:
-                    return cont.well("B2")
-            elif cont.container_type.well_count == 96:
-                if q in [0, "a1"]:
-                    return cont.well("A1")
-            raise RuntimeError("The source and/or destination quadrant "
-                                "reference supplied is not valid for the "
-                                "specified container type(s).")
-
         xfer = {}
-        xfer["to"] = convert_quad(dest, to_quad)
-        xfer["from"] = convert_quad(source, from_quad)
+        xfer["to"] = dest.quadrant(to_quad)[0]
+        xfer["from"] = source.quadrant(from_quad)[0]
         xfer["volume"] = volume
         opt_list = ["aspirate_speed", "dispense_speed"]
         for option in opt_list:
@@ -1181,6 +1161,15 @@ class Protocol(object):
                 "repetitions": repetitions,
                 "speed": flowrate
             }
+
+        for well in source.quadrant(from_quad):
+            if well.volume:
+                well.set_volume(well.volume - volume)
+        for well in dest.quadrant(to_quad):
+            if well.volume:
+                well.set_volume(well.volume + volume)
+            else:
+                well.set_volume(volume)
 
         txs.append(xfer)
 

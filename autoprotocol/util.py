@@ -7,17 +7,99 @@ from .unit import Unit
 '''
 
 def convert_to_ul(vol):
+    """
+    Convert a Unit or volume string into its equivalent in microliters.
+
+    Parameters
+    ----------
+    vol : Unit, str
+        A volume string or Unit with the unit "nanoliter" or "milliliter"
+
+    """
     v = Unit.fromstring(vol)
     if v.unit == "nanoliter":
         v = Unit(v.value/1000, "microliter")
     elif v.unit == "milliliter":
         v = Unit(v.value*1000, "microliter")
     elif v.unit == "microliter":
-        v = v
+        return v
     else:
         raise ValueError("The unit you're trying to convert to microliters "
                          "is invalid.")
     return v
+
+
+def quad_ind_to_num(q):
+    """
+    Convert a 384-well plate quadrant well index into its corresponding
+    integer form.
+
+    "A1" -> 0
+    "A2" -> 1
+    "B1" -> 2
+    "B2" -> 3
+
+    Parameters
+    ----------
+    q : int, str
+        A string or integer representing a well index that corresponds to a
+        quadrant on a 384-well plate.
+
+    """
+    if isinstance(q, str):
+        q = q.lower()
+    if q in ["a1", 0]:
+        return 0
+    elif q in ["a2", 1]:
+        return 1
+    elif q in ["b1", 24]:
+        return 2
+    elif q in ["b2", 25]:
+        return 3
+    else:
+        raise ValueError("Invalid quadrant index.")
+
+
+def quad_num_to_ind(q, human=False):
+    """
+    Convert a 384-well plate quadrant integer into its corresponding well index.
+
+    0 -> "A1" or 0
+    1 -> "A2" or 1
+    2 -> "B1" or 24
+    3 -> "B2" or 25
+
+    Parameters
+    ----------
+    q : int
+        An integer representing a quadrant number of a 384-well plate.
+    human : bool, optional
+        Return the corresponding well index in human readable form instead of
+        as an integer if True.
+
+    """
+    if q == 0:
+        if human:
+            return "A1"
+        else:
+            return 0
+    elif q == 1:
+        if human:
+            return "A2"
+        else:
+            return 1
+    elif q == 2:
+        if human:
+            return "B1"
+        else:
+            return 24
+    elif q == 3:
+        if human:
+            return "B2"
+        else:
+            return 25
+    else:
+        raise ValueError("Invalid quadrant number.")
 
 
 class make_dottable_dict(dict):

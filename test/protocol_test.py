@@ -354,7 +354,7 @@ class StampTestCase(unittest.TestCase):
         for plate_num in range(3):
             plate_name = ("test_384_"+str(plate_num))
             plate_384_list.append(p.ref(plate_name, None, "384-flat", discard=True))
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(AssertionError):
             # Transfer 4 plates
             for pl, q in zip(plate_96_list, [0, 1, 24, 26]):
                 p.stamp(pl, plate_384_list[0], "10:microliter", to_quad = q)

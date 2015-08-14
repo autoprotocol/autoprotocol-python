@@ -1,5 +1,6 @@
+from __future__ import print_function
 from .unit import Unit
-from .util import convert_to_ul
+from .util import convert_to_ul, quad_ind_to_num
 import sys
 
 if sys.version_info[0] >= 3:
@@ -472,10 +473,16 @@ class Container(object):
 
         """
         # TODO(Define what each quadrant number corresponds toL)
-        if not isinstance(quad, int):
-            raise TypeError("Quadrant given is not of type 'int'.")
-        assert self.container_type.well_count == 384
-        assert quad in [0, 1, 2, 3], "Quadrant number must be between 0 and 3."
+        if isinstance(quad, str):
+            quad = quad_ind_to_num(quad)
+        if self.container_type.well_count == 96:
+            if quad == 0:
+                return self._wells
+            else:
+                raise RuntimeError("0 or 'A1' is the only valid quadrant for a 96-well plate.")
+        elif self.container_type.well_count < 96:
+            raise RuntimeError("Cannot return quadrant for a container type with less than 96 wells.")
+        assert quad in [0, 1, 2, 3], "Invalid quadrant entered for the specified plate type."
 
         start_well = [0, 1, 24, 25]
         wells = []

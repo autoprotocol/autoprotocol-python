@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- volume tracking to Protocol.stamp() and associated helper functions in autoprotocol.util
 
 Changed
 

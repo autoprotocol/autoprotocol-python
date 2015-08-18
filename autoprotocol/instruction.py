@@ -777,9 +777,9 @@ class ImagePlate(Instruction):
 
 class Provision(Instruction):
     """
-    A generic instruction for provisioning a commercial resource from a
-    catalog and defining destination well(s).  A new tip is used for each
-    destination well specified.
+    Provision a commercial resource from a catalog into the specified
+    destination well(s).  A new tip is used for each destination well
+    specified to avoid contamination.
 
     Parameters
     ----------

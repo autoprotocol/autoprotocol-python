@@ -2,8 +2,17 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
-
 ## Unreleased
+---
+Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v2.2.1 - 2015-08-20
 ---
 Added
 - volume tracking to Protocol.stamp() and associated helper functions in autoprotocol.util
@@ -13,10 +22,11 @@ Changed
 Removed
 
 Fixed
+- semantic versioning fail
 
-## v2.2.1 - 2015-08-06
+## v2.1.1 - 2015-08-06
 ---
-
+**version number typo**
 Added
 - name property on Well
 - "outs" section of protocol.  Use Well.set_name() to name an aliquot

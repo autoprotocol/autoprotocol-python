@@ -245,7 +245,7 @@ class Protocol(object):
         else:
             raise RuntimeError("You must specify either a valid storage "
                              "condition or set discard=True for a Ref.")
-        container = Container(id, cont_type, name=name)
+        container = Container(id, cont_type, name=name, storage=storage if storage else None)
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -374,6 +374,36 @@ class Protocol(object):
                 "instructions": list(map(lambda x: self._refify(x.data),
                                          self.instructions))
             }
+
+    def store(self, container, condition):
+        """
+        Manually adjust the storage destiny for a container used within
+        this protocol.
+
+        Parameters
+        ----------
+        container : Container
+            Container used within this protocol
+        condition : str
+            New storage destiny for the specified Container
+
+        Raises
+        ------
+        TypeError
+            If container argument is not a Container object
+        RuntimeError
+            If the container passed is not already present in self.refs
+
+        """
+        if not isinstance(container, Container):
+            raise TypeError("Protocol.store() can only be used on a Container object.")
+        container.storage = condition
+        r = self.refs.get(container.name)
+        if not r:
+            raise RuntimeError("That container does not exist in the refs for this protocol.")
+        if "discard" in r.opts:
+            r.opts.pop("discard")
+        r.opts["store"] = {"where": str(condition)}
 
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,

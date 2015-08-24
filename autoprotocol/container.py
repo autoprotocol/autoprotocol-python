@@ -285,10 +285,11 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None):
+    def __init__(self, id, container_type, name=None, storage=None):
         self.name = name
         self.id = id
         self.container_type = container_type
+        self.storage = storage
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
 

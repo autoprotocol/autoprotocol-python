@@ -87,7 +87,10 @@ def convert_param(protocol, val, typeDesc):
     elif type == 'aliquot++':
         return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
     elif type == 'container':
-        return protocol.refs[val].container
+        try:
+            return protocol.refs[val].container
+        except KeyError:
+            raise RuntimeError("'%s' (supplied to field '%s') is not a valid reference to a container" % (val, typeDesc['label']))
     elif type in ['volume', 'time', 'temperature', 'length']:
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.

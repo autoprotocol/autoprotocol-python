@@ -779,24 +779,45 @@ class Protocol(object):
 
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
-          try:
-              sources = []
-              for idx, d in enumerate(dest.wells):
-                  for s in source.wells:
-                      vol = s.volume
-                      while vol >= volume[idx] and (len(sources) < len_dest):
-                          sources.append(s)
-                          vol -= volume[idx]
-              if len(sources) < len_dest:
-                  raise RuntimeError("There is not enough volume in the "
-                                     "source well(s) specified to complete "
-                                     "the transfers.")
-              source = WellGroup(sources)
-          except ValueError:
-            raise RuntimeError("When transferring liquid from multiple wells "
-                               "containing the same substance to multiple "
-                               "other wells, each source Well must have a "
-                               "volume attribute (aliquot) associated with it.")
+            try:
+                if reduce(lambda x, y: x+y, volume) > reduce(lambda x, y: x+y, [s.volume for s in source.wells]):
+                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete the transfers.")
+                sources = []
+                source_counter = 0
+                destinations = []
+                volumes = []
+                s = source.wells[source_counter]
+                vol = s.volume
+                for idx, d in enumerate(dest.wells):
+                    vol_d = volume[idx]
+                    while vol_d > Unit.fromstring("0:microliter"):
+                        if vol > vol_d:
+                            sources.append(s)
+                            destinations.append(d)
+                            volumes.append(vol_d)
+                            vol -= vol_d
+                            vol_d -= vol_d
+                        elif vol == vol_d:
+                            sources.append(s)
+                            destinations.append(d)
+                            volumes.append(vol_d)
+                            source_counter += 1
+                            s = source.wells[source_counter]
+                            vol = s.volume
+                            vol_d -= vol_d
+                        elif vol < vol_d:
+                            sources.append(s)
+                            destinations.append(d)
+                            volumes.append(vol)
+                            vol_d -= vol
+                            source_counter += 1
+                            s = source.wells[source_counter]
+                            vol = s.volume
+                source = WellGroup(sources)
+                dest = WellGroup(destinations)
+                volume = volumes
+            except ValueError:
+                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to multiple other wells, each source Well must have a volume attribute (aliquot) associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             v = convert_to_ul(v)

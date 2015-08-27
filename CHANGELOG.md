@@ -7,13 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 - storage attribute on Container
 - Protocol.store() - manually change storage condition destiny of a Container
+- Test for more complicated `transfer`ing with `one_source=True`
 
 Changed
 
 Removed
 
 Fixed
-
+- Error with `transfer`ing with `one_source=True`
 ## v2.2.1 - 2015-08-20
 ---
 Added

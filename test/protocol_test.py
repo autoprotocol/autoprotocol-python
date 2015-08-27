@@ -313,6 +313,17 @@ class TransferTestCase(unittest.TestCase):
                    c.wells_from(2, 2), "40:microliter", one_source=True)
         self.assertEqual(2, len(p.instructions[0].groups))
         self.assertFalse(p.instructions[0].groups[0]["transfer"][0]["from"] == p.instructions[0].groups[1]["transfer"][0]["from"])
+        p.transfer(c.wells_from(0, 2).set_volume("100:microliter"),
+                   c.wells_from(2, 4), "40:microliter", one_source=True)
+        self.assertEqual(7, len(p.instructions[0].groups))
+        self.assertTrue(p.instructions[0].groups[2]["transfer"][0]["from"] == p.instructions[0].groups[4]["transfer"][0]["from"])
+        self.assertTrue(p.instructions[0].groups[4]["transfer"][0]["volume"] == Unit.fromstring("20:microliter"))
+        p.transfer(c.wells_from(0, 2).set_volume("100:microliter"),
+                   c.wells_from(2, 4), ["20:microliter", "40:microliter", "60:microliter", "80:microliter"], one_source=True)
+        self.assertEqual(12, len(p.instructions[0].groups))
+        self.assertTrue(p.instructions[0].groups[7]["transfer"][0]["from"] == p.instructions[0].groups[9]["transfer"][0]["from"])
+        self.assertFalse(p.instructions[0].groups[9]["transfer"][0]["from"] == p.instructions[0].groups[10]["transfer"][0]["from"])
+        self.assertTrue(p.instructions[0].groups[10]["transfer"][0]["volume"] == Unit.fromstring("20:microliter"))
 
     def test_unit_conversion(self):
         p = Protocol()

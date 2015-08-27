@@ -75,22 +75,39 @@ def convert_param(protocol, val, typeDesc):
         val = param_default(typeDesc)
     if val is None:  # still None?
         return None
-
     type = typeDesc['type']
 
     if type == 'aliquot':
-        container = ('/').join(val.split('/')[0:-1])
-        well_idx = val.split('/')[-1]
-        return protocol.refs[container].container.well(well_idx)
+        try:
+            container = ('/').join(val.split('/')[0:-1])
+            well_idx = val.split('/')[-1]
+            return protocol.refs[container].container.well(well_idx)
+        except (KeyError, AttributeError, ValueError):
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("'%s' (supplied to field '%s') is not a valid "
+                               "reference to an aliquot" % (val, label))
     elif type == 'aliquot+':
-        return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
+        try:
+            return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
+        except:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The input '%s' (type aliquot+) is improperly"
+                               " formatted." % label)
     elif type == 'aliquot++':
-        return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
+        try:
+            return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
+        except:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The input '%s' (type aliquot++) is improperly"
+                               " formatted." % label)
     elif type == 'container':
+
         try:
             return protocol.refs[val].container
         except KeyError:
-            raise RuntimeError("'%s' (supplied to field '%s') is not a valid reference to a container" % (val, typeDesc['label']))
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("'%s' (supplied to field '%s') is not a valid "
+                               "reference to a container" % (val, label))
     elif type in ['volume', 'time', 'temperature', 'length']:
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.
@@ -113,21 +130,31 @@ def convert_param(protocol, val, typeDesc):
             for k in typeDesc['inputs']
         }
     elif type == 'group+':
-        return [{
-            k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
-            for k in typeDesc['inputs']
-        } for x in val]
+        try:
+            return [{
+                    k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
+                    for k in typeDesc['inputs']
+                    } for x in val]
+        except AttributeError:
+            raise RuntimeError("The input '%s' (type group+) must be in the form of"
+                               " a list of dictionaries" % typeDesc['label'])
     elif type == 'group-choice':
-        return {
-            'value': val['value'],
-            'inputs': {
-                opt['value']: convert_param(
-                    protocol,
-                    val['inputs'].get(opt['value']),
-                    {'type': 'group', 'inputs': opt['inputs']})
-                for opt in typeDesc['options'] if opt['value'] == val['value']
+        try:
+            return {
+                'value': val['value'],
+                'inputs': {
+                    opt['value']: convert_param(
+                        protocol,
+                        val['inputs'].get(opt['value']),
+                        {'type': 'group', 'inputs': opt['inputs']})
+                    for opt in typeDesc['options'] if opt['value'] == val['value']
+                }
             }
-        }
+        except (KeyError, AttributeError) as e:
+            label = typeDesc.get('label') or "[unknown]"
+            if e in ["value", "inputs"]:
+                raise RuntimeError("The input '%s' (type group-choice) is missing "
+                                   "a(n) %s field." % (label, e))
     elif type == 'thermocycle':
         return [
             {

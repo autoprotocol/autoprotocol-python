@@ -822,19 +822,17 @@ class Protocol(object):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
                     self.transfer(s, d, "750:microliter", one_source, one_tip,
-                                  mix_after, mix_before, mix_vol,
-                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
+                                  aspirate_speed, dispense_speed, aspirate_source,
                                   dispense_target, pre_buffer, disposal_vol,
                                   transit_vol, blowout_buffer, tip_type,
-                                  new_group)
+                                  new_group, **mix_kwargs)
                     diff -= Unit(750, "microliter")
 
                 self.transfer(s, d, diff,  one_source, one_tip,
-                                  mix_after, mix_before, mix_vol,
-                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
-                                  dispense_target, pre_buffer, disposal_vol,
-                                  transit_vol, blowout_buffer, tip_type,
-                                  new_group)
+                              aspirate_speed, dispense_speed, aspirate_source,
+                              dispense_target, pre_buffer, disposal_vol,
+                              transit_vol, blowout_buffer, tip_type,
+                              new_group, **mix_kwargs)
                 continue
 
             # Organize transfer options into dictionary (for json parsing)
@@ -851,7 +849,6 @@ class Protocol(object):
             if s.volume:
                 s.volume -= v
             # mix before and/or after parameters
-            print mix_kwargs.keys()
             if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
                 raise RuntimeError("If you specify mix arguments on transfer()"
                                    " you must also specify mix_before and/or"

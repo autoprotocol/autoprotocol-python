@@ -850,6 +850,12 @@ class Protocol(object):
                 d.volume = v
             if s.volume:
                 s.volume -= v
+            # mix before and/or after parameters
+            print mix_kwargs.keys()
+            if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
+                raise RuntimeError("If you specify mix arguments on transfer()"
+                                   " you must also specify mix_before and/or"
+                                   " mix_after=True.")
             if "mix_before" in mix_kwargs:
                 xfer["mix_before"] = {
                     "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,

@@ -770,7 +770,7 @@ class Protocol(object):
             else:
                 volume = [Unit.fromstring(volume)] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = map(lambda x: Unit.fromstring(x), volume)
+            volume = list(map(lambda x: Unit.fromstring(x), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -781,7 +781,7 @@ class Protocol(object):
         if one_source:
             try:
                 source_vol = [s.volume for s in source.wells]
-                if reduce(lambda x, y: x+y, volume) > reduce(lambda x, y: x+y, source_vol):
+                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the source well(s) specified to complete the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
@@ -815,7 +815,7 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, TypeError):
+            except (ValueError, AttributeError):
                 raise RuntimeError("When transferring liquid from multiple wells containing the same substance to multiple other wells, each source Well must have a volume attribute (aliquot) associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):

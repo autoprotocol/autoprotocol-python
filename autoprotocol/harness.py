@@ -125,10 +125,19 @@ def convert_param(protocol, val, typeDesc):
     elif type == 'decimal':
         return float(val)
     elif type == 'group':
-        return {
-            k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
-            for k in typeDesc['inputs']
-        }
+        try:
+            return {
+                k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
+                for k in typeDesc['inputs']
+            }
+        except KeyError as e:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The input '%s' (type group-choice) is missing "
+                                   "a(n) %s field." % (label, e))
+        except AttributeError:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The input '%s' (type group) is improperly"
+                               " formatted." % label)
     elif type == 'group+':
         try:
             return [{

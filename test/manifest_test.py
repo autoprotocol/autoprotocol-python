@@ -243,6 +243,32 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(0, len(parsed['group']['aliquot+']))
         self.assertEqual([{'bool': None}], parsed['group+'])
 
+    def test_errors(self):
+        with self.assertRaises(RuntimeError):
+            protocol_info1 = ProtocolInfo({
+            'name': 'Test Errors',
+            'inputs': {
+                'group': {
+                    'type': 'group',
+                    'inputs': {
+                        'bool': 'bool',
+                        'aliquot': 'aliquot',
+                        'aliquot+': 'aliquot+'
+                    }
+                },
+                'group+': {
+                    'type': 'group+',
+                    'inputs': {
+                        'bool': 'bool'
+                    }
+                }
+            }
+            })
+            parsed1 = protocol_info1.parse(self.protocol, {
+                'refs': {},
+                'parameters': {}
+            })
+
     # Test parsing of local manifest file
     def test_json_parse(self):
         protocol = Protocol()

@@ -159,9 +159,13 @@ def convert_param(protocol, val, typeDesc):
                     k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
                     for k in typeDesc['inputs']
                     } for x in val]
-        except AttributeError:
+        except (TypeError, AttributeError):
             raise RuntimeError("The value supplied to input '%s' (type group+) must be in the form of"
                                " a list of dictionaries" % typeDesc['label'])
+        except KeyError as e:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type group+) is missing "
+                                   "a(n) %s field." % (label, e))
     elif type == 'group-choice':
         try:
             return {
@@ -177,22 +181,29 @@ def convert_param(protocol, val, typeDesc):
         except (KeyError, AttributeError) as e:
             label = typeDesc.get('label') or "[unknown]"
             if e in ["value", "inputs"]:
-                raise RuntimeError("The input '%s' (type group-choice) is missing "
+                raise RuntimeError("The value supplied to input '%s' (type group-choice) is missing "
                                    "a(n) %s field." % (label, e))
     elif type == 'thermocycle':
-        return [
-            {
-                'cycles': g['cycles'],
-                'steps': [
-                    {
-                        'duration': Unit.fromstring(s['duration']),
-                        'temperature': Unit.fromstring(s['temperature'])
-                    }
-                    for s in g['steps']
-                ]
-            }
-            for g in val
-        ]
+        try:
+            return [
+                {
+                    'cycles': g['cycles'],
+                    'steps': [
+                        {
+                            'duration': Unit.fromstring(s['duration']),
+                            'temperature': Unit.fromstring(s['temperature'])
+                        }
+                        for s in g['steps']
+                    ]
+                }
+                for g in val
+            ]
+        except (TypeError, KeyError):
+            raise RuntimeError("Thermocycle input types must take a list of"
+                               " dictionaries in the form of:\n"
+                               "[{\"cycles\": integer, \n  \"steps\":[{\n    "
+                               "\"duration\": duration, \n    \"temperature\": "
+                               "temperature\n  }]\n}]")
     else:
         raise ValueError("Unknown input type %r" % type)
 

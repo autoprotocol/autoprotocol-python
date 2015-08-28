@@ -335,6 +335,36 @@ class TransferTestCase(unittest.TestCase):
         p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
         self.assertTrue(str(p.instructions[-1].groups[0]['transfer'][0]['volume']) == "500.0:microliter")
 
+    def test_mix_before_and_after(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(RuntimeError):
+            p.transfer(c.well(0), c.well(1), "10:microliter", mix_vol= "15:microliter")
+            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_a=21)
+            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions=21)
+            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_b=21)
+            p.transfer(c.well(0), c.well(1), "10:microliter", flowrate_a="200:microliter/second")
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True,
+                   mix_vol="10:microliter", repetitions_a=20)
+        self.assertTrue(int(p.instructions[-1].groups[0]['transfer'][0]['mix_after']['repetitions']) == 20)
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True,
+                   mix_vol="10:microliter", repetitions_b=20)
+        self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][0]['mix_after']['repetitions']) == 10)
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True)
+        self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][0]['mix_after']['repetitions']) == 10)
+        self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][0]['mix_after']['speed']) == "100:microliter/second")
+        self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][0]['mix_after']['volume']) == "6.0:microliter")
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True,
+                   mix_vol="10:microliter", repetitions_b=20)
+        self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['repetitions']) == 20)
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True,
+                   mix_vol="10:microliter", repetitions_a=20)
+        self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['repetitions']) == 10)
+        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True)
+        self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['repetitions']) == 10)
+        self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['speed']) == "100:microliter/second")
+        self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['volume']) == "6.0:microliter")
+
 class ConsolidateTestCase(unittest.TestCase):
     def test_multiple_sources(self):
         p = Protocol()

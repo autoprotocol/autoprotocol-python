@@ -601,12 +601,10 @@ class Protocol(object):
             self._pipette(groups)
 
     def transfer(self, source, dest, volume, one_source=False, one_tip=False,
-                 mix_after=False, mix_before=False, mix_vol=None,
-                 repetitions=10, flowrate="100:microliter/second",
                  aspirate_speed=None, dispense_speed=None,
                  aspirate_source=None, dispense_target=None, pre_buffer=None,
                  disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                 tip_type=None, new_group=False):
+                 tip_type=None, new_group=False, **mix_kwargs):
         """
         Transfer liquid from one specific well to another.  A new pipette tip
         is used between each transfer step unless the "one_tip" parameter
@@ -824,24 +822,18 @@ class Protocol(object):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
                     self.transfer(s, d, "750:microliter", one_source, one_tip,
-                                  mix_after, mix_before, mix_vol,
-                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
+                                  aspirate_speed, dispense_speed, aspirate_source,
                                   dispense_target, pre_buffer, disposal_vol,
                                   transit_vol, blowout_buffer, tip_type,
-                                  new_group)
+                                  new_group, **mix_kwargs)
                     diff -= Unit(750, "microliter")
 
                 self.transfer(s, d, diff,  one_source, one_tip,
-                                  mix_after, mix_before, mix_vol,
-                                  repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source,
-                                  dispense_target, pre_buffer, disposal_vol,
-                                  transit_vol, blowout_buffer, tip_type,
-                                  new_group)
+                              aspirate_speed, dispense_speed, aspirate_source,
+                              dispense_target, pre_buffer, disposal_vol,
+                              transit_vol, blowout_buffer, tip_type,
+                              new_group, **mix_kwargs)
                 continue
-
-
-            if mix_after and not mix_vol:
-                mix_vol = v
 
             # Organize transfer options into dictionary (for json parsing)
             xfer = {
@@ -856,17 +848,22 @@ class Protocol(object):
                 d.volume = v
             if s.volume:
                 s.volume -= v
-            if mix_before:
+            # mix before and/or after parameters
+            if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
+                raise RuntimeError("If you specify mix arguments on transfer()"
+                                   " you must also specify mix_before and/or"
+                                   " mix_after=True.")
+            if "mix_before" in mix_kwargs:
                 xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
+                    "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
+                    "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
+                    "speed":  mix_kwargs.get("flowrate_b") or  mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
-            if mix_after:
+            if "mix_after" in mix_kwargs:
                 xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
+                    "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
+                    "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
+                    "speed": mix_kwargs.get("flowrate_a") or  mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
             # Append transfer options
             opt_list = ["aspirate_speed", "dispense_speed"]

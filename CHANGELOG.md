@@ -11,6 +11,7 @@ Added
 - Better error handling in harness.py and accompanying tests
 
 Changed
+- Arguments to `Protocol.transfer` for `mix_before` and `mix_after` are now part of **mix_kwargs to allow for specifying separate parameters for mix_before and mix_after
 
 Removed
 

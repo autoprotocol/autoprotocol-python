@@ -75,70 +75,135 @@ def convert_param(protocol, val, typeDesc):
         val = param_default(typeDesc)
     if val is None:  # still None?
         return None
-
     type = typeDesc['type']
 
     if type == 'aliquot':
-        container = ('/').join(val.split('/')[0:-1])
-        well_idx = val.split('/')[-1]
-        return protocol.refs[container].container.well(well_idx)
+        try:
+            container = ('/').join(val.split('/')[0:-1])
+            well_idx = val.split('/')[-1]
+            return protocol.refs[container].container.well(well_idx)
+        except (KeyError, AttributeError, ValueError):
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("'%s' (supplied to input '%s') is not a valid "
+                               "reference to an aliquot" % (val, label))
     elif type == 'aliquot+':
-        return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
+        try:
+            return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
+        except:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type aliquot+) is improperly"
+                               " formatted." % label)
     elif type == 'aliquot++':
-        return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
+        try:
+            return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
+        except:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type aliquot++) is improperly"
+                               " formatted." % label)
     elif type == 'container':
-        return protocol.refs[val].container
+
+        try:
+            return protocol.refs[val].container
+        except KeyError:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("'%s' (supplied to input '%s') is not a valid "
+                               "reference to a container" % (val, label))
     elif type in ['volume', 'time', 'temperature', 'length']:
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.
-        if type == 'temperature' and \
-                val in ['ambient', 'warm_30', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
-            return val
-        else:
-            return Unit.fromstring(val)
+        try:
+            if type == 'temperature' and \
+                    val in ['ambient', 'warm_30', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
+                return val
+            else:
+                return Unit.fromstring(val)
+        except (ValueError, AttributeError):
+            raise RuntimeError("Values supplied to temperature input types must"
+                               " be either storage conditions (ex: \"cold_20\")"
+                               " or temperature units in the form of \"value:unit\"")
     elif type in 'bool':
         return bool(val)
     elif type in ['string', 'choice']:
         return str(val)
     elif type == 'integer':
-        return int(val)
+        try:
+            return int(val)
+        except ValueError:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type integer) is improperly"
+                               " formatted." % label)
     elif type == 'decimal':
-        return float(val)
+        try:
+            return float(val)
+        except ValueError:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type decimal) is improperly"
+                               " formatted." % label)
     elif type == 'group':
-        return {
-            k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
-            for k in typeDesc['inputs']
-        }
+        try:
+            return {
+                k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
+                for k in typeDesc['inputs']
+            }
+        except KeyError as e:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type group) is missing "
+                                   "a(n) %s field." % (label, e))
+        except AttributeError:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type group) is improperly"
+                               " formatted." % label)
     elif type == 'group+':
-        return [{
-            k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
-            for k in typeDesc['inputs']
-        } for x in val]
+        try:
+            return [{
+                    k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
+                    for k in typeDesc['inputs']
+                    } for x in val]
+        except (TypeError, AttributeError):
+            raise RuntimeError("The value supplied to input '%s' (type group+) must be in the form of"
+                               " a list of dictionaries" % typeDesc['label'])
+        except KeyError as e:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type group+) is missing "
+                                   "a(n) %s field." % (label, e))
     elif type == 'group-choice':
-        return {
-            'value': val['value'],
-            'inputs': {
-                opt['value']: convert_param(
-                    protocol,
-                    val['inputs'].get(opt['value']),
-                    {'type': 'group', 'inputs': opt['inputs']})
-                for opt in typeDesc['options'] if opt['value'] == val['value']
+        try:
+            return {
+                'value': val['value'],
+                'inputs': {
+                    opt['value']: convert_param(
+                        protocol,
+                        val['inputs'].get(opt['value']),
+                        {'type': 'group', 'inputs': opt['inputs']})
+                    for opt in typeDesc['options'] if opt['value'] == val['value']
+                }
             }
-        }
+        except (KeyError, AttributeError) as e:
+            label = typeDesc.get('label') or "[unknown]"
+            if e in ["value", "inputs"]:
+                raise RuntimeError("The value supplied to input '%s' (type group-choice) is missing "
+                                   "a(n) %s field." % (label, e))
     elif type == 'thermocycle':
-        return [
-            {
-                'cycles': g['cycles'],
-                'steps': [
-                    {
-                        'duration': Unit.fromstring(s['duration']),
-                        'temperature': Unit.fromstring(s['temperature'])
-                    }
-                    for s in g['steps']
-                ]
-            }
-            for g in val
-        ]
+        try:
+            return [
+                {
+                    'cycles': g['cycles'],
+                    'steps': [
+                        {
+                            'duration': Unit.fromstring(s['duration']),
+                            'temperature': Unit.fromstring(s['temperature'])
+                        }
+                        for s in g['steps']
+                    ]
+                }
+                for g in val
+            ]
+        except (TypeError, KeyError):
+            raise RuntimeError("Thermocycle input types must take a list of"
+                               " dictionaries in the form of:\n"
+                               "[{\"cycles\": integer, \n  \"steps\":[{\n    "
+                               "\"duration\": duration, \n    \"temperature\": "
+                               "temperature\n  }]\n}]")
     else:
         raise ValueError("Unknown input type %r" % type)
 

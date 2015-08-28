@@ -5,9 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
-- storage attribute on Container
+- Storage attribute on Container
 - Protocol.store() - manually change storage condition destiny of a Container
 - Test for more complicated `transfer`ing with `one_source=True`
+- Better error handling in harness.py and accompanying tests
 
 Changed
 

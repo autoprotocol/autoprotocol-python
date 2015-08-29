@@ -4,6 +4,7 @@ from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
 from .util import convert_to_ul
+from .util import check_valid_origin
 
 import sys
 if sys.version_info[0] >= 3:
@@ -1025,10 +1026,10 @@ class Protocol(object):
         else:
             self._pipette([cons])
 
-    def stamp(self, source, dest, volume, from_quad=0, to_quad=0,
-              mix_before=False, mix_after=False, mix_vol=None, repetitions=10,
-              flowrate="100:microliter/second", aspirate_speed=None,
-              dispense_speed=None, aspirate_source=None,
+    def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
+              columns=12), mix_before=False, mix_after=False, mix_vol=None,
+              repetitions=10, flowrate="100:microliter/second",
+              aspirate_speed=None, dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None, append=False):
 
@@ -1038,16 +1039,23 @@ class Protocol(object):
         documentation below and adjust existing scripts utilizing stamp()
         accordingly**
 
-        Move the specified volume of liquid from every well on the source plate
-        to the corersponding well on the destination plate using a 96-channel
-        liquid handler.
+        A stamp instruction consists of a list of transfers, each of which
+        specifies from and to well references (ref/well_index) representing
+        the top-left well or origin of a specified shape.
 
-        The following stamping configurations are supported:
+        Currently, the shape field may only be a rectangle object defined by
+        rows and columns attributes representing the number of contiguous tip
+        rows and columns to transfer.
 
-        - 384-well plate to 384-well plate (`from_quad` and `to_quad` must be specified)
-        - 96-well plate to 96-well plate (`from` and `to_quad` are optional)
-        - one 384-well plate to one 96-well plate (`from_quad` must be specified)
-        - one 96-well plate to one 384-well plate (`to_quad` must be specified)
+        The volume field defines the volume of liquid that will be aspirated
+        from every well of the shape specified starting at the from field and
+        dispensed into the corresponding wells starting at the to field.
+        The shape parameter is optional and will default to a full 8 rows by
+        12 columns. The tip_layout field refers to the SBS compliant layout of
+        tips, is optional, and will default to the layout of a 96 tip box.
+
+        The following plate types are currently supported: 96 and 384.
+
 
         Example Usage:
 
@@ -1055,60 +1063,65 @@ class Protocol(object):
 
             p = Protocol()
 
-            wells_96_1 = p.ref("wells_96_1", None, "96-flat", discard=True)
-            wells_96_2 = p.ref("wells_96_2", None, "96-flat", discard=True)
-            wells_96_3 = p.ref("wells_96_3", None, "96-flat", discard=True)
-            wells_96_4 = p.ref("wells_96_4", None, "96-flat", discard=True)
-            wells_96_5 = p.ref("wells_96_5", None, "96-flat", discard=True)
-            wells_384_1 = p.ref("wells_384_1", None, "384-flat", discard=True)
-            wells_384_2 = p.ref("wells_384_2", None, "384-flat", discard=True)
+            plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
+            plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
+            plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
+            plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
 
-            # 96 -> 96:
-            p.stamp(wells_96_1, wells_96_2, "10:microliter")
+            # A full-plate transfer between two 96 or 384-well plates
+            p.stamp(plate_1_96, plate_2_96, "10:microliter")
+            p.stamp(plate_1_384, plate_384, "10:microliter")
 
-            # 384 -> 384:
-            for x in [0, 1, 24, 25]:
-                p.stamp(wells_384_1, wells_384_2, "10:microliter",
-                        from_quad=x, to_quad=x, append=True)
+            # Defining shapes for selective stamping:
+            row_rectangle = dict(rows=1, columns=12)
+            two_column_rectangle = dict(rows=8, columns=2)
 
-            # 384 (specific quadrant) -> one 96-well:
-            p.stamp(wells_384_1, wells_96_1, "10:microliter", from_quad="A2")
+            # A transfer from the G row to the H row of another 96-well plate
+            p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
+            "10:microliter", row_rectangle)
 
-            # one 96-well to specific quadrant of 384:
-            p.stamp(wells_96_2, wells_384_1, "10:microliter", to_quad=1)
+            # A 2-column transfer from columns 1,2 of a 96-well plate to
+            #columns 2,4 of a 384-well plate
+            p.stamp(plate_1_384.well("A1"),
+            p.stamp(plate_1_96.well("A1"), plate_1_384.well("A2"),
+            "10:microliter", two_column_rectangle)
+            p.stamp(plate_1_96.well("A1"), plate_1_384.well("B2"),
+            "10:microliter", two_column_rectangle)
 
-            # 384-well to multiple 96-well plates:
-            for i,x in zip([0, 1, 24], [wells_96_1, wells_96_2, wells_96_3]):
-              p.stamp(wells_384_1, x, "10:microliter", from_quad = i, append=True)
-
-            # combine multiple 96-well plates into one 384-well:
-            for i, x in zip([0, 1, 24, 25], [wells_96_1, wells_96_2, wells_96_3, wells_96_4]):
-              p.stamp(x, wells_384_1, "10:microliter", to_quad = i, append=True)
-
-            # combine multiple 96-well plates into one 96-well:
-            for x in [wells_96_1, wells_96_2, wells_96_3, wells_96_4]:
-              p.stamp(x, wells_96_5, "10:microliter", append=True)
+            # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
+            #of a 96-well plate
+            p.stamp(plate_1_384.well("A1"), plate_1_96.well("B1"),
+            "10:microliter", shape=row_rectangle)
+            p.stamp(plate_1_384.well("A2"), plate_1_96.well("B1"),
+            "10:microliter", shape=row_rectangle)
+            p.stamp(plate_1_384.well("B1"), plate_1_96.well("C1"),
+            "10:microliter", shape=row_rectangle)
+            p.stamp(plate_1_384.well("B2"), plate_1_96.well("C1"),
+            "10:microliter", shape=row_rectangle)
 
         Parameters
         ----------
-        source : Container
-            96- or 384-well plate to source liquid from.
-        dest : Container
-            96- or 384-well plate to transfer liquid to.
+        source_origin : Well
+            Top-left well where the rows/columns will be defined with respect
+            to for the source transfer.
+        dest_origin : Well
+            Top-left well where the rows/columns will be defined with respect
+            to for the destination transfer.
         volume : str, Unit
             Volume of liquid to move from source plate to destination plate
-        to_quad : str, int
-            Well index referring to the top left well of a plate quadrant
-            on the destination plate. For 96-well plates, "A1" or 0 are the
-            only valid quadrants, for 384-well plates, the four quadrants are
-            referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
-            respectively.
-        from_quad : str, int
-            Well index referring to the top left well of a plate quadrant
-            on the source plate. For 96-well plates, "A1" or 0 are the
-            only valid quadrants, for 384-well plates, the four quadrants are
-            referred to using "A1" or 0, "A2" or 1, "B1" or 24, or "B2" or 25,
-            respectively.
+        shape : dictionary, optional
+            The shape parameter is optional and will default to a rectangle
+            corresponding to a full 96-well plate (8 rows by 12 columns).
+            The rows and columns will be defined wrt the specified origin.
+
+            Example
+
+            .. code-block:: python
+
+                rectangle = {}
+                rectangle["rows"] = 8
+                rectangle["columns"] = 12
+
         mix_after : bool, optional
             Specify whether to mix the liquid in destination wells after
             liquid is transferred.
@@ -1142,20 +1155,15 @@ class Protocol(object):
         blowout_buffer : bool, optional
             If true the operation will dispense the pre_buffer along with the
             dispense volume. Cannot be true if disposal_vol is specified.
-        append : boolean
-            Append this stamp instruction to the previous one if the previous
-            instruction has one transfer group.  Vendors may determine
-            different behavior for `stamp` instructions containing more than
-            one transfer in its list of "transfers" and should adjust their
-            version of this library accordingly.
 
             Example
 
             .. code-block:: python
 
-                p.stamp(wells_96_1, wells_96_2, "10:microliter")
-                p.stamp(wells_96_2, wells_96_3, "10:microliter", append = True)
-
+                p.stamp(96_plate_1.well("A1), 96_plate_2.well("A1"),
+                "10:microliter")
+                p.stamp(96_plate_1.well("A1), 96_plate_2.well("A1"),
+                "10:microliter", append=True)
 
             Autoprotocol Output:
 
@@ -1166,13 +1174,22 @@ class Protocol(object):
                       "transfers": [
                         {
                           "volume": "10.0:microliter",
-                          "to": "wells_96_2/0",
-                          "from": "wells_96_1/0"
+                          "to": "96_plate_2/0",
+                          "shape": {
+                            "rows": 8,
+                            "columns": 12
+                          }
+                          "from": "96_plate_1/0",
+                          "tip_layout": 96
                         },
                         {
                           "volume": "10.0:microliter",
-                          "to": "wells_96_3/0",
-                          "from": "wells_96_2/0"
+                          "to": "96_plate_2/0",
+                          "shape": {
+                            "rows": 8,
+                            "columns": 12
+                          }
+                          "from": "96_plate_1/0",
                         }
                       ],
                       "op": "stamp"
@@ -1180,12 +1197,62 @@ class Protocol(object):
                   ]
 
         """
-        txs = []
-        volume = Unit.fromstring(volume)
+
+        # Support existing transfer syntax for going from 96 --> 96 and 384 --> 384 full plate
+        if isinstance(source_origin, Container) and isinstance(dest_origin, Container):
+            source_plate = source_origin
+            dest_plate = dest_origin
+            src_plate_type = source_plate.container_type
+            dest_plate_type = dest_plate.container_type
+            if (src_plate_type.well_count == dest_plate_type.well_count):
+                source_origin = source_plate.well(0)
+                dest_origin = dest_plate.well(0)
+        elif not isinstance(source_origin, Well) or not isinstance(dest_origin,Well):
+            raise TypeError("Invalid input type given. Source and destination has to be of type well.")
+        else:
+          source_plate = source_origin.container
+          dest_plate = dest_origin.container
+          src_plate_type = source_plate.container_type
+          dest_plate_type = dest_plate.container_type
+
+        # Check and load rows/columns from given shape
+        if "rows" not in shape or "columns" not in shape:
+            raise TypeError("Invalid input shape given. Rows and columns "
+                            "of a rectangle has to be defined.")
+        rows = shape["rows"]
+        columns = shape["columns"]
+
+        # Check dimensions
+        src_col_count = src_plate_type.col_count
+        dest_col_count = dest_plate_type.col_count
+        if columns < 0 or columns > src_col_count or columns > dest_col_count:
+            raise ValueError("Columns given exceed plate dimensions.")
+
+        src_row_count = src_plate_type.well_count // src_col_count
+        dest_row_count = dest_plate_type.well_count // dest_col_count
+        if rows < 0 or rows > src_row_count or rows > dest_row_count:
+            raise ValueError("Rows given exceed plate dimensions.")
+
+        # Check on complete rows/columns (assumption: tip_layout=96)
+        xfer_axis = "col"
+        if columns == 12:
+            xfer_axis = "row"
+        elif rows != 8:
+            raise ValueError("Only complete rows or columns are allowed.")
+
+        # Check if origins are valid
+        check_valid_origin(source_origin, src_plate_type, xfer_axis)
+        check_valid_origin(dest_origin, dest_plate_type, xfer_axis)
+
+        # Initializing transfer dictionary
         xfer = {}
-        xfer["to"] = dest.quadrant(to_quad)[0]
-        xfer["from"] = source.quadrant(from_quad)[0]
-        xfer["volume"] = volume
+        xfer["to"] = dest_origin
+        xfer["from"] = source_origin
+        xfer["volume"] = Unit.fromstring(volume)
+        xfer["shape"] = shape
+        xfer["tip_layout"] = 96
+
+        # Adding liquid transfer options
         opt_list = ["aspirate_speed", "dispense_speed"]
         for option in opt_list:
             assign(xfer, option, eval(option))
@@ -1209,23 +1276,40 @@ class Protocol(object):
                 "speed": flowrate
             }
 
-        for well in source.quadrant(from_quad):
+        # Volume checking
+        columnWise = False
+        if xfer_axis == "col":
+            columnWise = True
+        for well in source_plate.wells_from(source_origin, columns*rows,
+                                            columnWise):
             if well.volume:
-                well.set_volume(well.volume - volume)
-        for well in dest.quadrant(to_quad):
+                well.volume -= Unit.fromstring(volume)
+        for well in dest_plate.wells_from(dest_origin, columns*rows,
+                                          columnWise):
             if well.volume:
-                well.set_volume(well.volume + volume)
+                well.volume += Unit.fromstring(volume)
             else:
-                well.set_volume(volume)
+                well.volume = Unit.fromstring(volume)
 
-        txs.append(xfer)
+        # Chunking transfers into lists as much as possible for efficiency
+        maxTransfers = 3
+        maxContainers = 3
+        if (len(self.instructions) > 0 and
+           self.instructions[-1].op == "stamp"):
+            transferList = self.instructions[-1].transfers
+            originList = ([x["from"] for x in transferList] +
+                          [x["to"] for x in transferList] +
+                          [source_origin, dest_origin])
 
-        if (append and self.instructions and
-            self.instructions[-1].op == "stamp" and
-            len(self.instructions[-1].transfers) == 1):
+            # Append to original list if possible
+            if (len(self.instructions[-1].transfers) + 1 <= maxTransfers and
+               len(set(map(lambda x: x.container, originList))) <= maxContainers):
                 self.instructions[-1].transfers.append(xfer)
+            else:
+                self.instructions.append(Stamp([xfer]))
         else:
-            self.instructions.append(Stamp(txs))
+            # Initialize list of transfers
+            self.instructions.append(Stamp([xfer]))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

@@ -385,20 +385,62 @@ class ConsolidateTestCase(unittest.TestCase):
 
 
 class StampTestCase(unittest.TestCase):
+    #TODO: Implement check for volume accounting
     def test_single_transfers(self):
         p = Protocol()
-        plate_96_list = []
-        for plate_num in range(5):
-            plate_name = ("test_96_"+str(plate_num))
-            plate_96_list.append(p.ref(plate_name, None, "96-flat", discard=True))
-        plate_384_list = []
-        for plate_num in range(3):
-            plate_name = ("test_384_"+str(plate_num))
-            plate_384_list.append(p.ref(plate_name, None, "384-flat", discard=True))
-        with self.assertRaises(AssertionError):
-            # Transfer 4 plates
-            for pl, q in zip(plate_96_list, [0, 1, 24, 26]):
-                p.stamp(pl, plate_384_list[0], "10:microliter", to_quad = q)
+        plate_1_6 = p.ref("plate_1_6", None, "6-flat", discard=True)
+        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
+        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
+        plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
+        plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
+        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
+                "10:microliter", dict(rows=1, columns=12))
+        p.stamp(plate_1_96.well("A1"), plate_1_384.well("A2"),
+                "10:microliter", dict(rows=8, columns=2))
+        # Verify full plate to full plate transfer works for 96, 384 container input
+        p.stamp(plate_1_96, plate_2_96, "10:microliter")
+        p.stamp(plate_1_384, plate_2_384, "10:microliter")
+
+        with self.assertRaises(TypeError):
+            p.stamp(plate_1_96, plate_1_384, "10:microliter")
+            p.stamp(plate_1_384, plate_1_96, "10:microliter")
+
+        with self.assertRaises(ValueError):
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A2"),
+                    "10:microliter", dict(rows=9, columns=1))
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("B1"),
+                    "10:microliter", dict(rows=1, columns=13))
+            p.stamp(plate_1_384.well("A1"), plate_2_384.well("A2"),
+                    "10:microliter", dict(rows=9, columns=1))
+            p.stamp(plate_1_384.well("A1"), plate_2_384.well("B1"),
+                    "10:microliter", dict(rows=1, columns=13))
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("B1"),
+                    "10:microliter", dict(rows=1, columns=12))
+
+    def test_multiple_transfers(self):
+        p = Protocol()
+        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
+        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
+        plate_3_96 = p.ref("plate_3_96", None, "96-flat", discard=True)
+        plate_4_96 = p.ref("plate_4_96", None, "96-flat", discard=True)
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter")
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter")
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter")
+        self.assertEqual(3, len(p.instructions[0].transfers))
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter")
+        self.assertEqual(3, len(p.instructions[0].transfers))
+        self.assertEqual(1, len(p.instructions[1].transfers))
+        # Test multiple plates
+        p.stamp(plate_1_96.well("A1"), plate_3_96.well("A1"),
+                "10:microliter")
+        p.stamp(plate_4_96.well("A1"), plate_3_96.well("A1"),
+                "10:microliter")
+        self.assertEqual(2, len(p.instructions[1].transfers))
+        self.assertEqual(1, len(p.instructions[2].transfers))
 
 
 class RefifyTestCase(unittest.TestCase):

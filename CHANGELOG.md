@@ -33,6 +33,7 @@ Added
 - volume tracking to Protocol.stamp() and associated helper functions in autoprotocol.util
 
 Changed
+- Protocol.stamp() now supports selective row-wise/col-wise stamping
 
 Removed
 

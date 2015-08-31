@@ -12,6 +12,17 @@ Removed
 
 Fixed
 
+## v2.3.0 - 2015-08-31
+---
+Added
+
+Changed
+- Protocol.stamp() and Stamp() now support selective (row-wise and column-wise) stamping (see docstring for details)
+
+Removed
+
+Fixed
+
 ## v2.2.2 - 2015-08-28
 Added
 - Storage attribute on Container
@@ -33,7 +44,6 @@ Added
 - volume tracking to Protocol.stamp() and associated helper functions in autoprotocol.util
 
 Changed
-- Protocol.stamp() now supports selective row-wise/col-wise stamping
 
 Removed
 

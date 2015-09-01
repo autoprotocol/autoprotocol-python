@@ -324,6 +324,12 @@ class TransferTestCase(unittest.TestCase):
         self.assertTrue(p.instructions[0].groups[7]["transfer"][0]["from"] == p.instructions[0].groups[9]["transfer"][0]["from"])
         self.assertFalse(p.instructions[0].groups[9]["transfer"][0]["from"] == p.instructions[0].groups[10]["transfer"][0]["from"])
         self.assertTrue(p.instructions[0].groups[10]["transfer"][0]["volume"] == Unit.fromstring("20:microliter"))
+        c.well(0).set_volume("50:microliter")
+        c.well(1).set_volume("200:microliter")
+        p.transfer(c.wells_from(0,2),
+                   c.well(1), "100:microliter", one_source=True)
+        p.transfer(c.wells_from(0,2),
+                   c.well(1), "100:microliter", one_source=True)
 
     def test_unit_conversion(self):
         p = Protocol()

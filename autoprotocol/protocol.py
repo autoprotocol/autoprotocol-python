@@ -808,7 +808,7 @@ class Protocol(object):
                                 volumes.append(vol)
                                 vol_d -= vol
                                 source_counter += 1
-                                if idx < len_dest-1:
+                                if source_counter < len_source:
                                     s = source.wells[source_counter]
                                 vol = s.volume
                 source = WellGroup(sources)

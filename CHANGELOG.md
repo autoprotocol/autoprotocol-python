@@ -11,6 +11,7 @@ Changed
 Removed
 
 Fixed
+- Small bug for transfer with one_source=true fixed
 
 ## v2.3.0 - 2015-08-31
 ---

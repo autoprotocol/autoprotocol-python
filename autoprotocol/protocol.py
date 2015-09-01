@@ -764,7 +764,7 @@ class Protocol(object):
 
         # Auto-generate list from single volume, check if list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
-            if len_dest == 1:
+            if len_dest == 1 and not one_source:
                 volume = [Unit.fromstring(volume)] * len_source
             else:
                 volume = [Unit.fromstring(volume)] * len_dest
@@ -810,7 +810,7 @@ class Protocol(object):
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
-                                vol = s.volume
+                                    vol = s.volume
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes

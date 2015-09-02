@@ -12,6 +12,7 @@ Removed
 
 Fixed
 - Small bug for transfer with one_source=true fixed
+- Better handling of default append=true behavior for `Protocol.stamp`
 
 ## v2.3.0 - 2015-08-31
 ---

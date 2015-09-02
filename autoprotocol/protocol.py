@@ -5,6 +5,7 @@ from .instruction import *
 from .pipette_tools import assign
 from .util import convert_to_ul
 from .util import check_valid_origin
+from .util import check_stamp_append
 
 import sys
 if sys.version_info[0] >= 3:
@@ -1291,24 +1292,20 @@ class Protocol(object):
             else:
                 well.volume = Unit.fromstring(volume)
 
-        # Chunking transfers into lists as much as possible for efficiency
+        # Set maximum parameters which are defined due to TCLE limitations
         maxTransfers = 3
         maxContainers = 3
-        if (len(self.instructions) > 0 and
-           self.instructions[-1].op == "stamp"):
-            transferList = self.instructions[-1].transfers
-            originList = ([x["from"] for x in transferList] +
-                          [x["to"] for x in transferList] +
-                          [source_origin, dest_origin])
 
-            # Append to original list if possible
-            if (len(self.instructions[-1].transfers) + 1 <= maxTransfers and
-               len(set(map(lambda x: x.container, originList))) <= maxContainers):
+        # Chunk transfers if there is a previous stamp instruction and if its
+        # valid to append to an existing instruction
+        if (len(self.instructions) > 0 and
+           self.instructions[-1].op == "stamp" and
+           check_stamp_append(xfer, self.instructions[-1].transfers,
+                              maxTransfers, maxContainers)):
+                # Append to existing instruction
                 self.instructions[-1].transfers.append(xfer)
-            else:
-                self.instructions.append(Stamp([xfer]))
         else:
-            # Initialize list of transfers
+            # Initialize new stamp list/instruction
             self.instructions.append(Stamp([xfer]))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):

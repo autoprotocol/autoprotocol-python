@@ -428,6 +428,7 @@ class StampTestCase(unittest.TestCase):
 
     def test_multiple_transfers(self):
         p = Protocol()
+        # Verify instruction list length
         plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
         plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
         plate_3_96 = p.ref("plate_3_96", None, "96-flat", discard=True)
@@ -450,6 +451,22 @@ class StampTestCase(unittest.TestCase):
                 "10:microliter")
         self.assertEqual(2, len(p.instructions[1].transfers))
         self.assertEqual(1, len(p.instructions[2].transfers))
+        # Ensure full plates are chunked correctly
+        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
+                "10:microliter", dict(rows=1, columns=12))
+        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
+                "10:microliter", dict(rows=2, columns=12))
+        self.assertEqual(len(p.instructions), 4)
+        self.assertEqual(len(p.instructions[3].transfers), 2)
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter", dict(rows=8, columns=2))
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A12"),
+                "10:microliter", dict(rows=8, columns=1))
+        self.assertEqual(len(p.instructions), 5)
+        self.assertEqual(len(p.instructions[3].transfers), 2)
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter", dict(rows=8, columns=12))
+        self.assertEqual(len(p.instructions), 6)
 
 
 class RefifyTestCase(unittest.TestCase):

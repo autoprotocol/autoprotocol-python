@@ -135,6 +135,42 @@ def check_valid_origin(origin, plate_type, xfer_axis):
     else:
         raise RuntimeError("Unsupported plate type for checking origin.")
 
+
+def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContainers=3):
+    """
+    Checks whether current stamp can be appended to previous stamp instruction.
+    """
+    # Ensure Instruction contains either all full plate or selective
+    if (prev_xfer_list[0]["shape"]["columns"] == 12 and
+       prev_xfer_list[0]["shape"]["rows"] == 8):
+        if (current_xfer["shape"]["columns"] != 12 or
+           current_xfer["shape"]["rows"] != 8):
+            return False
+    elif (current_xfer["shape"]["columns"] == 12 and
+          current_xfer["shape"]["rows"] == 8):
+        if (prev_xfer_list[0]["shape"]["columns"] != 12 or
+           prev_xfer_list[0]["shape"]["rows"] != 8):
+            return False
+    # Ensure Instruction contains all column/row-wise transfers
+    elif prev_xfer_list[0]["shape"]["columns"] == 12:
+        if current_xfer["shape"]["columns"] != 12:
+            return False
+    elif prev_xfer_list[0]["shape"]["rows"] == 8:
+        if current_xfer["shape"]["rows"] != 8:
+            return False
+
+    # Check if maximum Transfers/Containers is reached
+    originList = ([x["from"] for x in prev_xfer_list] +
+                  [x["to"] for x in prev_xfer_list] +
+                  [current_xfer["from"], current_xfer["to"]])
+
+    if (len(prev_xfer_list) + 1 > maxTransfers or
+       len(set(map(lambda x: x.container, originList))) > maxContainers):
+        return False
+
+    return True
+
+
 class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.

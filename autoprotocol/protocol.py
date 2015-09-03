@@ -753,13 +753,13 @@ class Protocol(object):
                 dest = WellGroup(dest.wells * len_source)
                 len_dest = len(dest.wells)
             if len_source != len_dest:
-                raise RuntimeError("To transfer liquid from one well or"
-                                   "multiple wells  containing the same"
-                                   "source, set one_source to True. To"
-                                   "transfer liquid from multiple wells to a"
+                raise RuntimeError("To transfer liquid from one well or "
+                                   "multiple wells  containing the same "
+                                   "source, set one_source to True. To "
+                                   "transfer liquid from multiple wells to a "
                                    "single destination well, specify only one "
-                                   "destination well. Otherwise, you must"
-                                   "specify the same number of source and"
+                                   "destination well. Otherwise, you must "
+                                   "specify the same number of source and "
                                    "destination wells to do a one-to-one "
                                    "transfer.")
 
@@ -782,7 +782,8 @@ class Protocol(object):
             try:
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete the transfers.")
+                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                                       "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
                     destinations = dest.wells
@@ -816,7 +817,9 @@ class Protocol(object):
                 dest = WellGroup(destinations)
                 volume = volumes
             except (ValueError, AttributeError):
-                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to multiple other wells, each source Well must have a volume attribute (aliquot) associated with it.")
+                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
+                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
+                                   "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             v = convert_to_ul(v)
@@ -859,13 +862,13 @@ class Protocol(object):
                 xfer["mix_before"] = {
                     "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
                     "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
-                    "speed":  mix_kwargs.get("flowrate_b") or  mix_kwargs.get("flowrate") or "100:microliter/second"
+                    "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
             if "mix_after" in mix_kwargs:
                 xfer["mix_after"] = {
                     "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
                     "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
-                    "speed": mix_kwargs.get("flowrate_a") or  mix_kwargs.get("flowrate") or "100:microliter/second"
+                    "speed": mix_kwargs.get("flowrate_a") or mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
             # Append transfer options
             opt_list = ["aspirate_speed", "dispense_speed"]
@@ -877,7 +880,7 @@ class Protocol(object):
             for x_option in x_opt_list:
                 assign(xfer, x_option, eval(x_option[2:]))
             if v.value > 0:
-              opts.append(xfer)
+                opts.append(xfer)
 
         trans = {}
         assign(trans, "x_tip_type", tip_type)
@@ -1009,9 +1012,9 @@ class Protocol(object):
         # Append mix options
         if mix_after:
             cons_instr["mix_after"] = {
-              "volume": mix_vol,
-              "repetitions": repetitions,
-              "speed": flowrate
+                "volume": mix_vol,
+                "repetitions": repetitions,
+                "speed": flowrate
             }
         # Append transfer options
         opt_list = ["allow_carryover", "dispense_speed"]
@@ -1211,10 +1214,10 @@ class Protocol(object):
         elif not isinstance(source_origin, Well) or not isinstance(dest_origin,Well):
             raise TypeError("Invalid input type given. Source and destination has to be of type well.")
         else:
-          source_plate = source_origin.container
-          dest_plate = dest_origin.container
-          src_plate_type = source_plate.container_type
-          dest_plate_type = dest_plate.container_type
+            source_plate = source_origin.container
+            dest_plate = dest_origin.container
+            src_plate_type = source_plate.container_type
+            dest_plate_type = dest_plate.container_type
 
         # Check and load rows/columns from given shape
         if "rows" not in shape or "columns" not in shape:
@@ -1561,10 +1564,10 @@ class Protocol(object):
             wells = WellGroup(ref.wells_from(c["column"], ref.container_type.row_count(),
                               columnwise=True))
             for w in wells:
-              if w.volume:
-                w.volume += Unit.fromstring(c["volume"])
-              else:
-                w.set_volume(c["volume"])
+                if w.volume:
+                    w.volume += Unit.fromstring(c["volume"])
+                else:
+                    w.set_volume(c["volume"])
 
         self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
 
@@ -3009,8 +3012,8 @@ class Protocol(object):
                     "to": []
                 })
             opts = {
-              "well": d,
-              "volume": v
+                "well": d,
+                "volume": v
             }
             if distribute_target:
                 opts["distribute_target"] = distribute_target

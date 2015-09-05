@@ -3,6 +3,7 @@ import json
 from .protocol import Protocol
 from .unit import Unit
 from .container import WellGroup
+from . import UserError
 import argparse
 import sys
 
@@ -314,6 +315,17 @@ def run(fn, protocol_name=None):
     else:
         params = protocol._ref_containers_and_wells(source["parameters"])
 
-    fn(protocol, params)
+    try:
+        fn(protocol, params)
+    except UserError as e:
+        print(json.dumps({
+            'errors': [
+                {
+                    'message': e.message,
+                    'info': e.info
+                }
+            ]
+        }, indent=2))
+        return
 
     print(json.dumps(protocol.as_dict(), indent=2))

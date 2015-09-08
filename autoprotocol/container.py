@@ -102,14 +102,7 @@ class Well(object):
         name : str
             Well name.
 
-        Raises
-        ------
-        TypeError
-            If `name` is not of type str.
-
         """
-        if not isinstance(name, str):
-            raise TypeError("Well name must be a string.")
         self.name = name
         return self
 

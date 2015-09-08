@@ -230,7 +230,8 @@ class ProtocolInfo(object):
                 for idx in aqs:
                     aq = aqs[idx]
                     c.well(idx).set_volume(aq['volume'])
-                    c.well(idx).set_name(aq['name'])
+                    if "name" in aq:
+                        c.well(idx).set_name(aq['name'])
                     if "properties" in aq:
                         c.well(idx).set_properties(aq.get('properties'))
 

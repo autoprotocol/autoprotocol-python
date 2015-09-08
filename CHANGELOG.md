@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- UserError exception class for returning custom errors from within protocol scripts
+- functionality to harness.py for naming aliquots
 
 Changed
 
@@ -12,7 +14,7 @@ Removed
 
 Fixed
 - Small bug for transfer with one_source=true fixed
-- Better handling of default append=true behavior for `Protocol.stamp`
+- Better handling of default append=true behavior for `Protocol.stamp()`
 
 ## v2.3.0 - 2015-08-31
 ---

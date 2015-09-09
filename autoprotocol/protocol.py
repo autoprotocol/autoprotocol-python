@@ -1238,15 +1238,18 @@ class Protocol(object):
             raise ValueError("Rows given exceed plate dimensions.")
 
         # Check on complete rows/columns (assumption: tip_layout=96)
-        xfer_axis = "col"
-        if columns == 12:
-            xfer_axis = "row"
-        elif rows != 8:
+        if columns == 12 and rows == 8:
+            stamp_type = "full"
+        elif columns == 12:
+            stamp_type = "row"
+        elif rows == 8:
+            stamp_type = "col"
+        else:
             raise ValueError("Only complete rows or columns are allowed.")
 
         # Check if origins are valid
-        check_valid_origin(source_origin, src_plate_type, xfer_axis)
-        check_valid_origin(dest_origin, dest_plate_type, xfer_axis)
+        check_valid_origin(source_origin, src_plate_type, stamp_type)
+        check_valid_origin(dest_origin, dest_plate_type, stamp_type)
 
         # Initializing transfer dictionary
         xfer = {}
@@ -1268,11 +1271,11 @@ class Protocol(object):
         if not mix_vol and (mix_before or mix_after):
             mix_vol = volume * .5
         if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
+            xfer["mix_before"] = {
+                "volume": mix_vol,
+                "repetitions": repetitions,
+                "speed": flowrate
+            }
         if mix_after:
             xfer["mix_after"] = {
                 "volume": mix_vol,
@@ -1282,7 +1285,7 @@ class Protocol(object):
 
         # Volume checking
         columnWise = False
-        if xfer_axis == "col":
+        if stamp_type == "col":
             columnWise = True
         for well in source_plate.wells_from(source_origin, columns*rows,
                                             columnWise):
@@ -1296,8 +1299,14 @@ class Protocol(object):
                 well.volume = Unit.fromstring(volume)
 
         # Set maximum parameters which are defined due to TCLE limitations
-        maxTransfers = 3
         maxContainers = 3
+        if stamp_type == "full":
+            maxTransfers = 3
+        elif stamp_type == "col":
+            maxTransfers = 12
+        else:
+            maxTransfers = 8
+
 
         # Chunk transfers if there is a previous stamp instruction and if its
         # valid to append to an existing instruction

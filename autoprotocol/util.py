@@ -102,7 +102,7 @@ def quad_num_to_ind(q, human=False):
         raise ValueError("Invalid quadrant number.")
 
 
-def check_valid_origin(origin, plate_type, xfer_axis):
+def check_valid_origin(origin, plate_type, stamp_type):
     # Checks if selected well is a valid origin destination for the given plate
     # Assumption: SBS formatted plates and 96-tip layout
     robotized_origin = plate_type.robotize(origin)
@@ -111,24 +111,32 @@ def check_valid_origin(origin, plate_type, xfer_axis):
     row_count = plate_type.well_count // col_count
 
     if well_count == 96:
-        if xfer_axis == "row":
+        if stamp_type == "full":
+            if robotized_origin != 0:
+                raise ValueError("For full 96-well transfers, origin has "
+                                 "to be well 0.")
+        elif stamp_type == "row":
             if (robotized_origin % col_count) != 0:
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
                                  "column.")
         else:
-            if robotized_origin > col_count or robotized_origin < 0:
+            if robotized_origin >= col_count or robotized_origin < 0:
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
                                  "column.")
     elif well_count == 384:
-        if xfer_axis == "row":
+        if stamp_type == "full":
+            if robotized_origin not in [0, 1, 24, 25]:
+                raise ValueError("For full 384-well transfers, origin has "
+                                 "to be well 0, 1, 24 or 25.")
+        elif stamp_type == "row":
             if (robotized_origin % col_count) not in [0, 1]:
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
                                  "column.")
         else:
-            if robotized_origin > col_count*2 or robotized_origin < 0:
+            if robotized_origin >= col_count*2 or robotized_origin < 0:
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
                                  "column.")
@@ -141,6 +149,7 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
     Checks whether current stamp can be appended to previous stamp instruction.
     """
     # Ensure Instruction contains either all full plate or selective
+    axis_key = None
     if (prev_xfer_list[0]["shape"]["columns"] == 12 and
        prev_xfer_list[0]["shape"]["rows"] == 8):
         if (current_xfer["shape"]["columns"] != 12 or
@@ -153,9 +162,11 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
             return False
     # Ensure Instruction contains all column/row-wise transfers
     elif prev_xfer_list[0]["shape"]["columns"] == 12:
+        axis_key = "rows"
         if current_xfer["shape"]["columns"] != 12:
             return False
     elif prev_xfer_list[0]["shape"]["rows"] == 8:
+        axis_key = "columns"
         if current_xfer["shape"]["rows"] != 8:
             return False
 
@@ -164,7 +175,12 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
                   [x["to"] for x in prev_xfer_list] +
                   [current_xfer["from"], current_xfer["to"]])
 
-    if (len(prev_xfer_list) + 1 > maxTransfers or
+    if axis_key:
+        num_prev_xfers = sum([x["shape"][axis_key] for x in prev_xfer_list])
+    else:
+        num_prev_xfers = len(prev_xfer_list)
+
+    if (num_prev_xfers + 1 > maxTransfers or
        len(set(map(lambda x: x.container, originList))) > maxContainers):
         return False
 

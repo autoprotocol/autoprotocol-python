@@ -1737,7 +1737,7 @@ class Protocol(object):
                     melting_rate=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
-        groups being a list of dicts in the formof:
+        groups is a list of dicts in the form of:
 
         .. code-block:: python
 
@@ -1756,6 +1756,9 @@ class Protocol(object):
                   "read": boolean // optional (default true)
                 }]
             }],
+
+        Thermocycle can also be used for either conventional or row-wise
+        gradient PCR. Refer to the examples below for details.
 
         Example Usage:
 
@@ -1788,12 +1791,12 @@ class Protocol(object):
                                "duration": "5:minute",
                                }]
                             },
-                            {"cycles": 35,
+                            {"cycles": 30,
                                 "steps": [
                                    {"temperature": "95:celsius",
                                     "duration": "30:second"},
                                    {"temperature": "56:celsius",
-                                    "duration": "30:second"},
+                                    "duration": "20:second"},
                                    {"temperature": "72:celsius",
                                     "duration": "20:second"}
                                    ]
@@ -1828,14 +1831,14 @@ class Protocol(object):
                       ]
                     },
                     {
-                      "cycles": 35,
+                      "cycles": 30,
                       "steps": [
                         {
                           "duration": "30:second",
                           "temperature": "95:celsius"
                         },
                         {
-                          "duration": "30:second",
+                          "duration": "20:second",
                           "temperature": "56:celsius"
                         },
                         {
@@ -1857,6 +1860,66 @@ class Protocol(object):
                   "op": "thermocycle"
                 }
               ]
+
+
+        To gradient thermocycle a container according to the protocol:
+            * 1 cycle:
+                * 95 degrees for 5 minutes
+            * 30 cycles:
+                * 95 degrees for 30 seconds
+
+                Top Row:
+                * 55 degrees for 20 seconds
+                Bottom Row:
+                * 65 degrees for 20 seconds
+
+                * 72 degrees for 30 seconds
+            * 1 cycle:
+                * 72 degrees for 10 minutes
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="warm_37")
+
+            # a plate must be sealed before it can be thermocycled
+            p.seal(sample_plate)
+
+            p.thermocycle(sample_plate,
+                          [
+                           {"cycles": 1,
+                            "steps": [{
+                               "temperature": "95:celsius",
+                               "duration": "5:minute",
+                               }]
+                            },
+                            {"cycles": 30,
+                                "steps": [
+                                  {
+                                    "duration": "30:second",
+                                    "temperature": "95:celsius"
+                                  },
+                                  {
+                                   "duration": "20:second",
+                                   "gradient": {
+                                      "top": "56:celsius",
+                                      "bottom": "58:celsius"
+                                    }
+                                  },
+                                  {
+                                    "duration": "20:second",
+                                    "temperature": "72:celsius"
+                                  }
+                                  ]
+                           },
+                               {"cycles": 1,
+                                   "steps": [
+                                   {"temperature": "72:celsius", "duration":"10:minute"}]
+                               }
+                          ])
 
         Parameters
         ----------

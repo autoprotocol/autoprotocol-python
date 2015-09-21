@@ -1307,13 +1307,15 @@ class Protocol(object):
         else:
             maxTransfers = 8
 
+        # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
+        volumeSwitch = Unit.fromstring("31:microliter")
 
         # Chunk transfers if there is a previous stamp instruction and if its
         # valid to append to an existing instruction
         if (len(self.instructions) > 0 and
            self.instructions[-1].op == "stamp" and
            check_stamp_append(xfer, self.instructions[-1].transfers,
-                              maxTransfers, maxContainers)):
+                              maxTransfers, maxContainers, volumeSwitch)):
                 # Append to existing instruction
                 self.instructions[-1].transfers.append(xfer)
         else:

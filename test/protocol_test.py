@@ -529,6 +529,32 @@ class StampTestCase(unittest.TestCase):
                 "10:microliter", dict(rows=8, columns=1))
         self.assertEqual(len(p.instructions), 13)
 
+        p = Protocol()
+        # Check on switching between tip volume types
+        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
+        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
+        plate_3_96 = p.ref("plate_3_96", None, "96-flat", discard=True)
+        plate_4_96 = p.ref("plate_4_96", None, "96-flat", discard=True)
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "31:microliter")
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "31:microliter")
+        self.assertEqual(len(p.instructions), 1)
+        self.assertEqual(2, len(p.instructions[0].transfers))
+
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "90:microliter")
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(2, len(p.instructions[0].transfers))
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "90:microliter")
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(2, len(p.instructions[1].transfers))
+
+        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "31:microliter")
+        self.assertEqual(len(p.instructions), 3)
+
 
 class RefifyTestCase(unittest.TestCase):
     def test_refifying_various(self):

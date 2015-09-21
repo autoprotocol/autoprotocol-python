@@ -144,7 +144,7 @@ def check_valid_origin(origin, plate_type, stamp_type):
         raise RuntimeError("Unsupported plate type for checking origin.")
 
 
-def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContainers=3):
+def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContainers=3, volumeSwitch=Unit.fromstring("31:microliter")):
     """
     Checks whether current stamp can be appended to previous stamp instruction.
     """
@@ -168,6 +168,15 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
     elif prev_xfer_list[0]["shape"]["rows"] == 8:
         axis_key = "columns"
         if current_xfer["shape"]["rows"] != 8:
+            return False
+
+    # Ensure Instruction contain the same volume type as defined by TCLE
+    # Currently volumeSwitch is hardcoded to check against the two tip volume types used in TCLE
+    if prev_xfer_list[0]["volume"] <= volumeSwitch:
+        if current_xfer["volume"] > volumeSwitch:
+            return False
+    elif prev_xfer_list[0]["volume"] > volumeSwitch:
+        if current_xfer["volume"] <= volumeSwitch:
             return False
 
     # Check if maximum Transfers/Containers is reached

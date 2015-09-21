@@ -9,6 +9,7 @@ Added
 - functionality to harness.py for naming aliquots
 
 Changed
+- Stamp transfers are not combinable if they use different tip volume types
 
 Removed
 

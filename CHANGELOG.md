@@ -10,6 +10,7 @@ Added
 
 Changed
 - Stamp transfers are not combinable if they use different tip volume types
+- Transfers with one_source true does not keep track of the value of volume less than 10^-12
 
 Removed
 

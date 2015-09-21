@@ -334,6 +334,21 @@ class TransferTestCase(unittest.TestCase):
         c.well(2).set_volume("100:microliter")
         p.transfer(c.wells_from(0, 3), c.wells_from(3, 2), "100:microliter", one_source=True)
 
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        c.well(0).set_volume("100.0000000000005:microliter")
+        c.well(1).set_volume("100:microliter")
+        p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50:microliter", one_source=True)
+        self.assertEqual(3, len(p.instructions[0].groups))
+
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        c.well(0).set_volume("50:microliter")
+        c.well(1).set_volume("101:microliter")
+        p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50.0000000000005:microliter", one_source=True)
+        self.assertEqual(3, len(p.instructions[0].groups))
+
+
     def test_unit_conversion(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)

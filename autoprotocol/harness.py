@@ -124,6 +124,8 @@ def convert_param(protocol, val, typeDesc):
                                " or temperature units in the form of \"value:unit\"")
     elif type in 'bool':
         return bool(val)
+    elif type in 'csv':
+        return val
     elif type in ['string', 'choice']:
         return str(val)
     elif type == 'integer':

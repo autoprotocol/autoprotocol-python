@@ -442,131 +442,155 @@ class StampTestCase(unittest.TestCase):
                     "10:microliter", dict(rows=1, columns=12))
 
     def test_multiple_transfers(self):
-        p = Protocol()
-        # Verify instruction list length
-        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
-        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
-        plate_3_96 = p.ref("plate_3_96", None, "96-flat", discard=True)
-        plate_4_96 = p.ref("plate_4_96", None, "96-flat", discard=True)
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-        self.assertEqual(3, len(p.instructions[0].transfers))
+        # Set maximum number of full plate transfers (limited by maximum
+        # number of tip boxes)
+        maxFullTransfers = 4
 
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        # Test: Ensure individual transfers are appended one at a time
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+
+        for i in range(maxFullTransfers):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter")
+            self.assertEqual(i+1, len(p.instructions[0].transfers))
+
+        # Ensure new stamp operation overflows into new instruction
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter")
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(1, len(p.instructions[1].transfers))
 
-        # Test multiple plates
-        p.stamp(plate_1_96.well("A1"), plate_3_96.well("A1"),
-                "10:microliter")
-        p.stamp(plate_4_96.well("A1"), plate_3_96.well("A1"),
-                "10:microliter")
-        self.assertEqual(2, len(p.instructions[1].transfers))
-        self.assertEqual(1, len(p.instructions[2].transfers))
+        # Test: Maximum number of containers on a deck
+        maxContainers = 3
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(maxContainers+1)]
+
+        for i in range(maxContainers-1):
+            p.stamp(plateList[i], plateList[i+1], "10:microliter")
+        self.assertEqual(1, len(p.instructions))
+        self.assertEqual(maxContainers-1, len(p.instructions[0].transfers))
+
+        p.stamp(plateList[maxContainers-1].well("A1"),
+                plateList[maxContainers].well("A1"), "10:microliter")
+        self.assertEqual(2, len(p.instructions))
+
+        # Test: Ensure col/row/full plate stamps are in separate instructions
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+
+        p.stamp(plateList[0].well("G1"), plateList[1].well("H1"),
+                "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+        p.stamp(plateList[0].well("G1"), plateList[1].well("H1"),
+                "10:microliter", dict(rows=2, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+        self.assertEqual(len(p.instructions[0].transfers), 2)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=2))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A12"),
+                "10:microliter", dict(rows=8, columns=1))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[1].transfers), 2)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=12))
+        self.assertEqual(len(p.instructions), 3)
+        self.assertEqual(len(p.instructions[2].transfers), 2)
+
+        # Test: Check on max transfer limit - Full plate
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+
+        for i in range(maxFullTransfers):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter", dict(rows=8, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=12))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(maxFullTransfers, len(p.instructions[0].transfers))
+        self.assertEqual(1, len(p.instructions[1].transfers))
+
+        # Test: Check on max transfer limit - Row-wise
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+        # Mixture of rows
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=3, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=2, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=2, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+        # Maximum number of row transfers
+        for i in range(8):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[0].transfers), 4)
+        self.assertEqual(len(p.instructions[1].transfers), 8)
+        # Overflow check
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
         self.assertEqual(len(p.instructions), 3)
 
-        # Ensure full plates are chunked correctly
-        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
-                "10:microliter", dict(rows=1, columns=12))
-        self.assertEqual(len(p.instructions), 4)
-
-        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
-                "10:microliter", dict(rows=2, columns=12))
-        self.assertEqual(len(p.instructions), 4)
-        self.assertEqual(len(p.instructions[3].transfers), 2)
-
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=2))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A12"),
-                "10:microliter", dict(rows=8, columns=1))
-        self.assertEqual(len(p.instructions), 5)
-        self.assertEqual(len(p.instructions[3].transfers), 2)
-
-        # Check on max transfer limit - Full plate
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        self.assertEqual(len(p.instructions), 6)
-
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        self.assertEqual(len(p.instructions), 7)
-        self.assertEqual(len(p.instructions[5].transfers), 3)
-        self.assertEqual(len(p.instructions[6].transfers), 1)
-
-        # Check on max transfer limit - Row-wise
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=3, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=2, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=2, columns=12))
-        self.assertEqual(len(p.instructions), 8)
-
-        for i in range(8):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                    "10:microliter", dict(rows=1, columns=12))
-        self.assertEqual(len(p.instructions), 9)
-        self.assertEqual(len(p.instructions[7].transfers), 4)
-        self.assertEqual(len(p.instructions[8].transfers), 8)
-
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        self.assertEqual(len(p.instructions), 10)
-
-        # Check on max transfer limit - Col-wise
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=4))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=6))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=2))
-        self.assertEqual(len(p.instructions), 11)
-
-        for i in range(12):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                    "10:microliter", dict(rows=8, columns=1))
-        self.assertEqual(len(p.instructions), 12)
-        self.assertEqual(len(p.instructions[10].transfers), 3)
-        self.assertEqual(len(p.instructions[11].transfers), 12)
-
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter", dict(rows=8, columns=1))
-        self.assertEqual(len(p.instructions), 13)
-
+        # Test: Check on max transfer limit - Col-wise
         p = Protocol()
-        # Check on switching between tip volume types
-        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
-        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
-        plate_3_96 = p.ref("plate_3_96", None, "96-flat", discard=True)
-        plate_4_96 = p.ref("plate_4_96", None, "96-flat", discard=True)
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+        # Mixture of columns
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=4))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=6))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=2))
+        self.assertEqual(len(p.instructions), 1)
+        # Maximum number of col transfers
+        for i in range(12):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter", dict(rows=8, columns=1))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[0].transfers), 3)
+        self.assertEqual(len(p.instructions[1].transfers), 12)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=8, columns=1))
+        self.assertEqual(len(p.instructions), 3)
+
+        # Test: Check on switching between tip volume types
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                     discard=True) for x in range(2)]
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(2, len(p.instructions[0].transfers))
 
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "90:microliter")
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(2, len(p.instructions[0].transfers))
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "90:microliter")
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(2, len(p.instructions[1].transfers))
 
-        p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
         self.assertEqual(len(p.instructions), 3)
 

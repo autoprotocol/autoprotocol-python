@@ -1305,7 +1305,7 @@ class Protocol(object):
         # Set maximum parameters which are defined due to TCLE limitations
         maxContainers = 3
         if stamp_type == "full":
-            maxTransfers = 3
+            maxTransfers = 4
         elif stamp_type == "col":
             maxTransfers = 12
         else:

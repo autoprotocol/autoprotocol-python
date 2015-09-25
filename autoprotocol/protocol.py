@@ -1752,19 +1752,19 @@ class Protocol(object):
                 "steps": [{
                   "duration": duration,
                   "temperature": temperature,
-                  "read": boolean // optional (default true)
+                  "read": boolean // optional (default false)
                 },{
                   "duration": duration,
                   "gradient": {
                     "top": temperature,
                     "bottom": temperature
                   },
-                  "read": boolean // optional (default true)
+                  "read": boolean // optional (default false)
                 }]
             }],
 
         Thermocycle can also be used for either conventional or row-wise
-        gradient PCR. Refer to the examples below for details.
+        gradient PCR as well as qPCR. Refer to the examples below for details.
 
         Example Usage:
 
@@ -1926,6 +1926,48 @@ class Protocol(object):
                                    {"temperature": "72:celsius", "duration":"10:minute"}]
                                }
                           ])
+
+        To conduct a qPCR, at least one dye type and the dataref field has to
+        be specified.
+        The example below uses SYBR dye and the following temperature profile:
+            * 1 cycle:
+                * 95 degrees for 3 minutes
+            * 40 cycles:
+                * 95 degrees for 10 seconds
+                * 60 degrees for 30 seconds (Read during extension)
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="warm_37")
+
+            # a plate must be sealed before it can be thermocycled
+            p.seal(sample_plate)
+
+            p.thermocycle(sample_plate,
+                          [
+                           {"cycles": 1,
+                            "steps": [{
+                               "temperature": "95:celsius",
+                               "duration": "3:minute",
+                               }]
+                            },
+                            {"cycles": 40,
+                                "steps": [
+                                   {"temperature": "95:celsius",
+                                    "duration": "10:second",
+                                    "read": False},
+                                   {"temperature": "60:celsius",
+                                    "duration": "30:second",
+                                    "read": True},
+                                   ]
+                           }
+                          ],
+                          dataref = "my_qpcr_data",
+                          dyes = {"SYBR": sample_plate.all_wells().indices()})
 
         Parameters
         ----------

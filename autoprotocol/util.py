@@ -198,25 +198,26 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
 
 class make_dottable_dict(dict):
     '''Enable dictionaries to be accessed using dot notation instead of bracket
-    notation.
+    notation.  This class should probably never be used.
 
     Example
     -------
     .. code-block:: python
 
-        >>> sample = {
-            "forks": 6,
-            "spoons": 5,
-            "knives": 3
-        }
+        >>> d = {"foo": {
+                    "bar": {
+                        "bat": "Hello!"
+                        }
+                    }
+                }
 
-        >>> print sample["forks"]
-        6
+        >>> print d["foo"]["bar"]["bat"]
+        Hello!
 
-        >>> sample = make_dottable_dict(sample)
+        >>> d = make_dottable_dict(d)
 
-        >>> print sample.forks
-        6
+        >>> print d.foo.bar.bat
+        Hello!
 
     Parameters
     ----------
@@ -225,6 +226,8 @@ class make_dottable_dict(dict):
 
     '''
     def __getattr__(self, attr):
+        if type(self[attr]) == dict:
+            return make_dottable_dict(self[attr])
         return self[attr]
 
     __setattr__ = dict.__setitem__

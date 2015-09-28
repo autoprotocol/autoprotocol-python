@@ -834,8 +834,16 @@ class FlashFreeze(Instruction):
         })
 
 class Stamp(Instruction):
-    def __init__(self, transfers):
+    '''
+    A stamp instruction is constructed as a list of groups, executed in order, where each group is a transfer.  One disposable tip shape and tip_layout is used for each transfer group.
+
+    transfer:
+
+        For each element in the transfer list, in order, aspirates the specifed volume from the source well and dispenses the same volume into the target well.
+    '''
+
+    def __init__(self, groups):
         super(Stamp, self).__init__({
             "op": "stamp",
-            "transfers": transfers
+            "groups": groups
          })

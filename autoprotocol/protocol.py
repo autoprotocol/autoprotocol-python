@@ -1074,7 +1074,8 @@ class Protocol(object):
               repetitions=10, flowrate="100:microliter/second",
               aspirate_speed=None, dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
-              transit_vol=None, blowout_buffer=None, append=False):
+              transit_vol=None, blowout_buffer=None, one_source=False,
+              one_tip=False, new_group=False):
 
         """
         **Note: the way this method now works is significantly different to the
@@ -1144,13 +1145,13 @@ class Protocol(object):
 
         Parameters
         ----------
-        source_origin : Well
+        source_origin : Well, WellGroup
             Top-left well where the rows/columns will be defined with respect
             to for the source transfer.
-        dest_origin : Well
+        dest_origin : Well, WellGroup
             Top-left well where the rows/columns will be defined with respect
             to for the destination transfer.
-        volume : str, Unit
+        volume : str, Unit, list
             Volume of liquid to move from source plate to destination plate
         shape : dictionary, optional
             The shape parameter is optional and will default to a rectangle
@@ -1198,6 +1199,12 @@ class Protocol(object):
         blowout_buffer : bool, optional
             If true the operation will dispense the pre_buffer along with the
             dispense volume. Cannot be true if disposal_vol is specified.
+        one_source : bool, optional
+            Specify whether liquid is to be transferred to destination wells
+            from a group of wells all containing the same substance.
+        one_tip : bool, optional
+            Specify whether all transfer steps will use the same tip or not.
+        new_group : bool, optional
 
             Example
 
@@ -1241,6 +1248,12 @@ class Protocol(object):
 
         """
 
+        source = WellGroup(source_origin)
+        dest = WellGroup(dest_origin)
+        opts = []
+        len_source = len(source.wells)
+        len_dest = len(dest.wells)
+
         # Support existing transfer syntax for going from 96 --> 96 and 384 --> 384 full plate
         if isinstance(source_origin, Container) and isinstance(dest_origin, Container):
             source_plate = source_origin
@@ -1257,6 +1270,86 @@ class Protocol(object):
             dest_plate = dest_origin.container
             src_plate_type = source_plate.container_type
             dest_plate_type = dest_plate.container_type
+
+        # Auto-generate well-group if only 1 well specified and using >1 source
+        if not one_source:
+            if len_dest > 1 and len_source == 1:
+                source = WellGroup(source.wells * len_dest)
+                len_source = len(source.wells)
+            if len_dest == 1 and len_source > 1:
+                dest = WellGroup(dest.wells * len_source)
+                len_dest = len(dest.wells)
+            if len_source != len_dest:
+                raise RuntimeError("To transfer liquid from one origin or "
+                                   "multiple origins containing the same "
+                                   "source, set one_source to True. To "
+                                   "transfer from multiple origins to a "
+                                   "single destination well, specify only one "
+                                   "destination well. Otherwise, you must "
+                                   "specify the same number of source and "
+                                   "destination wells to do a one-to-one "
+                                   "transfer.")
+
+        # Auto-generate list from single volume, check if list length matches
+        if isinstance(volume, basestring) or isinstance(volume, Unit):
+            if len_dest == 1 and not one_source:
+                volume = [Unit.fromstring(volume)] * len_source
+            else:
+                volume = [Unit.fromstring(volume)] * len_dest
+        elif isinstance(volume, list) and len(volume) == len_dest:
+            volume = list(map(lambda x: Unit.fromstring(x), volume))
+        else:
+            raise RuntimeError("Unless the same volume of liquid is being "
+                               "transferred to each destination well, each "
+                               "destination well must have a corresponding "
+                               "volume in the form of a list.")
+
+        if one_source:
+            try:
+                source_vol = [s.volume for s in source.wells]
+                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                                       "the transfers.")
+                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
+                    sources = source.wells[:len_dest]
+                    destinations = dest.wells
+                    volumes = volume
+                else:
+                    sources = []
+                    source_counter = 0
+                    destinations = []
+                    volumes = []
+                    s = source.wells[source_counter]
+                    vol = s.volume
+                    max_decimal_places = 12
+                    for idx, d in enumerate(dest.wells):
+                        vol_d = volume[idx]
+                        while vol_d > Unit.fromstring("0:microliter"):
+                            if vol > vol_d:
+                                sources.append(s)
+                                destinations.append(d)
+                                volumes.append(vol_d)
+                                vol -= vol_d
+                                vol.value = round(vol.value, max_decimal_places)
+                                vol_d -= vol_d
+                                vol_d.value = round(vol_d.value, max_decimal_places)
+                            else:
+                                sources.append(s)
+                                destinations.append(d)
+                                volumes.append(vol)
+                                vol_d -= vol
+                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                source_counter += 1
+                                if source_counter < len_source:
+                                    s = source.wells[source_counter]
+                                    vol = s.volume
+                source = WellGroup(sources)
+                dest = WellGroup(destinations)
+                volume = volumes
+            except (ValueError, AttributeError):
+                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
+                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
+                                   "associated with it.")
 
         # Check and load rows/columns from given shape
         if "rows" not in shape or "columns" not in shape:
@@ -1295,8 +1388,6 @@ class Protocol(object):
         xfer["to"] = dest_origin
         xfer["from"] = source_origin
         xfer["volume"] = Unit.fromstring(volume)
-        xfer["shape"] = shape
-        xfer["tip_layout"] = 96
 
         # Adding liquid transfer options
         opt_list = ["aspirate_speed", "dispense_speed"]
@@ -1358,21 +1449,25 @@ class Protocol(object):
             maxTransfers = 12
         else:
             maxTransfers = 8
-
         # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
         volumeSwitch = Unit.fromstring("31:microliter")
+
+        trans = {}
+        assign(trans, "shape", shape)
+        assign(trans, "tip_layout", 96)
+        trans["transfer"] = xfer
 
         # Chunk transfers if there is a previous stamp instruction and if its
         # valid to append to an existing instruction
         if (len(self.instructions) > 0 and
            self.instructions[-1].op == "stamp" and
-           check_stamp_append(xfer, self.instructions[-1].transfers,
+           check_stamp_append(trans, self.instructions[-1].groups.transfer,
                               maxTransfers, maxContainers, volumeSwitch)):
                 # Append to existing instruction
-                self.instructions[-1].transfers.append(xfer)
+                self.instructions[-1].groups.transfer.append(trans)
         else:
             # Initialize new stamp list/instruction
-            self.instructions.append(Stamp([xfer]))
+            self.instructions.append(Stamp([trans]))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

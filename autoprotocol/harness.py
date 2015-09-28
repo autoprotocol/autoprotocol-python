@@ -194,6 +194,12 @@ def convert_param(protocol, val, typeDesc):
                     'steps': [
                         {
                             'duration': Unit.fromstring(s['duration']),
+                            'temperature': Unit.fromstring(s['temperature']),
+                            'read': s["read"] == "True"
+                        }
+                        if 'read' in s else
+                        {
+                            'duration': Unit.fromstring(s['duration']),
                             'temperature': Unit.fromstring(s['temperature'])
                         }
                         for s in g['steps']

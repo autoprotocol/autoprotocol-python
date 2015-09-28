@@ -1075,7 +1075,7 @@ class Protocol(object):
               aspirate_speed=None, dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None, one_source=False,
-              one_tip=False, new_group=False):
+              one_tip=False):
 
         """
         **Note: the way this method now works is significantly different to the
@@ -1083,7 +1083,7 @@ class Protocol(object):
         documentation below and adjust existing scripts utilizing stamp()
         accordingly**
 
-        A stamp instruction consists of a list of transfers, each of which
+        A stamp instruction consists of a list of groups of transfers, each of which
         specifies from and to well references (ref/well_index) representing
         the top-left well or origin of a specified shape.
 
@@ -1145,18 +1145,23 @@ class Protocol(object):
 
         Parameters
         ----------
-        source_origin : Well, WellGroup
-            Top-left well where the rows/columns will be defined with respect
-            to for the source transfer.
-        dest_origin : Well, WellGroup
-            Top-left well where the rows/columns will be defined with respect
-            to for the destination transfer.
+        source_origin : Container, Well, WellGroup
+            Top-left well or wells where the rows/columns will be defined with respect
+            to for the source transfer. If a container is specified, stamp will be applied to all quadrants of the container.
+        dest_origin : Container, Well, WellGroup
+            Top-left well or wells where the rows/columns will be defined with respect
+            to for the destination transfer.  If a container is specified, stamp will be applied to all quadrants of the container
         volume : str, Unit, list
-            Volume of liquid to move from source plate to destination plate
-        shape : dictionary, optional
-            The shape parameter is optional and will default to a rectangle
+            Volume(s) of liquid to move from source plate to destination plate. Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of destination wells given unless
+            the same volume is to be transferred to each destination well.
+        shape : dictionary, list, optional
+            The shape(s) parameter is optional and will default to a rectangle
             corresponding to a full 96-well plate (8 rows by 12 columns).
-            The rows and columns will be defined wrt the specified origin.
+            The rows and columns will be defined wrt the specified origin. The length of a list
+            of shapes must match the number of destination wells given unless
+            the same shape is to be used for each destination well. If the length of shape is greater than 1, one_tip=False.
 
             Example
 
@@ -1200,11 +1205,10 @@ class Protocol(object):
             If true the operation will dispense the pre_buffer along with the
             dispense volume. Cannot be true if disposal_vol is specified.
         one_source : bool, optional
-            Specify whether liquid is to be transferred to destination wells
-            from a group of wells all containing the same substance.
+            Specify whether liquid is to be transferred to destination origins
+            from a group of origins all containing the same substance. Volume of all wells in the shape must be equal to the volume in the origin well. Specifying origins with overlapping shapes will cause undesireable effects.
         one_tip : bool, optional
-            Specify whether all transfer steps will use the same tip or not.
-        new_group : bool, optional
+            Specify whether all transfer steps will use the same tip or not. If multiple different shapes are used, one_tip cannot be true.
 
             Example
 
@@ -1248,28 +1252,33 @@ class Protocol(object):
 
         """
 
+        # Support existing transfer syntax by converting a container to all quadrants of that container
+        if isinstance(source_origin, Container):
+            source_plate = source_origin
+            source_plate_type = source_plate.container_type
+            if source_plate_type.well_count == 96:
+                source_origin = source_plate.well(0)
+            elif source_plate_type.well_count == 384:
+                source_origin = source_plate.wells([0, 1, 24, 25])
+            else:
+                raise TypeError("Invalid source_origin type given. If source_origin is a container, it must be a container with 96 or 384 wells.")
+        if isinstance(dest_origin, Container):
+            dest_plate = dest_origin
+            dest_plate_type = dest_plate.container_type
+            if dest_plate_type.well_count == 96:
+                dest_origin = dest_plate.well(0)
+            elif dest_plate_type.well_count == 384:
+                dest_origin = dest_plate.wells([0, 1, 24, 25])
+            else:
+                raise TypeError("Invalid dest_origin type given. If dest_origin is a container, it must be a container with 96 or 384 wells.")
+        if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
+            raise TypeError("Invalid input type given. Source and destination must be of type Container, Well, or WellGroup.")
+
         source = WellGroup(source_origin)
         dest = WellGroup(dest_origin)
         opts = []
         len_source = len(source.wells)
         len_dest = len(dest.wells)
-
-        # Support existing transfer syntax for going from 96 --> 96 and 384 --> 384 full plate
-        if isinstance(source_origin, Container) and isinstance(dest_origin, Container):
-            source_plate = source_origin
-            dest_plate = dest_origin
-            src_plate_type = source_plate.container_type
-            dest_plate_type = dest_plate.container_type
-            if (src_plate_type.well_count == dest_plate_type.well_count):
-                source_origin = source_plate.well(0)
-                dest_origin = dest_plate.well(0)
-        elif not isinstance(source_origin, Well) or not isinstance(dest_origin,Well):
-            raise TypeError("Invalid input type given. Source and destination has to be of type well.")
-        else:
-            source_plate = source_origin.container
-            dest_plate = dest_origin.container
-            src_plate_type = source_plate.container_type
-            dest_plate_type = dest_plate.container_type
 
         # Auto-generate well-group if only 1 well specified and using >1 source
         if not one_source:
@@ -1304,8 +1313,75 @@ class Protocol(object):
                                "destination well must have a corresponding "
                                "volume in the form of a list.")
 
+        # Auto-generate list from single shape, check if list length matches
+        if isinstance(shape, dict):
+            if len_dest == 1 and not one_source:
+                shape = [shape] * len_source
+            else:
+                shape = [shape] * len_dest
+        elif isinstance(shape, list) and len(shape) == len_dest:
+            shape = shape
+        else:
+            raise RuntimeError("Unless the same shape is being used for all transfers, each destination well must have a corresponding shape in the form of a list.")
+
+        stamp_type = []
+        rows = []
+        columns = []
+
+        for idx, s in enumerate(shape):
+            # Check and load rows/columns from given shape
+            if "rows" not in s or "columns" not in s:
+                raise TypeError("Invalid input shape given. Rows and columns "
+                                "of a rectangle has to be defined.")
+            r = shape["rows"]
+            c = shape["columns"]
+            rows[idx] = r
+            columns[idx] = c
+
+            # Check on complete rows/columns (assumption: tip_layout=96)
+            if c == 12 and r == 8:
+                stamp_type[idx] = "full"
+            elif c == 12:
+                stamp_type[idx] = "row"
+            elif r == 8:
+                stamp_type[idx] = "col"
+            else:
+                raise ValueError("Only complete rows or columns are allowed.")
+
+         # Check dimensions
+
+        for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
+            src_col_count = s.container.container_type.col_count
+            dest_col_count = d.container.container_type.col_count
+            if c < 0 or c > src_col_count or c > dest_col_count:
+                raise ValueError("Columns given exceed plate dimensions.")
+
+            src_row_count = s.container.container_type.well_count // src_col_count
+            dest_row_count = d.container.container_type.well_count // dest_col_count
+            if r < 0 or r > src_row_count or r > dest_row_count:
+                raise ValueError("Rows given exceed plate dimensions.")
+
+            # Check if origins are valid
+            check_valid_origin(s, s.container.container_type, st)
+            check_valid_origin(s, d.container.container_type, st)
+
+        # Checking if shapes are the same given one_tip or one_source = True
+        if one_tip or one_source:
+            if not all([s == shape[0] for s in shape]):
+                raise RuntimeError("The same shape must be used if one_tip or one_source is true.")
+
         if one_source:
             try:
+
+                # Checking if all wells in shape have same or greater volume given one_source = True
+                for w, s, st in list(zip(source.wells, shape, stamp_type)):
+                    columnWise = False
+                    if st == "col":
+                        columnWise = True
+
+
+
+
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
@@ -1351,37 +1427,8 @@ class Protocol(object):
                                    "multiple other wells, each source Well must have a volume attribute (aliquot) "
                                    "associated with it.")
 
-        # Check and load rows/columns from given shape
-        if "rows" not in shape or "columns" not in shape:
-            raise TypeError("Invalid input shape given. Rows and columns "
-                            "of a rectangle has to be defined.")
-        rows = shape["rows"]
-        columns = shape["columns"]
 
-        # Check dimensions
-        src_col_count = src_plate_type.col_count
-        dest_col_count = dest_plate_type.col_count
-        if columns < 0 or columns > src_col_count or columns > dest_col_count:
-            raise ValueError("Columns given exceed plate dimensions.")
 
-        src_row_count = src_plate_type.well_count // src_col_count
-        dest_row_count = dest_plate_type.well_count // dest_col_count
-        if rows < 0 or rows > src_row_count or rows > dest_row_count:
-            raise ValueError("Rows given exceed plate dimensions.")
-
-        # Check on complete rows/columns (assumption: tip_layout=96)
-        if columns == 12 and rows == 8:
-            stamp_type = "full"
-        elif columns == 12:
-            stamp_type = "row"
-        elif rows == 8:
-            stamp_type = "col"
-        else:
-            raise ValueError("Only complete rows or columns are allowed.")
-
-        # Check if origins are valid
-        check_valid_origin(source_origin, src_plate_type, stamp_type)
-        check_valid_origin(dest_origin, dest_plate_type, stamp_type)
 
         # Initializing transfer dictionary
         xfer = {}

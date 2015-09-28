@@ -102,13 +102,13 @@ def quad_num_to_ind(q, human=False):
         raise ValueError("Invalid quadrant number.")
 
 
-def check_valid_origin(origin, plate_type, stamp_type):
+def check_valid_origin(origin, stamp_type):
     # Checks if selected well is a valid origin destination for the given plate
     # Assumption: SBS formatted plates and 96-tip layout
-    robotized_origin = plate_type.robotize(origin)
-    well_count = plate_type.well_count
-    col_count = plate_type.col_count
-    row_count = plate_type.well_count // col_count
+    robotized_origin = origin.index
+    well_count = origin.container.container_type.well_count
+    col_count = origin.container.container_type.col_count
+    row_count = well_count // col_count
 
     if well_count == 96:
         if stamp_type == "full":
@@ -134,12 +134,12 @@ def check_valid_origin(origin, plate_type, stamp_type):
             if (robotized_origin % col_count) not in [0, 1]:
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
-                                 "column.")
+                                 "two columns.")
         else:
             if robotized_origin >= col_count*2 or robotized_origin < 0:
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
-                                 "column.")
+                                 "two columns.")
     else:
         raise RuntimeError("Unsupported plate type for checking origin.")
 

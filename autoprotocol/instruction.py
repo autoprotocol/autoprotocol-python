@@ -835,7 +835,7 @@ class FlashFreeze(Instruction):
 
 class Stamp(Instruction):
     '''
-    A stamp instruction is constructed as a list of groups, executed in order, where each group is a transfer.  One disposable tip shape and tip_layout is used for each transfer group.
+    A stamp instruction is constructed as a list of groups, executed in order, where each group is a transfer.  The same disposable tips, shape and tip_layout will be used within a transfer group.
 
     transfer:
 

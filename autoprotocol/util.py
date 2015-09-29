@@ -119,27 +119,29 @@ def check_valid_origin(origin, stamp_type, columns, rows):
             if (robotized_origin % col_count) != 0 or robotized_origin > ((row_count - rows) * col_count):
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
-                                 "column.")
+                                 "column and not more than allowed by shape.")
         else:
-            if robotized_origin >= col_count or robotized_origin < 0:
+            if robotized_origin > (col_count - columns) or robotized_origin < 0:
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
-                                 "column.")
+                                 "column and not more than allowed by shape.")
     elif well_count == 384:
         if stamp_type == "full":
             if robotized_origin not in [0, 1, 24, 25]:
                 raise ValueError("For full 384-well transfers, origin has "
                                  "to be well 0, 1, 24 or 25.")
         elif stamp_type == "row":
-            if (robotized_origin % col_count) not in [0, 1]:
+            if (robotized_origin % col_count) not in [0, 1] or robotized_origin >= ((row_count - ((rows - 1) * 2)) * col_count):
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
-                                 "two columns.")
+                                 "two columns and not more than allowed by "
+                                 "shape.")
         else:
-            if robotized_origin >= col_count*2 or robotized_origin < 0:
+            if robotized_origin >= col_count*2 or robotized_origin < 0 or robotized_origin % col_count >= (col_count - ((columns - 1) * 2)):
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
-                                 "two columns.")
+                                 "two columns and not more than allowed by "
+                                 "shape.")
     else:
         raise RuntimeError("Unsupported plate type for checking origin.")
 

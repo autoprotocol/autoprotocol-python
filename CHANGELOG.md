@@ -11,6 +11,7 @@ Changed
 Removed
 
 Fixed
+- volume tracking for stamping to/from 384-well plates
 
 ## v2.4.0 - 2015-09-28
 ---

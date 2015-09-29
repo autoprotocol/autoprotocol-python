@@ -1291,16 +1291,29 @@ class Protocol(object):
         columnWise = False
         if stamp_type == "col":
             columnWise = True
-        for well in source_plate.wells_from(source_origin, columns*rows,
-                                            columnWise):
+        if dest_plate_type.col_count == 24:
+            if columnWise:
+                dest_wells = [dest_plate.wells_from(dest_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//16) % 2 == 0]
+            else:
+                dest_wells = [dest_plate.wells_from(dest_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//24) % 2 == 0]
+        else:
+            dest_wells = dest_plate.wells_from(dest_origin, columns*rows, columnWise)
+        if src_plate_type.col_count == 24:
+            if columnWise:
+                source_wells = [source_plate.wells_from(source_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//16) % 2 == 0]
+            else:
+                source_wells = [source_plate.wells_from(source_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//24) % 2 == 0]
+        else:
+            source_wells = source_plate.wells_from(source_origin, columns*rows, columnWise)
+        for well in source_wells:
             if well.volume:
                 well.volume -= Unit.fromstring(volume)
-        for well in dest_plate.wells_from(dest_origin, columns*rows,
-                                          columnWise):
+        for well in dest_wells:
             if well.volume:
                 well.volume += Unit.fromstring(volume)
             else:
                 well.volume = Unit.fromstring(volume)
+
 
         # Set maximum parameters which are defined due to TCLE limitations
         maxContainers = 3

@@ -409,7 +409,33 @@ class ConsolidateTestCase(unittest.TestCase):
 
 
 class StampTestCase(unittest.TestCase):
-    #TODO: Implement check for volume accounting
+    def test_volume_tracking(self):
+        p = Protocol()
+        plate_96 = p.ref("plate_96", None, "96-pcr", discard=True)
+        plate_96_2 = p.ref("plate_96_2", None, "96-pcr", discard=True)
+        plate_384 = p.ref("plate_384", None, "384-pcr", discard=True)
+        plate_384_2 = p.ref("plate_384_2", None, "384-pcr", discard=True)
+        p.stamp(plate_96.well(0), plate_384.well(0), "5:microliter",
+                {"columns": 12, "rows": 1})
+        self.assertEqual(plate_384.well(0).volume.value, 5)
+        self.assertTrue(plate_384.well(1).volume is None)
+        p.stamp(plate_96.well(0), plate_96_2.well(0), "10:microliter",
+                {"columns": 12, "rows": 1})
+        p.stamp(plate_96.well(0), plate_96_2.well(0), "10:microliter",
+                {"columns": 1, "rows": 8})
+        self.assertTrue(plate_96_2.well(0).volume == Unit(20, "microliter"))
+        for w in plate_96_2.wells_from(1, 11):
+            self.assertTrue(w.volume == Unit(10, "microliter"))
+        p.stamp(plate_96.well(0), plate_384_2.well(0), "5:microliter",
+                {"columns": 1, "rows": 8})
+        for w in plate_384_2.wells_from(0, 16, columnwise=True)[0::2]:
+            self.assertTrue(w.volume == Unit(5, "microliter"))
+        for w in plate_384_2.wells_from(1, 16, columnwise=True)[0::2]:
+            self.assertTrue(w.volume is None)
+        for w in plate_384.wells_from(1, 24)[0::2]:
+            self.assertTrue(w.volume is None)
+
+
     def test_single_transfers(self):
         p = Protocol()
         plate_1_6 = p.ref("plate_1_6", None, "6-flat", discard=True)

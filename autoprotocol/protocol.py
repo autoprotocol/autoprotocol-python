@@ -1362,8 +1362,8 @@ class Protocol(object):
                 raise ValueError("Rows given exceed plate dimensions.")
 
             # Check if origins are valid
-            check_valid_origin(s, s.container.container_type, st)
-            check_valid_origin(s, d.container.container_type, st)
+            check_valid_origin(s, st, c, r)
+            check_valid_origin(s, st, c, r)
 
         # Checking if shapes are the same given one_tip or one_source = True
         if one_tip or one_source:

@@ -76,7 +76,15 @@ class Unit(object):
     def __le__(self, other):
         self._check_type(other)
         return self.value <= other.value
+        
+    def __gt__(self, other):
+        self._check_type(other)
+        return self.value > other.value
 
+    def __ge__(self, other):
+        self._check_type(other)
+        return self.value >= other.value
+        
     def __eq__(self, other):
         self._check_type(other)
         return self.value == other.value

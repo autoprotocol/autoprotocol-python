@@ -348,6 +348,11 @@ class TransferTestCase(unittest.TestCase):
         p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50.0000000000005:microliter", one_source=True)
         self.assertEqual(3, len(p.instructions[0].groups))
 
+    def test_one_tip_true_gt_750(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(c.well(0), c.well(1), "1000:microliter", one_tip=True)
+        self.assertEqual(1, len(p.instructions[0].groups))
 
     def test_unit_conversion(self):
         p = Protocol()

@@ -830,19 +830,54 @@ class Protocol(object):
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
-                    self.transfer(s, d, "750:microliter", one_source, one_tip,
-                                  aspirate_speed, dispense_speed, aspirate_source,
-                                  dispense_target, pre_buffer, disposal_vol,
-                                  transit_vol, blowout_buffer, tip_type,
-                                  new_group, **mix_kwargs)
+                    # Organize transfer options into dictionary (for json parsing)
+
+                    v = Unit(750, "microliter")
+
+                    xfer = {
+                        "from": s,
+                        "to": d,
+                        "volume": v
+                    }
+                    # Volume accounting
+                    if d.volume:
+                        d.volume += v
+                    else:
+                        d.volume = v
+                    if s.volume:
+                        s.volume -= v
+                    # mix before and/or after parameters
+                    if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
+                        raise RuntimeError("If you specify mix arguments on transfer()"
+                                           " you must also specify mix_before and/or"
+                                           " mix_after=True.")
+                    if "mix_before" in mix_kwargs:
+                        xfer["mix_before"] = {
+                            "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
+                            "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
+                            "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
+                        }
+                    if "mix_after" in mix_kwargs:
+                        xfer["mix_after"] = {
+                            "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
+                            "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
+                            "speed": mix_kwargs.get("flowrate_a") or mix_kwargs.get("flowrate") or "100:microliter/second"
+                        }
+                    # Append transfer options
+                    opt_list = ["aspirate_speed", "dispense_speed"]
+                    for option in opt_list:
+                        assign(xfer, option, eval(option))
+                    x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                                  "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                                  "x_blowout_buffer"]
+                    for x_option in x_opt_list:
+                        assign(xfer, x_option, eval(x_option[2:]))
+                    if v.value > 0:
+                        opts.append(xfer)
+
                     diff -= Unit(750, "microliter")
 
-                self.transfer(s, d, diff,  one_source, one_tip,
-                              aspirate_speed, dispense_speed, aspirate_source,
-                              dispense_target, pre_buffer, disposal_vol,
-                              transit_vol, blowout_buffer, tip_type,
-                              new_group, **mix_kwargs)
-                continue
+                v = diff
 
             # Organize transfer options into dictionary (for json parsing)
             xfer = {

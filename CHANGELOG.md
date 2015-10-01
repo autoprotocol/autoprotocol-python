@@ -12,6 +12,7 @@ Removed
 
 Fixed
 - volume tracking for stamping to/from 384-well plates
+- one_tip = True transfers > 750:microliter are transferred with single tip
 
 ## v2.4.0 - 2015-09-28
 ---

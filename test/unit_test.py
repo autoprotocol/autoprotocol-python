@@ -24,6 +24,8 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertTrue(u1 <= u2)
         self.assertFalse(u1 > u2)
         self.assertTrue(u2 > u1)
+        self.assertFalse(u1 >= u2)
+        self.assertTrue(u2 >= u1)
 
     def test_units_match(self):
         with self.assertRaises(ValueError):

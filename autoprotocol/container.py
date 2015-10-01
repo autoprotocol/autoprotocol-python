@@ -293,11 +293,12 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None):
+    def __init__(self, id, container_type, name=None, storage=None, cover=None):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
+        self.cover = cover
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
 
@@ -468,6 +469,24 @@ class Container(object):
             start = col * num_rows + row
         return WellGroup(self.all_wells(columnwise).wells[start:start + num])
 
+    def is_sealed(self):
+        """
+        Check if Container is sealed.
+
+        """
+        if self.cover == "seal":
+            return True
+        return False
+
+    def is_covered(self):
+        """
+        Check if Container is covered.
+
+        """
+        if self.cover == "cover":
+            return True
+        return False
+
     def quadrant(self, quad):
         """
         Return a WellGroup of Wells corresponding to the selected quadrant of
@@ -517,4 +536,4 @@ class Container(object):
         (ex. Container('my_plate'))
 
         """
-        return "Container(%s)" % (str(self.name))
+        return "Container(%s%s)" % (str(self.name), ", cover=" + self.cover if self.cover else "")

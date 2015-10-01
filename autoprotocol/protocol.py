@@ -1348,8 +1348,7 @@ class Protocol(object):
             else:
                 raise ValueError("Only complete rows or columns are allowed.")
 
-         # Check dimensions
-
+        # Check dimensions
         for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
             src_col_count = s.container.container_type.col_count
             dest_col_count = d.container.container_type.col_count
@@ -1370,18 +1369,22 @@ class Protocol(object):
             if not all([s == shape[0] for s in shape]):
                 raise RuntimeError("The same shape must be used if one_tip or one_source is true.")
 
+        # Checking if all wells in shape have same or greater volume given one_source = True
         if one_source:
+            for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
+                columnWise = False
+                if st == "col":
+                    columnWise = True
+                if w.container.container_type.col_count == 24:
+                    if columnWise:
+                        source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                    else:
+                        source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                else:
+                    source_wells = w.container.wells_from(w, c*r, columnWise)
+                if not all([s.volume >= w.volume for s in source_wells]):
+                    raise RuntimeError("Each well in a shape must have the same or greater volume as the origin well.")
             try:
-
-                # Checking if all wells in shape have same or greater volume given one_source = True
-                for w, s, st in list(zip(source.wells, shape, stamp_type)):
-                    columnWise = False
-                    if st == "col":
-                        columnWise = True
-
-
-
-
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
@@ -1422,80 +1425,121 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
+                shape = [shape[0]] * len(volume)
+                rows = [rows[0]] * len(volume)
+                columns = [columns[0]] * len(volume)
+                stamp_type = [stamp_type[0]] * len(volume)
             except (ValueError, AttributeError):
                 raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
                                    "multiple other wells, each source Well must have a volume attribute (aliquot) "
                                    "associated with it.")
 
+        # Checking on containers and volume consistency if one_tip = True
 
+        # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
+        volumeSwitch = Unit.fromstring("31:microliter")
 
+        if one_tip:
+            if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume])):
+                raise RuntimeError("Volumes must all be > or <= 31:microliter for one_tip = True. If one_source = True, it may be generating volumes which are incompatible.")
 
-        # Initializing transfer dictionary
-        xfer = {}
-        xfer["to"] = dest_origin
-        xfer["from"] = source_origin
-        xfer["volume"] = Unit.fromstring(volume)
+            st = stamp_type[0]
+            if st == "full":
+                maxContainers = 3
+            else:
+                maxContainers = 2
 
-        # Adding liquid transfer options
-        opt_list = ["aspirate_speed", "dispense_speed"]
-        for option in opt_list:
-            assign(xfer, option, eval(option))
-        x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                      "x_blowout_buffer"]
-        for x_option in x_opt_list:
-            assign(xfer, x_option, eval(x_option[2:]))
-        if not mix_vol and (mix_before or mix_after):
-            mix_vol = volume * .5
-        if mix_before:
-            xfer["mix_before"] = {
-                "volume": mix_vol,
-                "repetitions": repetitions,
-                "speed": flowrate
+            all_wells = source + dest
+
+            if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
+                raise RuntimeError("Exceeded maximum allowed containers when using one_tip = True")
+
+        max_tip_vol = Unit.fromstring("110:microliter")
+
+        for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
+
+            v = convert_to_ul(v)
+
+            if v > max_tip_vol:
+                diff = v
+                while diff > max_tip_vol:
+                    if diff < max_tip_vol*2:
+                        diff = diff/2
+                        self.stamp(s, d, diff, sh, mix_before, mix_after, mix_vol, repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source, dispense_target, pre_buffer, disposal_vol, transit_vol, blowout_buffer, one_source, one_tip)
+                    else:
+                        diff -= max_tip_vol
+                        self.stamp(s, d, max_tip_vol, sh, mix_before, mix_after, mix_vol, repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source, dispense_target, pre_buffer, disposal_vol, transit_vol, blowout_buffer, one_source, one_tip)
+                v = diff
+
+            xfer = {
+                "from": s,
+                "to": d,
+                "volume": v
             }
-        if mix_after:
-            xfer["mix_after"] = {
-                "volume": mix_vol,
-                "repetitions": repetitions,
-                "speed": flowrate
-            }
 
-        # Volume checking
-        columnWise = False
-        if stamp_type == "col":
-            columnWise = True
-        if dest_plate_type.col_count == 24:
-            if columnWise:
-                dest_wells = [dest_plate.wells_from(dest_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//16) % 2 == 0]
+            # Volume accounting
+            columnWise = False
+            if st == "col":
+                columnWise = True
+            if d.container.container_type.col_count == 24:
+                if columnWise:
+                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                else:
+                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
             else:
-                dest_wells = [dest_plate.wells_from(dest_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//24) % 2 == 0]
-        else:
-            dest_wells = dest_plate.wells_from(dest_origin, columns*rows, columnWise)
-        if src_plate_type.col_count == 24:
-            if columnWise:
-                source_wells = [source_plate.wells_from(source_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//16) % 2 == 0]
+                dest_wells = d.container.wells_from(d, c*r, columnWise)
+            if s.container.container_type.col_count == 24:
+                if columnWise:
+                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                else:
+                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
             else:
-                source_wells = [source_plate.wells_from(source_origin, columns*rows*4, columnWise)[x] for x in range(columns*rows*4) if (x % 2) == (x//24) % 2 == 0]
-        else:
-            source_wells = source_plate.wells_from(source_origin, columns*rows, columnWise)
-        for well in source_wells:
-            if well.volume:
-                well.volume -= Unit.fromstring(volume)
-        for well in dest_wells:
-            if well.volume:
-                well.volume += Unit.fromstring(volume)
-            else:
-                well.volume = Unit.fromstring(volume)
+                source_wells = s.container.wells_from(s, c*r, columnWise)
+            for well in source_wells:
+                if well.volume:
+                    well.volume -= v
+            for well in dest_wells:
+                if well.volume:
+                    well.volume += v
+                else:
+                    well.volume = v
 
+            # Adding liquid transfer options
+            opt_list = ["aspirate_speed", "dispense_speed"]
+            for option in opt_list:
+                assign(xfer, option, eval(option))
+            x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                          "x_blowout_buffer"]
+            for x_option in x_opt_list:
+                assign(xfer, x_option, eval(x_option[2:]))
+            if not mix_vol and (mix_before or mix_after):
+                mix_vol = volume * .5
+            if mix_before:
+                xfer["mix_before"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
+            if mix_after:
+                xfer["mix_after"] = {
+                    "volume": mix_vol,
+                    "repetitions": repetitions,
+                    "speed": flowrate
+                }
+            if v.value > 0:
+                opts.append(xfer)
 
         # Set maximum parameters which are defined due to TCLE limitations
-        maxContainers = 3
         if stamp_type == "full":
             maxTransfers = 4
+            maxContainers = 3
         elif stamp_type == "col":
             maxTransfers = 12
+            maxContainers = 2
         else:
             maxTransfers = 8
+            maxContainers = 3
         # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
         volumeSwitch = Unit.fromstring("31:microliter")
 

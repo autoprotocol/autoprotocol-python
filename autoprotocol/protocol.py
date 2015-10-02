@@ -1277,6 +1277,8 @@ class Protocol(object):
         source = WellGroup(source_origin)
         dest = WellGroup(dest_origin)
         opts = []
+        oshp = []
+        osta = []
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
@@ -1465,10 +1467,133 @@ class Protocol(object):
                 while diff > max_tip_vol:
                     if diff < max_tip_vol*2:
                         diff = diff/2
-                        self.stamp(s, d, diff, sh, mix_before, mix_after, mix_vol, repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source, dispense_target, pre_buffer, disposal_vol, transit_vol, blowout_buffer, one_source, one_tip)
+                        v = diff
+
+                        xfer = {
+                            "from": s,
+                            "to": d,
+                            "volume": v
+                        }
+
+                        # Volume accounting
+                        columnWise = False
+                        if st == "col":
+                            columnWise = True
+                        if d.container.container_type.col_count == 24:
+                            if columnWise:
+                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            else:
+                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        else:
+                            dest_wells = d.container.wells_from(d, c*r, columnWise)
+                        if s.container.container_type.col_count == 24:
+                            if columnWise:
+                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            else:
+                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        else:
+                            source_wells = s.container.wells_from(s, c*r, columnWise)
+                        for well in source_wells:
+                            if well.volume:
+                                well.volume -= v
+                        for well in dest_wells:
+                            if well.volume:
+                                well.volume += v
+                            else:
+                                well.volume = v
+
+                        # Adding liquid transfer options
+                        opt_list = ["aspirate_speed", "dispense_speed"]
+                        for option in opt_list:
+                            assign(xfer, option, eval(option))
+                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                                      "x_blowout_buffer"]
+                        for x_option in x_opt_list:
+                            assign(xfer, x_option, eval(x_option[2:]))
+                        if not mix_vol and (mix_before or mix_after):
+                            mix_vol = volume * .5
+                        if mix_before:
+                            xfer["mix_before"] = {
+                                "volume": mix_vol,
+                                "repetitions": repetitions,
+                                "speed": flowrate
+                            }
+                        if mix_after:
+                            xfer["mix_after"] = {
+                                "volume": mix_vol,
+                                "repetitions": repetitions,
+                                "speed": flowrate
+                            }
+                        if v.value > 0:
+                            opts.append(xfer)
+                            oshp.appen(sh)
+                            osta.appen(st)
+
                     else:
                         diff -= max_tip_vol
-                        self.stamp(s, d, max_tip_vol, sh, mix_before, mix_after, mix_vol, repetitions, flowrate, aspirate_speed, dispense_speed, aspirate_source, dispense_target, pre_buffer, disposal_vol, transit_vol, blowout_buffer, one_source, one_tip)
+                        v = max_tip_vol
+
+                        xfer = {
+                            "from": s,
+                            "to": d,
+                            "volume": v
+                        }
+
+                        # Volume accounting
+                        columnWise = False
+                        if st == "col":
+                            columnWise = True
+                        if d.container.container_type.col_count == 24:
+                            if columnWise:
+                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            else:
+                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        else:
+                            dest_wells = d.container.wells_from(d, c*r, columnWise)
+                        if s.container.container_type.col_count == 24:
+                            if columnWise:
+                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            else:
+                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        else:
+                            source_wells = s.container.wells_from(s, c*r, columnWise)
+                        for well in source_wells:
+                            if well.volume:
+                                well.volume -= v
+                        for well in dest_wells:
+                            if well.volume:
+                                well.volume += v
+                            else:
+                                well.volume = v
+
+                        # Adding liquid transfer options
+                        opt_list = ["aspirate_speed", "dispense_speed"]
+                        for option in opt_list:
+                            assign(xfer, option, eval(option))
+                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                                      "x_blowout_buffer"]
+                        for x_option in x_opt_list:
+                            assign(xfer, x_option, eval(x_option[2:]))
+                        if not mix_vol and (mix_before or mix_after):
+                            mix_vol = volume * .5
+                        if mix_before:
+                            xfer["mix_before"] = {
+                                "volume": mix_vol,
+                                "repetitions": repetitions,
+                                "speed": flowrate
+                            }
+                        if mix_after:
+                            xfer["mix_after"] = {
+                                "volume": mix_vol,
+                                "repetitions": repetitions,
+                                "speed": flowrate
+                            }
+                        if v.value > 0:
+                            opts.append(xfer)
+                            oshp.appen(sh)
+                            osta.appen(st)
                 v = diff
 
             xfer = {
@@ -1529,6 +1654,37 @@ class Protocol(object):
                 }
             if v.value > 0:
                 opts.append(xfer)
+                oshp.appen(sh)
+                osta.appen(st)
+
+        trans = {}
+        if one_tip:
+            trans["transfer"] = opts
+            trans["shape"] = oshp[0]
+            trans["tip_layout"] = 96
+            stamp_type = osta[0]
+
+            if stamp_type == "full":
+                maxTransfers = 4
+                maxContainers = 3
+            elif stamp_type == "col":
+                maxTransfers = 12
+                maxContainers = 2
+            else:
+                maxTransfers = 8
+                maxContainers = 3
+
+            if (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
+                # Append to existing instruction
+                self.instructions[-1].groups.append(trans)
+            else:
+                # Initialize new stamp list/instruction
+                self.append(Stamp([trans]))
+
+
+
+
+
 
         # Set maximum parameters which are defined due to TCLE limitations
         if stamp_type == "full":
@@ -1540,8 +1696,6 @@ class Protocol(object):
         else:
             maxTransfers = 8
             maxContainers = 3
-        # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
-        volumeSwitch = Unit.fromstring("31:microliter")
 
         trans = {}
         assign(trans, "shape", shape)

@@ -1330,23 +1330,23 @@ class Protocol(object):
         rows = []
         columns = []
 
-        for idx, s in enumerate(shape):
+        for s in shape:
             # Check and load rows/columns from given shape
             if "rows" not in s or "columns" not in s:
                 raise TypeError("Invalid input shape given. Rows and columns "
                                 "of a rectangle has to be defined.")
-            r = shape["rows"]
-            c = shape["columns"]
-            rows[idx] = r
-            columns[idx] = c
+            r = s["rows"]
+            c = s["columns"]
+            rows.append(r)
+            columns.append(c)
 
             # Check on complete rows/columns (assumption: tip_layout=96)
             if c == 12 and r == 8:
-                stamp_type[idx] = "full"
+                stamp_type.append("full")
             elif c == 12:
-                stamp_type[idx] = "row"
+                stamp_type.append("row")
             elif r == 8:
-                stamp_type[idx] = "col"
+                stamp_type.append("col")
             else:
                 raise ValueError("Only complete rows or columns are allowed.")
 
@@ -1512,7 +1512,7 @@ class Protocol(object):
                         for x_option in x_opt_list:
                             assign(xfer, x_option, eval(x_option[2:]))
                         if not mix_vol and (mix_before or mix_after):
-                            mix_vol = volume * .5
+                            mix_vol = v * .5
                         if mix_before:
                             xfer["mix_before"] = {
                                 "volume": mix_vol,
@@ -1527,8 +1527,8 @@ class Protocol(object):
                             }
                         if v.value > 0:
                             opts.append(xfer)
-                            oshp.appen(sh)
-                            osta.appen(st)
+                            oshp.append(sh)
+                            osta.append(st)
 
                     else:
                         diff -= max_tip_vol
@@ -1577,7 +1577,7 @@ class Protocol(object):
                         for x_option in x_opt_list:
                             assign(xfer, x_option, eval(x_option[2:]))
                         if not mix_vol and (mix_before or mix_after):
-                            mix_vol = volume * .5
+                            mix_vol = v * .5
                         if mix_before:
                             xfer["mix_before"] = {
                                 "volume": mix_vol,
@@ -1592,8 +1592,8 @@ class Protocol(object):
                             }
                         if v.value > 0:
                             opts.append(xfer)
-                            oshp.appen(sh)
-                            osta.appen(st)
+                            oshp.append(sh)
+                            osta.append(st)
                 v = diff
 
             xfer = {
@@ -1639,7 +1639,7 @@ class Protocol(object):
             for x_option in x_opt_list:
                 assign(xfer, x_option, eval(x_option[2:]))
             if not mix_vol and (mix_before or mix_after):
-                mix_vol = volume * .5
+                mix_vol = v * .5
             if mix_before:
                 xfer["mix_before"] = {
                     "volume": mix_vol,
@@ -1654,14 +1654,14 @@ class Protocol(object):
                 }
             if v.value > 0:
                 opts.append(xfer)
-                oshp.appen(sh)
-                osta.appen(st)
+                oshp.append(sh)
+                osta.append(st)
 
         trans = {}
         if one_tip:
             trans["transfer"] = opts
-            trans["shape"] = oshp[0]
-            trans["tip_layout"] = 96
+            assign(trans, "shape", oshp[0])
+            assign(trans, "tip_layout", 96)
             stamp_type = osta[0]
 
             if stamp_type == "full":
@@ -1673,46 +1673,36 @@ class Protocol(object):
             else:
                 maxTransfers = 8
                 maxContainers = 3
-
             if (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
                 # Append to existing instruction
                 self.instructions[-1].groups.append(trans)
             else:
                 # Initialize new stamp list/instruction
-                self.append(Stamp([trans]))
+                self.instructions.append(Stamp([trans]))
 
-
-
-
-
-
-        # Set maximum parameters which are defined due to TCLE limitations
-        if stamp_type == "full":
-            maxTransfers = 4
-            maxContainers = 3
-        elif stamp_type == "col":
-            maxTransfers = 12
-            maxContainers = 2
         else:
-            maxTransfers = 8
-            maxContainers = 3
+            for x, y, z in list(zip(opts, oshp, osta)):
+                trans = {}
+                trans["transfer"] = [x]
+                assign(trans, "shape", y)
+                assign(trans, "tip_layout", 96)
+                stamp_type = z
 
-        trans = {}
-        assign(trans, "shape", shape)
-        assign(trans, "tip_layout", 96)
-        trans["transfer"] = xfer
-
-        # Chunk transfers if there is a previous stamp instruction and if its
-        # valid to append to an existing instruction
-        if (len(self.instructions) > 0 and
-           self.instructions[-1].op == "stamp" and
-           check_stamp_append(trans, self.instructions[-1].groups.transfer,
-                              maxTransfers, maxContainers, volumeSwitch)):
-                # Append to existing instruction
-                self.instructions[-1].groups.transfer.append(trans)
-        else:
-            # Initialize new stamp list/instruction
-            self.instructions.append(Stamp([trans]))
+                if stamp_type == "full":
+                    maxTransfers = 4
+                    maxContainers = 3
+                elif stamp_type == "col":
+                    maxTransfers = 12
+                    maxContainers = 2
+                else:
+                    maxTransfers = 8
+                    maxContainers = 3
+                if (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
+                    # Append to existing instruction
+                    self.instructions[-1].groups.append(trans)
+                else:
+                    # Initialize new stamp list/instruction
+                    self.instructions.append(Stamp([trans]))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

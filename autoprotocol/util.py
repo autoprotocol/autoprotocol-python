@@ -117,7 +117,7 @@ def check_valid_origin(origin, stamp_type, columns, rows):
                                  "to be well 0.")
         elif stamp_type == "row":
             if (robotized_origin % col_count) != 0 or robotized_origin > ((row_count - rows) * col_count):
-                raise ValueError("For row transfers, origin"
+                raise ValueError("For row transfers, origin "
                                  "has to be specified within the left "
                                  "column and not more than allowed by shape.")
         else:
@@ -150,20 +150,9 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
     """
     Checks whether current stamp can be appended to previous stamp instruction.
     """
-    # Ensure Instruction contains either all full plate or selective
+    # Ensure Instruction contains either all full plate or selective (all rows or all columns)
     axis_key = None
-    if (prev_xfer_list[0]["shape"]["columns"] == 12 and
-       prev_xfer_list[0]["shape"]["rows"] == 8):
-        if (current_xfer["shape"]["columns"] != 12 or
-           current_xfer["shape"]["rows"] != 8):
-            return False
-    elif (current_xfer["shape"]["columns"] == 12 and
-          current_xfer["shape"]["rows"] == 8):
-        if (prev_xfer_list[0]["shape"]["columns"] != 12 or
-           prev_xfer_list[0]["shape"]["rows"] != 8):
-            return False
-    # Ensure Instruction contains all column/row-wise transfers
-    elif prev_xfer_list[0]["shape"]["columns"] == 12:
+    if prev_xfer_list[0]["shape"]["columns"] == 12:
         axis_key = "rows"
         if current_xfer["shape"]["columns"] != 12:
             return False
@@ -171,27 +160,35 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
         axis_key = "columns"
         if current_xfer["shape"]["rows"] != 8:
             return False
+    elif ((prev_xfer_list[0]["shape"]["columns"] == 12 and
+          prev_xfer_list[0]["shape"]["rows"] == 8) and
+          (current_xfer["shape"]["columns"] == 12 and
+          current_xfer["shape"]["rows"] == 8)):
+        axis_key = None
 
     # Ensure Instruction contain the same volume type as defined by TCLE
     # Currently volumeSwitch is hardcoded to check against the two tip volume types used in TCLE
-    if prev_xfer_list[0]["volume"] <= volumeSwitch:
-        if current_xfer["volume"] > volumeSwitch:
+    if prev_xfer_list[0]["transfer"][0]["volume"] <= volumeSwitch:
+        if current_xfer["transfer"][0]["volume"] > volumeSwitch:
             return False
-    elif prev_xfer_list[0]["volume"] > volumeSwitch:
-        if current_xfer["volume"] <= volumeSwitch:
+    elif prev_xfer_list[0]["transfer"][0]["volume"] > volumeSwitch:
+        if current_xfer["transfer"][0]["volume"] <= volumeSwitch:
             return False
 
     # Check if maximum Transfers/Containers is reached
-    originList = ([x["from"] for x in prev_xfer_list] +
-                  [x["to"] for x in prev_xfer_list] +
-                  [current_xfer["from"], current_xfer["to"]])
+    originList = ([y["from"] for x in prev_xfer_list for y in x["transfer"]] +
+                  [x["to"] for x in prev_xfer_list for y in x["transfer"]] +
+                  [y["from"] for y in current_xfer["transfer"]] +
+                  [y["to"] for y in current_xfer["transfer"]])
 
     if axis_key:
         num_prev_xfers = sum([x["shape"][axis_key] for x in prev_xfer_list])
+        num_current_xfers = current_xfer["shape"][axis_key]
     else:
         num_prev_xfers = len(prev_xfer_list)
+        num_current_xfers = 1
 
-    if (num_prev_xfers + 1 > maxTransfers or
+    if (num_prev_xfers + num_current_xfers > maxTransfers or
        len(set(map(lambda x: x.container, originList))) > maxContainers):
         return False
 

@@ -176,10 +176,7 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
             return False
 
     # Check if maximum Transfers/Containers is reached
-    originList = ([y["from"] for x in prev_xfer_list for y in x["transfer"]] +
-                  [x["to"] for x in prev_xfer_list for y in x["transfer"]] +
-                  [y["from"] for y in current_xfer["transfer"]] +
-                  [y["to"] for y in current_xfer["transfer"]])
+    originList = ([y["from"] for x in prev_xfer_list for y in x["transfer"]] + [y["to"] for x in prev_xfer_list for y in x["transfer"]] + [y["from"] for y in current_xfer["transfer"]] + [y["to"] for y in current_xfer["transfer"]])
 
     if axis_key:
         num_prev_xfers = sum([x["shape"][axis_key] for x in prev_xfer_list])

@@ -1390,7 +1390,7 @@ class Protocol(object):
 
             # Check if origins are valid
             check_valid_origin(s, st, c, r)
-            check_valid_origin(s, st, c, r)
+            check_valid_origin(d, st, c, r)
 
         # Checking if shapes are the same given one_tip or one_source = True
         if one_tip or one_source:

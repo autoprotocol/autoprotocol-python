@@ -437,9 +437,12 @@ class StampTestCase(unittest.TestCase):
             self.assertTrue(w.volume == Unit(5, "microliter"))
         for w in plate_384_2.wells_from(1, 16, columnwise=True)[0::2]:
             self.assertTrue(w.volume is None)
-        for w in plate_384.wells_from(1, 24)[0::2]:
+        for w in plate_384_2.wells_from(1, 24)[0::2]:
             self.assertTrue(w.volume is None)
-
+        plate_384_2.all_wells().set_volume("0:microliter")
+        p.stamp(plate_96.well(0), plate_384_2.well(0), "15:microliter", {"columns": 3, "rows": 8})
+        self.assertEqual(plate_384_2.well("C3").volume, Unit(15, "microliter"))
+        self.assertTrue(plate_384_2.well("B2").volume is None)
 
     def test_single_transfers(self):
         p = Protocol()
@@ -456,10 +459,6 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plate_1_96, plate_2_96, "10:microliter")
         p.stamp(plate_1_384, plate_2_384, "10:microliter")
 
-        with self.assertRaises(TypeError):
-            p.stamp(plate_1_96, plate_1_384, "10:microliter")
-            p.stamp(plate_1_384, plate_1_96, "10:microliter")
-
         with self.assertRaises(ValueError):
             p.stamp(plate_1_96.well("A1"), plate_2_96.well("A2"),
                     "10:microliter", dict(rows=9, columns=1))
@@ -469,8 +468,10 @@ class StampTestCase(unittest.TestCase):
                     "10:microliter", dict(rows=9, columns=1))
             p.stamp(plate_1_384.well("A1"), plate_2_384.well("B1"),
                     "10:microliter", dict(rows=1, columns=13))
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("B1"),
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A2"),
                     "10:microliter", dict(rows=1, columns=12))
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("D1"),
+                    "10:microliter", dict(rows=6, columns=12))
 
     def test_multiple_transfers(self):
         # Set maximum number of full plate transfers (limited by maximum

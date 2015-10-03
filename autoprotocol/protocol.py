@@ -1075,7 +1075,7 @@ class Protocol(object):
               aspirate_speed=None, dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None, one_source=False,
-              one_tip=False):
+              one_tip=False, new_group=False):
 
         """
         **Note: the way this method now works is significantly different to the
@@ -1083,17 +1083,18 @@ class Protocol(object):
         documentation below and adjust existing scripts utilizing stamp()
         accordingly**
 
-        A stamp instruction consists of a list of groups of transfers, each of which
-        specifies from and to well references (ref/well_index) representing
-        the top-left well or origin of a specified shape.
+        A stamp instruction consists of a list of groups of transfers, each of
+        which specifies from and to well references (ref/well_index)
+        representing the top-left well or origin of a specified shape.
+
+        The volume field defines the volume of liquid that will be aspirated
+        from every well of the shape specified starting at the from field and
+        dispensed into the corresponding wells starting at the to field.
 
         Currently, the shape field may only be a rectangle object defined by
         rows and columns attributes representing the number of contiguous tip
         rows and columns to transfer.
 
-        The volume field defines the volume of liquid that will be aspirated
-        from every well of the shape specified starting at the from field and
-        dispensed into the corresponding wells starting at the to field.
         The shape parameter is optional and will default to a full 8 rows by
         12 columns. The tip_layout field refers to the SBS compliant layout of
         tips, is optional, and will default to the layout of a 96 tip box.
@@ -1114,7 +1115,7 @@ class Protocol(object):
 
             # A full-plate transfer between two 96 or 384-well plates
             p.stamp(plate_1_96, plate_2_96, "10:microliter")
-            p.stamp(plate_1_384, plate_384, "10:microliter")
+            p.stamp(plate_1_384, plate_2_384, "10:microliter")
 
             # Defining shapes for selective stamping:
             row_rectangle = dict(rows=1, columns=12)
@@ -1126,42 +1127,41 @@ class Protocol(object):
 
             # A 2-column transfer from columns 1,2 of a 96-well plate to
             #columns 2,4 of a 384-well plate
-            p.stamp(plate_1_384.well("A1"),
-            p.stamp(plate_1_96.well("A1"), plate_1_384.well("A2"),
-            "10:microliter", two_column_rectangle)
-            p.stamp(plate_1_96.well("A1"), plate_1_384.well("B2"),
-            "10:microliter", two_column_rectangle)
+            p.stamp(plate_1_96.well("A1"), plate_1_384.wells_from("A2", 2,
+            columnwise=True), "10:microliter", two_column_rectangle)
 
             # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
             #of a 96-well plate
-            p.stamp(plate_1_384.well("A1"), plate_1_96.well("B1"),
-            "10:microliter", shape=row_rectangle)
-            p.stamp(plate_1_384.well("A2"), plate_1_96.well("B1"),
-            "10:microliter", shape=row_rectangle)
-            p.stamp(plate_1_384.well("B1"), plate_1_96.well("C1"),
-            "10:microliter", shape=row_rectangle)
-            p.stamp(plate_1_384.well("B2"), plate_1_96.well("C1"),
-            "10:microliter", shape=row_rectangle)
+            p.stamp(plate_1_384.wells(["A1", "A2", "B1", "B2"]), plate_1_96.
+            wells(["B1", "B1", "C1", "C1"]), "10:microliter",
+            shape=row_rectangle)
 
         Parameters
         ----------
         source_origin : Container, Well, WellGroup
-            Top-left well or wells where the rows/columns will be defined with respect
-            to for the source transfer. If a container is specified, stamp will be applied to all quadrants of the container.
+            Top-left well or wells where the rows/columns will be defined with
+            respect to the source transfer.
+            If a container is specified, stamp will be applied to all
+            quadrants of the container.
         dest_origin : Container, Well, WellGroup
-            Top-left well or wells where the rows/columns will be defined with respect
-            to for the destination transfer.  If a container is specified, stamp will be applied to all quadrants of the container
+            Top-left well or wells where the rows/columns will be defined with
+            respect to the destination transfer.
+            If a container is specified, stamp will be applied to all
+            quadrants of the container
         volume : str, Unit, list
-            Volume(s) of liquid to move from source plate to destination plate. Volume can be specified as a single string or
-            Unit, or can be given as a list of volumes.  The length of a list
-            of volumes must match the number of destination wells given unless
-            the same volume is to be transferred to each destination well.
+            Volume(s) of liquid to move from source plate to destination
+            plate. Volume can be specified as a single string or Unit, or can
+            be given as a list of volumes.  The length of a list of volumes
+            must match the number of destination wells given unless the same
+            volume is to be transferred to each destination well.
         shape : dictionary, list, optional
             The shape(s) parameter is optional and will default to a rectangle
             corresponding to a full 96-well plate (8 rows by 12 columns).
-            The rows and columns will be defined wrt the specified origin. The length of a list
-            of shapes must match the number of destination wells given unless
-            the same shape is to be used for each destination well. If the length of shape is greater than 1, one_tip=False.
+            The rows and columns will be defined wrt the specified origin.
+            The length of a list of shapes must match the number of
+            destination wells given unless the same shape is to be used for
+            each destination well. If the length of shape is greater than 1,
+            one_tip=False.
 
             Example
 
@@ -1206,18 +1206,23 @@ class Protocol(object):
             dispense volume. Cannot be true if disposal_vol is specified.
         one_source : bool, optional
             Specify whether liquid is to be transferred to destination origins
-            from a group of origins all containing the same substance. Volume of all wells in the shape must be equal to the volume in the origin well. Specifying origins with overlapping shapes will cause undesireable effects.
+            from a group of origins all containing the same substance. Volume
+            of all wells in the shape must be equal to or greater than the
+            volume in the origin well. Specifying origins with overlapping
+            shapes can produce undesireable effects.
         one_tip : bool, optional
-            Specify whether all transfer steps will use the same tip or not. If multiple different shapes are used, one_tip cannot be true.
+            Specify whether all transfer steps will use the same tip or not.
+            If multiple different shapes are used, one_tip cannot be true.
+        new_group : bool, optional
 
             Example
 
             .. code-block:: python
 
-                p.stamp(96_plate_1.well("A1), 96_plate_2.well("A1"),
+                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
                 "10:microliter")
-                p.stamp(96_plate_1.well("A1), 96_plate_2.well("A1"),
-                "10:microliter", append=True)
+                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                "10:microliter")
 
             Autoprotocol Output:
 
@@ -1225,25 +1230,39 @@ class Protocol(object):
 
                 "instructions": [
                     {
-                      "transfers": [
+                      "groups": [
                         {
-                          "volume": "10.0:microliter",
-                          "to": "96_plate_2/0",
+                          "transfer": [
+                            {
+                              "volume": "10.0:microliter",
+                              "to": "plate_2_96/0",
+                              "from": "plate_1_96/0"
+                            }
+                          ],
                           "shape": {
                             "rows": 8,
                             "columns": 12
-                          }
-                          "from": "96_plate_1/0",
+                          },
                           "tip_layout": 96
-                        },
+                        }
+                      ],
+                      "op": "stamp"
+                    },
+                    {
+                      "groups": [
                         {
-                          "volume": "10.0:microliter",
-                          "to": "96_plate_2/0",
+                          "transfer": [
+                            {
+                              "volume": "10.0:microliter",
+                              "to": "plate_2_96/0",
+                              "from": "plate_1_96/0"
+                            }
+                          ],
                           "shape": {
                             "rows": 8,
                             "columns": 12
-                          }
-                          "from": "96_plate_1/0",
+                          },
+                          "tip_layout": 96
                         }
                       ],
                       "op": "stamp"
@@ -1261,7 +1280,9 @@ class Protocol(object):
             elif source_plate_type.well_count == 384:
                 source_origin = source_plate.wells([0, 1, 24, 25])
             else:
-                raise TypeError("Invalid source_origin type given. If source_origin is a container, it must be a container with 96 or 384 wells.")
+                raise TypeError("Invalid source_origin type given. If "
+                                "source_origin is a container, it must be a "
+                                "container with 96 or 384 wells.")
         if isinstance(dest_origin, Container):
             dest_plate = dest_origin
             dest_plate_type = dest_plate.container_type
@@ -1270,9 +1291,12 @@ class Protocol(object):
             elif dest_plate_type.well_count == 384:
                 dest_origin = dest_plate.wells([0, 1, 24, 25])
             else:
-                raise TypeError("Invalid dest_origin type given. If dest_origin is a container, it must be a container with 96 or 384 wells.")
+                raise TypeError("Invalid dest_origin type given. If "
+                                "dest_origin is a container, it must be a "
+                                "container with 96 or 384 wells.")
         if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
-            raise TypeError("Invalid input type given. Source and destination must be of type Container, Well, or WellGroup.")
+            raise TypeError("Invalid input type given. Source and destination "
+                            "must be of type Container, Well, or WellGroup.")
 
         source = WellGroup(source_origin)
         dest = WellGroup(dest_origin)
@@ -1324,7 +1348,9 @@ class Protocol(object):
         elif isinstance(shape, list) and len(shape) == len_dest:
             shape = shape
         else:
-            raise RuntimeError("Unless the same shape is being used for all transfers, each destination well must have a corresponding shape in the form of a list.")
+            raise RuntimeError("Unless the same shape is being used for all "
+                               "transfers, each destination well must have a "
+                               "corresponding shape in the form of a list.")
 
         stamp_type = []
         rows = []
@@ -1369,7 +1395,8 @@ class Protocol(object):
         # Checking if shapes are the same given one_tip or one_source = True
         if one_tip or one_source:
             if not all([s == shape[0] for s in shape]):
-                raise RuntimeError("The same shape must be used if one_tip or one_source is true.")
+                raise RuntimeError("The same shape must be used if one_tip or "
+                                   "one_source is true.")
 
         # Checking if all wells in shape have same or greater volume given one_source = True
         if one_source:
@@ -1385,11 +1412,14 @@ class Protocol(object):
                 else:
                     source_wells = w.container.wells_from(w, c*r, columnWise)
                 if not all([s.volume >= w.volume for s in source_wells]):
-                    raise RuntimeError("Each well in a shape must have the same or greater volume as the origin well.")
+                    raise RuntimeError("Each well in a shape must have the "
+                                       "same or greater volume as the origin "
+                                       "well.")
             try:
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                    raise RuntimeError("There is not enough volume in the "
+                                       "source well(s) specified to complete "
                                        "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
@@ -1432,8 +1462,10 @@ class Protocol(object):
                 columns = [columns[0]] * len(volume)
                 stamp_type = [stamp_type[0]] * len(volume)
             except (ValueError, AttributeError):
-                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
-                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
+                raise RuntimeError("When transferring liquid from multiple "
+                                   "wells containing the same substance to "
+                                   "multiple other wells, each source Well "
+                                   "must have a volume attribute (aliquot) "
                                    "associated with it.")
 
         # Checking on containers and volume consistency if one_tip = True
@@ -1443,7 +1475,10 @@ class Protocol(object):
 
         if one_tip:
             if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume])):
-                raise RuntimeError("Volumes must all be > or <= 31:microliter for one_tip = True. If one_source = True, it may be generating volumes which are incompatible.")
+                raise RuntimeError("Volumes must all be > or <= 31:microliter "
+                                   "for one_tip = True. If one_source = True, "
+                                   "it may be generating volumes which are "
+                                   "incompatible.")
 
             st = stamp_type[0]
             if st == "full":
@@ -1454,7 +1489,8 @@ class Protocol(object):
             all_wells = source + dest
 
             if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
-                raise RuntimeError("Exceeded maximum allowed containers when using one_tip = True")
+                raise RuntimeError("Exceeded maximum allowed containers when "
+                                   "using one_tip = True")
 
         max_tip_vol = Unit.fromstring("110:microliter")
 
@@ -1673,7 +1709,9 @@ class Protocol(object):
             else:
                 maxTransfers = 8
                 maxContainers = 3
-            if (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
+            if new_group:
+                self.instructions.append(Stamp([trans]))
+            elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
                 # Append to existing instruction
                 self.instructions[-1].groups.append(trans)
             else:
@@ -1697,7 +1735,9 @@ class Protocol(object):
                 else:
                     maxTransfers = 8
                     maxContainers = 3
-                if (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
+                if new_group:
+                    self.instructions.append(Stamp([trans]))
+                elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
                     # Append to existing instruction
                     self.instructions[-1].groups.append(trans)
                 else:

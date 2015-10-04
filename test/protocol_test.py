@@ -442,7 +442,7 @@ class StampTestCase(unittest.TestCase):
         plate_384_2.all_wells().set_volume("0:microliter")
         p.stamp(plate_96.well(0), plate_384_2.well(0), "15:microliter", {"columns": 3, "rows": 8})
         self.assertEqual(plate_384_2.well("C3").volume, Unit(15, "microliter"))
-        self.assertTrue(plate_384_2.well("B2").volume is None)
+        self.assertEqual(plate_384_2.well("B2").volume, Unit(0, "microliter"))
 
     def test_single_transfers(self):
         p = Protocol()
@@ -514,10 +514,10 @@ class StampTestCase(unittest.TestCase):
         plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
                      discard=True) for x in range(2)]
 
-        p.stamp(plateList[0].well("G1"), plateList[1].well("H1"),
+        p.stamp(plateList[0].well("G1"), plateList[1].well("G1"),
                 "10:microliter", dict(rows=1, columns=12))
         self.assertEqual(len(p.instructions), 1)
-        p.stamp(plateList[0].well("G1"), plateList[1].well("H1"),
+        p.stamp(plateList[0].well("G1"), plateList[1].well("G1"),
                 "10:microliter", dict(rows=2, columns=12))
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(len(p.instructions[0].groups), 2)

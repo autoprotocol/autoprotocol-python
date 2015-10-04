@@ -486,13 +486,13 @@ class StampTestCase(unittest.TestCase):
         for i in range(maxFullTransfers):
             p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                     "10:microliter")
-            self.assertEqual(i+1, len(p.instructions[0].transfers))
+            self.assertEqual(i+1, len(p.instructions[0].groups))
 
         # Ensure new stamp operation overflows into new instruction
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter")
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(1, len(p.instructions[1].transfers))
+        self.assertEqual(1, len(p.instructions[1].groups))
 
         # Test: Maximum number of containers on a deck
         maxContainers = 3
@@ -503,7 +503,7 @@ class StampTestCase(unittest.TestCase):
         for i in range(maxContainers-1):
             p.stamp(plateList[i], plateList[i+1], "10:microliter")
         self.assertEqual(1, len(p.instructions))
-        self.assertEqual(maxContainers-1, len(p.instructions[0].transfers))
+        self.assertEqual(maxContainers-1, len(p.instructions[0].groups))
 
         p.stamp(plateList[maxContainers-1].well("A1"),
                 plateList[maxContainers].well("A1"), "10:microliter")
@@ -520,21 +520,21 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].well("G1"), plateList[1].well("H1"),
                 "10:microliter", dict(rows=2, columns=12))
         self.assertEqual(len(p.instructions), 1)
-        self.assertEqual(len(p.instructions[0].transfers), 2)
+        self.assertEqual(len(p.instructions[0].groups), 2)
 
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=8, columns=2))
         p.stamp(plateList[0].well("A1"), plateList[1].well("A12"),
                 "10:microliter", dict(rows=8, columns=1))
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(len(p.instructions[1].transfers), 2)
+        self.assertEqual(len(p.instructions[1].groups), 2)
 
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=8, columns=12))
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=8, columns=12))
         self.assertEqual(len(p.instructions), 3)
-        self.assertEqual(len(p.instructions[2].transfers), 2)
+        self.assertEqual(len(p.instructions[2].groups), 2)
 
         # Test: Check on max transfer limit - Full plate
         p = Protocol()
@@ -549,8 +549,8 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=8, columns=12))
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(maxFullTransfers, len(p.instructions[0].transfers))
-        self.assertEqual(1, len(p.instructions[1].transfers))
+        self.assertEqual(maxFullTransfers, len(p.instructions[0].groups))
+        self.assertEqual(1, len(p.instructions[1].groups))
 
         # Test: Check on max transfer limit - Row-wise
         p = Protocol()
@@ -571,8 +571,8 @@ class StampTestCase(unittest.TestCase):
             p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                     "10:microliter", dict(rows=1, columns=12))
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(len(p.instructions[0].transfers), 4)
-        self.assertEqual(len(p.instructions[1].transfers), 8)
+        self.assertEqual(len(p.instructions[0].groups), 4)
+        self.assertEqual(len(p.instructions[1].groups), 8)
         # Overflow check
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=1, columns=12))
@@ -595,8 +595,8 @@ class StampTestCase(unittest.TestCase):
             p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                     "10:microliter", dict(rows=8, columns=1))
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(len(p.instructions[0].transfers), 3)
-        self.assertEqual(len(p.instructions[1].transfers), 12)
+        self.assertEqual(len(p.instructions[0].groups), 3)
+        self.assertEqual(len(p.instructions[1].groups), 12)
 
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "10:microliter", dict(rows=8, columns=1))
@@ -611,16 +611,16 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
         self.assertEqual(len(p.instructions), 1)
-        self.assertEqual(2, len(p.instructions[0].transfers))
+        self.assertEqual(2, len(p.instructions[0].groups))
 
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "90:microliter")
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(2, len(p.instructions[0].transfers))
+        self.assertEqual(2, len(p.instructions[0].groups))
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "90:microliter")
         self.assertEqual(len(p.instructions), 2)
-        self.assertEqual(2, len(p.instructions[1].transfers))
+        self.assertEqual(2, len(p.instructions[1].groups))
 
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")

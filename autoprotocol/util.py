@@ -151,8 +151,9 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
     Checks whether current stamp can be appended to previous stamp instruction.
     """
     # Ensure Instruction contains either all full plate or selective (all rows or all columns)
-    axis_key = None
-    if prev_xfer_list[0]["shape"]["columns"] == 12:
+    if ((prev_xfer_list[0]["shape"]["columns"] == 12 and prev_xfer_list[0]["shape"]["rows"] == 8) and (current_xfer["shape"]["columns"] == 12 and current_xfer["shape"]["rows"] == 8)):
+        axis_key = None
+    elif prev_xfer_list[0]["shape"]["columns"] == 12:
         axis_key = "rows"
         if current_xfer["shape"]["columns"] != 12:
             return False
@@ -160,11 +161,6 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
         axis_key = "columns"
         if current_xfer["shape"]["rows"] != 8:
             return False
-    elif ((prev_xfer_list[0]["shape"]["columns"] == 12 and
-          prev_xfer_list[0]["shape"]["rows"] == 8) and
-          (current_xfer["shape"]["columns"] == 12 and
-          current_xfer["shape"]["rows"] == 8)):
-        axis_key = None
 
     # Ensure Instruction contain the same volume type as defined by TCLE
     # Currently volumeSwitch is hardcoded to check against the two tip volume types used in TCLE

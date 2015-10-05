@@ -1303,9 +1303,9 @@ class Protocol(object):
         # Initialize input parameters
         source = WellGroup(source_origin)
         dest = WellGroup(dest_origin)
-        opts = []
-        oshp = []
-        osta = []
+        opts = []  # list of transfers
+        oshp = []  # list of shapes
+        osta = []  # list of stamp_types
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 

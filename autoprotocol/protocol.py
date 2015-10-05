@@ -1294,10 +1294,13 @@ class Protocol(object):
                 raise TypeError("Invalid dest_origin type given. If "
                                 "dest_origin is a container, it must be a "
                                 "container with 96 or 384 wells.")
+
+        # Test that stamp only takes Container, Well, or WellGroup
         if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
             raise TypeError("Invalid input type given. Source and destination "
                             "must be of type Container, Well, or WellGroup.")
 
+        # Initialize input parameters
         source = WellGroup(source_origin)
         dest = WellGroup(dest_origin)
         opts = []
@@ -1306,7 +1309,7 @@ class Protocol(object):
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
-        # Auto-generate well-group if only 1 well specified and using >1 source
+        # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
         if not one_source:
             if len_dest > 1 and len_source == 1:
                 source = WellGroup(source.wells * len_dest)
@@ -1325,7 +1328,7 @@ class Protocol(object):
                                    "destination wells to do a one-to-one "
                                    "transfer.")
 
-        # Auto-generate list from single volume, check if list length matches
+        # Auto-generate list from single volume, check if volume list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
                 volume = [Unit.fromstring(volume)] * len_source
@@ -1352,6 +1355,7 @@ class Protocol(object):
                                "transfers, each destination well must have a "
                                "corresponding shape in the form of a list.")
 
+        # Read through shape list and generate stamp_type, rows, and columns
         stamp_type = []
         rows = []
         columns = []
@@ -1376,7 +1380,7 @@ class Protocol(object):
             else:
                 raise ValueError("Only complete rows or columns are allowed.")
 
-        # Check dimensions
+        # Check dimensions of shape and ensure that origins are valid
         for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
             src_col_count = s.container.container_type.col_count
             dest_col_count = d.container.container_type.col_count
@@ -1392,15 +1396,16 @@ class Protocol(object):
             check_valid_origin(s, st, c, r)
             check_valid_origin(d, st, c, r)
 
-        # Checking if shapes are the same given one_tip or one_source = True
+        # Check if shapes are the same given one_tip or one_source = True
         if one_tip or one_source:
             if not all([s == shape[0] for s in shape]):
                 raise RuntimeError("The same shape must be used if one_tip or "
                                    "one_source is true.")
 
-        # Checking if all wells in shape have same or greater volume given one_source = True
+        # Create source, destination, and volumes list for one_source=True
         if one_source:
             try:
+                # Check if all wells in shape have same or greater volume given one_source = True
                 for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
                     columnWise = False
                     if st == "col":
@@ -1417,6 +1422,7 @@ class Protocol(object):
                                            "the same or greater volume as the "
                                            "origin well.")
 
+                # Create volumes list
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the "
@@ -1475,12 +1481,14 @@ class Protocol(object):
         volumeSwitch = Unit.fromstring("31:microliter")
 
         if one_tip:
+            # Volume consistency
             if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume])):
                 raise RuntimeError("Volumes must all be > or <= 31:microliter "
                                    "for one_tip = True. If one_source = True, "
                                    "it may be generating volumes which are "
                                    "incompatible.")
 
+            # Container consistency
             st = stamp_type[0]
             if st == "full":
                 maxContainers = 3
@@ -1499,9 +1507,12 @@ class Protocol(object):
 
             v = convert_to_ul(v)
 
+            # Splitting volumes up if greater than max_tip_vol
             if v > max_tip_vol:
                 diff = v
                 while diff > max_tip_vol:
+
+                    # Logic for splitting volume in half once less than 2*max_tip_volum
                     if diff < max_tip_vol*2:
                         diff = diff/2
                         v = diff
@@ -1567,6 +1578,7 @@ class Protocol(object):
                             oshp.append(sh)
                             osta.append(st)
 
+                    # Logic for splitting out max_tip_vol if volume greater than max_tip_vol
                     else:
                         diff -= max_tip_vol
                         v = max_tip_vol
@@ -1695,6 +1707,8 @@ class Protocol(object):
                 osta.append(st)
 
         trans = {}
+
+        # one_tip appends all transfers into one transfer group
         if one_tip:
             trans["transfer"] = opts
             assign(trans, "shape", oshp[0])

@@ -1400,22 +1400,23 @@ class Protocol(object):
 
         # Checking if all wells in shape have same or greater volume given one_source = True
         if one_source:
-            for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
-                columnWise = False
-                if st == "col":
-                    columnWise = True
-                if w.container.container_type.col_count == 24:
-                    if columnWise:
-                        source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                    else:
-                        source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                else:
-                    source_wells = w.container.wells_from(w, c*r, columnWise)
-                if not all([s.volume >= w.volume for s in source_wells]):
-                    raise RuntimeError("Each well in a shape must have the "
-                                       "same or greater volume as the origin "
-                                       "well.")
             try:
+                for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
+                    columnWise = False
+                    if st == "col":
+                        columnWise = True
+                    if w.container.container_type.col_count == 24:
+                        if columnWise:
+                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                        else:
+                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                    else:
+                        source_wells = w.container.wells_from(w, c*r, columnWise)
+                    if not all([s.volume >= w.volume for s in source_wells]):
+                        raise RuntimeError("Each well in a shape must have "
+                                           "the same or greater volume as the "
+                                           "origin well.")
+
                 source_vol = [s.volume for s in source.wells]
                 if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the "
@@ -1461,7 +1462,7 @@ class Protocol(object):
                 rows = [rows[0]] * len(volume)
                 columns = [columns[0]] * len(volume)
                 stamp_type = [stamp_type[0]] * len(volume)
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError, TypeError):
                 raise RuntimeError("When transferring liquid from multiple "
                                    "wells containing the same substance to "
                                    "multiple other wells, each source Well "

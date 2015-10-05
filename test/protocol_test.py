@@ -472,6 +472,7 @@ class StampTestCase(unittest.TestCase):
                     "10:microliter", dict(rows=1, columns=12))
             p.stamp(plate_1_96.well("A1"), plate_2_96.well("D1"),
                     "10:microliter", dict(rows=6, columns=12))
+            p.stamp(plate_1_96.well("A1"), plate_2_96.well("B1"), "10:microliter", dict(rows=1, columns=12))
 
     def test_multiple_transfers(self):
         # Set maximum number of full plate transfers (limited by maximum
@@ -625,6 +626,15 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
         self.assertEqual(len(p.instructions), 3)
+
+    def test_stamp_onetip(self):
+
+        p = Protocol()
+        plateCount = 2
+        plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat", discard=True) for x in range(plateCount)]
+        p.stamp(plateList[0], plateList[1], "330:microliter", one_tip=True)
+        self.assertEqual(len(p.instructions[0].groups[0]["transfer"]), 12)
+        self.assertEqual(len(p.instructions[0].groups, 1)
 
 
 class RefifyTestCase(unittest.TestCase):

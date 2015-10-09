@@ -149,7 +149,8 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
-    def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
+    def ref(self, name, id=None, cont_type=None, storage=None, discard=None,
+            cover=None):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
         and return a Container with the id, container type and storage or
@@ -240,6 +241,8 @@ class Protocol(object):
         except ValueError:
           raise RuntimeError("You must specify a ref's container type.")
 
+        if cover:
+            opts["cover"] = cover
 
         if storage:
             opts["store"] = {"where": storage}
@@ -248,7 +251,9 @@ class Protocol(object):
         else:
             raise RuntimeError("You must specify either a valid storage "
                              "condition or set discard=True for a Ref.")
-        container = Container(id, cont_type, name=name, storage=storage if storage else None)
+        container = Container(id, cont_type, name=name,
+                              storage=storage if storage else None,
+                              cover=cover if cover else None)
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -2991,6 +2996,8 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
+        for w in wells:
+            self._adjust_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1
@@ -3038,11 +3045,12 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
+
         if not (ref.is_covered() or ref.is_sealed()):
             ref.cover = "seal"
         else:
             print("WARNING: You cannot seal a plate that is "
-                   "already %sed" % (ref.cover), file=sys.stderr)
+                   "already %sed, skipping seal step." % (ref.cover), file=sys.stderr)
             return
         self.instructions.append(Seal(ref, type))
 
@@ -3086,8 +3094,15 @@ class Protocol(object):
             Container to be unsealed
 
         """
-        ref.cover = None
+        if ref.is_sealed():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            print("WARNING: You cannot unseal a plate that is "
+                   "not already sealed or is covered, skipping unseal step.")
+            return
         self.instructions.append(Unseal(ref))
+
 
     def cover(self, ref, lid='standard'):
         """
@@ -3125,10 +3140,12 @@ class Protocol(object):
 
         """
         if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = "cover"
             ref.cover = "cover"
         else:
             print("WARNING: You cannot cover a plate that is "
-                   "already %sed" % ref.cover, file=sys.stderr)
+                  "already %sed, skipping cover step" %
+                  ref.cover, file=sys.stderr)
             return
         self.instructions.append(Cover(ref, lid))
 
@@ -3172,7 +3189,13 @@ class Protocol(object):
             Container to remove lid from
 
         """
-        ref.cover = None
+        if ref.is_covered():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            print("WARNING: You cannot uncover a plate that is "
+                   "not already covered or is sealed, skipping uncover step.")
+            return
         self.instructions.append(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
@@ -3753,6 +3776,18 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
+
+    def _adjust_cover(self, container, action):
+      if not (container.is_covered() or container.is_sealed()):
+            return
+      else:
+          status = container.cover
+          print("WARNING: You cannot %s a container that is "
+                "%sed, inserting un%s step." %
+                (action, status, status))
+          eval("self.un%s(container)" % status)
+
+
     def _refify(self, op_data):
         if type(op_data) is dict:
             return {k: self._refify(v) for k, v in op_data.items()}
@@ -3768,6 +3803,7 @@ class Protocol(object):
             return str(op_data)
         else:
             return op_data
+
 
     def _ref_containers_and_wells(self, params):
         """

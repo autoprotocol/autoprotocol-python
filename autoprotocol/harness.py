@@ -232,7 +232,8 @@ class ProtocolInfo(object):
                 ref.get('id'),
                 ref['type'],
                 storage=ref.get('store'),
-                discard=ref.get('discard'))
+                discard=ref.get('discard'),
+                cover=ref.get('cover'))
             aqs = ref.get('aliquots')
             if aqs:
                 for idx in aqs:

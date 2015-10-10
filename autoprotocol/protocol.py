@@ -596,6 +596,8 @@ class Protocol(object):
                 }
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
+            self._adjust_cover(d["from"].container, "pipette from")
+            [self._adjust_cover(t['well'].container, "pipette to") for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -1541,6 +1543,72 @@ class Protocol(object):
                                    "specify the same number of source and "
                                    "destination wells to do a one-to-one "
                                    "transfer.")
+        self._adjust_cover(source_plate, "stamp from")
+        self._adjust_cover(dest_plate, "stamp to")
+
+        # Check and load rows/columns from given shape
+        if "rows" not in shape or "columns" not in shape:
+            raise TypeError("Invalid input shape given. Rows and columns "
+                            "of a rectangle has to be defined.")
+        rows = shape["rows"]
+        columns = shape["columns"]
+
+        # Check dimensions
+        src_col_count = src_plate_type.col_count
+        dest_col_count = dest_plate_type.col_count
+        if columns < 0 or columns > src_col_count or columns > dest_col_count:
+            raise ValueError("Columns given exceed plate dimensions.")
+
+        src_row_count = src_plate_type.well_count // src_col_count
+        dest_row_count = dest_plate_type.well_count // dest_col_count
+        if rows < 0 or rows > src_row_count or rows > dest_row_count:
+            raise ValueError("Rows given exceed plate dimensions.")
+
+        # Check on complete rows/columns (assumption: tip_layout=96)
+        if columns == 12 and rows == 8:
+            stamp_type = "full"
+        elif columns == 12:
+            stamp_type = "row"
+        elif rows == 8:
+            stamp_type = "col"
+        else:
+            raise ValueError("Only complete rows or columns are allowed.")
+
+        # Check if origins are valid
+        check_valid_origin(source_origin, src_plate_type, stamp_type)
+        check_valid_origin(dest_origin, dest_plate_type, stamp_type)
+
+        # Initializing transfer dictionary
+        xfer = {}
+        xfer["to"] = dest_origin
+        xfer["from"] = source_origin
+        xfer["volume"] = Unit.fromstring(volume)
+        xfer["shape"] = shape
+        xfer["tip_layout"] = 96
+
+        # Adding liquid transfer options
+        opt_list = ["aspirate_speed", "dispense_speed"]
+        for option in opt_list:
+            assign(xfer, option, eval(option))
+        x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                      "x_blowout_buffer"]
+        for x_option in x_opt_list:
+            assign(xfer, x_option, eval(x_option[2:]))
+        if not mix_vol and (mix_before or mix_after):
+            mix_vol = volume * .5
+        if mix_before:
+            xfer["mix_before"] = {
+                "volume": mix_vol,
+                "repetitions": repetitions,
+                "speed": flowrate
+            }
+        if mix_after:
+            xfer["mix_after"] = {
+                "volume": mix_vol,
+                "repetitions": repetitions,
+                "speed": flowrate
+            }
 
         # Auto-generate list from single volume, check if volume list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
@@ -2135,6 +2203,7 @@ class Protocol(object):
         if isinstance(well, list):
             well = WellGroup(well)
         for w in well.wells:
+            self._adjust_cover(w.container, "mix")
             opts = {
                 "well": w,
                 "volume": volume,
@@ -2253,6 +2322,7 @@ class Protocol(object):
             dispenser.
 
         """
+        self._adjust_cover(ref, "dispense to")
         if (speed_percentage != None and
            (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2366,6 +2436,7 @@ class Protocol(object):
             dispenser.
 
         """
+        self._adjust_cover(ref, "dispense to")
         if (speed_percentage != None and
            (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2414,6 +2485,7 @@ class Protocol(object):
             Length of time that acceleration should be applied.
 
         """
+        self._adjust_cover(ref, "spin")
         self.instructions.append(Spin(ref, acceleration, duration))
 
     def thermocycle(self, ref, groups,
@@ -3050,7 +3122,8 @@ class Protocol(object):
             ref.cover = "seal"
         else:
             print("WARNING: You cannot seal a plate that is "
-                   "already %sed, skipping seal step." % (ref.cover), file=sys.stderr)
+                  "already %sed, skipping seal step." % (ref.cover),
+                  file=sys.stderr)
             return
         self.instructions.append(Seal(ref, type))
 
@@ -3099,7 +3172,8 @@ class Protocol(object):
             ref.cover = None
         else:
             print("WARNING: You cannot unseal a plate that is "
-                   "not already sealed or is covered, skipping unseal step.")
+                  "not already sealed or is covered, skipping unseal step.",
+                  file=sys.stderr)
             return
         self.instructions.append(Unseal(ref))
 
@@ -3435,6 +3509,8 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
+        self._adjust_cover(source.container, "spread")
+        self._adjust_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
         if dest.volume:
             dest.volume += volume
@@ -3784,7 +3860,7 @@ class Protocol(object):
           status = container.cover
           print("WARNING: You cannot %s a container that is "
                 "%sed, inserting un%s step." %
-                (action, status, status))
+                (action, status, status), file=sys.stderr)
           eval("self.un%s(container)" % status)
 
 

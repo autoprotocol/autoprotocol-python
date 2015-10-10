@@ -792,45 +792,56 @@ class AcousticTransferTestCase(unittest.TestCase):
 
 
 class AutopickTestCase(unittest.TestCase):
-
     def test_autopick(self):
         p = Protocol()
         dest_plate = p.ref("dest", None, "96-flat", discard=True)
-
         p.refs["agar_plate"] = Ref("agar_plate", {"reserve": "ki17reefwqq3sq", "discard": True}, Container(None, p.container_type("6-flat"), name="agar_plate"))
-
         agar_plate = Container(None, p.container_type("6-flat"), name="agar_plate")
-
         p.refs["agar_plate_1"] = Ref("agar_plate_1", {"reserve": "ki17reefwqq3sq", "discard": True}, Container(None, p.container_type("6-flat"), name="agar_plate_1"))
-
         agar_plate_1 = Container(None, p.container_type("6-flat"), name="agar_plate_1")
-
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="0", newpick=False)
-
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(len(p.instructions[0].groups), 1)
         self.assertEqual(len(p.instructions[0].groups[0]["from"]), 2)
-
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=True)
-
         self.assertEqual(len(p.instructions), 2)
-
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
-
         self.assertEqual(len(p.instructions), 2)
-
         for i in range(20):
             p.autopick([agar_plate.well(i % 6), agar_plate.well((i+1) % 6)], [dest_plate.well(i % 96)]*4, min_abort=i, dataref="1", newpick=False)
-
         self.assertEqual(len(p.instructions), 2)
-
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
-
         self.assertEqual(len(p.instructions), 3)
-
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="2", newpick=False)
-
         self.assertEqual(len(p.instructions), 4)
-
         with self.assertRaises(RuntimeError):
             p.autopick([agar_plate.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+
+class CoverStatusTestCase(unittest.TestCase):
+    def test_ref_cover_status(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True, cover="seal")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "seal")
+        self.assertTrue(p.refs[cont.name].opts['cover'])
+
+    def test_implicit_unseal(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True)
+        self.assertFalse(cont.cover)
+        p.seal(cont)
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "seal")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)
+
+    def test_implicit_uncover(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-flat", discard=True)
+        self.assertFalse(cont.cover)
+        p.cover(cont, "universal")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "cover")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)
+

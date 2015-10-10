@@ -171,6 +171,21 @@ class DistributeTestCase(unittest.TestCase):
         self.assertTrue(5, c.well(1).volume.value)
         self.assertTrue(15, c.well(0).volume.value)
 
+    def test_uncover_before_distribute(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.distribute(c.well(0).set_volume("20:microliter"),
+                     c.well(1),
+                     "5:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual("distribute",
+                         list(p.as_dict()["instructions"][-1]["groups"][0].keys())[0])
+        self.assertTrue(5, c.well(1).volume.value)
+        self.assertTrue(15, c.well(0).volume.value)
+        self.assertEqual(p.instructions[-2].op, "uncover")
+        self.assertFalse(c.cover)
+
     def test_distribute_multiple_wells(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
@@ -224,6 +239,18 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+
+    def test_uncover_before_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.transfer(c.well(0), c.well(1), "20:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
+        self.assertEqual(None, c.well(0).volume)
+        self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+        self.assertTrue(p.instructions[-2].op == "uncover")
+        self.assertFalse(c.cover)
 
     def test_gt_750uL_transfer(self):
         p = Protocol()

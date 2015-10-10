@@ -842,6 +842,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._adjust_cover(s.container, "pipette from")
+            self._adjust_cover(d.container, "pipette into")
             v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
@@ -1031,7 +1033,7 @@ class Protocol(object):
         if not isinstance(dest, (Well, str)):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well.")
-
+        self._adjust_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
         if isinstance(volumes, list):
@@ -1051,6 +1053,7 @@ class Protocol(object):
         from_wells = []
         # Generate instructions for each transfer from source wells
         for s, v in zip(sources, volumes):
+            self._adjust_cover(s.container, "consolidate from")
             source_opts = {}
             source_opts["well"] = s
             source_opts["volume"] = v

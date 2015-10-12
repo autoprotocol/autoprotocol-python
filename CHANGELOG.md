@@ -2,14 +2,9 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
-## Unreleased
+
+## v2.4.1 - 2015-10-12
 ---
-Added
-
-Changed
-
-Removed
-
 Fixed
 - volume tracking for stamping to/from 384-well plates
 - one_tip = True transfers > 750:microliter are transferred with single tip

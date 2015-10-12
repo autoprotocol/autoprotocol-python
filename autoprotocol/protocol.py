@@ -21,6 +21,9 @@ if sys.version_info[0] >= 3:
 
 '''
 
+SEAL_TYPES = ["ultra-clear", "foil"]
+COVER_TYPES = ["standard", "low_evaporation", "universal"]
+
 
 class Ref(object):
     """
@@ -241,7 +244,7 @@ class Protocol(object):
         except ValueError:
           raise RuntimeError("You must specify a ref's container type.")
 
-        if cover:
+        if cover and (cover in SEAL_TYPES or cover in COVER_TYPES):
             opts["cover"] = cover
 
         if storage:
@@ -3121,7 +3124,8 @@ class Protocol(object):
         """
 
         if not (ref.is_covered() or ref.is_sealed()):
-            ref.cover = "seal"
+            self.refs[ref.name].opts["cover"] = type
+            ref.cover = type
         else:
             print("WARNING: You cannot seal a plate that is "
                   "already %sed, skipping seal step." % (ref.cover),
@@ -3216,8 +3220,8 @@ class Protocol(object):
 
         """
         if not (ref.is_covered() or ref.is_sealed()):
-            self.refs[ref.name].opts["cover"] = "cover"
-            ref.cover = "cover"
+            self.refs[ref.name].opts["cover"] = lid
+            ref.cover = lid
         else:
             print("WARNING: You cannot cover a plate that is "
                   "already %sed, skipping cover step" %
@@ -3859,7 +3863,7 @@ class Protocol(object):
       if not (container.is_covered() or container.is_sealed()):
             return
       else:
-          status = container.cover
+          status = "cover" if container.cover in COVER_TYPES else "seal"
           print("WARNING: You cannot %s a container that is "
                 "%sed, inserting un%s step." %
                 (action, status, status), file=sys.stderr)

@@ -304,6 +304,8 @@ class Container(object):
         self.cover = cover
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
+        if self.cover and not (self.cover in SEAL_TYPES or self.cover in COVER_TYPES):
+            raise AttributeError("%s is not a valid seal or cover type." % cover)
 
     def well(self, i):
         """

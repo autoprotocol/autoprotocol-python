@@ -847,10 +847,18 @@ class AutopickTestCase(unittest.TestCase):
 class CoverStatusTestCase(unittest.TestCase):
     def test_ref_cover_status(self):
         p = Protocol()
-        cont = p.ref("cont", None, "96-pcr", discard=True, cover="seal")
+        cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")
         self.assertTrue(cont.cover)
-        self.assertTrue(cont.cover == "seal")
+        self.assertTrue(cont.cover == "ultra-clear")
         self.assertTrue(p.refs[cont.name].opts['cover'])
+
+    def test_ref_invalid_seal(self):
+        p = Protocol()
+        with self.assertRaises(AttributeError):
+            cont = p.ref("cont", None, "96-pcr", discard=True, cover="clear")
+            self.assertFalse(cont.cover)
+            self.assertFalse(cont.cover == "clear")
+            self.assertFalse(p.refs[cont.name].opts['cover'])
 
     def test_implicit_unseal(self):
         p = Protocol()
@@ -858,7 +866,7 @@ class CoverStatusTestCase(unittest.TestCase):
         self.assertFalse(cont.cover)
         p.seal(cont)
         self.assertTrue(cont.cover)
-        self.assertTrue(cont.cover == "seal")
+        self.assertTrue(cont.cover == "ultra-clear")
         p.mix(cont.well(0))
         self.assertFalse(cont.cover)
 
@@ -868,7 +876,7 @@ class CoverStatusTestCase(unittest.TestCase):
         self.assertFalse(cont.cover)
         p.cover(cont, "universal")
         self.assertTrue(cont.cover)
-        self.assertTrue(cont.cover == "cover")
+        self.assertTrue(cont.cover == "universal")
         p.mix(cont.well(0))
         self.assertFalse(cont.cover)
 

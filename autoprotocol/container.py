@@ -304,7 +304,7 @@ class Container(object):
         self.cover = cover
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
-        if self.cover and not (self.cover in SEAL_TYPES or self.cover in COVER_TYPES):
+        if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError("%s is not a valid seal or cover type." % cover)
 
     def well(self, i):
@@ -479,18 +479,16 @@ class Container(object):
         Check if Container is sealed.
 
         """
-        if self.cover in SEAL_TYPES:
-            return True
-        return False
+        return self.cover in SEAL_TYPES
+
 
     def is_covered(self):
         """
         Check if Container is covered.
 
         """
-        if self.cover in COVER_TYPES:
-            return True
-        return False
+        return self.cover in COVER_TYPES
+
 
     def quadrant(self, quad):
         """

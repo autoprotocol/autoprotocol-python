@@ -1,5 +1,5 @@
 from __future__ import print_function
-from .container import Container, Well, WellGroup
+from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
@@ -20,9 +20,6 @@ if sys.version_info[0] >= 3:
     :license: BSD, see LICENSE for more details
 
 '''
-
-SEAL_TYPES = ["ultra-clear", "foil"]
-COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
 class Ref(object):
@@ -3122,7 +3119,8 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
-
+        if type not in SEAL_TYPES:
+            raise RuntimeError("%s is not a valid seal type" % type)
         if not (ref.is_covered() or ref.is_sealed()):
             self.refs[ref.name].opts["cover"] = type
             ref.cover = type
@@ -3219,6 +3217,8 @@ class Protocol(object):
             Type of lid to cover container with
 
         """
+        if lid not in COVER_TYPES:
+            raise RuntimeError("%s is not a valid lid type" % lid)
         if not (ref.is_covered() or ref.is_sealed()):
             self.refs[ref.name].opts["cover"] = lid
             ref.cover = lid

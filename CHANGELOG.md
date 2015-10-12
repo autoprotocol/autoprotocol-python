@@ -3,6 +3,20 @@
 This project adheres to [Semantic Versioning](http://semver.org/)
 
 
+## Unreleased
+Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v2.5.0 - 2015-10-12
+---
+Changed
+- Protocol.stamp() and Stamp() has been reformatted to take groups of transfers. This allows for one_tip=True, one_source=True, and WellGroup source and destinations
+
 ## v2.4.1 - 2015-10-12
 ---
 Fixed

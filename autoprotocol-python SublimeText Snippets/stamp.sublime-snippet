@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-stamp(${1:source}, ${2:dest}, ${3:volume}, quad=${4:None})
+stamp(${1:source}, ${2:dest}, ${3:volume}, shape=${4:dict(rows=8, columns=12))}
 ]]></content>
     <tabTrigger>stamp</tabTrigger>
     <scope>source.python</scope>

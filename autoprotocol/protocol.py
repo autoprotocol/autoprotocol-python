@@ -766,11 +766,11 @@ class Protocol(object):
         # Auto-generate list from single volume, check if list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume)] * len_source
+                volume = [Unit.fromstring(convert_to_ul(volume))] * len_source
             else:
-                volume = [Unit.fromstring(volume)] * len_dest
+                volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: Unit.fromstring(x), volume))
+            volume = list(map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -820,7 +820,7 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError) as e:
                 raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
                                    "multiple other wells, each source Well must have a volume attribute (aliquot) "
                                    "associated with it.")

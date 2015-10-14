@@ -3125,9 +3125,9 @@ class Protocol(object):
             self.refs[ref.name].opts["cover"] = type
             ref.cover = type
         else:
-            print("WARNING: You cannot seal a plate that is "
-                  "already %sed, skipping seal step." % (ref.cover),
-                  file=sys.stderr)
+            # print("WARNING: You cannot seal a plate that is "
+            #       "already %sed, skipping seal step." % (ref.cover),
+            #       file=sys.stderr)
             return
         self.instructions.append(Seal(ref, type))
 
@@ -3175,9 +3175,9 @@ class Protocol(object):
             self.refs[ref.name].opts["cover"] = None
             ref.cover = None
         else:
-            print("WARNING: You cannot unseal a plate that is "
-                  "not already sealed or is covered, skipping unseal step.",
-                  file=sys.stderr)
+            # print("WARNING: You cannot unseal a plate that is "
+            #       "not already sealed or is covered, skipping unseal step.",
+            #       file=sys.stderr)
             return
         self.instructions.append(Unseal(ref))
 
@@ -3223,9 +3223,9 @@ class Protocol(object):
             self.refs[ref.name].opts["cover"] = lid
             ref.cover = lid
         else:
-            print("WARNING: You cannot cover a plate that is "
-                  "already %sed, skipping cover step" %
-                  ref.cover, file=sys.stderr)
+            # print("WARNING: You cannot cover a plate that is "
+            #       "already %sed, skipping cover step" %
+            #       ref.cover, file=sys.stderr)
             return
         self.instructions.append(Cover(ref, lid))
 
@@ -3273,8 +3273,8 @@ class Protocol(object):
             self.refs[ref.name].opts["cover"] = None
             ref.cover = None
         else:
-            print("WARNING: You cannot uncover a plate that is "
-                   "not already covered or is sealed, skipping uncover step.")
+            # print("WARNING: You cannot uncover a plate that is "
+            #        "not already covered or is sealed, skipping uncover step.")
             return
         self.instructions.append(Uncover(ref))
 
@@ -3864,9 +3864,9 @@ class Protocol(object):
             return
       else:
           status = "cover" if container.cover in COVER_TYPES else "seal"
-          print("WARNING: You cannot %s a container that is "
-                "%sed, inserting un%s step." %
-                (action, status, status), file=sys.stderr)
+          # print("WARNING: You cannot %s a container that is "
+          #       "%sed, inserting un%s step." %
+          #       (action, status, status), file=sys.stderr)
           eval("self.un%s(container)" % status)
 
 

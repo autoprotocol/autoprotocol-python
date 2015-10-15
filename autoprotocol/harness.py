@@ -3,7 +3,7 @@ import json
 from .container_type import _CONTAINER_TYPES
 from .protocol import Protocol
 from .unit import Unit
-from .container import WellGroup
+from .container import WellGroup, SEAL_TYPES, COVER_TYPES
 from . import UserError
 import argparse
 import sys
@@ -351,15 +351,29 @@ def seal_on_store(protocol, refs):
     '''
 
     Implicitly adds seal/cover instructions to the end of a run for containers
-    that do not have a cover.   Defaults to seal if its within the capabilities
-    of the container type, otherwise inserts a cover step.
+    that do not have a cover.   If no cover or seal instructions involving a
+    given container were present in a protocol, cover type applied defaults first to
+    "seal" if its within the capabilities of the container type, otherwise
+    to "cover".
 
 
     '''
     for name, ref in refs.items():
+        cover = None
+        action = None
         type = ref.opts.get("type") or ref.opts.get("new")
         if not ref.opts.get("cover") and "store" in ref.opts.keys():
-            if "seal" in _CONTAINER_TYPES[type].capabilities:
+            for i in protocol.instructions:
+                if i.data.get("object") == ref.container:
+                    if i.op == "seal":
+                        cover = i.data['type']
+                        action = "seal"
+                    elif i.op == "cover":
+                        cover = i.data['lid']
+                        action = "cover"
+            if cover:
+                eval("protocol.%s(ref.container, cover)" % action)
+            elif "seal" in _CONTAINER_TYPES[type].capabilities:
                 protocol.seal(ref.container)
             elif "cover" in _CONTAINER_TYPES[type].capabilities:
                 protocol.cover(ref.container)

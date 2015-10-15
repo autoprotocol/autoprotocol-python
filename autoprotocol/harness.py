@@ -1,5 +1,6 @@
 from __future__ import print_function
 import json
+from .container_type import _CONTAINER_TYPES
 from .protocol import Protocol
 from .unit import Unit
 from .container import WellGroup
@@ -332,6 +333,7 @@ def run(fn, protocol_name=None):
 
     try:
         fn(protocol, params)
+        seal_on_store(protocol, protocol.refs)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -344,3 +346,24 @@ def run(fn, protocol_name=None):
         return
 
     print(json.dumps(protocol.as_dict(), indent=2))
+
+def seal_on_store(protocol, refs):
+    '''
+
+    Implicitly adds seal/cover instructions to the end of a run for containers
+    that do not have a cover.   Defaults to seal if its within the capabilities
+    of the container type, otherwise inserts a cover step.
+
+
+    '''
+    for name, ref in refs.items():
+        type = ref.opts.get("type") or ref.opts.get("new")
+        if not ref.opts.get("cover") and "store" in ref.opts.keys():
+            if "seal" in _CONTAINER_TYPES[type].capabilities:
+                protocol.seal(ref.container)
+            elif "cover" in _CONTAINER_TYPES[type].capabilities:
+                protocol.cover(ref.container)
+            else:
+                continue
+
+

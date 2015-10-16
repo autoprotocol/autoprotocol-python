@@ -1301,60 +1301,44 @@ class Protocol(object):
         way it has in previous versions, please make sure to read the
         documentation below and adjust existing scripts utilizing stamp()
         accordingly**
-
         A stamp instruction consists of a list of groups of transfers, each of
         which specifies from and to well references (ref/well_index)
         representing the top-left well or origin of a specified shape.
-
         The volume field defines the volume of liquid that will be aspirated
         from every well of the shape specified starting at the from field and
         dispensed into the corresponding wells starting at the to field.
-
         Currently, the shape field may only be a rectangle object defined by
         rows and columns attributes representing the number of contiguous tip
         rows and columns to transfer.
-
         The shape parameter is optional and will default to a full 8 rows by
         12 columns. The tip_layout field refers to the SBS compliant layout of
         tips, is optional, and will default to the layout of a 96 tip box.
-
         The following plate types are currently supported: 96 and 384.
-
-
         Example Usage:
-
         .. code-block:: python
-
             p = Protocol()
-
             plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
             plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
             plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
             plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
-
             # A full-plate transfer between two 96 or 384-well plates
             p.stamp(plate_1_96, plate_2_96, "10:microliter")
             p.stamp(plate_1_384, plate_2_384, "10:microliter")
-
             # Defining shapes for selective stamping:
             row_rectangle = dict(rows=1, columns=12)
             two_column_rectangle = dict(rows=8, columns=2)
-
             # A transfer from the G row to the H row of another 96-well plate
             p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
             "10:microliter", row_rectangle)
-
             # A 2-column transfer from columns 1,2 of a 96-well plate to
             #columns 2,4 of a 384-well plate
             p.stamp(plate_1_96.well("A1"), plate_1_384.wells_from("A2", 2,
             columnwise=True), "10:microliter", two_column_rectangle)
-
             # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
             #of a 96-well plate
             p.stamp(plate_1_384.wells(["A1", "A2", "B1", "B2"]), plate_1_96.
             wells(["B1", "B1", "C1", "C1"]), "10:microliter",
             shape=row_rectangle)
-
         Parameters
         ----------
         source_origin : Container, Well, WellGroup
@@ -1381,15 +1365,11 @@ class Protocol(object):
             destination wells given unless the same shape is to be used for
             each destination well. If the length of shape is greater than 1,
             one_tip=False.
-
             Example
-
             .. code-block:: python
-
                 rectangle = {}
                 rectangle["rows"] = 8
                 rectangle["columns"] = 12
-
         mix_after : bool, optional
             Specify whether to mix the liquid in destination wells after
             liquid is transferred.
@@ -1433,20 +1413,14 @@ class Protocol(object):
             Specify whether all transfer steps will use the same tip or not.
             If multiple different shapes are used, one_tip cannot be true.
         new_group : bool, optional
-
             Example
-
             .. code-block:: python
-
                 p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
                 "10:microliter")
                 p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
                 "10:microliter")
-
             Autoprotocol Output:
-
             .. code-block:: json
-
                 "instructions": [
                     {
                       "groups": [
@@ -1487,7 +1461,6 @@ class Protocol(object):
                       "op": "stamp"
                     }
                   ]
-
         """
 
         # Support existing transfer syntax by converting a container to all quadrants of that container

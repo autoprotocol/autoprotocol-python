@@ -1087,6 +1087,7 @@ class Protocol(object):
             self.append(Pipette([cons]))
         else:
             self._pipette([cons])
+<<<<<<< HEAD
 
     def acoustic_transfer(self, source, dest, volume, one_source=False,
                           droplet_size="25:nanoliter"):
@@ -1295,7 +1296,6 @@ class Protocol(object):
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None, one_source=False,
               one_tip=False, new_group=False):
-
         """
         **Note: the way this method now works is significantly different to the
         way it has in previous versions, please make sure to read the

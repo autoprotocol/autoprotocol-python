@@ -437,10 +437,7 @@ def seal_on_store(protocol):
                     elif i.op == "cover":
                         cover = i.data['lid']
                         action = "cover"
-                    else:
-                        continue
             if cover:
-                eval("protocol.%s(ref.container, cover)" % action)
                 cov = getattr(protocol, action)
                 cov(ref.container)
             elif "seal" in _CONTAINER_TYPES[cont_type].capabilities:

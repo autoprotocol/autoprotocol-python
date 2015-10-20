@@ -449,10 +449,12 @@ class ManifestTest(unittest.TestCase):
         seal_on_store(self.protocol)
         self.assertEqual(len(self.protocol.instructions), 3)
         self.assertTrue(self.protocol.instructions[-1].op == "seal")
+        self.assertTrue(self.protocol.instructions[-1].type == "ultra-clear")
         self.assertTrue(self.protocol.refs["test"].opts.get("cover"))
         self.assertTrue(self.protocol.refs["test2"].opts.get("cover"))
         self.protocol.uncover(test2)
         seal_on_store(self.protocol)
         self.assertEqual(len(self.protocol.instructions), 5)
         self.assertTrue(self.protocol.instructions[-1].op == "cover")
+        self.assertTrue(self.protocol.instructions[-1].lid == "standard")
 

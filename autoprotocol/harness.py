@@ -333,7 +333,7 @@ def run(fn, protocol_name=None):
 
     try:
         fn(protocol, params)
-        seal_on_store(protocol, protocol.refs)
+        seal_on_store(protocol)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -347,7 +347,7 @@ def run(fn, protocol_name=None):
 
     print(json.dumps(protocol.as_dict(), indent=2))
 
-def seal_on_store(protocol, refs):
+def seal_on_store(protocol):
     '''
 
     Implicitly adds seal/cover instructions to the end of a run for containers
@@ -424,10 +424,10 @@ def seal_on_store(protocol, refs):
         }
 
     '''
-    for name, ref in refs.items():
+    for name, ref in protocol.refs.items():
         cover = None
         action = None
-        type = ref.opts.get("type") or ref.opts.get("new")
+        cont_type = ref.opts.get("type") or ref.opts.get("new")
         if not ref.opts.get("cover") and "store" in ref.opts.keys():
             for i in protocol.instructions:
                 if i.data.get("object") == ref.container:
@@ -441,9 +441,11 @@ def seal_on_store(protocol, refs):
                         continue
             if cover:
                 eval("protocol.%s(ref.container, cover)" % action)
-            elif "seal" in _CONTAINER_TYPES[type].capabilities:
+                cov = getattr(protocol, action)
+                cov(ref.container)
+            elif "seal" in _CONTAINER_TYPES[cont_type].capabilities:
                 protocol.seal(ref.container)
-            elif "cover" in _CONTAINER_TYPES[type].capabilities:
+            elif "cover" in _CONTAINER_TYPES[cont_type].capabilities:
                 protocol.cover(ref.container)
             else:
                 continue

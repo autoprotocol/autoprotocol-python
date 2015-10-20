@@ -1,5 +1,5 @@
 import unittest
-from autoprotocol.harness import ProtocolInfo, run, Manifest
+from autoprotocol.harness import ProtocolInfo, run, Manifest, seal_on_store
 from autoprotocol import Protocol, Unit, Well, WellGroup
 import json
 
@@ -437,3 +437,22 @@ class ManifestTest(unittest.TestCase):
         manifest = Manifest(json.loads(manifest_json))
         source = json.loads(manifest_json)['protocols'][0]['preview']
         params = manifest.protocol_info('TestMethod').parse(protocol, source)
+
+    def test_seal_on_store(self):
+        seal_on_store(self.protocol)
+        test = self.protocol.ref("test", None, "96-pcr", storage="cold_20")
+        test2 = self.protocol.ref("test2", None, "96-flat", storage="cold_20",
+                                  cover="standard")
+        self.protocol.spin(test, "2000:g", "5:minute")
+        self.protocol.spin(test2, "2000:g", "5:minute")
+        self.assertEqual(len(self.protocol.instructions), 2)
+        seal_on_store(self.protocol)
+        self.assertEqual(len(self.protocol.instructions), 3)
+        self.assertTrue(self.protocol.instructions[-1].op == "seal")
+        self.assertTrue(self.protocol.refs["test"].opts.get("cover"))
+        self.assertTrue(self.protocol.refs["test2"].opts.get("cover"))
+        self.protocol.uncover(test2)
+        seal_on_store(self.protocol)
+        self.assertEqual(len(self.protocol.instructions), 5)
+        self.assertTrue(self.protocol.instructions[-1].op == "cover")
+

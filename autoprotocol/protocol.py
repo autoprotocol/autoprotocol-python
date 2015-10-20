@@ -1501,7 +1501,6 @@ class Protocol(object):
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
-        # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
         if not one_source:
             if len_dest > 1 and len_source == 1:
                 source = WellGroup(source.wells * len_dest)

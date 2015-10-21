@@ -209,6 +209,21 @@ class WellGroup(object):
         else:
             return self.wells.append(other)
 
+    def extend(self, other):
+        """
+        Extend this WellGroup with another WellGroup.
+
+        Parameters
+        ----------
+        other : WellGroup
+            WellGroup to extend this WellGroup.
+
+        """
+        if not isinstance(other, WellGroup):
+            raise TypeError("Input given is not of type 'WellGroup'.")
+        else:
+            return self.wells.extend(other.wells)
+
     def __getitem__(self, key):
         """
         Return a specific Well from a WellGroup.

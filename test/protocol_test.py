@@ -712,3 +712,30 @@ class OutsTestCase(unittest.TestCase):
         self.assertTrue(list(p.as_dict()['outs'].keys()) == ['plate'])
         self.assertTrue(list(list(p.as_dict()['outs'].values())[0].keys()) == ['0'])
         self.assertTrue(list(p.as_dict()['outs'].values())[0]['0'] == {'name': 'test_well'})
+
+
+class AbsorbanceTestCase(unittest.TestCase):
+    def test_single_well(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                     "test_reading")
+        self.assertTrue(isinstance(p.instructions[0].wells, list))
+
+
+class FluorescenceTestCase(unittest.TestCase):
+    def test_single_well(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer", emission="610:nanometer",
+                       dataref="test_reading")
+        self.assertTrue(isinstance(p.instructions[0].wells, list))
+
+
+class LuminescenceTestCase(unittest.TestCase):
+    def test_single_well(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.luminescence(test_plate, test_plate.well(0), "test_reading")
+        self.assertTrue(isinstance(p.instructions[0].wells, list))

@@ -8,6 +8,7 @@ Added
 - `extend()` method to WellGroup
 
 Changed
+- Allow single Well reading for Absorbance, Fluorescence and Luminescence
 
 Removed
 

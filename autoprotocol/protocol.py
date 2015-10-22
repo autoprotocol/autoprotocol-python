@@ -2646,7 +2646,7 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Ref
-        wells : list, WellGroup
+        wells : list, WellGroup, Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
         wavelength : str, Unit
@@ -2717,7 +2717,7 @@ class Protocol(object):
         ----------
         ref : str, Container
             Container to plate read.
-        wells : list, WellGroup
+        wells : list, WellGroup, Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
         excitation : str, Unit
@@ -2730,6 +2730,8 @@ class Protocol(object):
             Number of flashes.
 
         """
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(
@@ -2782,12 +2784,14 @@ class Protocol(object):
         ----------
         ref : str, Container
             Container to plate read.
-        wells : list, WellGroup
+        wells : list, WellGroup, Well
             WellGroup or list of wells to be measured
         dataref : str
             Name of this dataset of measured luminescence readings.
 
         """
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(Luminescence(ref, wells, dataref))

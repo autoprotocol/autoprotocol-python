@@ -2656,6 +2656,8 @@ class Protocol(object):
         flashes : int, optional
 
         """
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(

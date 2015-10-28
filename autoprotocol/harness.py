@@ -282,10 +282,14 @@ class Manifest(object):
 
     """
     def __init__(self, json):
+        '''
+        '''
         self.version = json['version']
         self.protocols = json['protocols']
 
     def protocol_info(self, name):
+        '''
+        '''
         try:
             return ProtocolInfo(
                 next(p for p in self.protocols if p['name'] == name))

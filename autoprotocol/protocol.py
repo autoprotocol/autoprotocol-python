@@ -2223,28 +2223,28 @@ class Protocol(object):
             p.seal(sample_plate)
 
             p.thermocycle(sample_plate,
-                          [
-                           {"cycles": 1,
-                            "steps": [{
-                               "temperature": "95:celsius",
-                               "duration": "5:minute",
-                               }]
-                            },
-                            {"cycles": 30,
-                                "steps": [
-                                   {"temperature": "95:celsius",
-                                    "duration": "30:second"},
-                                   {"temperature": "56:celsius",
-                                    "duration": "20:second"},
-                                   {"temperature": "72:celsius",
-                                    "duration": "20:second"}
-                                   ]
-                           },
-                               {"cycles": 1,
-                                   "steps": [
-                                   {"temperature": "72:celsius", "duration":"10:minute"}]
-                               }
-                          ])
+                        [
+                         {"cycles": 1,
+                          "steps": [{
+                             "temperature": "95:celsius",
+                             "duration": "5:minute",
+                             }]
+                          },
+                          {"cycles": 30,
+                              "steps": [
+                                 {"temperature": "95:celsius",
+                                  "duration": "30:second"},
+                                 {"temperature": "56:celsius",
+                                  "duration": "20:second"},
+                                 {"temperature": "72:celsius",
+                                  "duration": "20:second"}
+                                 ]
+                         },
+                             {"cycles": 1,
+                                 "steps": [
+                                 {"temperature": "72:celsius", "duration":"10:minute"}]
+                             }
+                        ])
 
         Autoprotocol Output:
 
@@ -2302,6 +2302,7 @@ class Protocol(object):
 
 
         To gradient thermocycle a container according to the protocol:
+
             * 1 cycle:
                 * 95 degrees for 5 minutes
             * 30 cycles:
@@ -2400,7 +2401,8 @@ class Protocol(object):
                            }
                           ],
                           dataref = "my_qpcr_data",
-                          dyes = {"SYBR": sample_plate.all_wells().indices()})
+                          dyes = {"SYBR": sample_plate.all_wells().indices()
+                          })
 
         Parameters
         ----------

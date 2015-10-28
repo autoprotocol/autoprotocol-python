@@ -18,9 +18,6 @@ Protocol.ref()
 ^^^^^^^^^^^^^^
 .. automethod:: autoprotocol.protocol.Protocol.ref
 
-Protocol.out()
-^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.protocol.Protocol.out
 
 Protocol.append()
 ^^^^^^^^^^^^^^^^^
@@ -146,11 +143,6 @@ protocol.Ref
 ~~~~~~~~~~~~
 
 .. autoclass:: autoprotocol.protocol.Ref
-
-protocol.Out
-~~~~~~~~~~~~
-
-.. autoclass:: autoprotocol.protocol.Out
 
 
 autoprotocol.container

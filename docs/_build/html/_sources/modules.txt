@@ -1,7 +1,0 @@
-autoprotocol
-============
-
-.. toctree::
-   :maxdepth: 3
-
-   autoprotocol

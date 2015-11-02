@@ -421,6 +421,7 @@ class Protocol(object):
             r.opts.pop("store")
             r.opts["discard"] = True
 
+
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second", aspirate_speed=None,
@@ -1088,6 +1089,18 @@ class Protocol(object):
         else:
             self._pipette([cons])
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+
+    def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
+              columns=12), mix_before=False, mix_after=False, mix_vol=None,
+              repetitions=10, flowrate="100:microliter/second",
+              aspirate_speed=None, dispense_speed=None, aspirate_source=None,
+              dispense_target=None, pre_buffer=None, disposal_vol=None,
+              transit_vol=None, blowout_buffer=None, one_source=False,
+              one_tip=False, new_group=False):
+>>>>>>> add Protocol.adjust_cover() to stamp
 
     def acoustic_transfer(self, source, dest, volume, one_source=False,
                           droplet_size="25:nanoliter"):
@@ -1462,6 +1475,47 @@ class Protocol(object):
                     }
                   ]
         """
+        # Support existing transfer syntax by converting a container to all quadrants of that container
+        if isinstance(source_origin, Container):
+            source_plate = source_origin
+            source_plate_type = source_plate.container_type
+            if source_plate_type.well_count == 96:
+                source_origin = source_plate.well(0)
+            elif source_plate_type.well_count == 384:
+                source_origin = source_plate.wells([0, 1, 24, 25])
+            else:
+                raise TypeError("Invalid source_origin type given. If "
+                                "source_origin is a container, it must be a "
+                                "container with 96 or 384 wells.")
+        if isinstance(dest_origin, Container):
+            dest_plate = dest_origin
+            dest_plate_type = dest_plate.container_type
+            if dest_plate_type.well_count == 96:
+                dest_origin = dest_plate.well(0)
+            elif dest_plate_type.well_count == 384:
+                dest_origin = dest_plate.wells([0, 1, 24, 25])
+            else:
+                raise TypeError("Invalid dest_origin type given. If "
+                                "dest_origin is a container, it must be a "
+                                "container with 96 or 384 wells.")
+
+        # Test that stamp only takes Container, Well, or WellGroup
+        if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
+            raise TypeError("Invalid input type given. Source and destination "
+                            "must be of type Container, Well, or WellGroup.")
+
+        # Initialize input parameters
+        source = WellGroup(source_origin)
+        dest = WellGroup(dest_origin)
+        source_plate = source.wells[0].container
+        dest_plate = dest.wells[0].container
+        self._adjust_cover(source_plate, "stamp from")
+        self._adjust_cover(dest_plate, "stamp into")
+        opts = []  # list of transfers
+        oshp = []  # list of shapes
+        osta = []  # list of stamp_types
+        len_source = len(source.wells)
+        len_dest = len(dest.wells)
 
         # Support existing transfer syntax by converting a container to all quadrants of that container
         if isinstance(source_origin, Container):
@@ -1501,6 +1555,7 @@ class Protocol(object):
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
+        # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
         if not one_source:
             if len_dest > 1 and len_source == 1:
                 source = WellGroup(source.wells * len_dest)
@@ -1679,24 +1734,6 @@ class Protocol(object):
             else:
                 temp_vol = Unit.fromstring(mix_vol)
             if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume]) or (temp_vol > volumeSwitch)):
-                raise RuntimeError("Volumes must all be > or <= 31:microliter "
-                                   "for one_tip = True. If one_source = True, "
-                                   "it may be generating volumes which are "
-                                   "incompatible.")
-
-            # Container consistency
-            st = stamp_type[0]
-            if st == "full":
-                maxContainers = 3
-            else:
-                maxContainers = 2
-
-            all_wells = source + dest
-
-            if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
-                raise RuntimeError("Exceeded maximum allowed containers when "
-                                   "using one_tip = True")
-
         # Calculate max_tip_vol smartly based on residual volumes
         # tip_capacity determined with calibration parameters
         tip_capacity = Unit.fromstring("158:microliter")
@@ -1717,7 +1754,7 @@ class Protocol(object):
         else:
             primer_or_transit = transit_resid
 
-        max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
+        max_tip_vol = Unit.fromstring("110:microliter")
 
         for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
 

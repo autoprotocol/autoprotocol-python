@@ -738,9 +738,9 @@ class Protocol(object):
             number of wells and one_source is not True.
 
         """
+        opts = []
         source = WellGroup(source)
         dest = WellGroup(dest)
-        opts = []
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
@@ -1068,6 +1068,193 @@ class Protocol(object):
             self.append(Pipette([cons]))
         else:
             self._pipette([cons])
+
+    def acoustic_transfer(self, source, dest, volume, one_source=False):
+        """
+        Specify source and destination wells for transfering liquid via an acoustic
+        liquid handler.  Droplet size is usually device-specific.
+
+        Parameters
+        ----------
+        source : Well, WellGroup
+            Well or wells to transfer liquid from.  If multiple source wells
+            are supplied and one_source is set to True, liquid will be
+            transfered from each source well specified as long as it contains
+            sufficient volume. Otherwise, the number of source wells specified
+            must match the number of destination wells specified and liquid
+            will be transfered from each source well to its corresponding
+            destination well.
+        dest : Well, WellGroup
+            Well or WellGroup to which to transfer liquid.  The number of
+            destination wells must match the number of source wells specified
+            unless one_source is set to True.
+        volume : str, Unit, list
+            The volume(s) of liquid to be transferred from source wells to
+            destination wells.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of destination wells given unless
+            the same volume is to be transferred to each destination well.
+        one_source : bool, optional
+            Specify whether liquid is to be transferred to destination wells
+            from a group of wells all containing the same substance.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p.acoustic_transfer(echo.wells(0,1).set_volume("12:nanoliter"),
+                                plate.wells_from(0,5), "4:nanoliter",
+                                one_source=True)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+              "instructions": [
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "0.004:microliter",
+                          "to": "plate/0",
+                          "from": "echo_plate/0"
+                        },
+                        {
+                          "volume": "0.004:microliter",
+                          "to": "plate/1",
+                          "from": "echo_plate/0"
+                        },
+                        {
+                          "volume": "0.004:microliter",
+                          "to": "plate/2",
+                          "from": "echo_plate/0"
+                        },
+                        {
+                          "volume": "0.004:microliter",
+                          "to": "plate/3",
+                          "from": "echo_plate/1"
+                        },
+                        {
+                          "volume": "0.004:microliter",
+                          "to": "plate/4",
+                          "from": "echo_plate/1"
+                        }
+                      ]
+                    }
+                  ],
+                  "droplet_size": "25:microliter",
+                  "op": "acoustic_transfer"
+                }
+              ]
+            }
+
+        """
+        transfers = []
+        source = WellGroup(source)
+        dest = WellGroup(dest)
+        len_source = len(source.wells)
+        len_dest = len(dest.wells)
+
+        # Auto-generate well-group if only 1 well specified and using >1 source
+        if not one_source:
+            if len_dest > 1 and len_source == 1:
+                source = WellGroup(source.wells * len_dest)
+                len_source = len(source.wells)
+            if len_dest == 1 and len_source > 1:
+                dest = WellGroup(dest.wells * len_source)
+                len_dest = len(dest.wells)
+            if len_source != len_dest:
+                raise RuntimeError("To transfer liquid from one well or "
+                                   "multiple wells  containing the same "
+                                   "source, set one_source to True. To "
+                                   "transfer liquid from multiple wells to a "
+                                   "single destination well, specify only one "
+                                   "destination well. Otherwise, you must "
+                                   "specify the same number of source and "
+                                   "destination wells to do a one-to-one "
+                                   "transfer.")
+
+        # Auto-generate list from single volume, check if list length matches
+        if isinstance(volume, basestring) or isinstance(volume, Unit):
+            if len_dest == 1 and not one_source:
+                volume = [Unit.fromstring(convert_to_ul(volume))] * len_source
+            else:
+                volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
+        elif isinstance(volume, list) and len(volume) == len_dest:
+            volume = list(map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
+        else:
+            raise RuntimeError("Unless the same volume of liquid is being "
+                               "transferred to each destination well, each "
+                               "destination well must have a corresponding "
+                               "volume in the form of a list.")
+
+        # Ensure enough volume in single well to transfer to all dest wells
+        if one_source:
+            try:
+                source_vol = [s.volume for s in source.wells]
+                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                                       "the transfers.")
+                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
+                    sources = source.wells[:len_dest]
+                    destinations = dest.wells
+                    volumes = volume
+                else:
+                    sources = []
+                    source_counter = 0
+                    destinations = []
+                    volumes = []
+                    s = source.wells[source_counter]
+                    vol = s.volume
+                    max_decimal_places = 12
+                    for idx, d in enumerate(dest.wells):
+                        vol_d = volume[idx]
+                        while vol_d > Unit.fromstring("0:microliter"):
+                            if vol > vol_d:
+                                sources.append(s)
+                                destinations.append(d)
+                                volumes.append(vol_d)
+                                vol -= vol_d
+                                vol.value = round(vol.value, max_decimal_places)
+                                vol_d -= vol_d
+                                vol_d.value = round(vol_d.value, max_decimal_places)
+                            else:
+                                sources.append(s)
+                                destinations.append(d)
+                                volumes.append(vol)
+                                vol_d -= vol
+                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                source_counter += 1
+                                if source_counter < len_source:
+                                    s = source.wells[source_counter]
+                                    vol = s.volume
+                source = WellGroup(sources)
+                dest = WellGroup(destinations)
+                volume = volumes
+            except (ValueError, AttributeError) as e:
+                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
+                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
+                                   "associated with it.")
+
+        for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            v = convert_to_ul(v)
+            xfer = {
+                "from": s,
+                "to": d,
+                "volume": v
+            }
+            # Volume accounting
+            if d.volume:
+                d.volume += v
+            else:
+                d.volume = v
+            if s.volume:
+                s.volume -= v
+            if v.value > 0:
+                transfers.append(xfer)
+
+        self.append(AcousticTransfer(transfers))
 
     def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
               columns=12), mix_before=False, mix_after=False, mix_vol=None,

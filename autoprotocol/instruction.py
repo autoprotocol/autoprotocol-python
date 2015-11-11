@@ -92,6 +92,38 @@ class Dispense(Instruction):
 
         super(Dispense, self).__init__(disp)
 
+class AcousticTransfer(Instruction):
+    """
+    Specify source and destination wells for transfering liquid via an acoustic
+    liquid handler.  Droplet size is usually device-specific.
+
+    Parameters
+    ----------
+    groups : list(dict)
+        List of `transfer` groups in the form of:
+
+        .. code-block:: json
+
+        {
+            "transfer": [
+                "to": well,
+                "from": well,
+                "volume": volume
+            ]
+        }
+
+    droplet_size : str, Unit
+        Volume representing a droplet_size.  The volume of each transfer should
+        be a multiple of this volume.
+
+    """
+    def __init__(self, transfers, droplet_size="25:nanoliter"):
+        super(AcousticTransfer, self).__init__({
+            "op": "acoustic_transfer",
+            "groups": [{"transfer": transfers}],
+            "droplet_size": droplet_size
+        })
+
 class Spin(Instruction):
     """
     Apply the specified amount of acceleration to a plate using a centrifuge.

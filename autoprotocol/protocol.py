@@ -1070,7 +1070,7 @@ class Protocol(object):
             self._pipette([cons])
 
     def acoustic_transfer(self, source, dest, volume, one_source=False,
-                          droplet_size="0.025:microliter"):
+                          droplet_size="25:nanoliter"):
         """
         Specify source and destination wells for transfering liquid via an acoustic
         liquid handler.  Droplet size is usually device-specific.
@@ -1098,6 +1098,9 @@ class Protocol(object):
         one_source : bool, optional
             Specify whether liquid is to be transferred to destination wells
             from a group of wells all containing the same substance.
+        droplet_size : str, Unit, optional
+            Volume representing a droplet_size.  The volume of each `transfer`
+            group should be a multiple of this volume.
 
         Example Usage:
 

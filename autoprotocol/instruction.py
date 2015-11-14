@@ -106,9 +106,11 @@ class AcousticTransfer(Instruction):
 
         {
             "transfer": [
-                "to": well,
-                "from": well,
-                "volume": volume
+                {
+                    "to": well,
+                    "from": well,
+                    "volume": volume
+                }
             ]
         }
 

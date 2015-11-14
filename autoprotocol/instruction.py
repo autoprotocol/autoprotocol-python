@@ -117,7 +117,7 @@ class AcousticTransfer(Instruction):
         be a multiple of this volume.
 
     """
-    def __init__(self, transfers, droplet_size="25:nanoliter"):
+    def __init__(self, transfers, droplet_size=".025:microliter"):
         super(AcousticTransfer, self).__init__({
             "op": "acoustic_transfer",
             "groups": [{"transfer": transfers}],

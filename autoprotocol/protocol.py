@@ -1069,7 +1069,8 @@ class Protocol(object):
         else:
             self._pipette([cons])
 
-    def acoustic_transfer(self, source, dest, volume, one_source=False):
+    def acoustic_transfer(self, source, dest, volume, one_source=False,
+                          droplet_size="0.025:microliter"):
         """
         Specify source and destination wells for transfering liquid via an acoustic
         liquid handler.  Droplet size is usually device-specific.
@@ -1256,7 +1257,14 @@ class Protocol(object):
 
         for x in transfers:
             x["volume"] = convert_to_nl(x["volume"])
-        self.append(AcousticTransfer(transfers))
+        if self.instructions and self.instructions[-1].op == "acoustic_transfer":
+            prev_inst = self.instructions[-1].data["groups"][0]["transfer"][-1]
+            if (prev_inst["from"].container == transfers[0]["from"].container and
+                prev_inst["to"].container == transfers[0]["to"].container and
+                droplet_size == self.instructions[-1].data["droplet_size"]):
+                self.instructions[-1].data["groups"][0]["transfer"].extend(transfers)
+                return
+        self.append(AcousticTransfer(transfers, droplet_size))
 
     def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
               columns=12), mix_before=False, mix_after=False, mix_vol=None,

@@ -3,7 +3,7 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
-from .util import convert_to_ul
+from .util import convert_to_ul, convert_to_nl
 from .util import check_valid_origin
 from .util import check_stamp_append
 
@@ -1254,6 +1254,8 @@ class Protocol(object):
             if v.value > 0:
                 transfers.append(xfer)
 
+        for x in transfers:
+            x["volume"] = convert_to_nl(x["volume"])
         self.append(AcousticTransfer(transfers))
 
     def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,

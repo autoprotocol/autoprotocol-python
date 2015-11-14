@@ -739,3 +739,28 @@ class LuminescenceTestCase(unittest.TestCase):
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.luminescence(test_plate, test_plate.well(0), "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
+
+class AcousticTransferTestCase(unittest.TestCase):
+    def test_append(self):
+        p = Protocol()
+        echo = p.ref("echo", None, "384-echo", discard=True)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+        dest2 = p.ref("dest2", None, "384-flat", discard=True)
+        p.acoustic_transfer(echo.well(0), dest.wells(1,3,5), "25:microliter")
+        self.assertTrue(len(p.instructions) == 1)
+        p.acoustic_transfer(echo.well(0), dest.wells(0,2,4), "25:microliter")
+        self.assertTrue(len(p.instructions) == 1)
+        p.acoustic_transfer(echo.well(0), dest.wells(0,2,4), "25:microliter",
+                            droplet_size="0.50:microliter")
+        self.assertTrue(len(p.instructions) == 2)
+        p.acoustic_transfer(echo.well(0), dest2.wells(0,2,4), "25:microliter")
+        self.assertTrue(len(p.instructions) == 3)
+
+    def test_one_source(self):
+        p = Protocol()
+        echo = p.ref("echo", None, "384-echo", discard=True)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+        p.acoustic_transfer(echo.wells(0,1).set_volume("2:microliter"),
+                            dest.wells(0,1,2,3), "1:microliter", one_source=True)
+        self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][-1]["from"] == echo.well(1))
+        self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(0))

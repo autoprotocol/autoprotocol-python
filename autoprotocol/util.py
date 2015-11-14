@@ -28,6 +28,28 @@ def convert_to_ul(vol):
                          "is invalid.")
     return v
 
+def convert_to_nl(vol):
+    """
+    Convert a Unit or volume string into its equivalent in microliters.
+
+    Parameters
+    ----------
+    vol : Unit, str
+        A volume string or Unit with the unit "nanoliter" or "milliliter"
+
+    """
+    v = Unit.fromstring(vol)
+    if v.unit == "milliliter":
+        v = Unit(v.value*1000000, "nanoliter")
+    elif v.unit == "microliter":
+        v = Unit(v.value*1000, "nanoliter")
+    elif v.unit == "nanoliter":
+        return v
+    else:
+        raise ValueError("The unit you're trying to convert to nanoliters "
+                         "is invalid.")
+    return v
+
 
 def quad_ind_to_num(q):
     """

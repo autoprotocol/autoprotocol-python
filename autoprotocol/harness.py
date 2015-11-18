@@ -301,7 +301,7 @@ class Manifest(object):
                                "associated manifest.json file." % name)
 
 
-def run(fn, protocol_name=None):
+def run(fn, protocol_name=None, seal_on_store=True):
     """
     Run the protocol specified by the function.
 
@@ -333,7 +333,8 @@ def run(fn, protocol_name=None):
 
     try:
         fn(protocol, params)
-        seal_on_store(protocol)
+        if seal_on_store:
+            seal_on_store(protocol)
     except UserError as e:
         print(json.dumps({
             'errors': [

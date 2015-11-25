@@ -1682,7 +1682,11 @@ class Protocol(object):
 
         if one_tip:
             # Volume consistency
-            if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume])):
+            if not mix_vol:
+                temp_vol = Unit.fromstring("0:microliter")
+            else:
+                temp_vol = Unit.fromstring(mix_vol)
+            if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume]) or (temp_vol > volumeSwitch)):
                 raise RuntimeError("Volumes must all be > or <= 31:microliter "
                                    "for one_tip = True. If one_source = True, "
                                    "it may be generating volumes which are "

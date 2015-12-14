@@ -352,14 +352,12 @@ class Protocol(object):
                 if well.name or len(well.properties) > 0:
                     if n not in outs.keys():
                         outs[n] = {}
-                        outs[n][str(well.index)] = {}
+                    outs[n][str(well.index)] = {}
                     if well.name:
                         outs[n][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
                         outs[n][str(well.index)]["properties"] = well.properties
-
         if outs:
-
             return {
                 "refs": dict(
                     (key, value.opts)

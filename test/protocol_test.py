@@ -719,10 +719,12 @@ class OutsTestCase(unittest.TestCase):
         self.assertFalse('outs' in p.as_dict())
         plate = p.ref("plate", None, "96-pcr", discard=True)
         plate.well(0).set_name("test_well")
+        plate.well(0).set_properties({"test": "foo"})
         self.assertTrue(plate.well(0).name == "test_well")
         self.assertTrue(list(p.as_dict()['outs'].keys()) == ['plate'])
         self.assertTrue(list(list(p.as_dict()['outs'].values())[0].keys()) == ['0'])
-        self.assertTrue(list(p.as_dict()['outs'].values())[0]['0'] == {'name': 'test_well'})
+        self.assertTrue(list(p.as_dict()['outs'].values())[0]['0']['name'] == 'test_well')
+        self.assertTrue(list(p.as_dict()['outs'].values())[0]['0']['properties']['test'] == 'foo')
 
 
 class AbsorbanceTestCase(unittest.TestCase):

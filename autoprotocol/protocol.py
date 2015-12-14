@@ -3486,7 +3486,7 @@ class Protocol(object):
             source.volume -= volume
         self.instructions.append(Spread(source, dest, volume))
 
-    def autopick(self, source, dests, min_count=1, criteria={}, dataref="autopick"):
+    def autopick(self, source, dests, min_count=0, criteria={}, dataref="autopick"):
         """
         Pick at least `min_count` colonies from the location specified in "from" to
         the location(s) specified in "to" in the order that they are specified

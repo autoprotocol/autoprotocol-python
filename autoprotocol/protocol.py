@@ -349,10 +349,14 @@ class Protocol(object):
         outs = {}
         for n, ref in self.refs.items():
             for well in ref.container._wells:
-                if well.name:
+                if well.name or len(well.properties) > 0:
                     if n not in outs.keys():
                         outs[n] = {}
-                    outs[n][str(well.index)] = {"name": well.name}
+                        outs[n][str(well.index)] = {}
+                    if well.name:
+                        outs[n][str(well.index)]["name"] = well.name
+                    if len(well.properties) > 0:
+                        outs[n][str(well.index)]["properties"] = well.properties
 
         if outs:
 

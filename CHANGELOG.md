@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 Added
+- Include well properties in outs
 - `extend()` method to WellGroup
 
 Changed

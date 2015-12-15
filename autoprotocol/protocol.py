@@ -399,6 +399,8 @@ class Protocol(object):
             If the container passed is not already present in self.refs
 
         """
+        if not condition or condition == "discard":
+          condition = None
         if not isinstance(container, Container):
             raise TypeError("Protocol.store() can only be used on a Container object.")
         container.storage = condition
@@ -407,7 +409,11 @@ class Protocol(object):
             raise RuntimeError("That container does not exist in the refs for this protocol.")
         if "discard" in r.opts:
             r.opts.pop("discard")
-        r.opts["store"] = {"where": str(condition)}
+        if condition:
+            r.opts["store"] = {"where": str(condition)}
+        else:
+            r.opts.pop("store")
+            r.opts["discard"] = True
 
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,

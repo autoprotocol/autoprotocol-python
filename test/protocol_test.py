@@ -689,7 +689,7 @@ class StampTestCase(unittest.TestCase):
         plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat", discard=True) for x in range(plateCount)]
         with self.assertRaises(RuntimeError):
             p.stamp(WellGroup([plateList[0].well(0), plateList[0].well(1)]), WellGroup([plateList[1].well(0), plateList[1].well(1)]), ["20:microliter", "90:microliter"], one_tip=True)
-        p.stamp(WellGroup([plateList[0].well(0), plateList[0].well(1)]), WellGroup([plateList[1].well(0), plateList[1].well(1)]), ["20:microliter", "90:microliter"], mix_after=True, mix_vol="40:microliter", one_tip=True)
+        p.stamp(WellGroup([plateList[0].well(0), plateList[0].well(1)]), WellGroup([plateList[1].well(0), plateList[1].well(1)]), ["20:microliter", "30:microliter"], mix_after=True, mix_vol="40:microliter", one_tip=True)
         self.assertEqual(len(p.instructions[0].groups[0]["transfer"]), 2)
         self.assertEqual(len(p.instructions[0].groups), 1)
 

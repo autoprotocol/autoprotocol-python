@@ -2034,6 +2034,15 @@ class Protocol(object):
         if type == "rca" and not primer:
             raise RuntimeError("You must specify the location of primer for "
                                "RCA sequencing reactions.")
+        if isinstance(wells, WellGroup):
+            container = set([w.container for w in wells])
+            if len(container) > 1:
+                raise ValueError("All wells need to be on one container for SangerSeq")
+            wells = [str(w.index) for w in wells]
+
+        if not isinstance(wells, list):
+            raise ValueError("Unknown input. SangerSeq wells accepts either a "
+                             "WellGroup or well indices")
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",

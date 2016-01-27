@@ -1,7 +1,7 @@
 import sys
 import unittest
 from autoprotocol.container_type import ContainerType
-from autoprotocol.container import Container, Well
+from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.unit import Unit
 
 if sys.version_info[0] >= 3:
@@ -103,8 +103,10 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
     def test_wells(self):
         ws = self.c.wells([0,1,2])
         self.assertEqual(3, len(ws))
+        self.assertIsInstance(ws, WellGroup)
         ws = self.c.wells("A1", ["A2", "A3"])
         self.assertEquals(3, len(ws))
+        self.assertIsInstance(ws, WellGroup)
         with self.assertRaises(ValueError):
             ws = self.c.wells("an invalid reference")
         with self.assertRaises(TypeError):
@@ -164,6 +166,35 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         self.assertEqual(16, len(ws))
         with self.assertRaises(TypeError):
             ws = ws + "not a well"
+
+    def test_quadrant(self):
+        c = lambda container_type: Container(None, container_type)
+        plate_96 = c(make_dummy_type(well_count=96, col_count=12))
+        plate_384 = c(make_dummy_type(well_count=384, col_count=24))
+        plate_1536 = c(make_dummy_type(well_count=1536, col_count=48))
+        pathological_plate = c(make_dummy_type(well_count=384, col_count=96))
+
+        for plate in plate_96, plate_384:
+            ws = plate.quadrant(0)
+            self.assertEqual(96, len(ws))
+            self.assertIsInstance(ws, WellGroup)
+
+        quadB1 = plate_384.quadrant("B1")
+        self.assertEqual(96, len(quadB1))
+        self.assertEqual(24, quadB1[0].index)
+        self.assertEqual(26, quadB1[1].index)
+
+        # unsupported plate geometries
+        for plate in plate_1536, pathological_plate:
+            with self.assertRaises(ValueError):
+                plate.quadrant(0)
+
+        # bogus quadrants
+        with self.assertRaises(ValueError):
+            plate_96.quadrant("B2")
+
+        with self.assertRaises(ValueError):
+            plate_384.quadrant(9)
 
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):

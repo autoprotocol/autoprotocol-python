@@ -433,7 +433,7 @@ class Container(object):
             for i in xrange(1, num_rows-1):
                 inner_wells.extend(xrange(well+1, well+(num_cols-1)))
                 well += num_cols
-        inner_wells = map(lambda x: self._wells[x], inner_wells)
+        inner_wells = [self._wells[x] for x in inner_wells]
         return WellGroup(inner_wells)
 
     def wells_from(self, start, num, columnwise=False):

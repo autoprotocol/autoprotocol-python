@@ -27,9 +27,13 @@ class ContainerWellRefTestCase(unittest.TestCase):
     def test_well_ref(self):
         self.assertIsInstance(self.c.well("B4"), Well)
         self.assertIsInstance(self.c.well(14), Well)
+        with self.assertRaises(TypeError):
+            self.c.well(1.0)
 
     def test_decompose(self):
         self.assertEqual((2, 3), self.c.decompose("C4"))
+        with self.assertRaises(TypeError):
+            self.c.decompose(["C4"])
 
     def test_well_identity(self):
         self.assertIs(self.c.well("A1"), self.c.well(0))
@@ -53,6 +57,9 @@ class ContainerWellRefTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.c.robotize("A10")
             self.c.robotize("J1")
+        # check input type
+        with self.assertRaises(TypeError):
+            self.c.robotize(["A1", "A2"])
 
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):
@@ -75,6 +82,37 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
             row, col = self.c.decompose(ws[i].index)
             self.assertEqual(i, row+col*row_count)
 
+    def test_innerwells(self):
+        big_dummy_type = ContainerType(name="big_dummy",
+                                       well_count=20,
+                                       well_depth_mm=None,
+                                       well_volume_ul=200,
+                                       well_coating=None,
+                                       sterile=False,
+                                       is_tube=False,
+                                       capabilities=[],
+                                       shortname="big_dummy",
+                                       col_count=5,
+                                       dead_volume_ul=15)
+        c = Container(None, big_dummy_type)
+        # row-dominant order
+        ws = c.inner_wells()
+        self.assertEqual(6, len(ws))
+        self.assertEqual([6, 7, 8, 11, 12, 13], [i.index for i in ws])
+        # column dominant order
+        ws = c.inner_wells(columnwise=True)
+        self.assertEqual([6, 11, 7, 12, 8, 13], [i.index for i in ws])
+
+    def test_wells(self):
+        ws = self.c.wells([0,1,2])
+        self.assertEqual(3, len(ws))
+        ws = self.c.wells("A1", ["A2", "A3"])
+        self.assertEquals(3, len(ws))
+        with self.assertRaises(ValueError):
+            ws = self.c.wells("an invalid reference")
+        with self.assertRaises(TypeError):
+            ws = self.c.wells({"unexpected": "collection"})
+
     def test_wells_from(self):
         # wells_from should return the correct things
         ws = self.c.wells_from("A1", 6)
@@ -89,6 +127,46 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         ws = self.c.wells_from("B3", 6, columnwise=True)
         self.assertEqual([7, 12, 3, 8, 13, 4], [w.index for w in ws])
 
+        with self.assertRaises(TypeError):
+            self.c.wells_from(["unexpected collection"], 4)
+        with self.assertRaises(TypeError):
+            self.c.wells_from("B3", 3.14)
+
+    def test_setter_typechecking(self):
+        ws = self.c.all_wells()
+        with self.assertRaises(TypeError):
+            ws.set_properties(["not", "a", "dictionary"])
+        with self.assertRaises(TypeError):
+            ws.set_volume(200)
+
+    def test_append(self):
+        another_container = Container(None, dummy_type)
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        ws.append(another_container.well(0))
+        self.assertEqual(16, len(ws))
+        with self.assertRaises(TypeError):
+            ws.append("not a well")
+
+    def test_extend(self):
+        another_container = Container(None, dummy_type)
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        ws.extend(another_container.all_wells())
+        self.assertEqual(30, len(ws))
+        with self.assertRaises(TypeError):
+            ws.extend(another_container.well(0))
+
+    def test_add(self):
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        another_container = Container(None, dummy_type)
+        ws_bigger = self.c.all_wells() + another_container.all_wells()
+        self.assertEqual(30, len(ws_bigger))
+        ws_plus_well = ws + another_container.well(0)
+        self.assertEqual(16, len(ws))
+        with self.assertRaises(RuntimeError):
+            ws = ws + "not a well"
 
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
@@ -122,6 +200,8 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.keys()))
         self.assertEqual(["40:nanogram/microliter"],
                          list(c.well(0).properties.values()))
+        self.assertRaises(TypeError, c.well(0).set_properties,
+                          ["property", "value"])
 
     def test_add_properties(self):
         c = Container(None, dummy_type)

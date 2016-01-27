@@ -7,17 +7,24 @@ from autoprotocol.unit import Unit
 if sys.version_info[0] >= 3:
     xrange = range
 
-dummy_type = ContainerType(name="dummy",
-                           well_count=15,
-                           well_depth_mm=None,
-                           well_volume_ul=200,
-                           well_coating=None,
-                           sterile=False,
-                           is_tube=False,
-                           capabilities=[],
-                           shortname="dummy",
-                           col_count=5,
-                           dead_volume_ul=15)
+def make_dummy_type(**kwargs):
+    params = {
+        "name": "dummy",
+        "well_count": 15,
+        "well_depth_mm": None,
+        "well_volume_ul": 200,
+        "well_coating": None,
+        "sterile": False,
+        "is_tube": False,
+        "capabilities": [],
+        "shortname": "dummy",
+        "col_count": 5,
+        "dead_volume_ul": 15,
+    }
+    params.update(kwargs)
+    return ContainerType(**params)
+
+dummy_type = make_dummy_type()
 
 
 class ContainerWellRefTestCase(unittest.TestCase):
@@ -83,17 +90,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
             self.assertEqual(i, row+col*row_count)
 
     def test_innerwells(self):
-        big_dummy_type = ContainerType(name="big_dummy",
-                                       well_count=20,
-                                       well_depth_mm=None,
-                                       well_volume_ul=200,
-                                       well_coating=None,
-                                       sterile=False,
-                                       is_tube=False,
-                                       capabilities=[],
-                                       shortname="big_dummy",
-                                       col_count=5,
-                                       dead_volume_ul=15)
+        big_dummy_type = make_dummy_type(well_count=20)
         c = Container(None, big_dummy_type)
         # row-dominant order
         ws = c.inner_wells()

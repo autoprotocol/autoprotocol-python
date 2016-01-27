@@ -260,7 +260,7 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (Well, WellGroup)):
-            raise RuntimeError("You can only add a Well or WellGroups \
+            raise TypeError("You can only add a Well or WellGroups \
                                 together.")
         if isinstance(other, Well):
             return WellGroup(self.wells.append(other))

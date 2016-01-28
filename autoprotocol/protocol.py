@@ -971,7 +971,7 @@ class Protocol(object):
             Well or wells to transfer liquid from.
         dest : Well, str
             Well to which to transfer consolidated liquid.
-        volume : str, Unit, list
+        volumes : str, Unit, list
             The volume(s) of liquid to be transferred from source well(s) to
             destination well.  Volume can be specified as a single string or
             Unit, or can be given as a list of volumes.  The length of a list

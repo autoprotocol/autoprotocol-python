@@ -10,6 +10,7 @@ Added
 
 Changed
 - Allow single Well reading for Absorbance, Fluorescence and Luminescence
+- Autopick now conforms to updated ASC
 
 Removed
 

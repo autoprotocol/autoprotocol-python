@@ -753,6 +753,7 @@ class LuminescenceTestCase(unittest.TestCase):
         p.luminescence(test_plate, test_plate.well(0), "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
 
+
 class AcousticTransferTestCase(unittest.TestCase):
     def test_append(self):
         p = Protocol()
@@ -777,3 +778,48 @@ class AcousticTransferTestCase(unittest.TestCase):
                             dest.wells(0,1,2,3), "1:microliter", one_source=True)
         self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][-1]["from"] == echo.well(1))
         self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(0))
+
+
+class AutopickTestCase(unittest.TestCase):
+
+    def test_autopick(self):
+        p = Protocol()
+        dest_plate = p.ref("dest", None, "96-flat", discard=True)
+
+        p.refs["agar_plate"] = Ref("agar_plate", {"reserve": "ki17reefwqq3sq", "discard": True}, Container(None, p.container_type("6-flat"), name="agar_plate"))
+
+        agar_plate = Container(None, p.container_type("6-flat"), name="agar_plate")
+
+        p.refs["agar_plate_1"] = Ref("agar_plate_1", {"reserve": "ki17reefwqq3sq", "discard": True}, Container(None, p.container_type("6-flat"), name="agar_plate_1"))
+
+        agar_plate_1 = Container(None, p.container_type("6-flat"), name="agar_plate_1")
+
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="0", newpick=False)
+
+        self.assertEqual(len(p.instructions), 1)
+        self.assertEqual(len(p.instructions[0].groups), 1)
+        self.assertEqual(len(p.instructions[0].groups[0]["from"]), 2)
+
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=True)
+
+        self.assertEqual(len(p.instructions), 2)
+
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+
+        self.assertEqual(len(p.instructions), 2)
+
+        for i in range(20):
+            p.autopick([agar_plate.well(i % 6), agar_plate.well((i+1) % 6)], [dest_plate.well(i % 96)]*4, min_abort=i, dataref="1", newpick=False)
+
+        self.assertEqual(len(p.instructions), 2)
+
+        p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+
+        self.assertEqual(len(p.instructions), 3)
+
+        p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="2", newpick=False)
+
+        self.assertEqual(len(p.instructions), 4)
+
+        with self.assertRaises(RuntimeError):
+            p.autopick([agar_plate.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)

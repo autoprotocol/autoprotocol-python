@@ -3499,43 +3499,57 @@ class Protocol(object):
             source.volume -= volume
         self.instructions.append(Spread(source, dest, volume))
 
-    def autopick(self, source, dests, min_count=0, criteria={}, dataref="autopick"):
+    def autopick(self, sources, dests, min_abort=0, criteria={},
+                 dataref="autopick", newpick=False):
         """
-        Pick at least `min_count` colonies from the location specified in "from" to
-        the location(s) specified in "to" in the order that they are specified
-        until there are no more colonies available. If there are fewer than
-        `min_count` colonies detected, the instruction will fail.
 
-          Example Usage:
+        Pick colonies from the agar-containing location(s) specified in
+        `sources` to the location(s) specified in `dests` in highest to lowest
+        rank order until there are no more colonies available.  If fewer than
+        min_abort pickable colonies have been identified from the location(s)
+        specified in `sources`, the run will stop and no further instructions
+        will be executed.
 
-          Autoprotocol Output:
+        Example Usage:
+
+        Autoprotocol Output:
 
         Parameters
         ----------
-        source : str, Well
+        sources : list of str, list of Wells
           Reference to plate containing agar and colonies to pick
-        dests : list of str, list of Well
+        dests : list of str, list of Wells
           List of destination(s) for picked colonies
         criteria : dict
           Dictionary of autopicking criteria.
-        min_count : int, optional
-            Minimum number of colonies to detect in order to continue with
-            autopicking
-
-        Raises
-        ------
-        RuntimeError
-            If `min_count` is greater than the number of `dests` specified
+        min_abort : int, optional
+          Total number of colonies that must be detected in the aggregate
+          list of `from` wells to avoid aborting the entire run.
 
         """
+        pick = {}
+
+        if isinstance(sources, Well) or isinstance(sources, str):
+            sources = [sources]
+        pick["from"] = sources
+        if len(set([s.container for s in pick["from"]])) > 1:
+            raise RuntimeError("All source wells for autopick must exist "
+                               "on the same container")
         if isinstance(dests, Well) or isinstance(dests, str):
             dests = [dests]
-        if len(dests) < min_count:
-            raise RuntimeError("Your minimum colony count cannot be greater "
-                               "than the number of destination wells "
-                               "specified.")
+        pick["to"] = dests
+        pick["min_abort"] = min_abort
 
-        self.instructions.append(Autopick(source, dests, min_count, criteria, dataref))
+        group = [pick]
+
+        if (not newpick and self.instructions
+            and self.instructions[-1].op == "autopick"
+            and self.instructions[-1].dataref == dataref
+            and self.instructions[-1].criteria == criteria
+            and self.instructions[-1].groups[0]['from'][0].container == sources[0].container):
+          self.instructions[-1].groups.extend(group)
+        else:
+          self.instructions.append(Autopick(group, criteria, dataref))
 
     def image_plate(self, ref, mode, dataref):
         """

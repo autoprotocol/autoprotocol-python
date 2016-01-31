@@ -758,34 +758,39 @@ class Spread(Instruction):
 
 class Autopick(Instruction):
     """
-    Pick at least `min_count` colonies from the location specified in "from" to
-    the location(s) specified in "to" in the order that they are specified
-    until there are no more colonies available. If there are fewer than
-    `min_count` colonies detected, the instruction will fail.
+    Pick colonies from the agar-containing location(s) specified in `sources`
+    to the location(s) specified in `dests` in highest to lowest rank order
+    until there are no more colonies available.  If fewer than min_abort
+    pickable colonies have been identified from the location(s) specified in
+    `sources`, the run will stop and no further instructions will be executed.
+
+    Example Usage:
+
+    Autoprotocol Output:
 
     Parameters
     ----------
-    source : str, Well
-        Reference to plate containing agar and colonies to pick
-    dests : list of str, list of Well
-        List of destination(s) for picked colonies
-    min_count : int, optional
-        Minimum number of colonies to detect in order to continue with
-        autopicking
+    sources : list of str, list of Wells
+      Reference to wells containing agar and colonies to pick
+    dests : list of str, list of Wells
+      List of destination(s) for picked colonies
+    criteria : dict
+      Dictionary of autopicking criteria.
+    min_abort : int, optional
+      Total number of colonies that must be detected in the aggregate
+      list of `from` wells to avoid aborting the entire run.
 
     """
-    def __init__(self, source, dests, min_count, criteria, dataref):
+    def __init__(self, groups, criteria, dataref):
         pick = {
             "op": "autopick",
-            "from": source,
-            "to": dests,
-            "min_colony_count": min_count,
-            "dataref": dataref
+            "groups": groups,
+            "dataref": dataref,
+            "criteria": criteria
         }
-        if criteria:
-            pick["criteria"] = criteria
 
         super(Autopick, self).__init__(pick)
+
 
 class ImagePlate(Instruction):
     """

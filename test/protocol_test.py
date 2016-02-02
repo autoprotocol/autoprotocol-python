@@ -673,23 +673,19 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].wells(list(range(12))), plateList[1].wells(list(range(12))), "30:microliter", shape={"rows": 8, "columns": 1})
         self.assertEqual(len(p.instructions[0].groups), 12)
 
-    def test_gt_110uL_transfer(self):
+    def test_gt_150uL_transfer(self):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat", discard=True) for x in range(plateCount)]
         p.stamp(plateList[0], plateList[1], "300:microliter")
-        self.assertEqual(3, len(p.instructions[0].groups))
+        self.assertEqual(2, len(p.instructions[0].groups))
         self.assertEqual(
-            Unit(110, 'microliter'),
+            Unit(150, 'microliter'),
             p.instructions[0].groups[0]['transfer'][0]['volume']
             )
         self.assertEqual(
-            Unit(95, 'microliter'),
+            Unit(150, 'microliter'),
             p.instructions[0].groups[1]['transfer'][0]['volume']
-            )
-        self.assertEqual(
-            Unit(95, 'microliter'),
-            p.instructions[0].groups[2]['transfer'][0]['volume']
             )
 
     def test_one_source(self):

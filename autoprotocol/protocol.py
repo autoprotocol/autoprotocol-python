@@ -1686,6 +1686,7 @@ class Protocol(object):
         # Checking on containers and volume consistency if one_tip = True
 
         # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
+        #TODO remove this when consolidating to 165ul filtered tips
         volumeSwitch = Unit.fromstring("31:microliter")
 
         if one_tip:
@@ -1713,7 +1714,7 @@ class Protocol(object):
                 raise RuntimeError("Exceeded maximum allowed containers when "
                                    "using one_tip = True")
 
-        max_tip_vol = Unit.fromstring("110:microliter")
+        max_tip_vol = Unit.fromstring("150:microliter")
 
         for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
 

@@ -10,9 +10,10 @@ Added
 
 Changed
 - Allow single Well reading for Absorbance, Fluorescence and Luminescence
-- Autopick now conforms to updated ASC
+- Autopick now conforms to updated ASC (**not backwards compatible**)
 
 Removed
+- Protocol.plate_to_magblock() and Protocol.plate_from_magblock()
 
 Fixed
 - Protocol.stamp() allows one_tip=True when steps use a `mix_vol` greater than "31:microliter" even if transferred volumes are not all greater than "31:microliter"

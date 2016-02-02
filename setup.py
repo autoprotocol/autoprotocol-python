@@ -7,7 +7,7 @@ setup(
     author='Tali Herzka',
     description='Python library for generating Autoprotocol',
     author_email="tali@transcriptic.com",
-    version='2.5.3',
+    version='2.6.0',
     test_suite='test',
     packages=['autoprotocol']
 )

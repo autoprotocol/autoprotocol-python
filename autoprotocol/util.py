@@ -30,12 +30,12 @@ def convert_to_ul(vol):
 
 def convert_to_nl(vol):
     """
-    Convert a Unit or volume string into its equivalent in microliters.
+    Convert a Unit or volume string into its equivalent in nanoliters.
 
     Parameters
     ----------
     vol : Unit, str
-        A volume string or Unit with the unit "nanoliter" or "milliliter"
+        A volume string or Unit with the unit "microliter" or "milliliter"
 
     """
     v = Unit.fromstring(vol)

@@ -1,23 +1,30 @@
 import sys
 import unittest
 from autoprotocol.container_type import ContainerType
-from autoprotocol.container import Container, Well
+from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.unit import Unit
 
 if sys.version_info[0] >= 3:
     xrange = range
 
-dummy_type = ContainerType(name="dummy",
-                           well_count=15,
-                           well_depth_mm=None,
-                           well_volume_ul=200,
-                           well_coating=None,
-                           sterile=False,
-                           is_tube=False,
-                           capabilities=[],
-                           shortname="dummy",
-                           col_count=5,
-                           dead_volume_ul=15)
+def make_dummy_type(**kwargs):
+    params = {
+        "name": "dummy",
+        "well_count": 15,
+        "well_depth_mm": None,
+        "well_volume_ul": 200,
+        "well_coating": None,
+        "sterile": False,
+        "is_tube": False,
+        "capabilities": [],
+        "shortname": "dummy",
+        "col_count": 5,
+        "dead_volume_ul": 15,
+    }
+    params.update(kwargs)
+    return ContainerType(**params)
+
+dummy_type = make_dummy_type()
 
 
 class ContainerWellRefTestCase(unittest.TestCase):
@@ -27,9 +34,13 @@ class ContainerWellRefTestCase(unittest.TestCase):
     def test_well_ref(self):
         self.assertIsInstance(self.c.well("B4"), Well)
         self.assertIsInstance(self.c.well(14), Well)
+        with self.assertRaises(TypeError):
+            self.c.well(1.0)
 
     def test_decompose(self):
         self.assertEqual((2, 3), self.c.decompose("C4"))
+        with self.assertRaises(TypeError):
+            self.c.decompose(["C4"])
 
     def test_well_identity(self):
         self.assertIs(self.c.well("A1"), self.c.well(0))
@@ -53,6 +64,9 @@ class ContainerWellRefTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.c.robotize("A10")
             self.c.robotize("J1")
+        # check input type
+        with self.assertRaises(TypeError):
+            self.c.robotize(["A1", "A2"])
 
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):
@@ -75,6 +89,29 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
             row, col = self.c.decompose(ws[i].index)
             self.assertEqual(i, row+col*row_count)
 
+    def test_innerwells(self):
+        big_dummy_type = make_dummy_type(well_count=20)
+        c = Container(None, big_dummy_type)
+        # row-dominant order
+        ws = c.inner_wells()
+        self.assertEqual(6, len(ws))
+        self.assertEqual([6, 7, 8, 11, 12, 13], [i.index for i in ws])
+        # column dominant order
+        ws = c.inner_wells(columnwise=True)
+        self.assertEqual([6, 11, 7, 12, 8, 13], [i.index for i in ws])
+
+    def test_wells(self):
+        ws = self.c.wells([0,1,2])
+        self.assertEqual(3, len(ws))
+        self.assertIsInstance(ws, WellGroup)
+        ws = self.c.wells("A1", ["A2", "A3"])
+        self.assertEquals(3, len(ws))
+        self.assertIsInstance(ws, WellGroup)
+        with self.assertRaises(ValueError):
+            ws = self.c.wells("an invalid reference")
+        with self.assertRaises(TypeError):
+            ws = self.c.wells({"unexpected": "collection"})
+
     def test_wells_from(self):
         # wells_from should return the correct things
         ws = self.c.wells_from("A1", 6)
@@ -89,6 +126,75 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         ws = self.c.wells_from("B3", 6, columnwise=True)
         self.assertEqual([7, 12, 3, 8, 13, 4], [w.index for w in ws])
 
+        with self.assertRaises(TypeError):
+            self.c.wells_from(["unexpected collection"], 4)
+        with self.assertRaises(TypeError):
+            self.c.wells_from("B3", 3.14)
+
+    def test_setter_typechecking(self):
+        ws = self.c.all_wells()
+        with self.assertRaises(TypeError):
+            ws.set_properties(["not", "a", "dictionary"])
+        with self.assertRaises(TypeError):
+            ws.set_volume(200)
+
+    def test_append(self):
+        another_container = Container(None, dummy_type)
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        ws.append(another_container.well(0))
+        self.assertEqual(16, len(ws))
+        with self.assertRaises(TypeError):
+            ws.append("not a well")
+
+    def test_extend(self):
+        another_container = Container(None, dummy_type)
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        ws.extend(another_container.all_wells())
+        self.assertEqual(30, len(ws))
+        with self.assertRaises(TypeError):
+            ws.extend(another_container.well(0))
+
+    def test_add(self):
+        ws = self.c.all_wells()
+        self.assertEqual(15, len(ws))
+        another_container = Container(None, dummy_type)
+        ws_bigger = self.c.all_wells() + another_container.all_wells()
+        self.assertEqual(30, len(ws_bigger))
+        ws_plus_well = ws + another_container.well(0)
+        self.assertEqual(16, len(ws))
+        with self.assertRaises(TypeError):
+            ws = ws + "not a well"
+
+    def test_quadrant(self):
+        c = lambda container_type: Container(None, container_type)
+        plate_96 = c(make_dummy_type(well_count=96, col_count=12))
+        plate_384 = c(make_dummy_type(well_count=384, col_count=24))
+        plate_1536 = c(make_dummy_type(well_count=1536, col_count=48))
+        pathological_plate = c(make_dummy_type(well_count=384, col_count=96))
+
+        for plate in plate_96, plate_384:
+            ws = plate.quadrant(0)
+            self.assertEqual(96, len(ws))
+            self.assertIsInstance(ws, WellGroup)
+
+        quadB1 = plate_384.quadrant("B1")
+        self.assertEqual(96, len(quadB1))
+        self.assertEqual(24, quadB1[0].index)
+        self.assertEqual(26, quadB1[1].index)
+
+        # unsupported plate geometries
+        for plate in plate_1536, pathological_plate:
+            with self.assertRaises(ValueError):
+                plate.quadrant(0)
+
+        # bogus quadrants
+        with self.assertRaises(ValueError):
+            plate_96.quadrant("B2")
+
+        with self.assertRaises(ValueError):
+            plate_384.quadrant(9)
 
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
@@ -111,7 +217,7 @@ class WellVolumeTestCase(unittest.TestCase):
         c.well(1).set_volume(".1:milliliter")
         self.assertTrue(c.well(1).volume == Unit(100, "microliter"))
         with self.assertRaises(ValueError):
-            c.well(2).set_volume("1:liter")
+            c.well(2).set_volume("1:milliliter")
 
 class WellPropertyTestCase(unittest.TestCase):
     def test_set_properties(self):
@@ -122,6 +228,8 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.keys()))
         self.assertEqual(["40:nanogram/microliter"],
                          list(c.well(0).properties.values()))
+        self.assertRaises(TypeError, c.well(0).set_properties,
+                          ["property", "value"])
 
     def test_add_properties(self):
         c = Container(None, dummy_type)

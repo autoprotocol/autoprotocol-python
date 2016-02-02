@@ -260,7 +260,7 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (Well, WellGroup)):
-            raise RuntimeError("You can only add a Well or WellGroups \
+            raise TypeError("You can only add a Well or WellGroups \
                                 together.")
         if isinstance(other, Well):
             return WellGroup(self.wells.append(other))
@@ -433,7 +433,7 @@ class Container(object):
             for i in xrange(1, num_rows-1):
                 inner_wells.extend(xrange(well+1, well+(num_cols-1)))
                 well += num_cols
-        inner_wells = map(lambda x: self._wells[x], inner_wells)
+        inner_wells = [self._wells[x] for x in inner_wells]
         return WellGroup(inner_wells)
 
     def wells_from(self, start, num, columnwise=False):
@@ -484,14 +484,23 @@ class Container(object):
         # TODO(Define what each quadrant number corresponds toL)
         if isinstance(quad, str):
             quad = quad_ind_to_num(quad)
-        if self.container_type.well_count == 96:
+
+        # n_wells: n_cols
+        allowed_layouts = {96: 12, 384: 24}
+        n_wells = self.container_type.well_count
+        if (n_wells not in allowed_layouts or
+            self.container_type.col_count != allowed_layouts[n_wells]):
+            raise ValueError("Quadrant is only defined for standard 96 and "
+                             "384-well plates")
+
+        if n_wells == 96:
             if quad == 0:
-                return self._wells
+                return WellGroup(self._wells)
             else:
-                raise RuntimeError("0 or 'A1' is the only valid quadrant for a 96-well plate.")
-        elif self.container_type.well_count < 96:
-            raise RuntimeError("Cannot return quadrant for a container type with less than 96 wells.")
-        assert quad in [0, 1, 2, 3], "Invalid quadrant entered for the specified plate type."
+                raise ValueError("0 or 'A1' is the only valid quadrant for a 96-well plate.")
+
+        if quad not in [0, 1, 2, 3]:
+            raise ValueError("Invalid quadrant {} for plate type {}".format(quad, str(self.name)))
 
         start_well = [0, 1, 24, 25]
         wells = []
@@ -499,7 +508,8 @@ class Container(object):
         for row_offset in xrange(start_well[quad], 384, 48):
             for col_offset in xrange(0, 24, 2):
                 wells.append(row_offset + col_offset)
-        return WellGroup([self.well(w) for w in wells])
+
+        return self.wells(wells)
 
     def __repr__(self):
         """

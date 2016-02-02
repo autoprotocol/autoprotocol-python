@@ -16,6 +16,7 @@ Removed
 
 Fixed
 - Protocol.stamp() allows one_tip=True when steps use a `mix_vol` greater than "31:microliter" even if transferred volumes are not all greater than "31:microliter"
+- Protocol.transfer() respects when `mix_after` or `mix_before` is explicitly False
 
 ## v2.5.0 - 2015-10-12
 ---

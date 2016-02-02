@@ -368,7 +368,7 @@ class TransferTestCase(unittest.TestCase):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         with self.assertRaises(RuntimeError):
-            p.transfer(c.well(0), c.well(1), "10:microliter", mix_vol= "15:microliter")
+            p.transfer(c.well(0), c.well(1), "10:microliter", mix_vol="15:microliter")
             p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_a=21)
             p.transfer(c.well(0), c.well(1), "10:microliter", repetitions=21)
             p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_b=21)
@@ -393,6 +393,21 @@ class TransferTestCase(unittest.TestCase):
         self.assertTrue(int(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['repetitions']) == 10)
         self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['speed']) == "100:microliter/second")
         self.assertTrue(str(p.instructions[-1].groups[-1]['transfer'][-1]['mix_before']['volume']) == "6.0:microliter")
+
+    def test_mix_false(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(c.well(0), c.well(1), "20:microliter", mix_after=False)
+        self.assertFalse("mix_after" in p.instructions[0].groups[0]["transfer"][0])
+        p.transfer(c.well(0), c.well(1), "20:microliter", mix_before=False)
+        self.assertFalse("mix_before" in p.instructions[0].groups[1]["transfer"][0])
+        p.transfer(c.well(0), c.well(1), "1800:microliter", mix_after=False)
+        for i in range(2, 5):
+            self.assertFalse("mix_after" in p.instructions[0].groups[i]["transfer"][0])
+        p.transfer(c.well(0), c.well(1), "1800:microliter", mix_before=False)
+        for i in range(5, 8):
+            self.assertFalse("mix_before" in p.instructions[0].groups[i]["transfer"][0])
+
 
 class ConsolidateTestCase(unittest.TestCase):
     def test_multiple_sources(self):

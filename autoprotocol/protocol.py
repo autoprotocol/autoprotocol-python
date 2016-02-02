@@ -859,13 +859,13 @@ class Protocol(object):
                         raise RuntimeError("If you specify mix arguments on transfer()"
                                            " you must also specify mix_before and/or"
                                            " mix_after=True.")
-                    if "mix_before" in mix_kwargs:
+                    if mix_kwargs.get("mix_before"):
                         xfer["mix_before"] = {
                             "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
                             "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
                             "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
                         }
-                    if "mix_after" in mix_kwargs:
+                    if mix_kwargs.get("mix_after"):
                         xfer["mix_after"] = {
                             "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
                             "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
@@ -905,13 +905,13 @@ class Protocol(object):
                 raise RuntimeError("If you specify mix arguments on transfer()"
                                    " you must also specify mix_before and/or"
                                    " mix_after=True.")
-            if "mix_before" in mix_kwargs:
+            if mix_kwargs.get("mix_before"):
                 xfer["mix_before"] = {
                     "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
                     "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
                     "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
-            if "mix_after" in mix_kwargs:
+            if mix_kwargs.get("mix_after"):
                 xfer["mix_after"] = {
                     "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
                     "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,

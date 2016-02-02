@@ -2,8 +2,10 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
-
 ## Unreleased
+
+## v2.6.0 - 2015-02-02
+---
 Added
 - Include well properties in outs
 - `extend()` method to WellGroup

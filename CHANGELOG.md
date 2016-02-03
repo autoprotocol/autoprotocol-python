@@ -3,6 +3,15 @@
 This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
+---
+Added
+
+Changed
+
+Removed
+
+Fixed
+- Protocol.stamp() smartly calculates max_tip_volume using residual volumes
 
 ## v2.6.0 - 2015-02-02
 ---

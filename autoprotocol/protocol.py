@@ -1714,7 +1714,27 @@ class Protocol(object):
                 raise RuntimeError("Exceeded maximum allowed containers when "
                                    "using one_tip = True")
 
-        max_tip_vol = Unit.fromstring("150:microliter")
+        # Calculate max_tip_vol smartly based on residual volumes
+        # tip_capacity determined with calibration parameters
+        tip_capacity = Unit.fromstring("158:microliter")
+        primer_resid = Unit.fromstring("5:microliter")
+        transit_resid = Unit.fromstring("1:microliter")
+        pre_buffer_resid = Unit.fromstring("5:microliter")
+
+        if aspirate_source:
+            if 'primer_vol' in aspirate_source.keys():
+                primer_resid = Unit.fromstring(aspirate_source['primer_vol'])
+        if pre_buffer:
+            pre_buffer_resid = Unit.fromstring(pre_buffer)
+        if transit_vol:
+            transit_resid = Unit.fromstring(transit_vol)
+        # Determine max(transit_vol, primer_vol)
+        if primer_resid > Unit.fromstring(transit_resid):
+            primer_or_transit = primer_resid
+        else:
+            primer_or_transit = transit_resid
+
+        max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
 
         for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
 

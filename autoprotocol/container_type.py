@@ -158,11 +158,11 @@ class ContainerType(namedtuple("ContainerType",
         if not isinstance(well_ref, int):
             raise TypeError("ContainerType.humanize(): Well reference given "
                             "is not of type 'int'.")
-        row, col = self.decompose(well_ref)
         # Check bounds
-        if well_ref > self.well_count or well_ref < 0:
+        if well_ref >= self.well_count or well_ref < 0:
                 raise ValueError("ContainerType.humanize(): Well reference "
                                  "given exceeds container dimensions.")
+        row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):

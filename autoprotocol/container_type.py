@@ -109,9 +109,6 @@ class ContainerType(namedtuple("ContainerType",
             if col >= self.col_count or col < 0:
                 raise ValueError("ContainerType.robotize(): Col given exceeds "
                                  "container dimensions.")
-            if well_num > self.well_count:
-                raise ValueError("ContainerType.robotize(): Well given "
-                                 "exceeds container dimensions.")
             return well_num
         else:
             m = re.match(r"\d+$", well_ref)

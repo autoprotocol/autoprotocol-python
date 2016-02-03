@@ -45,3 +45,8 @@ class ContainerRobotizeTestCase(unittest.TestCase):
       self.assertEqual("A1", dummy_type.humanize(0))
       self.assertEqual("A5", dummy_type.humanize(4))
       self.assertEqual("B2", dummy_type.humanize(6))
+      self.assertEqual("C5", dummy_type.humanize(14))
+      with self.assertRaises(ValueError):
+        dummy_type.humanize(15)
+      with self.assertRaises(TypeError):
+        dummy_type.humanize("A1")

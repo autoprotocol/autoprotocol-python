@@ -2121,11 +2121,13 @@ class Protocol(object):
             number of times to aspirate and expell liquid during mixing
 
         """
-        if not isinstance(well, (Well, basestring, WellGroup)):
-            raise TypeError("Well given is not of type 'str', 'Well' or "
-                            "'WellGroup'.")
+        if not isinstance(well, (Well, basestring, WellGroup, list)):
+            raise TypeError("Well given is not of type 'str', 'Well', "
+                            "'WellGroup' or 'list'.")
         if isinstance(well, (Well, basestring)):
             well = WellGroup([well])
+        if isinstance(well, list):
+            well = WellGroup(well)
         for w in well.wells:
             opts = {
                 "well": w,

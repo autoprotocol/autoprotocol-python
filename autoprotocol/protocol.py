@@ -2110,7 +2110,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        well : str, Well, WellGroup
+        well : str, Well, WellGroup, list of Wells
             Well(s) to be mixed. If a WellGroup is passed, each well in the
             group will be mixed using the specified parameters.
         volume : str, Unit, optional

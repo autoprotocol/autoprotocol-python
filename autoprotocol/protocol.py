@@ -1,4 +1,5 @@
-from .container import Container, Well, WellGroup
+from __future__ import print_function
+from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
@@ -148,7 +149,8 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
-    def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
+    def ref(self, name, id=None, cont_type=None, storage=None, discard=None,
+            cover=None):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
         and return a Container with the id, container type and storage or
@@ -239,6 +241,8 @@ class Protocol(object):
         except ValueError:
           raise RuntimeError("You must specify a ref's container type.")
 
+        if cover and (cover in SEAL_TYPES or cover in COVER_TYPES):
+            opts["cover"] = cover
 
         if storage:
             opts["store"] = {"where": storage}
@@ -247,7 +251,9 @@ class Protocol(object):
         else:
             raise RuntimeError("You must specify either a valid storage "
                              "condition or set discard=True for a Ref.")
-        container = Container(id, cont_type, name=name, storage=storage if storage else None)
+        container = Container(id, cont_type, name=name,
+                              storage=storage if storage else None,
+                              cover=cover if cover else None)
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -414,6 +420,7 @@ class Protocol(object):
         else:
             r.opts.pop("store")
             r.opts["discard"] = True
+
 
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
@@ -590,6 +597,8 @@ class Protocol(object):
                 }
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
+            self._adjust_cover(d["from"].container, "pipette from")
+            [self._adjust_cover(t['well'].container, "pipette to") for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -834,6 +843,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._adjust_cover(s.container, "pipette from")
+            self._adjust_cover(d.container, "pipette into")
             v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
@@ -1023,7 +1034,7 @@ class Protocol(object):
         if not isinstance(dest, (Well, str)):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well.")
-
+        self._adjust_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
         if isinstance(volumes, list):
@@ -1043,6 +1054,7 @@ class Protocol(object):
         from_wells = []
         # Generate instructions for each transfer from source wells
         for s, v in zip(sources, volumes):
+            self._adjust_cover(s.container, "consolidate from")
             source_opts = {}
             source_opts["well"] = s
             source_opts["volume"] = v
@@ -1278,701 +1290,648 @@ class Protocol(object):
         self.append(AcousticTransfer(transfers, droplet_size))
 
     def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
-              columns=12), mix_before=False, mix_after=False, mix_vol=None,
-              repetitions=10, flowrate="100:microliter/second",
-              aspirate_speed=None, dispense_speed=None, aspirate_source=None,
-              dispense_target=None, pre_buffer=None, disposal_vol=None,
-              transit_vol=None, blowout_buffer=None, one_source=False,
-              one_tip=False, new_group=False):
+                  columns=12), mix_before=False, mix_after=False, mix_vol=None,
+                  repetitions=10, flowrate="100:microliter/second",
+                  aspirate_speed=None, dispense_speed=None, aspirate_source=None,
+                  dispense_target=None, pre_buffer=None, disposal_vol=None,
+                  transit_vol=None, blowout_buffer=None, one_source=False,
+                  one_tip=False, new_group=False):
 
-        """
-        **Note: the way this method now works is significantly different to the
-        way it has in previous versions, please make sure to read the
-        documentation below and adjust existing scripts utilizing stamp()
-        accordingly**
-
-        A stamp instruction consists of a list of groups of transfers, each of
-        which specifies from and to well references (ref/well_index)
-        representing the top-left well or origin of a specified shape.
-
-        The volume field defines the volume of liquid that will be aspirated
-        from every well of the shape specified starting at the from field and
-        dispensed into the corresponding wells starting at the to field.
-
-        Currently, the shape field may only be a rectangle object defined by
-        rows and columns attributes representing the number of contiguous tip
-        rows and columns to transfer.
-
-        The shape parameter is optional and will default to a full 8 rows by
-        12 columns. The tip_layout field refers to the SBS compliant layout of
-        tips, is optional, and will default to the layout of a 96 tip box.
-
-        The following plate types are currently supported: 96 and 384.
-
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-
-            plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
-            plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
-            plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
-            plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
-
-            # A full-plate transfer between two 96 or 384-well plates
-            p.stamp(plate_1_96, plate_2_96, "10:microliter")
-            p.stamp(plate_1_384, plate_2_384, "10:microliter")
-
-            # Defining shapes for selective stamping:
-            row_rectangle = dict(rows=1, columns=12)
-            two_column_rectangle = dict(rows=8, columns=2)
-
-            # A transfer from the G row to the H row of another 96-well plate
-            p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
-            "10:microliter", row_rectangle)
-
-            # A 2-column transfer from columns 1,2 of a 96-well plate to
-            #columns 2,4 of a 384-well plate
-            p.stamp(plate_1_96.well("A1"), plate_1_384.wells_from("A2", 2,
-            columnwise=True), "10:microliter", two_column_rectangle)
-
-            # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
-            #of a 96-well plate
-            p.stamp(plate_1_384.wells(["A1", "A2", "B1", "B2"]), plate_1_96.
-            wells(["B1", "B1", "C1", "C1"]), "10:microliter",
-            shape=row_rectangle)
-
-        Parameters
-        ----------
-        source_origin : Container, Well, WellGroup
-            Top-left well or wells where the rows/columns will be defined with
-            respect to the source transfer.
-            If a container is specified, stamp will be applied to all
-            quadrants of the container.
-        dest_origin : Container, Well, WellGroup
-            Top-left well or wells where the rows/columns will be defined with
-            respect to the destination transfer.
-            If a container is specified, stamp will be applied to all
-            quadrants of the container
-        volume : str, Unit, list
-            Volume(s) of liquid to move from source plate to destination
-            plate. Volume can be specified as a single string or Unit, or can
-            be given as a list of volumes.  The length of a list of volumes
-            must match the number of destination wells given unless the same
-            volume is to be transferred to each destination well.
-        shape : dictionary, list, optional
-            The shape(s) parameter is optional and will default to a rectangle
-            corresponding to a full 96-well plate (8 rows by 12 columns).
-            The rows and columns will be defined wrt the specified origin.
-            The length of a list of shapes must match the number of
-            destination wells given unless the same shape is to be used for
-            each destination well. If the length of shape is greater than 1,
-            one_tip=False.
-
-            Example
-
+            """
+            **Note: the way this method now works is significantly different to the
+            way it has in previous versions, please make sure to read the
+            documentation below and adjust existing scripts utilizing stamp()
+            accordingly**
+            A stamp instruction consists of a list of groups of transfers, each of
+            which specifies from and to well references (ref/well_index)
+            representing the top-left well or origin of a specified shape.
+            The volume field defines the volume of liquid that will be aspirated
+            from every well of the shape specified starting at the from field and
+            dispensed into the corresponding wells starting at the to field.
+            Currently, the shape field may only be a rectangle object defined by
+            rows and columns attributes representing the number of contiguous tip
+            rows and columns to transfer.
+            The shape parameter is optional and will default to a full 8 rows by
+            12 columns. The tip_layout field refers to the SBS compliant layout of
+            tips, is optional, and will default to the layout of a 96 tip box.
+            The following plate types are currently supported: 96 and 384.
+            Example Usage:
             .. code-block:: python
-
-                rectangle = {}
-                rectangle["rows"] = 8
-                rectangle["columns"] = 12
-
-        mix_after : bool, optional
-            Specify whether to mix the liquid in destination wells after
-            liquid is transferred.
-        mix_before : bool, optional
-            Specify whether to mix the liquid in source wells before
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in wells
-            before and/or after it is transfered.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in wells before and/or after it is transfered.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before and/or after each
-            transfer step in units of "microliter/second".
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May
-            not be specified if dispense_target is also specified.
-        aspirate_source : fn, optional
-            Can't be specified if aspirate_speed is also specified.
-        dispense_target : fn, optional
-            Same but opposite of  aspirate_source.
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid.
-        disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into
-            trash afterwards.
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence
-            of bubbles at pipette tip.
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume. Cannot be true if disposal_vol is specified.
-        one_source : bool, optional
-            Specify whether liquid is to be transferred to destination origins
-            from a group of origins all containing the same substance. Volume
-            of all wells in the shape must be equal to or greater than the
-            volume in the origin well. Specifying origins with overlapping
-            shapes can produce undesireable effects.
-        one_tip : bool, optional
-            Specify whether all transfer steps will use the same tip or not.
-            If multiple different shapes are used, one_tip cannot be true.
-        new_group : bool, optional
-
-            Example
-
-            .. code-block:: python
-
-                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-
-            Autoprotocol Output:
-
-            .. code-block:: json
-
-                "instructions": [
-                    {
-                      "groups": [
+                p = Protocol()
+                plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
+                plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
+                plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
+                plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
+                # A full-plate transfer between two 96 or 384-well plates
+                p.stamp(plate_1_96, plate_2_96, "10:microliter")
+                p.stamp(plate_1_384, plate_2_384, "10:microliter")
+                # Defining shapes for selective stamping:
+                row_rectangle = dict(rows=1, columns=12)
+                two_column_rectangle = dict(rows=8, columns=2)
+                # A transfer from the G row to the H row of another 96-well plate
+                p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
+                "10:microliter", row_rectangle)
+                # A 2-column transfer from columns 1,2 of a 96-well plate to
+                #columns 2,4 of a 384-well plate
+                p.stamp(plate_1_96.well("A1"), plate_1_384.wells_from("A2", 2,
+                columnwise=True), "10:microliter", two_column_rectangle)
+                # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
+                #of a 96-well plate
+                p.stamp(plate_1_384.wells(["A1", "A2", "B1", "B2"]), plate_1_96.
+                wells(["B1", "B1", "C1", "C1"]), "10:microliter",
+                shape=row_rectangle)
+            Parameters
+            ----------
+            source_origin : Container, Well, WellGroup
+                Top-left well or wells where the rows/columns will be defined with
+                respect to the source transfer.
+                If a container is specified, stamp will be applied to all
+                quadrants of the container.
+            dest_origin : Container, Well, WellGroup
+                Top-left well or wells where the rows/columns will be defined with
+                respect to the destination transfer.
+                If a container is specified, stamp will be applied to all
+                quadrants of the container
+            volume : str, Unit, list
+                Volume(s) of liquid to move from source plate to destination
+                plate. Volume can be specified as a single string or Unit, or can
+                be given as a list of volumes.  The length of a list of volumes
+                must match the number of destination wells given unless the same
+                volume is to be transferred to each destination well.
+            shape : dictionary, list, optional
+                The shape(s) parameter is optional and will default to a rectangle
+                corresponding to a full 96-well plate (8 rows by 12 columns).
+                The rows and columns will be defined wrt the specified origin.
+                The length of a list of shapes must match the number of
+                destination wells given unless the same shape is to be used for
+                each destination well. If the length of shape is greater than 1,
+                one_tip=False.
+                Example
+                .. code-block:: python
+                    rectangle = {}
+                    rectangle["rows"] = 8
+                    rectangle["columns"] = 12
+            mix_after : bool, optional
+                Specify whether to mix the liquid in destination wells after
+                liquid is transferred.
+            mix_before : bool, optional
+                Specify whether to mix the liquid in source wells before
+                liquid is transferred.
+            mix_vol : str, Unit, optional
+                Volume to aspirate and dispense in order to mix liquid in wells
+                before and/or after it is transfered.
+            repetitions : int, optional
+                Number of times to aspirate and dispense in order to mix
+                liquid in wells before and/or after it is transfered.
+            flowrate : str, Unit, optional
+                Speed at which to mix liquid in well before and/or after each
+                transfer step in units of "microliter/second".
+            dispense_speed : str, Unit, optional
+                Speed at which to dispense liquid into the destination well.  May
+                not be specified if dispense_target is also specified.
+            aspirate_source : fn, optional
+                Can't be specified if aspirate_speed is also specified.
+            dispense_target : fn, optional
+                Same but opposite of  aspirate_source.
+            pre_buffer : str, Unit, optional
+                Volume of air aspirated before aspirating liquid.
+            disposal_vol : str, Unit, optional
+                Volume of extra liquid to aspirate that will be dispensed into
+                trash afterwards.
+            transit_vol : str, Unit, optional
+                Volume of air aspirated after aspirating liquid to reduce presence
+                of bubbles at pipette tip.
+            blowout_buffer : bool, optional
+                If true the operation will dispense the pre_buffer along with the
+                dispense volume. Cannot be true if disposal_vol is specified.
+            one_source : bool, optional
+                Specify whether liquid is to be transferred to destination origins
+                from a group of origins all containing the same substance. Volume
+                of all wells in the shape must be equal to or greater than the
+                volume in the origin well. Specifying origins with overlapping
+                shapes can produce undesireable effects.
+            one_tip : bool, optional
+                Specify whether all transfer steps will use the same tip or not.
+                If multiple different shapes are used, one_tip cannot be true.
+            new_group : bool, optional
+                Example
+                .. code-block:: python
+                    p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                    "10:microliter")
+                    p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
+                    "10:microliter")
+                Autoprotocol Output:
+                .. code-block:: json
+                    "instructions": [
                         {
-                          "transfer": [
+                          "groups": [
                             {
-                              "volume": "10.0:microliter",
-                              "to": "plate_2_96/0",
-                              "from": "plate_1_96/0"
+                              "transfer": [
+                                {
+                                  "volume": "10.0:microliter",
+                                  "to": "plate_2_96/0",
+                                  "from": "plate_1_96/0"
+                                }
+                              ],
+                              "shape": {
+                                "rows": 8,
+                                "columns": 12
+                              },
+                              "tip_layout": 96
                             }
                           ],
-                          "shape": {
-                            "rows": 8,
-                            "columns": 12
-                          },
-                          "tip_layout": 96
-                        }
-                      ],
-                      "op": "stamp"
-                    },
-                    {
-                      "groups": [
+                          "op": "stamp"
+                        },
                         {
-                          "transfer": [
+                          "groups": [
                             {
-                              "volume": "10.0:microliter",
-                              "to": "plate_2_96/0",
-                              "from": "plate_1_96/0"
+                              "transfer": [
+                                {
+                                  "volume": "10.0:microliter",
+                                  "to": "plate_2_96/0",
+                                  "from": "plate_1_96/0"
+                                }
+                              ],
+                              "shape": {
+                                "rows": 8,
+                                "columns": 12
+                              },
+                              "tip_layout": 96
                             }
                           ],
-                          "shape": {
-                            "rows": 8,
-                            "columns": 12
-                          },
-                          "tip_layout": 96
+                          "op": "stamp"
                         }
-                      ],
-                      "op": "stamp"
+                      ]
+            """
+
+            # Support existing transfer syntax by converting a container to all quadrants of that container
+            if isinstance(source_origin, Container):
+                source_plate = source_origin
+                source_plate_type = source_plate.container_type
+                if source_plate_type.well_count == 96:
+                    source_origin = source_plate.well(0)
+                elif source_plate_type.well_count == 384:
+                    source_origin = source_plate.wells([0, 1, 24, 25])
+                else:
+                    raise TypeError("Invalid source_origin type given. If "
+                                    "source_origin is a container, it must be a "
+                                    "container with 96 or 384 wells.")
+            if isinstance(dest_origin, Container):
+                dest_plate = dest_origin
+                dest_plate_type = dest_plate.container_type
+                if dest_plate_type.well_count == 96:
+                    dest_origin = dest_plate.well(0)
+                elif dest_plate_type.well_count == 384:
+                    dest_origin = dest_plate.wells([0, 1, 24, 25])
+                else:
+                    raise TypeError("Invalid dest_origin type given. If "
+                                    "dest_origin is a container, it must be a "
+                                    "container with 96 or 384 wells.")
+
+            # Test that stamp only takes Container, Well, or WellGroup
+            if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
+                raise TypeError("Invalid input type given. Source and destination "
+                                "must be of type Container, Well, or WellGroup.")
+
+            # Initialize input parameters
+            source = WellGroup(source_origin)
+            dest = WellGroup(dest_origin)
+            opts = []  # list of transfers
+            oshp = []  # list of shapes
+            osta = []  # list of stamp_types
+            len_source = len(source.wells)
+            len_dest = len(dest.wells)
+
+            # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
+            if not one_source:
+                if len_dest > 1 and len_source == 1:
+                    source = WellGroup(source.wells * len_dest)
+                    len_source = len(source.wells)
+                if len_dest == 1 and len_source > 1:
+                    dest = WellGroup(dest.wells * len_source)
+                    len_dest = len(dest.wells)
+                if len_source != len_dest:
+                    raise RuntimeError("To transfer liquid from one origin or "
+                                       "multiple origins containing the same "
+                                       "source, set one_source to True. To "
+                                       "transfer from multiple origins to a "
+                                       "single destination well, specify only one "
+                                       "destination well. Otherwise, you must "
+                                       "specify the same number of source and "
+                                       "destination wells to do a one-to-one "
+                                       "transfer.")
+
+            # Auto-generate list from single volume, check if volume list length matches
+            if isinstance(volume, basestring) or isinstance(volume, Unit):
+                if len_dest == 1 and not one_source:
+                    volume = [Unit.fromstring(volume)] * len_source
+                else:
+                    volume = [Unit.fromstring(volume)] * len_dest
+            elif isinstance(volume, list) and len(volume) == len_dest:
+                volume = list(map(lambda x: Unit.fromstring(x), volume))
+            else:
+                raise RuntimeError("Unless the same volume of liquid is being "
+                                   "transferred to each destination well, each "
+                                   "destination well must have a corresponding "
+                                   "volume in the form of a list.")
+
+            # Auto-generate list from single shape, check if list length matches
+            if isinstance(shape, dict):
+                if len_dest == 1 and not one_source:
+                    shape = [shape] * len_source
+                else:
+                    shape = [shape] * len_dest
+            elif isinstance(shape, list) and len(shape) == len_dest:
+                shape = shape
+            else:
+                raise RuntimeError("Unless the same shape is being used for all "
+                                   "transfers, each destination well must have a "
+                                   "corresponding shape in the form of a list.")
+
+            # Read through shape list and generate stamp_type, rows, and columns
+            stamp_type = []
+            rows = []
+            columns = []
+
+            for s in shape:
+                # Check and load rows/columns from given shape
+                if "rows" not in s or "columns" not in s:
+                    raise TypeError("Invalid input shape given. Rows and columns "
+                                    "of a rectangle has to be defined.")
+                r = s["rows"]
+                c = s["columns"]
+                rows.append(r)
+                columns.append(c)
+
+                # Check on complete rows/columns (assumption: tip_layout=96)
+                if c == 12 and r == 8:
+                    stamp_type.append("full")
+                elif c == 12:
+                    stamp_type.append("row")
+                elif r == 8:
+                    stamp_type.append("col")
+                else:
+                    raise ValueError("Only complete rows or columns are allowed.")
+
+            # Check dimensions of shape and ensure that origins are valid
+            for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
+                src_col_count = s.container.container_type.col_count
+                dest_col_count = d.container.container_type.col_count
+                if c < 0 or c > src_col_count or c > dest_col_count:
+                    raise ValueError("Columns given exceed plate dimensions.")
+
+                src_row_count = s.container.container_type.well_count // src_col_count
+                dest_row_count = d.container.container_type.well_count // dest_col_count
+                if r < 0 or r > src_row_count or r > dest_row_count:
+                    raise ValueError("Rows given exceed plate dimensions.")
+
+                # Check if origins are valid
+                check_valid_origin(s, st, c, r)
+                check_valid_origin(d, st, c, r)
+
+            # Check if shapes are the same given one_tip or one_source = True
+            if one_tip or one_source:
+                if not all([s == shape[0] for s in shape]):
+                    raise RuntimeError("The same shape must be used if one_tip or "
+                                       "one_source is true.")
+
+            # Create source, destination, and volumes list for one_source=True
+            if one_source:
+                try:
+                    # Check if all wells in shape have same or greater volume given one_source = True
+                    for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
+                        columnWise = False
+                        if st == "col":
+                            columnWise = True
+                        if w.container.container_type.col_count == 24:
+                            if columnWise:
+                                source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            else:
+                                source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        else:
+                            source_wells = w.container.wells_from(w, c*r, columnWise)
+                        if not all([s.volume >= w.volume for s in source_wells]):
+                            raise RuntimeError("Each well in a shape must have "
+                                               "the same or greater volume as the "
+                                               "origin well.")
+
+                    # Create volumes list
+                    source_vol = [s.volume for s in source.wells]
+                    if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                        raise RuntimeError("There is not enough volume in the "
+                                           "source well(s) specified to complete "
+                                           "the transfers.")
+                    if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
+                        sources = source.wells[:len_dest]
+                        destinations = dest.wells
+                        volumes = volume
+                    else:
+                        sources = []
+                        source_counter = 0
+                        destinations = []
+                        volumes = []
+                        s = source.wells[source_counter]
+                        vol = s.volume
+                        max_decimal_places = 12
+                        for idx, d in enumerate(dest.wells):
+                            vol_d = volume[idx]
+                            while vol_d > Unit.fromstring("0:microliter"):
+                                if vol > vol_d:
+                                    sources.append(s)
+                                    destinations.append(d)
+                                    volumes.append(vol_d)
+                                    vol -= vol_d
+                                    vol.value = round(vol.value, max_decimal_places)
+                                    vol_d -= vol_d
+                                    vol_d.value = round(vol_d.value, max_decimal_places)
+                                else:
+                                    sources.append(s)
+                                    destinations.append(d)
+                                    volumes.append(vol)
+                                    vol_d -= vol
+                                    vol_d.value = round(vol_d.value, max_decimal_places)
+                                    source_counter += 1
+                                    if source_counter < len_source:
+                                        s = source.wells[source_counter]
+                                        vol = s.volume
+                    source = WellGroup(sources)
+                    dest = WellGroup(destinations)
+                    volume = volumes
+                    shape = [shape[0]] * len(volume)
+                    rows = [rows[0]] * len(volume)
+                    columns = [columns[0]] * len(volume)
+                    stamp_type = [stamp_type[0]] * len(volume)
+                except (ValueError, AttributeError, TypeError):
+                    raise RuntimeError("When transferring liquid from multiple "
+                                       "wells containing the same substance to "
+                                       "multiple other wells, each source Well "
+                                       "must have a volume attribute (aliquot) "
+                                       "associated with it.")
+
+            # Checking on containers and volume consistency if one_tip = True
+
+            # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
+            #TODO remove this when consolidating to 165ul filtered tips
+            volumeSwitch = Unit.fromstring("31:microliter")
+
+            if one_tip:
+                # Volume consistency
+                if not mix_vol:
+                    temp_vol = Unit.fromstring("0:microliter")
+                else:
+                    temp_vol = Unit.fromstring(mix_vol)
+                if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume]) or (temp_vol > volumeSwitch)):
+                    raise RuntimeError("Volumes must all be > or <= 31:microliter "
+                                       "for one_tip = True. If one_source = True, "
+                                       "it may be generating volumes which are "
+                                       "incompatible.")
+
+                # Container consistency
+                st = stamp_type[0]
+                if st == "full":
+                    maxContainers = 3
+                else:
+                    maxContainers = 2
+
+                all_wells = source + dest
+
+                if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
+                    raise RuntimeError("Exceeded maximum allowed containers when "
+                                       "using one_tip = True")
+
+            # Calculate max_tip_vol smartly based on residual volumes
+            # tip_capacity determined with calibration parameters
+            tip_capacity = Unit.fromstring("158:microliter")
+            primer_resid = Unit.fromstring("5:microliter")
+            transit_resid = Unit.fromstring("1:microliter")
+            pre_buffer_resid = Unit.fromstring("5:microliter")
+
+            if aspirate_source:
+                if 'primer_vol' in aspirate_source.keys():
+                    primer_resid = Unit.fromstring(aspirate_source['primer_vol'])
+            if pre_buffer:
+                pre_buffer_resid = Unit.fromstring(pre_buffer)
+            if transit_vol:
+                transit_resid = Unit.fromstring(transit_vol)
+            # Determine max(transit_vol, primer_vol)
+            if primer_resid > Unit.fromstring(transit_resid):
+                primer_or_transit = primer_resid
+            else:
+                primer_or_transit = transit_resid
+
+            max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
+
+            for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
+
+                v = convert_to_ul(v)
+
+                # Splitting volumes up if greater than max_tip_vol
+                if v > max_tip_vol:
+                    diff = v
+                    while diff > max_tip_vol:
+
+                        # Logic for splitting volume in half once less than 2*max_tip_volum
+                        if diff < max_tip_vol*2:
+                            diff = diff/2
+                            v = diff
+
+                            xfer = {
+                                "from": s,
+                                "to": d,
+                                "volume": v
+                            }
+
+                            # Volume accounting
+                            columnWise = False
+                            if st == "col":
+                                columnWise = True
+                            if d.container.container_type.col_count == 24:
+                                if columnWise:
+                                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                else:
+                                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                            else:
+                                dest_wells = d.container.wells_from(d, c*r, columnWise)
+                            if s.container.container_type.col_count == 24:
+                                if columnWise:
+                                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                else:
+                                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                            else:
+                                source_wells = s.container.wells_from(s, c*r, columnWise)
+                            for well in source_wells:
+                                if well.volume:
+                                    well.volume -= v
+                            for well in dest_wells:
+                                if well.volume:
+                                    well.volume += v
+                                else:
+                                    well.volume = v
+
+                            # Adding liquid transfer options
+                            opt_list = ["aspirate_speed", "dispense_speed"]
+                            for option in opt_list:
+                                assign(xfer, option, eval(option))
+                            x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                                          "x_blowout_buffer"]
+                            for x_option in x_opt_list:
+                                assign(xfer, x_option, eval(x_option[2:]))
+                            if not mix_vol and (mix_before or mix_after):
+                                mix_vol = v * .5
+                            if mix_before:
+                                xfer["mix_before"] = {
+                                    "volume": mix_vol,
+                                    "repetitions": repetitions,
+                                    "speed": flowrate
+                                }
+                            if mix_after:
+                                xfer["mix_after"] = {
+                                    "volume": mix_vol,
+                                    "repetitions": repetitions,
+                                    "speed": flowrate
+                                }
+                            if v.value > 0:
+                                opts.append(xfer)
+                                oshp.append(sh)
+                                osta.append(st)
+
+                        # Logic for splitting out max_tip_vol if volume greater than max_tip_vol
+                        else:
+                            diff -= max_tip_vol
+                            v = max_tip_vol
+
+                            xfer = {
+                                "from": s,
+                                "to": d,
+                                "volume": v
+                            }
+
+                            # Volume accounting
+                            columnWise = False
+                            if st == "col":
+                                columnWise = True
+                            if d.container.container_type.col_count == 24:
+                                if columnWise:
+                                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                else:
+                                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                            else:
+                                dest_wells = d.container.wells_from(d, c*r, columnWise)
+                            if s.container.container_type.col_count == 24:
+                                if columnWise:
+                                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                else:
+                                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                            else:
+                                source_wells = s.container.wells_from(s, c*r, columnWise)
+                            for well in source_wells:
+                                if well.volume:
+                                    well.volume -= v
+                            for well in dest_wells:
+                                if well.volume:
+                                    well.volume += v
+                                else:
+                                    well.volume = v
+
+                            # Adding liquid transfer options
+                            opt_list = ["aspirate_speed", "dispense_speed"]
+                            for option in opt_list:
+                                assign(xfer, option, eval(option))
+                            x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                                          "x_blowout_buffer"]
+                            for x_option in x_opt_list:
+                                assign(xfer, x_option, eval(x_option[2:]))
+                            if not mix_vol and (mix_before or mix_after):
+                                mix_vol = v * .5
+                            if mix_before:
+                                xfer["mix_before"] = {
+                                    "volume": mix_vol,
+                                    "repetitions": repetitions,
+                                    "speed": flowrate
+                                }
+                            if mix_after:
+                                xfer["mix_after"] = {
+                                    "volume": mix_vol,
+                                    "repetitions": repetitions,
+                                    "speed": flowrate
+                                }
+                            if v.value > 0:
+                                opts.append(xfer)
+                                oshp.append(sh)
+                                osta.append(st)
+                    v = diff
+
+                xfer = {
+                    "from": s,
+                    "to": d,
+                    "volume": v
+                }
+
+                # Volume accounting
+                columnWise = False
+                if st == "col":
+                    columnWise = True
+                if d.container.container_type.col_count == 24:
+                    if columnWise:
+                        dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                    else:
+                        dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                else:
+                    dest_wells = d.container.wells_from(d, c*r, columnWise)
+                if s.container.container_type.col_count == 24:
+                    if columnWise:
+                        source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                    else:
+                        source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                else:
+                    source_wells = s.container.wells_from(s, c*r, columnWise)
+                for well in source_wells:
+                    if well.volume:
+                        well.volume -= v
+                for well in dest_wells:
+                    if well.volume:
+                        well.volume += v
+                    else:
+                        well.volume = v
+
+                # Adding liquid transfer options
+                opt_list = ["aspirate_speed", "dispense_speed"]
+                for option in opt_list:
+                    assign(xfer, option, eval(option))
+                x_opt_list = ["x_aspirate_source", "x_dispense_target",
+                              "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                              "x_blowout_buffer"]
+                for x_option in x_opt_list:
+                    assign(xfer, x_option, eval(x_option[2:]))
+                if not mix_vol and (mix_before or mix_after):
+                    mix_vol = v * .5
+                if mix_before:
+                    xfer["mix_before"] = {
+                        "volume": mix_vol,
+                        "repetitions": repetitions,
+                        "speed": flowrate
                     }
-                  ]
+                if mix_after:
+                    xfer["mix_after"] = {
+                        "volume": mix_vol,
+                        "repetitions": repetitions,
+                        "speed": flowrate
+                    }
+                if v.value > 0:
+                    opts.append(xfer)
+                    oshp.append(sh)
+                    osta.append(st)
 
-        """
+            trans = {}
 
-        # Support existing transfer syntax by converting a container to all quadrants of that container
-        if isinstance(source_origin, Container):
-            source_plate = source_origin
-            source_plate_type = source_plate.container_type
-            if source_plate_type.well_count == 96:
-                source_origin = source_plate.well(0)
-            elif source_plate_type.well_count == 384:
-                source_origin = source_plate.wells([0, 1, 24, 25])
-            else:
-                raise TypeError("Invalid source_origin type given. If "
-                                "source_origin is a container, it must be a "
-                                "container with 96 or 384 wells.")
-        if isinstance(dest_origin, Container):
-            dest_plate = dest_origin
-            dest_plate_type = dest_plate.container_type
-            if dest_plate_type.well_count == 96:
-                dest_origin = dest_plate.well(0)
-            elif dest_plate_type.well_count == 384:
-                dest_origin = dest_plate.wells([0, 1, 24, 25])
-            else:
-                raise TypeError("Invalid dest_origin type given. If "
-                                "dest_origin is a container, it must be a "
-                                "container with 96 or 384 wells.")
-
-        # Test that stamp only takes Container, Well, or WellGroup
-        if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
-            raise TypeError("Invalid input type given. Source and destination "
-                            "must be of type Container, Well, or WellGroup.")
-
-        # Initialize input parameters
-        source = WellGroup(source_origin)
-        dest = WellGroup(dest_origin)
-        opts = []  # list of transfers
-        oshp = []  # list of shapes
-        osta = []  # list of stamp_types
-        len_source = len(source.wells)
-        len_dest = len(dest.wells)
-
-        # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
-        if not one_source:
-            if len_dest > 1 and len_source == 1:
-                source = WellGroup(source.wells * len_dest)
-                len_source = len(source.wells)
-            if len_dest == 1 and len_source > 1:
-                dest = WellGroup(dest.wells * len_source)
-                len_dest = len(dest.wells)
-            if len_source != len_dest:
-                raise RuntimeError("To transfer liquid from one origin or "
-                                   "multiple origins containing the same "
-                                   "source, set one_source to True. To "
-                                   "transfer from multiple origins to a "
-                                   "single destination well, specify only one "
-                                   "destination well. Otherwise, you must "
-                                   "specify the same number of source and "
-                                   "destination wells to do a one-to-one "
-                                   "transfer.")
-
-        # Auto-generate list from single volume, check if volume list length matches
-        if isinstance(volume, basestring) or isinstance(volume, Unit):
-            if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume)] * len_source
-            else:
-                volume = [Unit.fromstring(volume)] * len_dest
-        elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: Unit.fromstring(x), volume))
-        else:
-            raise RuntimeError("Unless the same volume of liquid is being "
-                               "transferred to each destination well, each "
-                               "destination well must have a corresponding "
-                               "volume in the form of a list.")
-
-        # Auto-generate list from single shape, check if list length matches
-        if isinstance(shape, dict):
-            if len_dest == 1 and not one_source:
-                shape = [shape] * len_source
-            else:
-                shape = [shape] * len_dest
-        elif isinstance(shape, list) and len(shape) == len_dest:
-            shape = shape
-        else:
-            raise RuntimeError("Unless the same shape is being used for all "
-                               "transfers, each destination well must have a "
-                               "corresponding shape in the form of a list.")
-
-        # Read through shape list and generate stamp_type, rows, and columns
-        stamp_type = []
-        rows = []
-        columns = []
-
-        for s in shape:
-            # Check and load rows/columns from given shape
-            if "rows" not in s or "columns" not in s:
-                raise TypeError("Invalid input shape given. Rows and columns "
-                                "of a rectangle has to be defined.")
-            r = s["rows"]
-            c = s["columns"]
-            rows.append(r)
-            columns.append(c)
-
-            # Check on complete rows/columns (assumption: tip_layout=96)
-            if c == 12 and r == 8:
-                stamp_type.append("full")
-            elif c == 12:
-                stamp_type.append("row")
-            elif r == 8:
-                stamp_type.append("col")
-            else:
-                raise ValueError("Only complete rows or columns are allowed.")
-
-        # Check dimensions of shape and ensure that origins are valid
-        for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
-            src_col_count = s.container.container_type.col_count
-            dest_col_count = d.container.container_type.col_count
-            if c < 0 or c > src_col_count or c > dest_col_count:
-                raise ValueError("Columns given exceed plate dimensions.")
-
-            src_row_count = s.container.container_type.well_count // src_col_count
-            dest_row_count = d.container.container_type.well_count // dest_col_count
-            if r < 0 or r > src_row_count or r > dest_row_count:
-                raise ValueError("Rows given exceed plate dimensions.")
-
-            # Check if origins are valid
-            check_valid_origin(s, st, c, r)
-            check_valid_origin(d, st, c, r)
-
-        # Check if shapes are the same given one_tip or one_source = True
-        if one_tip or one_source:
-            if not all([s == shape[0] for s in shape]):
-                raise RuntimeError("The same shape must be used if one_tip or "
-                                   "one_source is true.")
-
-        # Create source, destination, and volumes list for one_source=True
-        if one_source:
-            try:
-                # Check if all wells in shape have same or greater volume given one_source = True
-                for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
-                    columnWise = False
-                    if st == "col":
-                        columnWise = True
-                    if w.container.container_type.col_count == 24:
-                        if columnWise:
-                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                        else:
-                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                    else:
-                        source_wells = w.container.wells_from(w, c*r, columnWise)
-                    if not all([s.volume >= w.volume for s in source_wells]):
-                        raise RuntimeError("Each well in a shape must have "
-                                           "the same or greater volume as the "
-                                           "origin well.")
-
-                # Create volumes list
-                source_vol = [s.volume for s in source.wells]
-                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the "
-                                       "source well(s) specified to complete "
-                                       "the transfers.")
-                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
-                    sources = source.wells[:len_dest]
-                    destinations = dest.wells
-                    volumes = volume
-                else:
-                    sources = []
-                    source_counter = 0
-                    destinations = []
-                    volumes = []
-                    s = source.wells[source_counter]
-                    vol = s.volume
-                    max_decimal_places = 12
-                    for idx, d in enumerate(dest.wells):
-                        vol_d = volume[idx]
-                        while vol_d > Unit.fromstring("0:microliter"):
-                            if vol > vol_d:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol_d)
-                                vol -= vol_d
-                                vol.value = round(vol.value, max_decimal_places)
-                                vol_d -= vol_d
-                                vol_d.value = round(vol_d.value, max_decimal_places)
-                            else:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol)
-                                vol_d -= vol
-                                vol_d.value = round(vol_d.value, max_decimal_places)
-                                source_counter += 1
-                                if source_counter < len_source:
-                                    s = source.wells[source_counter]
-                                    vol = s.volume
-                source = WellGroup(sources)
-                dest = WellGroup(destinations)
-                volume = volumes
-                shape = [shape[0]] * len(volume)
-                rows = [rows[0]] * len(volume)
-                columns = [columns[0]] * len(volume)
-                stamp_type = [stamp_type[0]] * len(volume)
-            except (ValueError, AttributeError, TypeError):
-                raise RuntimeError("When transferring liquid from multiple "
-                                   "wells containing the same substance to "
-                                   "multiple other wells, each source Well "
-                                   "must have a volume attribute (aliquot) "
-                                   "associated with it.")
-
-        # Checking on containers and volume consistency if one_tip = True
-
-        # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
-        #TODO remove this when consolidating to 165ul filtered tips
-        volumeSwitch = Unit.fromstring("31:microliter")
-
-        if one_tip:
-            # Volume consistency
-            if not mix_vol:
-                temp_vol = Unit.fromstring("0:microliter")
-            else:
-                temp_vol = Unit.fromstring(mix_vol)
-            if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume]) or (temp_vol > volumeSwitch)):
-                raise RuntimeError("Volumes must all be > or <= 31:microliter "
-                                   "for one_tip = True. If one_source = True, "
-                                   "it may be generating volumes which are "
-                                   "incompatible.")
-
-            # Container consistency
-            st = stamp_type[0]
-            if st == "full":
-                maxContainers = 3
-            else:
-                maxContainers = 2
-
-            all_wells = source + dest
-
-            if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
-                raise RuntimeError("Exceeded maximum allowed containers when "
-                                   "using one_tip = True")
-
-        # Calculate max_tip_vol smartly based on residual volumes
-        # tip_capacity determined with calibration parameters
-        tip_capacity = Unit.fromstring("158:microliter")
-        primer_resid = Unit.fromstring("5:microliter")
-        transit_resid = Unit.fromstring("1:microliter")
-        pre_buffer_resid = Unit.fromstring("5:microliter")
-
-        if aspirate_source:
-            if 'primer_vol' in aspirate_source.keys():
-                primer_resid = Unit.fromstring(aspirate_source['primer_vol'])
-        if pre_buffer:
-            pre_buffer_resid = Unit.fromstring(pre_buffer)
-        if transit_vol:
-            transit_resid = Unit.fromstring(transit_vol)
-        # Determine max(transit_vol, primer_vol)
-        if primer_resid > Unit.fromstring(transit_resid):
-            primer_or_transit = primer_resid
-        else:
-            primer_or_transit = transit_resid
-
-        max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
-
-        for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
-
-            v = convert_to_ul(v)
-
-            # Splitting volumes up if greater than max_tip_vol
-            if v > max_tip_vol:
-                diff = v
-                while diff > max_tip_vol:
-
-                    # Logic for splitting volume in half once less than 2*max_tip_volum
-                    if diff < max_tip_vol*2:
-                        diff = diff/2
-                        v = diff
-
-                        xfer = {
-                            "from": s,
-                            "to": d,
-                            "volume": v
-                        }
-
-                        # Volume accounting
-                        columnWise = False
-                        if st == "col":
-                            columnWise = True
-                        if d.container.container_type.col_count == 24:
-                            if columnWise:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                            else:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                        else:
-                            dest_wells = d.container.wells_from(d, c*r, columnWise)
-                        if s.container.container_type.col_count == 24:
-                            if columnWise:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                            else:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                        else:
-                            source_wells = s.container.wells_from(s, c*r, columnWise)
-                        for well in source_wells:
-                            if well.volume:
-                                well.volume -= v
-                        for well in dest_wells:
-                            if well.volume:
-                                well.volume += v
-                            else:
-                                well.volume = v
-
-                        # Adding liquid transfer options
-                        opt_list = ["aspirate_speed", "dispense_speed"]
-                        for option in opt_list:
-                            assign(xfer, option, eval(option))
-                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                                      "x_blowout_buffer"]
-                        for x_option in x_opt_list:
-                            assign(xfer, x_option, eval(x_option[2:]))
-                        if not mix_vol and (mix_before or mix_after):
-                            mix_vol = v * .5
-                        if mix_before:
-                            xfer["mix_before"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if mix_after:
-                            xfer["mix_after"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if v.value > 0:
-                            opts.append(xfer)
-                            oshp.append(sh)
-                            osta.append(st)
-
-                    # Logic for splitting out max_tip_vol if volume greater than max_tip_vol
-                    else:
-                        diff -= max_tip_vol
-                        v = max_tip_vol
-
-                        xfer = {
-                            "from": s,
-                            "to": d,
-                            "volume": v
-                        }
-
-                        # Volume accounting
-                        columnWise = False
-                        if st == "col":
-                            columnWise = True
-                        if d.container.container_type.col_count == 24:
-                            if columnWise:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                            else:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                        else:
-                            dest_wells = d.container.wells_from(d, c*r, columnWise)
-                        if s.container.container_type.col_count == 24:
-                            if columnWise:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                            else:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-                        else:
-                            source_wells = s.container.wells_from(s, c*r, columnWise)
-                        for well in source_wells:
-                            if well.volume:
-                                well.volume -= v
-                        for well in dest_wells:
-                            if well.volume:
-                                well.volume += v
-                            else:
-                                well.volume = v
-
-                        # Adding liquid transfer options
-                        opt_list = ["aspirate_speed", "dispense_speed"]
-                        for option in opt_list:
-                            assign(xfer, option, eval(option))
-                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                                      "x_blowout_buffer"]
-                        for x_option in x_opt_list:
-                            assign(xfer, x_option, eval(x_option[2:]))
-                        if not mix_vol and (mix_before or mix_after):
-                            mix_vol = v * .5
-                        if mix_before:
-                            xfer["mix_before"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if mix_after:
-                            xfer["mix_after"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if v.value > 0:
-                            opts.append(xfer)
-                            oshp.append(sh)
-                            osta.append(st)
-                v = diff
-
-            xfer = {
-                "from": s,
-                "to": d,
-                "volume": v
-            }
-
-            # Volume accounting
-            columnWise = False
-            if st == "col":
-                columnWise = True
-            if d.container.container_type.col_count == 24:
-                if columnWise:
-                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                else:
-                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-            else:
-                dest_wells = d.container.wells_from(d, c*r, columnWise)
-            if s.container.container_type.col_count == 24:
-                if columnWise:
-                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
-                else:
-                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
-            else:
-                source_wells = s.container.wells_from(s, c*r, columnWise)
-            for well in source_wells:
-                if well.volume:
-                    well.volume -= v
-            for well in dest_wells:
-                if well.volume:
-                    well.volume += v
-                else:
-                    well.volume = v
-
-            # Adding liquid transfer options
-            opt_list = ["aspirate_speed", "dispense_speed"]
-            for option in opt_list:
-                assign(xfer, option, eval(option))
-            x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                          "x_blowout_buffer"]
-            for x_option in x_opt_list:
-                assign(xfer, x_option, eval(x_option[2:]))
-            if not mix_vol and (mix_before or mix_after):
-                mix_vol = v * .5
-            if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if mix_after:
-                xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if v.value > 0:
-                opts.append(xfer)
-                oshp.append(sh)
-                osta.append(st)
-
-        trans = {}
-
-        # one_tip appends all transfers into one transfer group
-        if one_tip:
-            trans["transfer"] = opts
-            assign(trans, "shape", oshp[0])
-            assign(trans, "tip_layout", 96)
-            stamp_type = osta[0]
-
-            if stamp_type == "full":
-                maxTransfers = 4
-                maxContainers = 3
-            elif stamp_type == "col":
-                maxTransfers = 12
-                maxContainers = 2
-            else:
-                maxTransfers = 8
-                maxContainers = 3
-            if new_group:
-                self.instructions.append(Stamp([trans]))
-            elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
-                # Append to existing instruction
-                self.instructions[-1].groups.append(trans)
-            else:
-                # Initialize new stamp list/instruction
-                self.instructions.append(Stamp([trans]))
-
-        else:
-            for x, y, z in list(zip(opts, oshp, osta)):
-                trans = {}
-                trans["transfer"] = [x]
-                assign(trans, "shape", y)
+            # one_tip appends all transfers into one transfer group
+            if one_tip:
+                trans["transfer"] = opts
+                assign(trans, "shape", oshp[0])
                 assign(trans, "tip_layout", 96)
-                stamp_type = z
+                stamp_type = osta[0]
 
                 if stamp_type == "full":
                     maxTransfers = 4
@@ -1991,6 +1950,32 @@ class Protocol(object):
                 else:
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
+
+            else:
+                for x, y, z in list(zip(opts, oshp, osta)):
+                    trans = {}
+                    trans["transfer"] = [x]
+                    assign(trans, "shape", y)
+                    assign(trans, "tip_layout", 96)
+                    stamp_type = z
+
+                    if stamp_type == "full":
+                        maxTransfers = 4
+                        maxContainers = 3
+                    elif stamp_type == "col":
+                        maxTransfers = 12
+                        maxContainers = 2
+                    else:
+                        maxTransfers = 8
+                        maxContainers = 3
+                    if new_group:
+                        self.instructions.append(Stamp([trans]))
+                    elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
+                        # Append to existing instruction
+                        self.instructions[-1].groups.append(trans)
+                    else:
+                        # Initialize new stamp list/instruction
+                        self.instructions.append(Stamp([trans]))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """
@@ -2129,6 +2114,7 @@ class Protocol(object):
         if isinstance(well, list):
             well = WellGroup(well)
         for w in well.wells:
+            self._adjust_cover(w.container, "mix")
             opts = {
                 "well": w,
                 "volume": volume,
@@ -2247,6 +2233,7 @@ class Protocol(object):
             dispenser.
 
         """
+        self._adjust_cover(ref, "dispense to")
         if (speed_percentage != None and
            (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2360,6 +2347,7 @@ class Protocol(object):
             dispenser.
 
         """
+        self._adjust_cover(ref, "dispense to")
         if (speed_percentage != None and
            (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2990,6 +2978,8 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
+        for w in wells:
+            self._adjust_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1
@@ -3037,6 +3027,13 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
+        if type not in SEAL_TYPES:
+            raise RuntimeError("%s is not a valid seal type" % type)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = type
+            ref.cover = type
+        else:
+            return
         self.instructions.append(Seal(ref, type))
 
     def unseal(self, ref):
@@ -3079,7 +3076,13 @@ class Protocol(object):
             Container to be unsealed
 
         """
+        if ref.is_sealed():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Unseal(ref))
+
 
     def cover(self, ref, lid='standard'):
         """
@@ -3116,6 +3119,13 @@ class Protocol(object):
             Type of lid to cover container with
 
         """
+        if lid not in COVER_TYPES:
+            raise RuntimeError("%s is not a valid lid type" % lid)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = lid
+            ref.cover = lid
+        else:
+            return
         self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
@@ -3158,6 +3168,11 @@ class Protocol(object):
             Container to remove lid from
 
         """
+        if ref.is_covered():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
@@ -3397,6 +3412,8 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
+        self._adjust_cover(source.container, "spread")
+        self._adjust_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
         if dest.volume:
             dest.volume += volume
@@ -3738,6 +3755,15 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
+
+    def _adjust_cover(self, container, action):
+      if not (container.is_covered() or container.is_sealed()):
+            return
+      else:
+          status = "cover" if container.cover in COVER_TYPES else "seal"
+          eval("self.un%s(container)" % status)
+
+
     def _refify(self, op_data):
         if type(op_data) is dict:
             return {k: self._refify(v) for k, v in op_data.items()}
@@ -3753,6 +3779,7 @@ class Protocol(object):
             return str(op_data)
         else:
             return op_data
+
 
     def _ref_containers_and_wells(self, params):
         """

@@ -97,28 +97,25 @@ class ContainerType(namedtuple("ContainerType",
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
         well_ref = str(well_ref)
-        m = re.match("([a-z])(\d+)$", well_ref, re.I)
+        m = re.match(r"([a-z])(\d+)$", well_ref, re.I)
         if m:
             row = ord(m.group(1).upper()) - ord('A')
             col = int(m.group(2)) - 1
             well_num = row * self.col_count + col
             # Check bounds
-            if row > self.row_count():
+            if row >= self.row_count():
                 raise ValueError("ContainerType.robotize(): Row given exceeds "
                                  "container dimensions.")
-            if col > self.col_count or col < 0:
+            if col >= self.col_count or col < 0:
                 raise ValueError("ContainerType.robotize(): Col given exceeds "
                                  "container dimensions.")
-            if well_num > self.well_count:
-                raise ValueError("ContainerType.robotize(): Well given "
-                                 "exceeds container dimensions.")
             return well_num
         else:
-            m = re.match("\d+$", well_ref)
+            m = re.match(r"\d+$", well_ref)
             if m:
                 well_num = int(m.group(0))
                 # Check bounds
-                if well_num > self.well_count or well_num < 0:
+                if well_num >= self.well_count or well_num < 0:
                     raise ValueError("ContainerType.robotize(): Well number "
                                      "given exceeds container dimensions.")
                 return well_num
@@ -161,11 +158,11 @@ class ContainerType(namedtuple("ContainerType",
         if not isinstance(well_ref, int):
             raise TypeError("ContainerType.humanize(): Well reference given "
                             "is not of type 'int'.")
-        row, col = self.decompose(well_ref)
         # Check bounds
-        if well_ref > self.well_count or well_ref < 0:
+        if well_ref >= self.well_count or well_ref < 0:
                 raise ValueError("ContainerType.humanize(): Well reference "
                                  "given exceeds container dimensions.")
+        row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):

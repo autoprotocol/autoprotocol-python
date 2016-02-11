@@ -2,12 +2,15 @@
 Credits
 =======
 
+Autoprotocol-python is currently maintained by: 
 
-Contributors
-------------
+- Vanessa Biggers - `polarpine <https://github.com/polarpine>`_ - vanessa@transcriptic.com
+- Cornelia Scheitz - `cojofra <https://github.com/cojofra>`_ - conny@transcriptic.com
+- Yang Choo - `yangchoo <https://github.com/yangchoo>`_ - yangchoo@transcriptic.com
+- Jeremy Apthorp - `nornagon <https://github.com/nornagon>`_ - jeremy@transcriptic.com
 
-* Tali Herzka <https://github.com/therzka>
+`See all Github contributors <https://github.com/autoprotocol/autoprotocol-python/contributors>`_
 
-* Jeremy Apthorp <https://github.com/nornagon>
 
-* Christopher Beitel <https://github.com/cb01>
+
+For more information about Autoprotocol and its specification, visit `autoprotocol.org <http://www.autoprotocol.org>`_

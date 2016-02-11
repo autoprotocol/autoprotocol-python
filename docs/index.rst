@@ -181,7 +181,7 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also write an email to us if you want to discuss ideas or
 bugs.
 
-- Tali Herzka: tali@transcriptic.com
+- Vanessa Biggers: vanessa@transcriptic.com
 - Jeremy Apthorp: jeremy@transcriptic.com
 - Max Hodak: max@transcriptic.com
 
@@ -197,7 +197,7 @@ Search the Docs
 * :ref:`genindex`
 * :ref:`search`
 
-:copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+:copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
     for more details.
 :license: BSD, see LICENSE for more details
 

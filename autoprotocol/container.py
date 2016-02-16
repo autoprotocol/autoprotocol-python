@@ -8,7 +8,7 @@ if sys.version_info[0] >= 3:
     basestring = str
 
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -16,6 +16,7 @@ if sys.version_info[0] >= 3:
 
 
 class Well(object):
+
     """
     A Well object describes a single location within a container.
 
@@ -34,6 +35,7 @@ class Well(object):
         Additional properties of this well represented as a dictionary.
 
     """
+
     def __init__(self, container, index):
         self.container = container
         self.index = index
@@ -106,7 +108,6 @@ class Well(object):
         self.name = name
         return self
 
-
     def humanize(self):
         """
         Return the human readable representation of the integer well index
@@ -128,6 +129,7 @@ class Well(object):
 
 
 class WellGroup(object):
+
     """
     A logical grouping of Wells.
 
@@ -269,6 +271,7 @@ class WellGroup(object):
 
 
 class Container(object):
+
     """
     A reference to a specific physical container (e.g. a tube or 96-well
     microplate).
@@ -489,7 +492,7 @@ class Container(object):
         allowed_layouts = {96: 12, 384: 24}
         n_wells = self.container_type.well_count
         if (n_wells not in allowed_layouts or
-            self.container_type.col_count != allowed_layouts[n_wells]):
+                self.container_type.col_count != allowed_layouts[n_wells]):
             raise ValueError("Quadrant is only defined for standard 96 and "
                              "384-well plates")
 
@@ -497,10 +500,12 @@ class Container(object):
             if quad == 0:
                 return WellGroup(self._wells)
             else:
-                raise ValueError("0 or 'A1' is the only valid quadrant for a 96-well plate.")
+                raise ValueError(
+                    "0 or 'A1' is the only valid quadrant for a 96-well plate.")
 
         if quad not in [0, 1, 2, 3]:
-            raise ValueError("Invalid quadrant {} for plate type {}".format(quad, str(self.name)))
+            raise ValueError(
+                "Invalid quadrant {} for plate type {}".format(quad, str(self.name)))
 
         start_well = [0, 1, 24, 25]
         wells = []

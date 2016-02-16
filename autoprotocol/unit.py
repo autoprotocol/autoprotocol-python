@@ -3,7 +3,7 @@ import operator
 import sys
 
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -11,10 +11,12 @@ import sys
 
 
 class Unit(object):
+
     """A representation of a measure of volume, duration, temperature, or
     concentration.
 
     """
+
     def __init__(self, value, unit):
         self.value = float(value)
         self.unit = unit
@@ -76,7 +78,7 @@ class Unit(object):
     def __le__(self, other):
         self._check_type(other)
         return self.value <= other.value
-        
+
     def __gt__(self, other):
         self._check_type(other)
         return self.value > other.value
@@ -84,7 +86,7 @@ class Unit(object):
     def __ge__(self, other):
         self._check_type(other)
         return self.value >= other.value
-        
+
     def __eq__(self, other):
         self._check_type(other)
         return self.value == other.value
@@ -96,8 +98,8 @@ class Unit(object):
     def __mul__(self, other):
         if isinstance(other, Unit):
             print("WARNING: Unit.__mul__ and __div__ only support scalar "
-                "multiplication. Converting %s to %f" % (other, other.value),
-                file=sys.stderr)
+                  "multiplication. Converting %s to %f" % (other, other.value),
+                  file=sys.stderr)
             other = other.value
         return Unit(self.value * other, self.unit)
 
@@ -106,8 +108,8 @@ class Unit(object):
     def __div__(self, other):
         if isinstance(other, Unit):
             print("WARNING: Unit.__mul__ and __div__ only support scalar "
-                "multiplication. Converting %s to %f" % (other, other.value),
-                file=sys.stderr)
+                  "multiplication. Converting %s to %f" % (other, other.value),
+                  file=sys.stderr)
             other = other.value
         return Unit(self.value / other, self.unit)
 
@@ -118,10 +120,10 @@ class Unit(object):
         self._check_type(other)
         return Unit(self.value // other.value, self.unit)
 
-    def __iadd__(self,other):
+    def __iadd__(self, other):
         self._check_type(other)
-        return Unit(operator.iadd(self.value,other.value), self.unit)
+        return Unit(operator.iadd(self.value, other.value), self.unit)
 
-    def __isub__(self,other):
+    def __isub__(self, other):
         self._check_type(other)
-        return Unit(operator.isub(self.value,other.value), self.unit)
+        return Unit(operator.isub(self.value, other.value), self.unit)

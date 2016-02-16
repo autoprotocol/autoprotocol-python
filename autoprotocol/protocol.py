@@ -14,7 +14,7 @@ if sys.version_info[0] >= 3:
 
 
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -22,10 +22,12 @@ if sys.version_info[0] >= 3:
 
 
 class Ref(object):
+
     """
     Link a ref name (string) to a Container instance.
 
     """
+
     def __init__(self, name, opts, container):
         self.name = name
         self.opts = opts
@@ -33,6 +35,7 @@ class Ref(object):
 
 
 class Protocol(object):
+
     """
     A Protocol is a sequence of instructions to be executed, and a set of
     containers on which those instructions act.
@@ -212,12 +215,14 @@ class Protocol(object):
         Returns
         -------
         container : Container
-            Container object generated from the id and container type provided.
+            Container object generated from the id and container type
+             provided.
 
         Raises
         ------
         RuntimeError
-            If a container previously referenced in this protocol (existant in refs section) has the same name as the one specified.
+            If a container previously referenced in this protocol (existant
+            in refs section) has the same name as the one specified.
         RuntimeError
             If no container type is specified.
         RuntimeError
@@ -225,20 +230,19 @@ class Protocol(object):
 
         """
         if name in self.refs.keys():
-          raise RuntimeError("Two containers within the same protocol cannot "
-                             "have the same name.")
+            raise RuntimeError("Two containers within the same protocol "
+                               "cannot have the same name.")
         opts = {}
 
         # Check container type
         try:
-          cont_type = self.container_type(cont_type)
-          if id and cont_type:
-              opts["id"] = id
-          elif cont_type:
-              opts["new"] = cont_type.shortname
+            cont_type = self.container_type(cont_type)
+            if id and cont_type:
+                opts["id"] = id
+            elif cont_type:
+                opts["new"] = cont_type.shortname
         except ValueError:
-          raise RuntimeError("You must specify a ref's container type.")
-
+            raise RuntimeError("You must specify a ref's container type.")
 
         if storage:
             opts["store"] = {"where": storage}
@@ -246,11 +250,11 @@ class Protocol(object):
             opts["discard"] = discard
         else:
             raise RuntimeError("You must specify either a valid storage "
-                             "condition or set discard=True for a Ref.")
-        container = Container(id, cont_type, name=name, storage=storage if storage else None)
+                               "condition or set discard=True for a Ref.")
+        container = Container(
+            id, cont_type, name=name, storage=storage if storage else None)
         self.refs[name] = Ref(name, opts, container)
         return container
-
 
     def append(self, instructions):
         """
@@ -356,7 +360,8 @@ class Protocol(object):
                     if well.name:
                         outs[n][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
-                        outs[n][str(well.index)]["properties"] = well.properties
+                        outs[n][str(well.index)][
+                            "properties"] = well.properties
         if outs:
             return {
                 "refs": dict(
@@ -400,13 +405,15 @@ class Protocol(object):
 
         """
         if not condition or condition == "discard":
-          condition = None
+            condition = None
         if not isinstance(container, Container):
-            raise TypeError("Protocol.store() can only be used on a Container object.")
+            raise TypeError(
+                "Protocol.store() can only be used on a Container object.")
         container.storage = condition
         r = self.refs.get(container.name)
         if not r:
-            raise RuntimeError("That container does not exist in the refs for this protocol.")
+            raise RuntimeError(
+                "That container does not exist in the refs for this protocol.")
         if "discard" in r.opts:
             r.opts.pop("discard")
         if condition:
@@ -572,10 +579,10 @@ class Protocol(object):
         """
         opts = {}
         try:
-          dists = self.fill_wells(dest, source, volume, distribute_target)
+            dists = self.fill_wells(dest, source, volume, distribute_target)
         except ValueError:
-          raise RuntimeError("When distributing liquid, source well(s) "
-                             "must have an associated volume (aliquot).")
+            raise RuntimeError("When distributing liquid, source well(s) "
+                               "must have an associated volume (aliquot).")
         groups = []
         for d in dists:
             opts = {}
@@ -778,7 +785,8 @@ class Protocol(object):
             else:
                 volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
+            volume = list(
+                map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -812,15 +820,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(vol.value, max_decimal_places)
+                                vol.value = round(
+                                    vol.value, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -829,8 +840,10 @@ class Protocol(object):
                 dest = WellGroup(destinations)
                 volume = volumes
             except (ValueError, AttributeError) as e:
-                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
-                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
+                raise RuntimeError("When transferring liquid from multiple "
+                                   "wells containing the same substance to "
+                                   "multiple other wells, each source Well "
+                                   "must have a volume attribute (aliquot) "
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
@@ -838,7 +851,8 @@ class Protocol(object):
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
-                    # Organize transfer options into dictionary (for json parsing)
+                    # Organize transfer options into dictionary (for json
+                    # parsing)
 
                     v = Unit(750, "microliter")
 
@@ -855,28 +869,46 @@ class Protocol(object):
                     if s.volume:
                         s.volume -= v
                     # mix before and/or after parameters
-                    if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
-                        raise RuntimeError("If you specify mix arguments on transfer()"
-                                           " you must also specify mix_before and/or"
-                                           " mix_after=True.")
+                    if mix_kwargs and (
+                        "mix_before" not in mix_kwargs and (
+                            "mix_after" not in mix_kwargs)):
+                        raise RuntimeError("If you specify mix arguments on "
+                                           "transfer() you must also specify "
+                                           "mix_before and/or mix_after=True."
+                                           )
                     if mix_kwargs.get("mix_before"):
                         xfer["mix_before"] = {
-                            "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
-                            "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
-                            "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
+                            "volume": mix_kwargs.get(
+                                "mix_vol_b") or mix_kwargs.get(
+                                "mix_vol") or v/2,
+                            "repetitions": mix_kwargs.get(
+                                "repetitions_b") or mix_kwargs.get(
+                                "repetitions") or 10,
+                            "speed":  mix_kwargs.get(
+                                "flowrate_b") or mix_kwargs.get(
+                                "flowrate") or "100:microliter/second"
                         }
                     if mix_kwargs.get("mix_after"):
                         xfer["mix_after"] = {
-                            "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
-                            "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
-                            "speed": mix_kwargs.get("flowrate_a") or mix_kwargs.get("flowrate") or "100:microliter/second"
+                            "volume":  mix_kwargs.get(
+                                "mix_vol_a") or mix_kwargs.get(
+                                "mix_vol") or v/2,
+                            "repetitions": mix_kwargs.get(
+                                "repetitions_a") or mix_kwargs.get(
+                                "repetitions") or 10,
+                            "speed": mix_kwargs.get(
+                                "flowrate_a") or mix_kwargs.get(
+                                "flowrate") or "100:microliter/second"
                         }
                     # Append transfer options
                     opt_list = ["aspirate_speed", "dispense_speed"]
                     for option in opt_list:
                         assign(xfer, option, eval(option))
-                    x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                                  "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
+                    x_opt_list = ["x_aspirate_source",
+                                  "x_dispense_target",
+                                  "x_pre_buffer",
+                                  "x_disposal_vol",
+                                  "x_transit_vol",
                                   "x_blowout_buffer"]
                     for x_option in x_opt_list:
                         assign(xfer, x_option, eval(x_option[2:]))
@@ -1194,7 +1226,8 @@ class Protocol(object):
             else:
                 volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
+            volume = list(
+                map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -1228,15 +1261,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(vol.value, max_decimal_places)
+                                vol.value = round(
+                                    vol.value, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1271,20 +1307,20 @@ class Protocol(object):
         if self.instructions and self.instructions[-1].op == "acoustic_transfer":
             prev_inst = self.instructions[-1].data["groups"][0]["transfer"][-1]
             if (prev_inst["from"].container == transfers[0]["from"].container and
-                prev_inst["to"].container == transfers[0]["to"].container and
-                droplet_size == self.instructions[-1].data["droplet_size"]):
-                self.instructions[-1].data["groups"][0]["transfer"].extend(transfers)
+                    prev_inst["to"].container == transfers[0]["to"].container and
+                    droplet_size == self.instructions[-1].data["droplet_size"]):
+                self.instructions[-
+                                  1].data["groups"][0]["transfer"].extend(transfers)
                 return
         self.append(AcousticTransfer(transfers, droplet_size))
 
     def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
-              columns=12), mix_before=False, mix_after=False, mix_vol=None,
+                                                                   columns=12), mix_before=False, mix_after=False, mix_vol=None,
               repetitions=10, flowrate="100:microliter/second",
               aspirate_speed=None, dispense_speed=None, aspirate_source=None,
               dispense_target=None, pre_buffer=None, disposal_vol=None,
               transit_vol=None, blowout_buffer=None, one_source=False,
               one_tip=False, new_group=False):
-
         """
         **Note: the way this method now works is significantly different to the
         way it has in previous versions, please make sure to read the
@@ -1479,7 +1515,8 @@ class Protocol(object):
 
         """
 
-        # Support existing transfer syntax by converting a container to all quadrants of that container
+        # Support existing transfer syntax by converting a container to all
+        # quadrants of that container
         if isinstance(source_origin, Container):
             source_plate = source_origin
             source_plate_type = source_plate.container_type
@@ -1517,7 +1554,8 @@ class Protocol(object):
         len_source = len(source.wells)
         len_dest = len(dest.wells)
 
-        # Auto-generate well-group if only 1 well specified for either source or destination if one_source=False
+        # Auto-generate well-group if only 1 well specified for either source
+        # or destination if one_source=False
         if not one_source:
             if len_dest > 1 and len_source == 1:
                 source = WellGroup(source.wells * len_dest)
@@ -1536,7 +1574,8 @@ class Protocol(object):
                                    "destination wells to do a one-to-one "
                                    "transfer.")
 
-        # Auto-generate list from single volume, check if volume list length matches
+        # Auto-generate list from single volume, check if volume list length
+        # matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
                 volume = [Unit.fromstring(volume)] * len_source
@@ -1613,18 +1652,22 @@ class Protocol(object):
         # Create source, destination, and volumes list for one_source=True
         if one_source:
             try:
-                # Check if all wells in shape have same or greater volume given one_source = True
+                # Check if all wells in shape have same or greater volume given
+                # one_source = True
                 for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
                     columnWise = False
                     if st == "col":
                         columnWise = True
                     if w.container.container_type.col_count == 24:
                         if columnWise:
-                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                            source_wells = [w.container.wells_from(
+                                w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                         else:
-                            source_wells = [w.container.wells_from(w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                            source_wells = [w.container.wells_from(
+                                w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
                     else:
-                        source_wells = w.container.wells_from(w, c*r, columnWise)
+                        source_wells = w.container.wells_from(
+                            w, c*r, columnWise)
                     if not all([s.volume >= w.volume for s in source_wells]):
                         raise RuntimeError("Each well in a shape must have "
                                            "the same or greater volume as the "
@@ -1656,15 +1699,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(vol.value, max_decimal_places)
+                                vol.value = round(
+                                    vol.value, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(vol_d.value, max_decimal_places)
+                                vol_d.value = round(
+                                    vol_d.value, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1686,7 +1732,7 @@ class Protocol(object):
         # Checking on containers and volume consistency if one_tip = True
 
         # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
-        #TODO remove this when consolidating to 165ul filtered tips
+        # TODO remove this when consolidating to 165ul filtered tips
         volumeSwitch = Unit.fromstring("31:microliter")
 
         if one_tip:
@@ -1745,7 +1791,8 @@ class Protocol(object):
                 diff = v
                 while diff > max_tip_vol:
 
-                    # Logic for splitting volume in half once less than 2*max_tip_volum
+                    # Logic for splitting volume in half once less than
+                    # 2*max_tip_volum
                     if diff < max_tip_vol*2:
                         diff = diff/2
                         v = diff
@@ -1762,18 +1809,24 @@ class Protocol(object):
                             columnWise = True
                         if d.container.container_type.col_count == 24:
                             if columnWise:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                dest_wells = [d.container.wells_from(
+                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                             else:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                dest_wells = [d.container.wells_from(
+                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
                         else:
-                            dest_wells = d.container.wells_from(d, c*r, columnWise)
+                            dest_wells = d.container.wells_from(
+                                d, c*r, columnWise)
                         if s.container.container_type.col_count == 24:
                             if columnWise:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                source_wells = [s.container.wells_from(
+                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                             else:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                source_wells = [s.container.wells_from(
+                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
                         else:
-                            source_wells = s.container.wells_from(s, c*r, columnWise)
+                            source_wells = s.container.wells_from(
+                                s, c*r, columnWise)
                         for well in source_wells:
                             if well.volume:
                                 well.volume -= v
@@ -1811,7 +1864,8 @@ class Protocol(object):
                             oshp.append(sh)
                             osta.append(st)
 
-                    # Logic for splitting out max_tip_vol if volume greater than max_tip_vol
+                    # Logic for splitting out max_tip_vol if volume greater
+                    # than max_tip_vol
                     else:
                         diff -= max_tip_vol
                         v = max_tip_vol
@@ -1828,18 +1882,24 @@ class Protocol(object):
                             columnWise = True
                         if d.container.container_type.col_count == 24:
                             if columnWise:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                dest_wells = [d.container.wells_from(
+                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                             else:
-                                dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                dest_wells = [d.container.wells_from(
+                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
                         else:
-                            dest_wells = d.container.wells_from(d, c*r, columnWise)
+                            dest_wells = d.container.wells_from(
+                                d, c*r, columnWise)
                         if s.container.container_type.col_count == 24:
                             if columnWise:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                source_wells = [s.container.wells_from(
+                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                             else:
-                                source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                source_wells = [s.container.wells_from(
+                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
                         else:
-                            source_wells = s.container.wells_from(s, c*r, columnWise)
+                            source_wells = s.container.wells_from(
+                                s, c*r, columnWise)
                         for well in source_wells:
                             if well.volume:
                                 well.volume -= v
@@ -1890,16 +1950,20 @@ class Protocol(object):
                 columnWise = True
             if d.container.container_type.col_count == 24:
                 if columnWise:
-                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                    dest_wells = [d.container.wells_from(
+                        d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                 else:
-                    dest_wells = [d.container.wells_from(d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                    dest_wells = [d.container.wells_from(
+                        d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
             else:
                 dest_wells = d.container.wells_from(d, c*r, columnWise)
             if s.container.container_type.col_count == 24:
                 if columnWise:
-                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                    source_wells = [s.container.wells_from(
+                        s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
                 else:
-                    source_wells = [s.container.wells_from(s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                    source_wells = [s.container.wells_from(
+                        s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
             else:
                 source_wells = s.container.wells_from(s, c*r, columnWise)
             for well in source_wells:
@@ -2058,7 +2122,8 @@ class Protocol(object):
         if isinstance(wells, WellGroup):
             container = set([w.container for w in wells])
             if len(container) > 1:
-                raise ValueError("All wells need to be on one container for SangerSeq")
+                raise ValueError(
+                    "All wells need to be on one container for SangerSeq")
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
@@ -2248,20 +2313,21 @@ class Protocol(object):
 
         """
         if (speed_percentage != None and
-           (speed_percentage > 100 or speed_percentage < 1)):
+                (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         if not isinstance(columns, list):
             raise TypeError("Columns is not of type 'list'.")
         for c in columns:
             wells = WellGroup(ref.wells_from(c["column"], ref.container_type.row_count(),
-                              columnwise=True))
+                                             columnwise=True))
             for w in wells:
                 if w.volume:
                     w.volume += Unit.fromstring(c["volume"])
                 else:
                     w.set_volume(c["volume"])
 
-        self.instructions.append(Dispense(ref, reagent, columns, speed_percentage))
+        self.instructions.append(
+            Dispense(ref, reagent, columns, speed_percentage))
 
     def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None):
         """
@@ -2361,7 +2427,7 @@ class Protocol(object):
 
         """
         if (speed_percentage != None and
-           (speed_percentage > 100 or speed_percentage < 1)):
+                (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         columns = []
         for col in range(0, ref.container_type.col_count):
@@ -3450,13 +3516,13 @@ class Protocol(object):
         group = [pick]
 
         if (not newpick and self.instructions
-            and self.instructions[-1].op == "autopick"
-            and self.instructions[-1].dataref == dataref
-            and self.instructions[-1].criteria == criteria
-            and self.instructions[-1].groups[0]['from'][0].container == sources[0].container):
-          self.instructions[-1].groups.extend(group)
+                and self.instructions[-1].op == "autopick"
+                and self.instructions[-1].dataref == dataref
+                and self.instructions[-1].criteria == criteria
+                and self.instructions[-1].groups[0]['from'][0].container == sources[0].container):
+            self.instructions[-1].groups.extend(group)
         else:
-          self.instructions.append(Autopick(group, criteria, dataref))
+            self.instructions.append(Autopick(group, criteria, dataref))
 
     def image_plate(self, ref, mode, dataref):
         """
@@ -3595,8 +3661,8 @@ class Protocol(object):
             dest_group.append(xfer)
 
             if (self.instructions and self.instructions[-1].op == "provision" and
-                self.instructions[-1].resource_id == resource_id and
-                self.instructions[-1].to[-1]["well"].container == d.container):
+                    self.instructions[-1].resource_id == resource_id and
+                    self.instructions[-1].to[-1]["well"].container == d.container):
                 self.instructions[-1].to.append(xfer)
             else:
                 self.instructions.append(Provision(resource_id, dest_group))
@@ -3848,9 +3914,11 @@ class Protocol(object):
                         "'%s'." % ref_name)
 
                 if v.rsplit("/")[1] == "all_wells":
-                    parameters[str(k)] = self.refs[ref_name].container.all_wells()
+                    parameters[str(k)] = self.refs[
+                        ref_name].container.all_wells()
                 else:
-                    parameters[str(k)] = self.refs[ref_name].container.well(v.rsplit("/")[1])
+                    parameters[str(k)] = self.refs[ref_name].container.well(
+                        v.rsplit("/")[1])
             else:
                 parameters[str(k)] = v
 

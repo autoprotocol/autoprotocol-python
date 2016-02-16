@@ -3,16 +3,19 @@ from .pipette_tools import assign
 
 
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 '''
 
+
 class Instruction(object):
+
     """Base class for an instruction that is to later be encoded as JSON.
 
     """
+
     def __init__(self, data):
         super(Instruction, self).__init__()
         self.data = data
@@ -26,6 +29,7 @@ class Instruction(object):
 
 
 class Pipette(Instruction):
+
     '''
     A pipette instruction is constructed as a list of groups, executed in
     order, where each group is a transfer, distribute or mix group.  One
@@ -58,13 +62,16 @@ class Pipette(Instruction):
     Well positions are given using the format :ref/:index
 
     '''
+
     def __init__(self, groups):
         super(Pipette, self).__init__({
             "op": "pipette",
             "groups": groups
         })
 
+
 class Dispense(Instruction):
+
     """
     Dispense specified reagent to specified columns.
 
@@ -81,18 +88,21 @@ class Dispense(Instruction):
         [{"column": <column num>, "volume": <volume>}, ...]
 
     """
+
     def __init__(self, ref, reagent, columns, speed):
         disp = {
-                "op": "dispense",
-                "object": ref,
-                "reagent": reagent,
-                "columns": columns
+            "op": "dispense",
+            "object": ref,
+            "reagent": reagent,
+            "columns": columns
         }
         assign(disp, "x_speed_percentage", speed)
 
         super(Dispense, self).__init__(disp)
 
+
 class AcousticTransfer(Instruction):
+
     """
     Specify source and destination wells for transfering liquid via an acoustic
     liquid handler.  Droplet size is usually device-specific.
@@ -119,6 +129,7 @@ class AcousticTransfer(Instruction):
         be a multiple of this volume.
 
     """
+
     def __init__(self, transfers, droplet_size):
         super(AcousticTransfer, self).__init__({
             "op": "acoustic_transfer",
@@ -126,7 +137,9 @@ class AcousticTransfer(Instruction):
             "droplet_size": droplet_size
         })
 
+
 class Spin(Instruction):
+
     """
     Apply the specified amount of acceleration to a plate using a centrifuge.
 
@@ -141,6 +154,7 @@ class Spin(Instruction):
         Amount of time to apply acceleration.
 
     """
+
     def __init__(self, ref, acceleration, duration):
         super(Spin, self).__init__({
             "op": "spin",
@@ -151,6 +165,7 @@ class Spin(Instruction):
 
 
 class Thermocycle(Instruction):
+
     """
     Append a Thermocycle instruction to the list of instructions, with
     groups being a list of dicts in the form of:
@@ -211,13 +226,15 @@ class Thermocycle(Instruction):
         If invalid dyes are supplied.
 
     """
-    CHANNEL1_DYES  = ["FAM","SYBR"]
-    CHANNEL2_DYES  = ["VIC","HEX","TET","CALGOLD540"]
-    CHANNEL3_DYES  = ["ROX","TXR","CALRED610"]
-    CHANNEL4_DYES  = ["CY5","QUASAR670"]
-    CHANNEL5_DYES  = ["QUASAR705"]
-    CHANNEL_DYES   = [CHANNEL1_DYES, CHANNEL2_DYES, CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
-    AVAILABLE_DYES = [dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
+    CHANNEL1_DYES = ["FAM", "SYBR"]
+    CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
+    CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
+    CHANNEL4_DYES = ["CY5", "QUASAR670"]
+    CHANNEL5_DYES = ["QUASAR705"]
+    CHANNEL_DYES = [CHANNEL1_DYES, CHANNEL2_DYES,
+                    CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
+    AVAILABLE_DYES = [
+        dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
     def __init__(self, ref, groups, volume="25:microliter", dataref=None,
                  dyes=None, melting_start=None, melting_end=None,
@@ -295,6 +312,7 @@ class Thermocycle(Instruction):
 
 
 class Incubate(Instruction):
+
     """
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
@@ -317,7 +335,8 @@ class Incubate(Instruction):
 
     def __init__(self, ref, where, duration, shaking=False, co2=0):
         if where not in self.WHERE:
-            raise ValueError("Specified `where` not contained in: %s" % ", ".join(self.WHERE))
+            raise ValueError(
+                "Specified `where` not contained in: %s" % ", ".join(self.WHERE))
         if where == "ambient" and shaking:
             raise ValueError("Shaking is not possible for ambient incubation")
         super(Incubate, self).__init__({
@@ -331,6 +350,7 @@ class Incubate(Instruction):
 
 
 class SangerSeq(Instruction):
+
     """
     Send the indicated wells of the container specified for Sanger sequencing.
     The specified wells should already contain the appropriate mix for
@@ -348,6 +368,7 @@ class SangerSeq(Instruction):
       Name of sequencing dataset that will be returned.
 
     """
+
     def __init__(self, obj, wells, dataref, type, primer):
         seq = {
             "op": "sanger_sequence",
@@ -362,6 +383,7 @@ class SangerSeq(Instruction):
 
 
 class GelSeparate(Instruction):
+
     """
     Separate nucleic acids on an agarose gel.
 
@@ -393,6 +415,7 @@ class GelSeparate(Instruction):
 
 
 class Absorbance(Instruction):
+
     """
     Read the absorbance for the indicated wavelength for the indicated
     wells. Append an Absorbance instruction to the list of instructions for
@@ -411,6 +434,7 @@ class Absorbance(Instruction):
     flashes : int, optional
 
     """
+
     def __init__(self, ref, wells, wavelength, dataref, flashes=25):
         super(Absorbance, self).__init__({
             "op": "absorbance",
@@ -423,6 +447,7 @@ class Absorbance(Instruction):
 
 
 class Fluorescence(Instruction):
+
     """
     Read the fluoresence for the indicated wavelength for the indicated
     wells.  Append a Fluorescence instruction to the list of instructions
@@ -443,6 +468,7 @@ class Fluorescence(Instruction):
     flashes : int, optional
 
     """
+
     def __init__(self, ref, wells, excitation, emission, dataref, flashes=25):
         super(Fluorescence, self).__init__({
             "op": "fluorescence",
@@ -456,6 +482,7 @@ class Fluorescence(Instruction):
 
 
 class Luminescence(Instruction):
+
     """
     Read luminesence of indicated wells
 
@@ -467,16 +494,18 @@ class Luminescence(Instruction):
     dataref : str
 
     """
+
     def __init__(self, ref, wells, dataref):
         super(Luminescence, self).__init__({
             "op": "luminescence",
             "object": ref,
             "wells": wells,
             "dataref": dataref
-            })
+        })
 
 
 class Seal(Instruction):
+
     """
     Seal indicated container using the automated plate sealer.
 
@@ -486,6 +515,7 @@ class Seal(Instruction):
         Container to be sealed
 
     """
+
     def __init__(self, ref, type="ultra-clear"):
         super(Seal, self).__init__({
             "op": "seal",
@@ -495,6 +525,7 @@ class Seal(Instruction):
 
 
 class Unseal(Instruction):
+
     """
     Remove seal from indicated container using the automated plate unsealer.
 
@@ -504,6 +535,7 @@ class Unseal(Instruction):
         Container to be unsealed
 
     """
+
     def __init__(self, ref):
         super(Unseal, self).__init__({
             "op": "unseal",
@@ -512,6 +544,7 @@ class Unseal(Instruction):
 
 
 class Cover(Instruction):
+
     """
     Place specified lid type on specified container
 
@@ -536,6 +569,7 @@ class Cover(Instruction):
 
 
 class Uncover(Instruction):
+
     """
     Remove lid from specified container
 
@@ -545,6 +579,7 @@ class Uncover(Instruction):
         Container to remove lid from
 
     """
+
     def __init__(self, ref):
         super(Uncover, self).__init__({
             "op": "uncover",
@@ -553,6 +588,7 @@ class Uncover(Instruction):
 
 
 class FlowAnalyze(Instruction):
+
     """
     Perform flow cytometry.The instruction will be executed within the voltage
     range specified for each channel, optimized for the best sample
@@ -672,6 +708,7 @@ class FlowAnalyze(Instruction):
             ]
 
     """
+
     def __init__(self,
                  dataref,
                  FSC,
@@ -681,10 +718,10 @@ class FlowAnalyze(Instruction):
                  colors=None,
                  pos_controls=None):
         flow_instr = {
-                "op": "flow_analyze",
-                "dataref": dataref,
-                "channels": {}
-            }
+            "op": "flow_analyze",
+            "dataref": dataref,
+            "channels": {}
+        }
         assert FSC and SSC, "You must include parameters for FSC and SSC channels."
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
@@ -699,6 +736,7 @@ class FlowAnalyze(Instruction):
 
 
 class Oligosynthesize(Instruction):
+
     """
     Parameters
     ----------
@@ -725,14 +763,16 @@ class Oligosynthesize(Instruction):
                 ...
             ]
     """
+
     def __init__(self, oligos):
         super(Oligosynthesize, self).__init__({
-                "op": "oligosynthesize",
-                "oligos": oligos
-            })
+            "op": "oligosynthesize",
+            "oligos": oligos
+        })
 
 
 class Spread(Instruction):
+
     """
     Spread the specified volume of the source aliquot across the surace of the
     agar contained in the object container
@@ -747,6 +787,7 @@ class Spread(Instruction):
         Volume of source material to spread on agar
 
     """
+
     def __init__(self, source, dest, volume):
         super(Spread, self).__init__({
             "op": "spread",
@@ -757,6 +798,7 @@ class Spread(Instruction):
 
 
 class Autopick(Instruction):
+
     """
     Pick colonies from the agar-containing location(s) specified in `sources`
     to the location(s) specified in `dests` in highest to lowest rank order
@@ -781,6 +823,7 @@ class Autopick(Instruction):
       list of `from` wells to avoid aborting the entire run.
 
     """
+
     def __init__(self, groups, criteria, dataref):
         pick = {
             "op": "autopick",
@@ -793,6 +836,7 @@ class Autopick(Instruction):
 
 
 class ImagePlate(Instruction):
+
     """
     Capture an image of the specified container.
 
@@ -806,15 +850,18 @@ class ImagePlate(Instruction):
         Name of data reference of resulting image
 
     """
+
     def __init__(self, ref, mode, dataref):
         super(ImagePlate, self).__init__({
             "op": "image_plate",
             "object": ref,
             "mode": mode,
             "dataref": dataref
-            })
+        })
+
 
 class Provision(Instruction):
+
     """
     Provision a commercial resource from a catalog into the specified
     destination well(s).  A new tip is used for each destination well
@@ -844,14 +891,17 @@ class Provision(Instruction):
       If volume is not specified as a string or Unit (or a list of either)
 
     """
+
     def __init__(self, resource_id, dests):
         super(Provision, self).__init__({
             "op": "provision",
             "resource_id": resource_id,
             "to": dests
-            })
+        })
+
 
 class FlashFreeze(Instruction):
+
     """
     Flash freeze the contents of the specified container by submerging it in
     liquid nitrogen for the specified amount of time.
@@ -872,7 +922,9 @@ class FlashFreeze(Instruction):
             "duration": duration
         })
 
+
 class Stamp(Instruction):
+
     """
     A stamp instruction is constructed as a list of groups, executed in order,
     where each group is a transfer. The same disposable tips, shape and
@@ -889,4 +941,4 @@ class Stamp(Instruction):
         super(Stamp, self).__init__({
             "op": "stamp",
             "groups": groups
-         })
+        })

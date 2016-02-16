@@ -1,10 +1,11 @@
 from .unit import Unit
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 '''
+
 
 def convert_to_ul(vol):
     """
@@ -27,6 +28,7 @@ def convert_to_ul(vol):
         raise ValueError("The unit you're trying to convert to microliters "
                          "is invalid.")
     return v
+
 
 def convert_to_nl(vol):
     """
@@ -138,7 +140,8 @@ def check_valid_origin(origin, stamp_type, columns, rows):
                 raise ValueError("For full 96-well transfers, origin has "
                                  "to be well 0.")
         elif stamp_type == "row":
-            if (robotized_origin % col_count) != 0 or robotized_origin > ((row_count - rows) * col_count):
+            if (robotized_origin % col_count) != 0 or robotized_origin > ((
+                    row_count - rows) * col_count):
                 raise ValueError("For row transfers, origin "
                                  "has to be specified within the left "
                                  "column and not more than allowed by shape.")
@@ -153,13 +156,18 @@ def check_valid_origin(origin, stamp_type, columns, rows):
                 raise ValueError("For full 384-well transfers, origin has "
                                  "to be well 0, 1, 24 or 25.")
         elif stamp_type == "row":
-            if (robotized_origin % col_count) not in [0, 1] or robotized_origin >= ((row_count - ((rows - 1) * 2)) * col_count):
+            if (robotized_origin % col_count) not in [0, 1] or (
+                robotized_origin >= ((row_count - ((
+                    rows - 1) * 2)) * col_count)):
                 raise ValueError("For row transfers, origin"
                                  "has to be specified within the left "
                                  "two columns and not more than allowed by "
                                  "shape.")
         else:
-            if robotized_origin >= col_count*2 or robotized_origin < 0 or robotized_origin % col_count >= (col_count - ((columns - 1) * 2)):
+            if robotized_origin >= col_count * 2 or (
+                robotized_origin < 0) or (
+                robotized_origin % col_count >= (
+                    col_count - ((columns - 1) * 2))):
                 raise ValueError("For column transfers, origin "
                                  "has to be specified within the top "
                                  "two columns and not more than allowed by "
@@ -168,12 +176,16 @@ def check_valid_origin(origin, stamp_type, columns, rows):
         raise RuntimeError("Unsupported plate type for checking origin.")
 
 
-def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContainers=3, volumeSwitch=Unit.fromstring("31:microliter")):
+def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
+                       maxContainers=3,
+                       volumeSwitch=Unit.fromstring("31:microliter")):
     """
     Checks whether current stamp can be appended to previous stamp instruction.
     """
-    # Ensure Instruction contains either all full plate or selective (all rows or all columns)
-    if ((prev_xfer_list[0]["shape"]["columns"] == 12 and prev_xfer_list[0]["shape"]["rows"] == 8) and (current_xfer["shape"]["columns"] == 12 and current_xfer["shape"]["rows"] == 8)):
+    # Ensure Instruction contains either all full plate or selective (all rows
+    # or all columns)
+    if ((prev_xfer_list[0]["shape"]["columns"] == 12 and prev_xfer_list[0][
+         "shape"]["rows"] == 8) and (current_xfer["shape"]["columns"] == 12 and current_xfer["shape"]["rows"] == 8)):
         axis_key = None
     elif prev_xfer_list[0]["shape"]["columns"] == 12:
         axis_key = "rows"
@@ -185,7 +197,8 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
             return False
 
     # Ensure Instruction contain the same volume type as defined by TCLE
-    # Currently volumeSwitch is hardcoded to check against the two tip volume types used in TCLE
+    # Currently volumeSwitch is hardcoded to check against the two tip volume
+    # types used in TCLE
     if prev_xfer_list[0]["transfer"][0]["volume"] <= volumeSwitch:
         if current_xfer["transfer"][0]["volume"] > volumeSwitch:
             return False
@@ -194,7 +207,10 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
             return False
 
     # Check if maximum Transfers/Containers is reached
-    originList = ([y["from"] for x in prev_xfer_list for y in x["transfer"]] + [y["to"] for x in prev_xfer_list for y in x["transfer"]] + [y["from"] for y in current_xfer["transfer"]] + [y["to"] for y in current_xfer["transfer"]])
+    originList = ([y["from"] for x in prev_xfer_list for y in x["transfer"]] +
+                  [y["to"] for x in prev_xfer_list for y in x["transfer"]] +
+                  [y["from"] for y in current_xfer["transfer"]] +
+                  [y["to"] for y in current_xfer["transfer"]])
 
     if axis_key:
         num_prev_xfers = sum([x["shape"][axis_key] for x in prev_xfer_list])
@@ -204,13 +220,14 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3, maxContaine
         num_current_xfers = 1
 
     if (num_prev_xfers + num_current_xfers > maxTransfers or
-       len(set(map(lambda x: x.container, originList))) > maxContainers):
+            len(set(map(lambda x: x.container, originList))) > maxContainers):
         return False
 
     return True
 
 
 class make_dottable_dict(dict):
+
     '''Enable dictionaries to be accessed using dot notation instead of bracket
     notation.  This class should probably never be used.
 
@@ -239,6 +256,7 @@ class make_dottable_dict(dict):
         Dictionary to be made dottable.
 
     '''
+
     def __getattr__(self, attr):
         if type(self[attr]) == dict:
             return make_dottable_dict(self[attr])

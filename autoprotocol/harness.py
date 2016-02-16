@@ -13,7 +13,7 @@ else:
     string_type = basestring
 
 '''
-    :copyright: 2015 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -24,7 +24,7 @@ def param_default(typeDesc):
     if isinstance(typeDesc, string_type):
         typeDesc = {'type': typeDesc}
 
-    type    = typeDesc['type']
+    type = typeDesc['type']
     default = typeDesc.get('default')
 
     if default is not None and type != 'group-choice':
@@ -42,7 +42,7 @@ def param_default(typeDesc):
     elif typeDesc['type'] == 'group-choice':
         default_inputs = {}
         for option in typeDesc.get('options', []):
-            value  = option.get('value')
+            value = option.get('value')
             inputs = option.get('inputs')
             if inputs:
                 group_typedesc = {'type': 'group', 'inputs': inputs}
@@ -151,7 +151,7 @@ def convert_param(protocol, val, typeDesc):
         except KeyError as e:
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("The value supplied to input '%s' (type group) is missing "
-                                   "a(n) %s field." % (label, e))
+                               "a(n) %s field." % (label, e))
         except AttributeError:
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("The value supplied to input '%s' (type group) is improperly"
@@ -168,7 +168,7 @@ def convert_param(protocol, val, typeDesc):
         except KeyError as e:
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("The value supplied to input '%s' (type group+) is missing "
-                                   "a(n) %s field." % (label, e))
+                               "a(n) %s field." % (label, e))
     elif type == 'group-choice':
         try:
             return {
@@ -218,6 +218,7 @@ def convert_param(protocol, val, typeDesc):
 
 
 class ProtocolInfo(object):
+
     def __init__(self, json):
         self.input_types = json['inputs']
 
@@ -252,6 +253,7 @@ class ProtocolInfo(object):
 
 
 class Manifest(object):
+
     """
     Object representation of a manifest.json file
 
@@ -281,6 +283,7 @@ class Manifest(object):
             }
 
     """
+
     def __init__(self, json):
         '''
         '''

@@ -5,8 +5,10 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- safe_min_volume_ul in _CONTAINER_TYPES
 
 Changed
+- updated dead_volume_ul values in _CONTAINER_TYPES
 
 Removed
 

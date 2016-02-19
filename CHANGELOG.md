@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v2.7.0 - 2016-02-18
+---
+Added
 - safe_min_volume_ul in _CONTAINER_TYPES
 
 Changed

@@ -6,6 +6,7 @@ from .pipette_tools import assign
 from .util import convert_to_ul, convert_to_nl
 from .util import check_valid_origin
 from .util import check_stamp_append
+from .util import check_valid_mag
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3515,14 +3516,64 @@ class Protocol(object):
 
         group = [pick]
 
-        if (not newpick and self.instructions
-                and self.instructions[-1].op == "autopick"
-                and self.instructions[-1].dataref == dataref
-                and self.instructions[-1].criteria == criteria
-                and self.instructions[-1].groups[0]['from'][0].container == sources[0].container):
+        if (not newpick and self.instructions and
+                self.instructions[-1].op == "autopick" and
+                self.instructions[-1].dataref == dataref and
+                self.instructions[-1].criteria == criteria and
+                self.instructions[-1].groups[0]['from'][0].container ==
+                sources[0].container):
             self.instructions[-1].groups.extend(group)
         else:
             self.instructions.append(Autopick(group, criteria, dataref))
+
+    def mag_dry(self, container, duration, head, new_tip=False, new_instruction=False):
+        """
+
+        foo
+
+        """
+
+        check_valid_mag(container, head)
+        mag = {}
+        mag["object"] = container
+        mag["duration"] = duration
+
+        self._add_mag(mag, head, new_tip, new_instruction, "dry")
+
+    def mag_incubate(self, container, duration, head, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
+        """
+
+        foo
+
+        """
+
+        check_valid_mag(container, head)
+        mag = {}
+        mag["object"] = container
+        mag["duration"] = duration
+        mag["magnetize"] = magnetize
+        mag["tip_position"] = tip_position
+
+        if temperature:
+            mag["temperature"] = temperature
+
+        self._add_mag(mag, head, new_tip, new_instruction, "incubate")
+
+    def mag_collect(self, object, cycles, head, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
+        """
+
+        foo
+
+        """
+
+        check_valid_mag(object, head)
+        for kw in ("object", "cycles", "pause_duration", "bottom_position"):
+            mag[kw] = locals()[kw]
+
+        if temperature:
+            mag["temperature"] = temperature
+
+        self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def image_plate(self, ref, mode, dataref):
         """
@@ -3803,6 +3854,33 @@ class Protocol(object):
             self.instructions[-1].groups += groups
         else:
             self.instructions.append(Pipette(groups))
+
+    def _add_mag(self, mag, head, new_tip, new_instruction, name):
+
+        if (not new_instruction and self.instructions and
+                self.instructions[-1].op == "magbead_transfer" and
+                self.instructions[-1].magnetic_head == head and
+                self._count_mag_containers(mag, new_tip) <= 8):
+            if not new_tip:
+                self.instructions[-1].groups[-1].append({name: mag})
+            elif new_tip:
+                self.instructions[-1].groups.append([{name: mag}])
+        else:
+            self.instructions.append(Magbead_Transfer([[{name: mag}]], head))
+
+    def _count_mag_containers(self, mag, new_tip):
+        num_groups = len(self.instructions[-1].groups)
+
+        containers = [g.values()[0]["object"] for group in self.instructions[-1].groups for g in group]
+        containers.append(mag["object"])
+        containers = list(set(containers))
+        num_containers = len(containers)
+        num_containers += num_groups
+
+        if new_tip:
+            num_containers += 1
+
+        return num_containers
 
     def _refify(self, op_data):
         if type(op_data) is dict:

@@ -70,7 +70,7 @@ class Pipette(Instruction):
         })
 
 
-class Magbead_Transfer(Instruction):
+class Magnetic_Transfer(Instruction):
 
     '''
     A magbead_transfer instruction is constructed as a list of groups,
@@ -106,8 +106,8 @@ class Magbead_Transfer(Instruction):
         if head_type not in self.HEAD_TYPE:
             raise ValueError(
                 "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
-        super(Magbead_Transfer, self).__init__({
-            "op": "magbead_transfer",
+        super(Magnetic_Transfer, self).__init__({
+            "op": "magnetic_transfer",
             "groups": groups,
             "magnetic_head": head_type
         })

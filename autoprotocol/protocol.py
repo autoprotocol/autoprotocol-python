@@ -3526,7 +3526,7 @@ class Protocol(object):
         else:
             self.instructions.append(Autopick(group, criteria, dataref))
 
-    def mag_dry(self, container, duration, head, new_tip=False, new_instruction=False):
+    def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
         """
 
         foo
@@ -3536,11 +3536,12 @@ class Protocol(object):
         check_valid_mag(container, head)
         mag = {}
         mag["object"] = container
-        mag["duration"] = duration
+        for kw in ["duration"]:
+            mag[kw] = locals()[kw]
 
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
-    def mag_incubate(self, container, duration, head, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
+    def mag_incubate(self, head, container, duration, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
         """
 
         foo
@@ -3550,30 +3551,55 @@ class Protocol(object):
         check_valid_mag(container, head)
         mag = {}
         mag["object"] = container
-        mag["duration"] = duration
-        mag["magnetize"] = magnetize
-        mag["tip_position"] = tip_position
-
-        if temperature:
-            mag["temperature"] = temperature
+        for kw in ("duration", "magnetize", "tip_position", "temperature"):
+            mag[kw] = locals()[kw]
 
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
-    def mag_collect(self, object, cycles, head, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
+    def mag_collect(self, head, container, cycles, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
         """
 
         foo
 
         """
 
-        check_valid_mag(object, head)
-        for kw in ("object", "cycles", "pause_duration", "bottom_position"):
+        check_valid_mag(container, head)
+        mag = {}
+        mag["object"] = container
+        for kw in ("cycles", "pause_duration", "bottom_position", "temperature"):
             mag[kw] = locals()[kw]
 
-        if temperature:
-            mag["temperature"] = temperature
+        self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
-        self._add_mag(mag, head, new_tip, new_instruction, "incubate")
+    def mag_release(self, head, container, duration, frequency, center=0.5, amplitude=0.5, temperature=None, new_tip=False, new_instruction=False):
+        """
+
+        foo
+
+        """
+
+        check_valid_mag(container, head)
+        mag = {}
+        mag["object"] = container
+        for kw in ("duration", "frequency", "center", "amplitude", "temperature"):
+            mag[kw] = locals()[kw]
+
+        self._add_mag(mag, head, new_tip, new_instruction, "release")
+
+    def mag_mix(self, head, container, duration, frequency, center=0.5, amplitude=0.5, magnetize=False, temperature=None, new_tip=False, new_instruction=False):
+        """
+
+        foo
+
+        """
+
+        check_valid_mag(container, head)
+        mag = {}
+        mag["object"] = container
+        for kw in ("duration", "frequency", "center", "amplitude", "magnetize", "temperature"):
+            mag[kw] = locals()[kw]
+
+        self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
         """
@@ -3856,9 +3882,12 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
+        """
+        Append given magnetic_transfer groups to protocol
+        """
 
         if (not new_instruction and self.instructions and
-                self.instructions[-1].op == "magbead_transfer" and
+                self.instructions[-1].op == "magnetic_transfer" and
                 self.instructions[-1].magnetic_head == head and
                 self._count_mag_containers(mag, new_tip) <= 8):
             if not new_tip:
@@ -3866,9 +3895,13 @@ class Protocol(object):
             elif new_tip:
                 self.instructions[-1].groups.append([{name: mag}])
         else:
-            self.instructions.append(Magbead_Transfer([[{name: mag}]], head))
+            self.instructions.append(Magnetic_Transfer([[{name: mag}]], head))
 
     def _count_mag_containers(self, mag, new_tip):
+        """
+        Count the number of containers and tip protectors used in a magnetic_transfer instruction
+        """
+
         num_groups = len(self.instructions[-1].groups)
 
         containers = [g.values()[0]["object"] for group in self.instructions[-1].groups for g in group]

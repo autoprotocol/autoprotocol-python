@@ -70,6 +70,49 @@ class Pipette(Instruction):
         })
 
 
+class Magbead_Transfer(Instruction):
+
+    '''
+    A magbead_transfer instruction is constructed as a list of groups,
+    executed in order, where each group is a collect, release, dry, incubate,
+    or mix group.  Groups in the same list of groups use the same magnetic tip
+    comb protector.
+
+    collect:
+
+        Foo
+
+    release:
+
+        Foo
+
+    dry:
+
+        Foo
+
+    invubate:
+
+        Foo
+
+    mix:
+
+        Foo
+
+    '''
+
+    HEAD_TYPE = ["96-deep", "96-pcr"]
+
+    def __init__(self, groups, head_type):
+        if head_type not in self.HEAD_TYPE:
+            raise ValueError(
+                "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
+        super(Magbead_Transfer, self).__init__({
+            "op": "magbead_transfer",
+            "groups": groups,
+            "magnetic_head": head_type
+        })
+
+
 class Dispense(Instruction):
 
     """

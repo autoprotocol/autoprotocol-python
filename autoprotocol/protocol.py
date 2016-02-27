@@ -3529,7 +3529,46 @@ class Protocol(object):
     def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
         """
 
-        foo
+        Dry beads with tips above and outside an `object` for a set `duration`.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="cold_20")
+
+            p.mag_dry("96-pcr", plate, "30:minute", new_tip=False,
+                      new_instruction=False)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    [
+                      {
+                        "dry": {
+                          "duration": "30:minute",
+                          "object": "plate_0"
+                        }
+                      }
+                    ]
+                  ],
+                  "magnetic_head": "96-pcr",
+                  "op": "magnetic_transfer"
+                }
+              ]
+
+        Parameters
+        ----------
+        object : container
+            Container to remove lid from
 
         """
 
@@ -3544,7 +3583,9 @@ class Protocol(object):
     def mag_incubate(self, head, container, duration, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        foo
+        Incubate an `object` for a set `duration` with the tips moved to
+        `tip_position`. During this instruction, the `object` can be
+        optionally heated to `temperature` and the tips can be `magnetize`d.
 
         """
 

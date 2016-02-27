@@ -73,30 +73,33 @@ class Pipette(Instruction):
 class Magnetic_Transfer(Instruction):
 
     '''
-    A magbead_transfer instruction is constructed as a list of groups,
-    executed in order, where each group is a collect, release, dry, incubate,
-    or mix group.  Groups in the same list of groups use the same magnetic tip
-    comb protector.
+    A magnetic_transfer instruction is constructed as a list of lists of
+    groups, executed in order, where each group is a collect, release, dry,
+    incubate, or mix sub-operation.  These sub-operations control the behavior
+    tips which can be magnetized, and a heating platform. Groups in the same
+    list of groups use the same tips.
 
     collect:
 
-        Foo
+        Collects beads from the specified "object" by raising and lowering
+        magnetized tips repeatedly with an optional pause at well bottom.
 
     release:
 
-        Foo
+        Release beads from unmagnetized tips by oscillating the tips
+        vertically into and out of the "object".
 
     dry:
 
-        Foo
+        Dry beads on magnetized tips above and outside the "object".
 
-    invubate:
+    incubate:
 
-        Foo
+        Incubate the "object".
 
     mix:
 
-        Foo
+        Oscillate the tips into and out of the "object"
 
     '''
 

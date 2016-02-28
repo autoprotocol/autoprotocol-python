@@ -3529,17 +3529,14 @@ class Protocol(object):
     def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
         """
 
-        Dry beads with tips above and outside an `object` for a set `duration`.
+        Dry beads with tips above and outside an container for a set time.
 
         Example Usage:
 
         .. code-block:: python
 
             p = Protocol()
-            sample_plate = p.ref("sample_plate",
-                                 None,
-                                 "96-pcr",
-                                 storage="cold_20")
+            plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
 
             p.mag_dry("96-pcr", plate, "30:minute", new_tip=False,
                       new_instruction=False)
@@ -3567,8 +3564,16 @@ class Protocol(object):
 
         Parameters
         ----------
-        object : container
-            Container to remove lid from
+        head : str
+            Magnetic head to use for the magnetic bead transfers
+        container : Container
+            Container to dry beads above
+        duration : str, Unit
+            Time for drying
+        new_tip : bool
+            Specify whether to use a new tip to complete the step
+        new_instruction: bool
+            Specify whether to create a new magnetic_transfer instruction
 
         """
 
@@ -3583,9 +3588,60 @@ class Protocol(object):
     def mag_incubate(self, head, container, duration, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        Incubate an `object` for a set `duration` with the tips moved to
-        `tip_position`. During this instruction, the `object` can be
-        optionally heated to `temperature` and the tips can be `magnetize`d.
+        Incubate the container for a set time with tips set at `tip_position`.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
+
+            p.mag_incubate("96-pcr", plate, "30:minute", magnetize=False,
+                           tip_position=1.5, temperature=None, new_tip=False)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    [
+                      {
+                        "incubate": {
+                          "duration": "30:minute",
+                          "tip_position": 1.5,
+                          "object": "plate_0",
+                          "magnetize": false,
+                          "temperature": null
+                        }
+                      }
+                    ]
+                  ],
+                  "magnetic_head": "96-pcr",
+                  "op": "magnetic_transfer"
+                }
+              ]
+
+        Parameters
+        ----------
+        head : str
+            Magnetic head to use for the magnetic bead transfers
+        container : Container
+            Container to incubate beads
+        duration : str, Unit
+            Time for incubation
+        magnetize : bool
+            Specify whether to magnetize the tips
+        tip_position : float
+            Position relative to well height that tips are held
+        temperature: str, Unit
+            Temperature heat block is set at
+        new_tip : bool
+            Specify whether to use a new tip to complete the step
+        new_instruction: bool
+            Specify whether to create a new magnetic_transfer instruction
 
         """
 
@@ -3600,7 +3656,62 @@ class Protocol(object):
     def mag_collect(self, head, container, cycles, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        foo
+        Collect beads from a container by cycling tips in and out of the
+        container with an optional pause at the bottom of the insertion.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
+
+            p.mag_collect("96-pcr", plate, 5, "30:second", bottom_position=
+                          0.0, temperature=None, new_tip=False,
+                          new_instruction=False)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    [
+                      {
+                        "collect": {
+                          "bottom_position": 0.0,
+                          "object": "plate_0",
+                          "temperature": null,
+                          "cycles": 5,
+                          "pause_duration": "30:second"
+                        }
+                      }
+                    ]
+                  ],
+                  "magnetic_head": "96-pcr",
+                  "op": "magnetic_transfer"
+                }
+              ]
+
+        Parameters
+        ----------
+        head : str
+            Magnetic head to use for the magnetic bead transfers
+        container : Container
+            Container to incubate beads
+        cycles: int
+            Number of cycles to raise and lower tips
+        pause_duration : str, Unit
+            Time tips are paused in bottom position each cycle
+        bottom_position : float
+            Position relative to well height that tips are held during pause
+        temperature: str, Unit
+            Temperature heat block is set at
+        new_tip : bool
+            Specify whether to use a new tip to complete the step
+        new_instruction: bool
+            Specify whether to create a new magnetic_transfer instruction
 
         """
 
@@ -3615,7 +3726,65 @@ class Protocol(object):
     def mag_release(self, head, container, duration, frequency, center=0.5, amplitude=0.5, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        foo
+        Release beads into a container by cycling tips in and out of the
+        container with tips unmagnetized.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
+
+            p.mag_release("96-pcr", plate, "30:second", "60:Hz", center=0.75,
+                          amplitude=0.25, temperature=None, new_tip=False,
+                          new_instruction=False)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    [
+                      {
+                        "release": {
+                          "center": 0.75,
+                          "object": "plate_0",
+                          "frequency": "60:Hz",
+                          "amplitude": 0.25,
+                          "duration": "30:second",
+                          "temperature": null
+                        }
+                      }
+                    ]
+                  ],
+                  "magnetic_head": "96-pcr",
+                  "op": "magnetic_transfer"
+                }
+              ]
+
+        Parameters
+        ----------
+        head : str
+            Magnetic head to use for the magnetic bead transfers
+        container : Container
+            Container to incubate beads
+        duration : str, Unit
+            Total time for this sub-operation
+        frequency : str, Unit
+            Cycles per second (Hz) that tips are raised and lowered
+        center : float
+            Position relative to well height where oscillation is centered
+        amplitude : float
+            Distance relative to well height to oscillate around "center"
+        temperature: str, Unit
+            Temperature heat block is set at
+        new_tip : bool
+            Specify whether to use a new tip to complete the step
+        new_instruction: bool
+            Specify whether to create a new magnetic_transfer instruction
 
         """
 
@@ -3625,12 +3794,76 @@ class Protocol(object):
         for kw in ("duration", "frequency", "center", "amplitude", "temperature"):
             mag[kw] = locals()[kw]
 
+        if mag["amplitude"] > mag["center"]:
+            raise RuntimeError("Amplitude must be set lower than or equal to "
+                               "center")
         self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(self, head, container, duration, frequency, center=0.5, amplitude=0.5, magnetize=False, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        foo
+        Mix beads in a container by cycling tips in and out of the
+        container.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
+
+            p.mag_mix("96-pcr", plate, "30:second", "60:Hz", center=0.75,
+                      amplitude=0.25, magnetize=True, temperature=None,
+                      new_tip=False, new_instruction=False)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                  "groups": [
+                    [
+                      {
+                        "mix": {
+                          "center": 0.75,
+                          "object": "plate_0",
+                          "frequency": "60:Hz",
+                          "amplitude": 0.25,
+                          "duration": "30:second",
+                          "magnetize": true,
+                          "temperature": null
+                        }
+                      }
+                    ]
+                  ],
+                  "magnetic_head": "96-pcr",
+                  "op": "magnetic_transfer"
+                }
+              ]
+
+        Parameters
+        ----------
+        head : str
+            Magnetic head to use for the magnetic bead transfers
+        container : Container
+            Container to incubate beads
+        duration : str, Unit
+            Total time for this sub-operation
+        frequency : str, Unit
+            Cycles per second (Hz) that tips are raised and lowered
+        center : float
+            Position relative to well height where oscillation is centered
+        amplitude : float
+            Distance relative to well height to oscillate around "center"
+        magnetize : bool
+            Specify whether to magnetize the tips
+        temperature: str, Unit
+            Temperature heat block is set at
+        new_tip : bool
+            Specify whether to use a new tip to complete the step
+        new_instruction: bool
+            Specify whether to create a new magnetic_transfer instruction
 
         """
 
@@ -3640,6 +3873,9 @@ class Protocol(object):
         for kw in ("duration", "frequency", "center", "amplitude", "magnetize", "temperature"):
             mag[kw] = locals()[kw]
 
+        if mag["amplitude"] > mag["center"]:
+            raise RuntimeError("Amplitude must be set lower than or equal to "
+                               "center")
         self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
@@ -3927,14 +4163,21 @@ class Protocol(object):
         Append given magnetic_transfer groups to protocol
         """
 
+        max_containers = 8
+
         if (not new_instruction and self.instructions and
                 self.instructions[-1].op == "magnetic_transfer" and
-                self.instructions[-1].magnetic_head == head and
-                self._count_mag_containers(mag, new_tip) <= 8):
-            if not new_tip:
-                self.instructions[-1].groups[-1].append({name: mag})
-            elif new_tip:
-                self.instructions[-1].groups.append([{name: mag}])
+                self.instructions[-1].magnetic_head == head):
+            if self._count_mag_containers(mag, new_tip) <= max_containers:
+                if not new_tip:
+                    self.instructions[-1].groups[-1].append({name: mag})
+                elif new_tip:
+                    self.instructions[-1].groups.append([{name: mag}])
+            elif self._count_mag_containers(mag, new_tip) > max_containers:
+                raise RuntimeError("Error with magnetic_transfer: Only 8 "
+                                   "containers and tips are allowed per "
+                                   "magnetic transfer instruction. Please "
+                                   "specify a new instruction")
         else:
             self.instructions.append(Magnetic_Transfer([[{name: mag}]], head))
 

@@ -229,10 +229,10 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
 
 def check_valid_mag(container, head):
     if head == "96-deep":
-        if container.container_type.shortname not in ["96-cone-kf", "96-deep-kf"]:
+        if container.container_type.shortname not in ["96-v-kf", "96-deep-kf", "96-deep", "96-flat", "96-flat-uv"]:
             raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
     elif head == "96-pcr":
-        if container.container_type.shortname not in ["96-pcr"]:
+        if container.container_type.shortname not in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]:
             raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
 
 

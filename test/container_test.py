@@ -20,6 +20,7 @@ def make_dummy_type(**kwargs):
         "shortname": "dummy",
         "col_count": 5,
         "dead_volume_ul": 15,
+        "safe_min_volume_ul": 30
     }
     params.update(kwargs)
     return ContainerType(**params)

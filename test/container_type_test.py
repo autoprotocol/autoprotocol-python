@@ -12,7 +12,8 @@ dummy_type = ContainerType(name="dummy",
                            capabilities=[],
                            shortname="dummy",
                            col_count=5,
-                           dead_volume_ul=15)
+                           dead_volume_ul=15,
+                           safe_min_volume_ul=30)
 
 class ContainerRobotizeTestCase(unittest.TestCase):
     def test_robotize_decompose(self):

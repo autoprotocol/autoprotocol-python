@@ -11,6 +11,7 @@ Changed
 Removed
 
 Fixed
+- Update container_test.py and container_type_test.py to include safe_min_volume_ul
 
 ## v2.7.0 - 2016-02-18
 ---

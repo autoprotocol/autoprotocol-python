@@ -265,13 +265,13 @@ class Manifest(object):
         .. code-block:: json
 
             {
-              "version": "1.0.0",
               "format": "python",
               "license": "MIT",
               "description": "This is a protocol.",
               "protocols": [
                 {
                   "name": "SampleProtocol",
+                  "version": 1.0.0,
                   "command_string": "python sample_protocol.py",
                   "preview": {
                     "refs":{},
@@ -287,7 +287,6 @@ class Manifest(object):
     def __init__(self, json):
         '''
         '''
-        self.version = json['version']
         self.protocols = json['protocols']
 
     def protocol_info(self, name):

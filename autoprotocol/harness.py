@@ -30,7 +30,7 @@ def param_default(typeDesc):
     if default is not None and type != 'group-choice':
         return default
 
-    if typeDesc['type'] in ['aliquot+', 'aliquot++']:
+    if typeDesc['type'] in ['aliquot+', 'aliquot++', 'container+']:
         return []
     elif typeDesc['type'] == 'group+':
         return [{}]
@@ -109,6 +109,13 @@ def convert_param(protocol, val, typeDesc):
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("'%s' (supplied to input '%s') is not a valid "
                                "reference to a container" % (val, label))
+    elif type == 'container+':
+        try:
+            return [convert_param(protocol, cont, 'container') for cont in val]
+        except:
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The value supplied to input '%s' (type container+) is improperly"
+                               " formatted." % label)
     elif type in ['volume', 'time', 'temperature', 'length']:
         # TODO: this should be a separate 'condition' type, rather than
         # overloading 'temperature'.

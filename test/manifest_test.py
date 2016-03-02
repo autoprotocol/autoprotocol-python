@@ -341,6 +341,7 @@ class ManifestTest(unittest.TestCase):
                 'aliquot+': 'aliquot+',
                 'aliquot++': 'aliquot++',
                 'container': 'container',
+                'container+': 'container+'
             }
         })
         parsed = protocol_info.parse(self.protocol, {
@@ -352,6 +353,7 @@ class ManifestTest(unittest.TestCase):
         self.assertIsInstance(parsed['aliquot+'], WellGroup)
         self.assertEqual(0, len(parsed['aliquot+']))
         self.assertEqual([], parsed['aliquot++'])
+        self.assertEqual([], parsed['container+'])
 
     def test_group_default(self):
         protocol_info = ProtocolInfo({

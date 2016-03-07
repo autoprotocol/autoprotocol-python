@@ -7,6 +7,7 @@ from .util import convert_to_ul, convert_to_nl
 from .util import check_valid_origin
 from .util import check_stamp_append
 from .util import check_valid_mag
+from .util import check_valid_mag_params
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3583,6 +3584,7 @@ class Protocol(object):
         for kw in ["duration"]:
             mag[kw] = locals()[kw]
 
+        check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
     def mag_incubate(self, head, container, duration, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
@@ -3651,6 +3653,7 @@ class Protocol(object):
         for kw in ("duration", "magnetize", "tip_position", "temperature"):
             mag[kw] = locals()[kw]
 
+        check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def mag_collect(self, head, container, cycles, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
@@ -3721,6 +3724,7 @@ class Protocol(object):
         for kw in ("cycles", "pause_duration", "bottom_position", "temperature"):
             mag[kw] = locals()[kw]
 
+        check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
     def mag_release(self, head, container, duration, frequency, center=0.5, amplitude=0.5, temperature=None, new_tip=False, new_instruction=False):
@@ -3794,9 +3798,7 @@ class Protocol(object):
         for kw in ("duration", "frequency", "center", "amplitude", "temperature"):
             mag[kw] = locals()[kw]
 
-        if mag["amplitude"] > mag["center"]:
-            raise RuntimeError("Amplitude must be set lower than or equal to "
-                               "center")
+        check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(self, head, container, duration, frequency, center=0.5, amplitude=0.5, magnetize=False, temperature=None, new_tip=False, new_instruction=False):
@@ -3873,9 +3875,7 @@ class Protocol(object):
         for kw in ("duration", "frequency", "center", "amplitude", "magnetize", "temperature"):
             mag[kw] = locals()[kw]
 
-        if mag["amplitude"] > mag["center"]:
-            raise RuntimeError("Amplitude must be set lower than or equal to "
-                               "center")
+        check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
@@ -4188,7 +4188,7 @@ class Protocol(object):
 
         num_groups = len(self.instructions[-1].groups)
 
-        containers = [g.values()[0]["object"] for group in self.instructions[-1].groups for g in group]
+        containers = [list(g.values())[0]["object"] for group in self.instructions[-1].groups for g in group]
         containers.append(mag["object"])
         containers = list(set(containers))
         num_containers = len(containers)

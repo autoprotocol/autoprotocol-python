@@ -236,6 +236,23 @@ def check_valid_mag(container, head):
             raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
 
 
+def check_valid_mag_params(mag_dict):
+    if "temperature" in mag_dict and mag_dict["temperature"]:
+        if Unit.fromstring(mag_dict["temperature"]) < Unit.fromstring("27:celsius") or Unit.fromstring(mag_dict["temperature"]) > Unit.fromstring("96:celsius"):
+            raise ValueError("Temperature set at %s, must be between '27:celsius' and '96:celsius'" % mag_dict["temperature"])
+    if "amplitude" in mag_dict:
+        if mag_dict["amplitude"] > mag_dict["center"]:
+            raise ValueError("'amplitude': %s must be less than 'center': %s" % (mag_dict["amplitude"], mag_dict["center"]))
+        if (mag_dict["amplitude"] + mag_dict["center"]) > 2:
+            raise ValueError("'amplitude': %s and 'center': %s can not be greater than 2" % (mag_dict["amplitude"], mag_dict["center"]))
+        if mag_dict["amplitude"] < 0:
+            raise ValueError("'amplitude: %s must be positive" % mag_dict["amplitude"])
+    if any(kw in mag_dict for kw in ("center", "bottom_position", "tip_position")):
+        position = mag_dict.get("center", mag_dict.get("bottom_position", mag_dict.get("tip_position")))
+        if position < 0 or position > 2:
+            raise ValueError("Tip head position set at %s can not be less than 0 or greater than 2" % position)
+
+
 class make_dottable_dict(dict):
 
     '''Enable dictionaries to be accessed using dot notation instead of bracket

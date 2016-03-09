@@ -10,6 +10,7 @@ Added
 Changed
 - release versioning has been removed in favor of protocol versioniong in harness.py
 - update 6-flat well volumes
+- Unit now uses Pint's Quantity as a base class
 
 Removed
 

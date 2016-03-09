@@ -207,9 +207,6 @@ class DistributeTestCase(unittest.TestCase):
     def test_unit_conversion(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(RuntimeError):
-            with self.assertRaises(ValueError):
-                p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), ".0001:liter")
         p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), "200:nanoliter")
         self.assertTrue(str(p.instructions[0].groups[0]["distribute"]["to"][0]["volume"]) == "0.2:microliter")
         p.distribute(c.well(2).set_volume("100:microliter"), c.well(3), ".1:milliliter", new_group=True)
@@ -357,8 +354,6 @@ class TransferTestCase(unittest.TestCase):
     def test_unit_conversion(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(ValueError):
-            p.transfer(c.well(0), c.well(1), "1:liter")
         p.transfer(c.well(0), c.well(1), "200:nanoliter")
         self.assertTrue(str(p.instructions[0].groups[0]['transfer'][0]['volume']) == "0.2:microliter")
         p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)

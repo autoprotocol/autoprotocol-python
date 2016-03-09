@@ -7,52 +7,6 @@ from .unit import Unit
 '''
 
 
-def convert_to_ul(vol):
-    """
-    Convert a Unit or volume string into its equivalent in microliters.
-
-    Parameters
-    ----------
-    vol : Unit, str
-        A volume string or Unit with the unit "nanoliter" or "milliliter"
-
-    """
-    v = Unit.fromstring(vol)
-    if v.unit == "nanoliter":
-        v = Unit(v.value/1000, "microliter")
-    elif v.unit == "milliliter":
-        v = Unit(v.value*1000, "microliter")
-    elif v.unit == "microliter":
-        return v
-    else:
-        raise ValueError("The unit you're trying to convert to microliters "
-                         "is invalid.")
-    return v
-
-
-def convert_to_nl(vol):
-    """
-    Convert a Unit or volume string into its equivalent in nanoliters.
-
-    Parameters
-    ----------
-    vol : Unit, str
-        A volume string or Unit with the unit "microliter" or "milliliter"
-
-    """
-    v = Unit.fromstring(vol)
-    if v.unit == "milliliter":
-        v = Unit(v.value*1000000, "nanoliter")
-    elif v.unit == "microliter":
-        v = Unit(v.value*1000, "nanoliter")
-    elif v.unit == "nanoliter":
-        return v
-    else:
-        raise ValueError("The unit you're trying to convert to nanoliters "
-                         "is invalid.")
-    return v
-
-
 def quad_ind_to_num(q):
     """
     Convert a 384-well plate quadrant well index into its corresponding

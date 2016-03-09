@@ -24,8 +24,6 @@ class Unit(_Quantity):
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()
-        # Variables to ensure backwards compatibility
-        self.value = float(self.magnitude)
         self.unit = self.units.__str__()
 
     @staticmethod
@@ -58,9 +56,12 @@ class Unit(_Quantity):
             try:
                 value, unit = s.split(":")
             except:
-                raise RuntimeError("Incorrect Unit format. Unit has to be "
-                                   "in 1:meter format.")
+                raise ValueError("Incorrect Unit format. Unit has to be "
+                                 "in 1:meter format.")
             return Unit(float(value), unit)
 
     def __str__(self):
         return ":".join([str(self.value), self.unit])
+
+    def __repr__(self):
+        return "Unit({0}, '{1}')".format(self._magnitude, self._units)

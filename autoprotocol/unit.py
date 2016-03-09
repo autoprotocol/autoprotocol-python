@@ -1,6 +1,12 @@
 from __future__ import division, print_function
 from pint import UnitRegistry
 from pint.quantity import _Quantity
+import sys
+
+if sys.version_info[0] >= 3:
+    string_type = str
+else:
+    string_type = basestring
 
 '''
     :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
@@ -21,16 +27,14 @@ class Unit(_Quantity):
         cls._REGISTRY = ureg
         cls.force_ndarray = False
 
-        # Automatically parse to String if no units provided
-        if not units:
-            if not isinstance(value, str):
-                raise ValueError("When providing a single argument, a string "
-                                 "has to be provided.")
+        # Automatically parse String if no units provided
+        if not units and isinstance(value, string_type):
             try:
                 value, units = value.split(":")
             except:
-                raise ValueError("Incorrect Unit format. Unit has to be "
-                                 "in 1:meter format.")
+                raise ValueError("Incorrect Unit format. When passing a "
+                                 "string argument, Unit has to be in "
+                                 "\'1:meter\' format.")
 
         return super(Unit, cls).__new__(cls, float(value), units)
 

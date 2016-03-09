@@ -87,6 +87,8 @@ class Well(object):
             Theoretical volume to indicate for a Well.
 
         """
+        if not isinstance(vol, basestring) and not isinstance(vol, Unit):
+            raise TypeError("Volume given is not of type str or Unit. %s" % type(vol))
         v = Unit.fromstring(vol)
         if v > Unit(
                 self.container.container_type.well_volume_ul, "microliter"):

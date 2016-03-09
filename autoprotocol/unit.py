@@ -20,7 +20,19 @@ class Unit(_Quantity):
     def __new__(cls, value, units=None):
         cls._REGISTRY = ureg
         cls.force_ndarray = False
-        return super(Unit, cls).__new__(cls, value, units)
+
+        # Automatically parse to String if no units provided
+        if not units:
+            if not isinstance(value, str):
+                raise ValueError("When providing a single argument, a string "
+                                 "has to be provided.")
+            try:
+                value, units = value.split(":")
+            except:
+                raise ValueError("Incorrect Unit format. Unit has to be "
+                                 "in 1:meter format.")
+
+        return super(Unit, cls).__new__(cls, float(value), units)
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()
@@ -53,15 +65,10 @@ class Unit(_Quantity):
         if isinstance(s, Unit):
             return s
         else:
-            try:
-                value, unit = s.split(":")
-            except:
-                raise ValueError("Incorrect Unit format. Unit has to be "
-                                 "in 1:meter format.")
-            return Unit(float(value), unit)
+            return Unit(s)
 
     def __str__(self):
-        return ":".join([str(self.value), self.unit])
+        return ":".join([str(self._magnitude), self.unit])
 
     def __repr__(self):
         return "Unit({0}, '{1}')".format(self._magnitude, self._units)

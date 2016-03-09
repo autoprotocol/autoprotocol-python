@@ -9,20 +9,23 @@ from pint.quantity import _Quantity
 
 '''
 
+# Preload UnitRegistry
+ureg = UnitRegistry("autoprotocol/units_en.txt")
+
 
 class Unit(_Quantity):
     """
         Uses Pint's Quantity as a base class for implementing units.
     """
     def __new__(cls, value, units=None):
-        cls._REGISTRY = UnitRegistry("autoprotocol/units_en.txt")
+        cls._REGISTRY = ureg
         cls.force_ndarray = False
         return super(Unit, cls).__new__(cls, value, units)
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()
         # Variables to ensure backwards compatibility
-        self.value = self.magnitude
+        self.value = float(self.magnitude)
         self.unit = self.units.__str__()
 
     @staticmethod
@@ -57,4 +60,7 @@ class Unit(_Quantity):
             except:
                 raise RuntimeError("Incorrect Unit format. Unit has to be "
                                    "in 1:meter format.")
-            return Unit(value, unit)
+            return Unit(float(value), unit)
+
+    def __str__(self):
+        return ":".join([str(self.value), self.unit])

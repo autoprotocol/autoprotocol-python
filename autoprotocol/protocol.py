@@ -3530,7 +3530,8 @@ class Protocol(object):
     def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
         """
 
-        Dry beads with tips above and outside an container for a set time.
+        Dry beads with magnetized tips above and outside a container for a set
+        time.
 
         Example Usage:
 
@@ -3659,8 +3660,8 @@ class Protocol(object):
     def mag_collect(self, head, container, cycles, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
         """
 
-        Collect beads from a container by cycling tips in and out of the
-        container with an optional pause at the bottom of the insertion.
+        Collect beads from a container by cycling magnetized tips in and out
+        of the container with an optional pause at the bottom of the insertion.
 
         Example Usage:
 

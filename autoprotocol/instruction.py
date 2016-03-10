@@ -70,13 +70,13 @@ class Pipette(Instruction):
         })
 
 
-class Magnetic_Transfer(Instruction):
+class MagneticTransfer(Instruction):
 
     '''
     A magnetic_transfer instruction is constructed as a list of lists of
     groups, executed in order, where each group is a collect, release, dry,
     incubate, or mix sub-operation.  These sub-operations control the behavior
-    tips which can be magnetized, and a heating platform. Groups in the same
+    of tips which can be magnetized, and a heating platform. Groups in the same
     list of groups use the same tips.
 
     collect:

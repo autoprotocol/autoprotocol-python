@@ -839,9 +839,36 @@ class MagneticTransferTestCase(unittest.TestCase):
             p.mag_incubate("96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
             self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
 
-        for i in range(26, 97, 71):
+        for i in range(-300, -290):
             with self.assertRaises(ValueError):
                 p.mag_incubate("96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
+
+    def test_frequency_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        for i in range(27, 96):
+            p.mag_mix("96-pcr", pcr, "30:second", "%s:Hz" % i, center=1, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
+
+        for i in range(-10, -5):
+            with self.assertRaises(ValueError):
+                p.mag_mix("96-pcr", pcr, "30:second", "%s:Hz" % i, center=1, amplitude=0)
+
+    def test_magnetize_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize=True)
+        self.assertEqual(len(p.instructions[-1].groups[0]), 1)
+
+        p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize=False)
+        self.assertEqual(len(p.instructions[-1].groups[0]), 2)
+
+        with self.assertRaises(ValueError):
+            p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize="Foo")
 
     def test_center_valid(self):
         p = Protocol()

@@ -810,6 +810,7 @@ class Protocol(object):
                     volumes = []
                     s = source.wells[source_counter]
                     vol = s.volume
+                    max_decimal_places = 12
                     for idx, d in enumerate(dest.wells):
                         vol_d = volume[idx]
                         while vol_d > Unit.fromstring("0:microliter"):
@@ -818,12 +819,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1243,6 +1250,7 @@ class Protocol(object):
                     volumes = []
                     s = source.wells[source_counter]
                     vol = s.volume
+                    max_decimal_places = 12
                     for idx, d in enumerate(dest.wells):
                         vol_d = volume[idx]
                         while vol_d > Unit.fromstring("0:microliter"):
@@ -1251,12 +1259,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1673,6 +1687,7 @@ class Protocol(object):
                     volumes = []
                     s = source.wells[source_counter]
                     vol = s.volume
+                    max_decimal_places = 12
                     for idx, d in enumerate(dest.wells):
                         vol_d = volume[idx]
                         while vol_d > Unit.fromstring("0:microliter"):
@@ -1681,12 +1696,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]

@@ -21,7 +21,11 @@ ureg = UnitRegistry("autoprotocol/units_en.txt")
 
 class Unit(_Quantity):
     """
-        Uses Pint's Quantity as a base class for implementing units.
+        A representation of a measure of physical quantities such as length,
+        mass, time and volume.
+        Uses Pint's Quantity as a base class for implementing units and
+        inherits functionalities such as conversions and proper unit
+        arithmetic.
     """
     def __new__(cls, value, units=None):
         cls._REGISTRY = ureg

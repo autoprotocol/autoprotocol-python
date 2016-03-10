@@ -345,6 +345,21 @@ class TransferTestCase(unittest.TestCase):
         p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
         self.assertTrue(str(p.instructions[-1].groups[0]['transfer'][0]['volume']) == "500.0:microliter")
 
+    def test_volume_rounding(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        c.well(0).set_volume("100.0000000000005:microliter")
+        c.well(1).set_volume("100:microliter")
+        p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50:microliter", one_source=True)
+        self.assertEqual(3, len(p.instructions[0].groups))
+
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        c.well(0).set_volume("50:microliter")
+        c.well(1).set_volume("101:microliter")
+        p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50.0000000000005:microliter", one_source=True)
+        self.assertEqual(3, len(p.instructions[0].groups))
+
     def test_mix_before_and_after(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)

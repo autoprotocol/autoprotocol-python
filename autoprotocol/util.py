@@ -238,8 +238,8 @@ def check_valid_mag(container, head):
 
 def check_valid_mag_params(mag_dict):
     if "frequency" in mag_dict:
-        if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:Hz"):
-            raise ValueError("Frequency set at %s, must not be less than 0:Hz" % mag_dict["frequency"])
+        if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:hertz"):
+            raise ValueError("Frequency set at %s, must not be less than 0:hertz" % mag_dict["frequency"])
     if "temperature" in mag_dict and mag_dict["temperature"]:
         if Unit.fromstring(mag_dict["temperature"]) < Unit.fromstring("-273.15:celsius"):
             raise ValueError("Temperature set at %s, must not be less than absolute zero'" % mag_dict["temperature"])

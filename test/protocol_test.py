@@ -849,26 +849,26 @@ class MagneticTransferTestCase(unittest.TestCase):
         pcr = p.ref("pcr", None, "96-pcr", discard=True)
 
         for i in range(27, 96):
-            p.mag_mix("96-pcr", pcr, "30:second", "%s:Hz" % i, center=1, amplitude=0)
+            p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" % i, center=1, amplitude=0)
             self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
 
         for i in range(-10, -5):
             with self.assertRaises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "%s:Hz" % i, center=1, amplitude=0)
+                p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" % i, center=1, amplitude=0)
 
     def test_magnetize_valid(self):
         p = Protocol()
 
         pcr = p.ref("pcr", None, "96-pcr", discard=True)
 
-        p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize=True)
+        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize=True)
         self.assertEqual(len(p.instructions[-1].groups[0]), 1)
 
-        p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize=False)
+        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize=False)
         self.assertEqual(len(p.instructions[-1].groups[0]), 2)
 
         with self.assertRaises(ValueError):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=0, magnetize="Foo")
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize="Foo")
 
     def test_center_valid(self):
         p = Protocol()
@@ -876,24 +876,24 @@ class MagneticTransferTestCase(unittest.TestCase):
         pcr = p.ref("pcr", None, "96-pcr", discard=True)
 
         for i in range(0, 200):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=float(i)/100, amplitude=0)
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=float(i)/100, amplitude=0)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*4+1)
             p.mag_collect("96-pcr", pcr, 5, "30:second", bottom_position=float(i)/100)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*4+2)
             p.mag_incubate("96-pcr", pcr, "30:minute", tip_position=float(i)/100)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*4+3)
-            p.mag_release("96-pcr", pcr, "30:second", "1:Hz", center=float(i)/100, amplitude=0)
+            p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=float(i)/100, amplitude=0)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*4+4)
 
         for i in range(-1, 3, 4):
             with self.assertRaises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=i, amplitude=0)
+                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=i, amplitude=0)
             with self.assertRaises(ValueError):
                 p.mag_collect("96-pcr", pcr, 5, "30:second", bottom_position=i)
             with self.assertRaises(ValueError):
                 p.mag_incubate("96-pcr", pcr, "30:minute", tip_position=i)
             with self.assertRaises(ValueError):
-                p.mag_release("96-pcr", pcr, "30:second", "1:Hz", center=i, amplitude=0)
+                p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=i, amplitude=0)
 
     def test_amplitude_valid(self):
         p = Protocol()
@@ -901,16 +901,16 @@ class MagneticTransferTestCase(unittest.TestCase):
         pcr = p.ref("pcr", None, "96-pcr", discard=True)
 
         for i in range(0, 100):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=float(i)/100)
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=float(i)/100)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*2+1)
-            p.mag_release("96-pcr", pcr, "30:second", "1:Hz", center=1, amplitude=float(i)/100)
+            p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=float(i)/100)
             self.assertEqual(len(p.instructions[-1].groups[0]), i*2+2)
 
         for i in range(-1, 2, 3):
             with self.assertRaises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "60:Hz", center=1, amplitude=i)
+                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=i)
             with self.assertRaises(ValueError):
-                p.mag_release("96-pcr", pcr, "30:second", "1:Hz", center=1, amplitude=i)
+                p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=i)
 
     def test_mag_append(self):
         p = Protocol()

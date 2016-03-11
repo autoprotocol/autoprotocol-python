@@ -15,8 +15,8 @@ else:
 
 '''
 
-# Preload UnitRegistry
-ureg = UnitRegistry("autoprotocol/units_en.txt")
+# Preload UnitRegistry (Use default)
+ureg = UnitRegistry()
 
 
 class Unit(_Quantity):

@@ -109,7 +109,7 @@ class MagneticTransfer(Instruction):
         if head_type not in self.HEAD_TYPE:
             raise ValueError(
                 "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
-        super(Magnetic_Transfer, self).__init__({
+        super(MagneticTransfer, self).__init__({
             "op": "magnetic_transfer",
             "groups": groups,
             "magnetic_head": head_type

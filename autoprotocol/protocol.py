@@ -4180,7 +4180,7 @@ class Protocol(object):
                                    "magnetic transfer instruction. Please "
                                    "specify a new instruction")
         else:
-            self.instructions.append(Magnetic_Transfer([[{name: mag}]], head))
+            self.instructions.append(MagneticTransfer([[{name: mag}]], head))
 
     def _count_mag_containers(self, mag, new_tip):
         """

@@ -243,6 +243,8 @@ def check_valid_mag_params(mag_dict):
     if "temperature" in mag_dict and mag_dict["temperature"]:
         if Unit.fromstring(mag_dict["temperature"]) < Unit.fromstring("-273.15:celsius"):
             raise ValueError("Temperature set at %s, must not be less than absolute zero'" % mag_dict["temperature"])
+    elif "temperature" in mag_dict and not mag_dict["temperature"]:
+            del mag_dict["temperature"]
     if "amplitude" in mag_dict:
         if mag_dict["amplitude"] > mag_dict["center"]:
             raise ValueError("'amplitude': %s, must be less than 'center': %s" % (mag_dict["amplitude"], mag_dict["center"]))

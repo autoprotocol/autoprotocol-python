@@ -201,7 +201,7 @@ class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
         c = Container(None, dummy_type)
         c.well(0).set_volume("20:microliter")
-        self.assertEqual(20, c.well(0).volume.value)
+        self.assertEqual(Unit(20, 'microliter'), c.well(0).volume)
         self.assertEqual("microliter", c.well(0).volume.unit)
         self.assertIs(None, c.well(1).volume)
 
@@ -209,7 +209,7 @@ class WellVolumeTestCase(unittest.TestCase):
         c = Container(None, dummy_type)
         c.all_wells().set_volume("30:microliter")
         for w in c.all_wells():
-            self.assertEqual(30, w.volume.value)
+            self.assertEqual(Unit(30, 'microliter'), w.volume)
 
     def test_set_volume_unit_conv(self):
         c = Container(None, dummy_type)

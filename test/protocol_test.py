@@ -168,8 +168,8 @@ class DistributeTestCase(unittest.TestCase):
         self.assertEqual(1, len(p.instructions))
         self.assertEqual("distribute",
                          list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
-        self.assertTrue(5, c.well(1).volume.value)
-        self.assertTrue(15, c.well(0).volume.value)
+        self.assertTrue(Unit(5, 'microliter'), c.well(1).volume)
+        self.assertTrue(Unit(15, 'microliter'), c.well(0).volume)
 
     def test_distribute_multiple_wells(self):
         p = Protocol()
@@ -181,8 +181,8 @@ class DistributeTestCase(unittest.TestCase):
         self.assertEqual("distribute",
                          list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
         for w in c.wells_from(1, 3):
-            self.assertTrue(5, w.volume.value)
-        self.assertTrue(5, c.well(0).volume.value)
+            self.assertTrue(Unit(5, 'microliter'), w.volume)
+        self.assertTrue(Unit(5, 'microliter'), c.well(0).volume)
 
     def test_fill_wells(self):
         p = Protocol()
@@ -193,11 +193,11 @@ class DistributeTestCase(unittest.TestCase):
         self.assertEqual(2, len(p.instructions[0].groups))
 
         # track source vols
-        self.assertEqual(10, c.well(1).volume.value)
-        self.assertEqual(70, c.well(2).volume.value)
+        self.assertEqual(Unit(10, 'microliter'), c.well(1).volume)
+        self.assertEqual(Unit(70, 'microliter'), c.well(2).volume)
 
         # track dest vols
-        self.assertEqual(30, c.well(7).volume.value)
+        self.assertEqual(Unit(30, 'microliter'), c.well(7).volume)
         self.assertIs(None, c.well(6).volume)
 
         # test distribute from Well to Well
@@ -207,9 +207,6 @@ class DistributeTestCase(unittest.TestCase):
     def test_unit_conversion(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(RuntimeError):
-            with self.assertRaises(ValueError):
-                p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), ".0001:liter")
         p.distribute(c.well(0).set_volume("100:microliter"), c.well(1), "200:nanoliter")
         self.assertTrue(str(p.instructions[0].groups[0]["distribute"]["to"][0]["volume"]) == "0.2:microliter")
         p.distribute(c.well(2).set_volume("100:microliter"), c.well(3), ".1:milliliter", new_group=True)
@@ -334,6 +331,21 @@ class TransferTestCase(unittest.TestCase):
         c.well(2).set_volume("100:microliter")
         p.transfer(c.wells_from(0, 3), c.wells_from(3, 2), "100:microliter", one_source=True)
 
+    def test_one_tip_true_gt_750(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-deep", discard=True)
+        p.transfer(c.well(0), c.well(1), "1000:microliter", one_tip=True)
+        self.assertEqual(1, len(p.instructions[0].groups))
+
+    def test_unit_conversion(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.transfer(c.well(0), c.well(1), "200:nanoliter")
+        self.assertTrue(str(p.instructions[0].groups[0]['transfer'][0]['volume']) == "0.2:microliter")
+        p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
+        self.assertTrue(str(p.instructions[-1].groups[0]['transfer'][0]['volume']) == "500.0:microliter")
+
+    def test_volume_rounding(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
         c.well(0).set_volume("100.0000000000005:microliter")
@@ -347,22 +359,6 @@ class TransferTestCase(unittest.TestCase):
         c.well(1).set_volume("101:microliter")
         p.transfer(c.wells_from(0, 2), c.wells_from(3, 3), "50.0000000000005:microliter", one_source=True)
         self.assertEqual(3, len(p.instructions[0].groups))
-
-    def test_one_tip_true_gt_750(self):
-        p = Protocol()
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(c.well(0), c.well(1), "1000:microliter", one_tip=True)
-        self.assertEqual(1, len(p.instructions[0].groups))
-
-    def test_unit_conversion(self):
-        p = Protocol()
-        c = p.ref("test", None, "96-flat", discard=True)
-        with self.assertRaises(ValueError):
-            p.transfer(c.well(0), c.well(1), "1:liter")
-        p.transfer(c.well(0), c.well(1), "200:nanoliter")
-        self.assertTrue(str(p.instructions[0].groups[0]['transfer'][0]['volume']) == "0.2:microliter")
-        p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
-        self.assertTrue(str(p.instructions[-1].groups[0]['transfer'][0]['volume']) == "500.0:microliter")
 
     def test_mix_before_and_after(self):
         p = Protocol()
@@ -437,7 +433,7 @@ class StampTestCase(unittest.TestCase):
         plate_384_2 = p.ref("plate_384_2", None, "384-pcr", discard=True)
         p.stamp(plate_96.well(0), plate_384.well(0), "5:microliter",
                 {"columns": 12, "rows": 1})
-        self.assertEqual(plate_384.well(0).volume.value, 5)
+        self.assertEqual(plate_384.well(0).volume, Unit(5, 'microliter'))
         self.assertTrue(plate_384.well(1).volume is None)
         p.stamp(plate_96.well(0), plate_96_2.well(0), "10:microliter",
                 {"columns": 12, "rows": 1})

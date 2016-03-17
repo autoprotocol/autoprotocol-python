@@ -1,6 +1,6 @@
 from __future__ import print_function
 from .unit import Unit
-from .util import convert_to_ul, quad_ind_to_num
+from .util import quad_ind_to_num
 import sys
 
 if sys.version_info[0] >= 3:
@@ -87,7 +87,9 @@ class Well(object):
             Theoretical volume to indicate for a Well.
 
         """
-        v = convert_to_ul(vol)
+        if not isinstance(vol, basestring) and not isinstance(vol, Unit):
+            raise TypeError("Volume given is not of type str or Unit. %s" % type(vol))
+        v = Unit.fromstring(vol)
         if v > Unit(
                 self.container.container_type.well_volume_ul, "microliter"):
             raise ValueError("Theoretical volume you are trying to set "

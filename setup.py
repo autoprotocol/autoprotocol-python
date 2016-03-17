@@ -9,5 +9,8 @@ setup(
     author_email="vanessa@transcriptic.com",
     version='2.7.0',
     test_suite='test',
+    install_requires=[
+        'Pint>=0.7.2'
+    ],
     packages=['autoprotocol']
 )

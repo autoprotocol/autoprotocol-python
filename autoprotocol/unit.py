@@ -1,6 +1,12 @@
 from __future__ import division, print_function
-import operator
+from pint import UnitRegistry
+from pint.quantity import _Quantity
 import sys
+
+if sys.version_info[0] >= 3:
+    string_type = str
+else:
+    string_type = basestring
 
 '''
     :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
@@ -9,17 +15,58 @@ import sys
 
 '''
 
+# Preload UnitRegistry (Use default)
+ureg = UnitRegistry()
 
-class Unit(object):
 
-    """A representation of a measure of volume, duration, temperature, or
-    concentration.
+class Unit(_Quantity):
+    """
+        A representation of a measure of physical quantities such as length,
+        mass, time and volume.
+        Uses Pint's Quantity as a base class for implementing units and
+        inherits functionalities such as conversions and proper unit
+        arithmetic.
+        Note that the magnitude is stored as a double-precision float, so
+        there are inherent issues when dealing with extremely large/small
+        numbers as well as numerical rounding for non-base 2 numbers.
+
+        Usage Examples
+            .. code-block:: python
+
+                vol_1 = Unit(10, 'microliter')
+                vol_2 = Unit(10, 'liter')
+                print(vol_1 + vol_2)
+
+                time_1 = Unit(1, 'second')
+                speed_1 = vol_1/time_1
+                print (speed_1)
+                print (speed_1.to('liter/hour'))
+
+        Output
+            .. code-block:: json
+                10000010.0:microliter
+                10.0:microliter / second
+                0.036:liter / hour
 
     """
+    def __new__(cls, value, units=None):
+        cls._REGISTRY = ureg
+        cls.force_ndarray = False
 
-    def __init__(self, value, unit):
-        self.value = float(value)
-        self.unit = unit
+        # Automatically parse String if no units provided
+        if not units and isinstance(value, string_type):
+            try:
+                value, units = value.split(":")
+            except:
+                raise ValueError("Incorrect Unit format. When passing a "
+                                 "string argument, Unit has to be in "
+                                 "\'1:meter\' format.")
+
+        return super(Unit, cls).__new__(cls, float(value), units)
+
+    def __init__(self, value, units=None):
+        super(Unit, self).__init__()
+        self.unit = self.units.__str__()
 
     @staticmethod
     def fromstring(s):
@@ -48,82 +95,10 @@ class Unit(object):
         if isinstance(s, Unit):
             return s
         else:
-            value, unit = s.split(":")
-            return Unit(float(value), unit)
+            return Unit(s)
 
     def __str__(self):
-        return ":".join([str(self.value), self.unit])
+        return ":".join([str(self._magnitude), self.unit])
 
     def __repr__(self):
-        return "Unit(%s, %s)" % (self.value, self.unit)
-
-    def _check_type(self, other):
-        if not isinstance(other, Unit):
-            raise ValueError("Both operands must be of type Unit")
-        elif self.unit != other.unit:
-            raise ValueError("unit %s is not %s" % (self.unit, other.unit))
-
-    def __add__(self, other):
-        self._check_type(other)
-        return Unit(self.value + other.value, self.unit)
-
-    def __sub__(self, other):
-        self._check_type(other)
-        return Unit(self.value - other.value, self.unit)
-
-    def __lt__(self, other):
-        self._check_type(other)
-        return self.value < other.value
-
-    def __le__(self, other):
-        self._check_type(other)
-        return self.value <= other.value
-
-    def __gt__(self, other):
-        self._check_type(other)
-        return self.value > other.value
-
-    def __ge__(self, other):
-        self._check_type(other)
-        return self.value >= other.value
-
-    def __eq__(self, other):
-        self._check_type(other)
-        return self.value == other.value
-
-    def __cmp__(self, other):
-        self._check_type(other)
-        return cmp(self.value, other.value)
-
-    def __mul__(self, other):
-        if isinstance(other, Unit):
-            print("WARNING: Unit.__mul__ and __div__ only support scalar "
-                  "multiplication. Converting %s to %f" % (other, other.value),
-                  file=sys.stderr)
-            other = other.value
-        return Unit(self.value * other, self.unit)
-
-    __rmul__ = __mul__
-
-    def __div__(self, other):
-        if isinstance(other, Unit):
-            print("WARNING: Unit.__mul__ and __div__ only support scalar "
-                  "multiplication. Converting %s to %f" % (other, other.value),
-                  file=sys.stderr)
-            other = other.value
-        return Unit(self.value / other, self.unit)
-
-    def __truediv__(self, other):
-        return self.__div__(other)
-
-    def __floordiv__(self, other):
-        self._check_type(other)
-        return Unit(self.value // other.value, self.unit)
-
-    def __iadd__(self, other):
-        self._check_type(other)
-        return Unit(operator.iadd(self.value, other.value), self.unit)
-
-    def __isub__(self, other):
-        self._check_type(other)
-        return Unit(operator.isub(self.value, other.value), self.unit)
+        return "Unit({0}, '{1}')".format(self._magnitude, self._units)

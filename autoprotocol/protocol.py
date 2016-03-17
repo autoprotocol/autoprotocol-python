@@ -3,7 +3,6 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *
 from .pipette_tools import assign
-from .util import convert_to_ul, convert_to_nl
 from .util import check_valid_origin
 from .util import check_stamp_append
 
@@ -781,12 +780,12 @@ class Protocol(object):
         # Auto-generate list from single volume, check if list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(convert_to_ul(volume))] * len_source
+                volume = [Unit.fromstring(volume).to("ul")] * len_source
             else:
-                volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
+                volume = [Unit.fromstring(volume).to("ul")] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
             volume = list(
-                map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
+                map(lambda x: Unit.fromstring(x).to("ul"), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -797,7 +796,7 @@ class Protocol(object):
         if one_source:
             try:
                 source_vol = [s.volume for s in source.wells]
-                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                if sum([a for a in volume]) > sum([a for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
                                        "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
@@ -820,18 +819,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(
-                                    vol.value, max_decimal_places)
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -839,7 +838,7 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError) as e:
+            except (ValueError, AttributeError, TypeError) as e:
                 raise RuntimeError("When transferring liquid from multiple "
                                    "wells containing the same substance to "
                                    "multiple other wells, each source Well "
@@ -847,7 +846,6 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(750, "microliter"):
@@ -912,7 +910,7 @@ class Protocol(object):
                                   "x_blowout_buffer"]
                     for x_option in x_opt_list:
                         assign(xfer, x_option, eval(x_option[2:]))
-                    if v.value > 0:
+                    if v > Unit(0, "microliter"):
                         opts.append(xfer)
 
                     diff -= Unit(750, "microliter")
@@ -958,7 +956,7 @@ class Protocol(object):
                           "x_blowout_buffer"]
             for x_option in x_opt_list:
                 assign(xfer, x_option, eval(x_option[2:]))
-            if v.value > 0:
+            if v > Unit(0, "microliter"):
                 opts.append(xfer)
 
         trans = {}
@@ -1222,12 +1220,12 @@ class Protocol(object):
         # Auto-generate list from single volume, check if list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(convert_to_ul(volume))] * len_source
+                volume = [Unit.fromstring(volume).to("ul")] * len_source
             else:
-                volume = [Unit.fromstring(convert_to_ul(volume))] * len_dest
+                volume = [Unit.fromstring(volume).to("ul")] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
             volume = list(
-                map(lambda x: convert_to_ul(Unit.fromstring(x)), volume))
+                map(lambda x: Unit.fromstring(x).to("ul"), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -1238,7 +1236,7 @@ class Protocol(object):
         if one_source:
             try:
                 source_vol = [s.volume for s in source.wells]
-                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                if sum([a for a in volume]) > sum([a for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
                                        "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
@@ -1261,18 +1259,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(
-                                    vol.value, max_decimal_places)
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1280,13 +1278,12 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError) as e:
+            except (ValueError, AttributeError, TypeError) as e:
                 raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
                                    "multiple other wells, each source Well must have a volume attribute (aliquot) "
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            v = convert_to_ul(v)
             xfer = {
                 "from": s,
                 "to": d,
@@ -1299,11 +1296,11 @@ class Protocol(object):
                 d.volume = v
             if s.volume:
                 s.volume -= v
-            if v.value > 0:
+            if v > Unit(0, 'microliter'):
                 transfers.append(xfer)
 
         for x in transfers:
-            x["volume"] = convert_to_nl(x["volume"])
+            x["volume"] = x["volume"].to("nl")
         if self.instructions and self.instructions[-1].op == "acoustic_transfer":
             prev_inst = self.instructions[-1].data["groups"][0]["transfer"][-1]
             if (prev_inst["from"].container == transfers[0]["from"].container and
@@ -1675,7 +1672,7 @@ class Protocol(object):
 
                 # Create volumes list
                 source_vol = [s.volume for s in source.wells]
-                if sum([a.value for a in volume]) > sum([a.value for a in source_vol]):
+                if sum([a for a in volume]) > sum([a for a in source_vol]):
                     raise RuntimeError("There is not enough volume in the "
                                        "source well(s) specified to complete "
                                        "the transfers.")
@@ -1699,18 +1696,18 @@ class Protocol(object):
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol.value = round(
-                                    vol.value, max_decimal_places)
+                                vol._magnitude = round(
+                                    vol._magnitude, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d.value = round(
-                                    vol_d.value, max_decimal_places)
+                                vol_d._magnitude = round(
+                                    vol_d._magnitude, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1783,8 +1780,6 @@ class Protocol(object):
         max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
 
         for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
-
-            v = convert_to_ul(v)
 
             # Splitting volumes up if greater than max_tip_vol
             if v > max_tip_vol:
@@ -1859,7 +1854,7 @@ class Protocol(object):
                                 "repetitions": repetitions,
                                 "speed": flowrate
                             }
-                        if v.value > 0:
+                        if v > Unit(0, 'microliter'):
                             opts.append(xfer)
                             oshp.append(sh)
                             osta.append(st)
@@ -1932,7 +1927,7 @@ class Protocol(object):
                                 "repetitions": repetitions,
                                 "speed": flowrate
                             }
-                        if v.value > 0:
+                        if v > Unit(0, 'microliter'):
                             opts.append(xfer)
                             oshp.append(sh)
                             osta.append(st)
@@ -1998,7 +1993,7 @@ class Protocol(object):
                     "repetitions": repetitions,
                     "speed": flowrate
                 }
-            if v.value > 0:
+            if v > Unit(0, 'microliter'):
                 opts.append(xfer)
                 oshp.append(sh)
                 osta.append(st)
@@ -3641,7 +3636,6 @@ class Protocol(object):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
             dest_group = []
-            v = convert_to_ul(v)
             if v > Unit(750, "microliter"):
                 diff = v - Unit(750, "microliter")
                 self.provision(resource_id, d, Unit(750, "microliter"))
@@ -3767,7 +3761,7 @@ class Protocol(object):
         else:
             volume = [Unit.fromstring(volume)]*len(dst_group.wells)
         for d, v in list(zip(dst_group.wells, volume)):
-            v = convert_to_ul(v)
+            v = v.to("ul")
             if len(distributes) == 0 or src.volume < v:
                 # find a src well with enough volume
                 src = next(

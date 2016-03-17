@@ -26,6 +26,28 @@ class Unit(_Quantity):
         Uses Pint's Quantity as a base class for implementing units and
         inherits functionalities such as conversions and proper unit
         arithmetic.
+        Note that the magnitude is stored as a double-precision float, so
+        there are inherent issues when dealing with extremely large/small
+        numbers as well as numerical rounding for non-base 2 numbers.
+
+        Usage Examples
+            .. code-block:: python
+
+                vol_1 = Unit(10, 'microliter')
+                vol_2 = Unit(10, 'liter')
+                print(vol_1 + vol_2)
+
+                time_1 = Unit(1, 'second')
+                speed_1 = vol_1/time_1
+                print (speed_1)
+                print (speed_1.to('liter/hour'))
+
+        Output
+            .. code-block:: json
+                10000010.0:microliter
+                10.0:microliter / second
+                0.036:liter / hour
+
     """
     def __new__(cls, value, units=None):
         cls._REGISTRY = ureg
@@ -39,6 +61,9 @@ class Unit(_Quantity):
                 raise ValueError("Incorrect Unit format. When passing a "
                                  "string argument, Unit has to be in "
                                  "\'1:meter\' format.")
+
+        # Due to float imprecision and to avoid additional package dependencies
+        # Let's round the value stored to prevent
 
         return super(Unit, cls).__new__(cls, float(value), units)
 

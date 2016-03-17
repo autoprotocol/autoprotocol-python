@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+
+
+## v3.0.0 - 2016-03-17
+---
+Added
 - container+ input type to harness.py
 
 Changed

@@ -7,7 +7,7 @@ setup(
     author='Vanessa Biggers',
     description='Python library for generating Autoprotocol',
     author_email="vanessa@transcriptic.com",
-    version='2.7.0',
+    version='3.0.0',
     test_suite='test',
     install_requires=[
         'Pint>=0.7.2'

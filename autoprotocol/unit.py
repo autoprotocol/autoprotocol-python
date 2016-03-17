@@ -62,9 +62,6 @@ class Unit(_Quantity):
                                  "string argument, Unit has to be in "
                                  "\'1:meter\' format.")
 
-        # Due to float imprecision and to avoid additional package dependencies
-        # Let's round the value stored to prevent
-
         return super(Unit, cls).__new__(cls, float(value), units)
 
     def __init__(self, value, units=None):

@@ -274,3 +274,46 @@ def deep_merge_params(defaults, override):
             defaults[key] = value
 
     return defaults
+
+
+def incubate_params(duration, shake_amplitude=None, shake_orbital=None):
+    """
+    Create a dictionary with incubation parameters which can be used as input
+    for instructions. Currenly supports plate reader instructions and could be
+    extended for use with other instructions.
+
+    Parameters
+    ----------
+    shake_amplitude: str, Unit
+        amplitude of shaking between 1 and 6:millimeter
+    shake_orbital: bool
+        True for oribital and False for linear shaking
+    duration: str, Unit
+        time for shaking
+    """
+
+    incubate_dict = {}
+    if Unit.fromstring(duration) < Unit.fromstring("0:second"):
+        raise ValueError("duration: %s must be positive" % duration)
+    else:
+        incubate_dict["duration"] = duration
+
+    if (shake_amplitude is not None) and (shake_orbital is not None):
+        shake_dict = {}
+
+        if Unit.fromstring(shake_amplitude) < Unit.fromstring("0:millimeter"):
+            raise ValueError("shake_amplitude: %s must be positive" % shake_amplitude)
+        else:
+            shake_dict["amplitude"] = shake_amplitude
+
+        if not isinstance(shake_orbital, bool):
+            raise ValueError("shake_orbital: %s must be a boolean" % shake_orbital)
+        else:
+            shake_dict["orbital"] = shake_orbital
+
+        incubate_dict["shaking"] = shake_dict
+
+    if (shake_amplitude is not None) ^ (shake_orbital is not None):
+        raise RuntimeError("Both `shake_amplitude`: %s and `shake_orbital`: %s must not be None for shaking to be set" % (shake_amplitude, shake_orbital))
+
+    return incubate_dict

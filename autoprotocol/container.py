@@ -90,8 +90,7 @@ class Well(object):
         if not isinstance(vol, basestring) and not isinstance(vol, Unit):
             raise TypeError("Volume given is not of type str or Unit. %s" % type(vol))
         v = Unit.fromstring(vol)
-        if v > Unit(
-                self.container.container_type.well_volume_ul, "microliter"):
+        if v > self.container.container_type.well_volume_ul:
             raise ValueError("Theoretical volume you are trying to set "
                              "exceeds the maximum volume of this well.")
         self.volume = v

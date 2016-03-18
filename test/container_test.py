@@ -7,20 +7,21 @@ from autoprotocol.unit import Unit
 if sys.version_info[0] >= 3:
     xrange = range
 
+
 def make_dummy_type(**kwargs):
     params = {
         "name": "dummy",
         "well_count": 15,
         "well_depth_mm": None,
-        "well_volume_ul": 200,
+        "well_volume_ul": Unit(200, "microliter"),
         "well_coating": None,
         "sterile": False,
         "is_tube": False,
         "capabilities": [],
         "shortname": "dummy",
         "col_count": 5,
-        "dead_volume_ul": 15,
-        "safe_min_volume_ul": 30
+        "dead_volume_ul": Unit(15, "microliter"),
+        "safe_min_volume_ul": Unit(30, "microliter")
     }
     params.update(kwargs)
     return ContainerType(**params)
@@ -102,7 +103,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         self.assertEqual([6, 11, 7, 12, 8, 13], [i.index for i in ws])
 
     def test_wells(self):
-        ws = self.c.wells([0,1,2])
+        ws = self.c.wells([0, 1, 2])
         self.assertEqual(3, len(ws))
         self.assertIsInstance(ws, WellGroup)
         ws = self.c.wells("A1", ["A2", "A3"])
@@ -197,11 +198,12 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             plate_384.quadrant(9)
 
+
 class WellVolumeTestCase(unittest.TestCase):
     def test_set_volume(self):
         c = Container(None, dummy_type)
         c.well(0).set_volume("20:microliter")
-        self.assertEqual(Unit(20, 'microliter'), c.well(0).volume)
+        self.assertEqual(Unit(20, "microliter"), c.well(0).volume)
         self.assertEqual("microliter", c.well(0).volume.unit)
         self.assertIs(None, c.well(1).volume)
 
@@ -209,7 +211,7 @@ class WellVolumeTestCase(unittest.TestCase):
         c = Container(None, dummy_type)
         c.all_wells().set_volume("30:microliter")
         for w in c.all_wells():
-            self.assertEqual(Unit(30, 'microliter'), w.volume)
+            self.assertEqual(Unit(30, "microliter"), w.volume)
 
     def test_set_volume_unit_conv(self):
         c = Container(None, dummy_type)
@@ -219,6 +221,7 @@ class WellVolumeTestCase(unittest.TestCase):
         self.assertTrue(c.well(1).volume == Unit(100, "microliter"))
         with self.assertRaises(ValueError):
             c.well(2).set_volume("1:milliliter")
+
 
 class WellPropertyTestCase(unittest.TestCase):
     def test_set_properties(self):
@@ -252,6 +255,7 @@ class WellPropertyTestCase(unittest.TestCase):
         for well in group:
             self.assertTrue("property1" in well.properties)
             self.assertTrue("property2" in well.properties)
+
 
 class WellNameTestCase(unittest.TestCase):
     def test_set_name(self):

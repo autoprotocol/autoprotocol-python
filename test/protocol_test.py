@@ -801,7 +801,7 @@ class MagneticTransferTestCase(unittest.TestCase):
         p = Protocol()
 
         pcrs = [p.ref("pcr_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]]
-        deeps = [p.ref("deep_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-v-kf", "96-deep-kf", "96-deep", "96-flat", "96-flat-uv"]]
+        deeps = [p.ref("deep_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-v-kf", "96-deep-kf", "96-deep"]]
 
         for i, pcr in enumerate(pcrs):
             p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False, new_instruction=False)

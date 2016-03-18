@@ -70,6 +70,52 @@ class Pipette(Instruction):
         })
 
 
+class MagneticTransfer(Instruction):
+
+    '''
+    A magnetic_transfer instruction is constructed as a list of lists of
+    groups, executed in order, where each group is a collect, release, dry,
+    incubate, or mix sub-operation.  These sub-operations control the behavior
+    of tips which can be magnetized, and a heating platform. Groups in the same
+    list of groups use the same tips.
+
+    collect:
+
+        Collects beads from the specified "object" by raising and lowering
+        magnetized tips repeatedly with an optional pause at well bottom.
+
+    release:
+
+        Release beads from unmagnetized tips by oscillating the tips
+        vertically into and out of the "object".
+
+    dry:
+
+        Dry beads on magnetized tips above and outside the "object".
+
+    incubate:
+
+        Incubate the "object".
+
+    mix:
+
+        Oscillate the tips into and out of the "object"
+
+    '''
+
+    HEAD_TYPE = ["96-deep", "96-pcr"]
+
+    def __init__(self, groups, head_type):
+        if head_type not in self.HEAD_TYPE:
+            raise ValueError(
+                "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
+        super(MagneticTransfer, self).__init__({
+            "op": "magnetic_transfer",
+            "groups": groups,
+            "magnetic_head": head_type
+        })
+
+
 class Dispense(Instruction):
 
     """

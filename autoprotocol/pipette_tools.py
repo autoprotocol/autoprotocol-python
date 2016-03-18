@@ -180,7 +180,7 @@ def depth(relation, lld=None, distance="0.0:meter"):
     lld : str, optional
       Method of liquid level detection.
     distance : str, unit
-      Distance compared to position set by relation parameter, measured
+      Distance above the position set by the relation parameter, measured
       in millimeters.
 
     """

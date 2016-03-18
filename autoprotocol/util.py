@@ -1,4 +1,5 @@
 from .unit import Unit
+
 '''
     :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
@@ -178,6 +179,38 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
         return False
 
     return True
+
+
+def check_valid_mag(container, head):
+    if head == "96-deep":
+        if container.container_type.shortname not in ["96-v-kf", "96-deep-kf", "96-deep"]:
+            raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
+    elif head == "96-pcr":
+        if container.container_type.shortname not in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]:
+            raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
+
+
+def check_valid_mag_params(mag_dict):
+    if "frequency" in mag_dict:
+        if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:hertz"):
+            raise ValueError("Frequency set at %s, must not be less than 0:hertz" % mag_dict["frequency"])
+    if "temperature" in mag_dict and mag_dict["temperature"]:
+        if Unit.fromstring(mag_dict["temperature"]) < Unit.fromstring("-273.15:celsius"):
+            raise ValueError("Temperature set at %s, must not be less than absolute zero'" % mag_dict["temperature"])
+    elif "temperature" in mag_dict and not mag_dict["temperature"]:
+            del mag_dict["temperature"]
+    if "amplitude" in mag_dict:
+        if mag_dict["amplitude"] > mag_dict["center"]:
+            raise ValueError("'amplitude': %s, must be less than 'center': %s" % (mag_dict["amplitude"], mag_dict["center"]))
+        if mag_dict["amplitude"] < 0:
+            raise ValueError("Amplitude set at %s, must not be negative" % mag_dict["amplitude"])
+    if any(kw in mag_dict for kw in ("center", "bottom_position", "tip_position")):
+        position = mag_dict.get("center", mag_dict.get("bottom_position", mag_dict.get("tip_position")))
+        if position < 0:
+            raise ValueError("Tip head position set at %s, must not be negative" % position)
+    if "magnetize" in mag_dict:
+        if not isinstance(mag_dict["magnetize"], bool):
+            raise ValueError("Magnetize set at: %s, must be boolean" % mag_dict["magnetize"])
 
 
 class make_dottable_dict(dict):

@@ -18,6 +18,8 @@ Fixed
 ---
 Added
 - container+ input type to harness.py
+- magnetic_transfer instruction to instruction.py and protocol.py
+- kf container types in container_type.py
 
 Changed
 - release versioning has been removed in favor of protocol versioniong in harness.py
@@ -27,6 +29,7 @@ Changed
 Removed
 
 Fixed
+- default versioning in manifest_test.json
 - Update container_test.py and container_type_test.py to include safe_min_volume_ul
 
 ## v2.7.0 - 2016-02-18

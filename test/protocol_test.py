@@ -786,6 +786,164 @@ class AcousticTransferTestCase(unittest.TestCase):
         self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][-1]["from"] == echo.well(1))
         self.assertTrue(p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(0))
 
+class MagneticTransferTestCase(unittest.TestCase):
+
+    def test_head_type(self):
+        p = Protocol()
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        with self.assertRaises(ValueError):
+                p.mag_dry("96-flat", pcr, "30:minute", new_tip=False, new_instruction=False)
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False, new_instruction=False)
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_head_compatibility(self):
+        p = Protocol()
+
+        pcrs = [p.ref("pcr_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]]
+        deeps = [p.ref("deep_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-v-kf", "96-deep-kf", "96-deep"]]
+
+        for i, pcr in enumerate(pcrs):
+            p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False, new_instruction=False)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i+1)
+
+        for i, deep in enumerate(deeps):
+            if i == 0:
+                n_i = True
+            else:
+                n_i = False
+            p.mag_dry("96-deep", deep, "30:minute", new_tip=False, new_instruction=n_i)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i+1)
+
+        bad_pcrs = [p.ref("bad_pcr_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-pcr"]]
+        bad_deeps = [p.ref("bad_deep_%s" % cont_type, None, cont_type, discard=True) for cont_type in ["96-deep-kf", "96-deep"]]
+
+        for pcr in bad_pcrs:
+            with self.assertRaises(ValueError):
+                p.mag_dry("96-deep", pcr, "30:minute", new_tip=False, new_instruction=False)
+
+        for deep in bad_deeps:
+            with self.assertRaises(ValueError):
+                p.mag_dry("96-pcr", deep, "30:minute", new_tip=False, new_instruction=False)
+
+    def test_temperature_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        for i in range(27, 96):
+            p.mag_incubate("96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
+
+        for i in range(-300, -290):
+            with self.assertRaises(ValueError):
+                p.mag_incubate("96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
+
+    def test_frequency_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        for i in range(27, 96):
+            p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" % i, center=1, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
+
+        for i in range(-10, -5):
+            with self.assertRaises(ValueError):
+                p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" % i, center=1, amplitude=0)
+
+    def test_magnetize_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize=True)
+        self.assertEqual(len(p.instructions[-1].groups[0]), 1)
+
+        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize=False)
+        self.assertEqual(len(p.instructions[-1].groups[0]), 2)
+
+        with self.assertRaises(ValueError):
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=0, magnetize="Foo")
+
+    def test_center_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        for i in range(0, 200):
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=float(i)/100, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+1)
+            p.mag_collect("96-pcr", pcr, 5, "30:second", bottom_position=float(i)/100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+2)
+            p.mag_incubate("96-pcr", pcr, "30:minute", tip_position=float(i)/100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+3)
+            p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=float(i)/100, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+4)
+
+        for i in range(-1, 3, 4):
+            with self.assertRaises(ValueError):
+                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=i, amplitude=0)
+            with self.assertRaises(ValueError):
+                p.mag_collect("96-pcr", pcr, 5, "30:second", bottom_position=i)
+            with self.assertRaises(ValueError):
+                p.mag_incubate("96-pcr", pcr, "30:minute", tip_position=i)
+            with self.assertRaises(ValueError):
+                p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=i, amplitude=0)
+
+    def test_amplitude_valid(self):
+        p = Protocol()
+
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+
+        for i in range(0, 100):
+            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=float(i)/100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*2+1)
+            p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=float(i)/100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i*2+2)
+
+        for i in range(-1, 2, 3):
+            with self.assertRaises(ValueError):
+                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz", center=1, amplitude=i)
+            with self.assertRaises(ValueError):
+                p.mag_release("96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=i)
+
+    def test_mag_append(self):
+        p = Protocol()
+
+        pcrs = [p.ref("pcr_%s" % i, None, "96-pcr", storage="cold_20") for i in range(7)]
+
+        pcr = pcrs[0]
+
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False, new_instruction=False)
+        self.assertEqual(len(p.instructions[-1].groups[0]), 1)
+        self.assertEqual(len(p.instructions[-1].groups), 1)
+
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True, new_instruction=False)
+        self.assertEqual(len(p.instructions[-1].groups), 2)
+        self.assertEqual(len(p.instructions), 1)
+
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True, new_instruction=True)
+        self.assertEqual(len(p.instructions), 2)
+
+        for plate in pcrs:
+            p.mag_dry("96-pcr", plate, "30:minute", new_tip=False, new_instruction=False)
+            self.assertEqual(len(p.instructions), 2)
+
+        with self.assertRaises(RuntimeError):
+            pcr_too_many = p.ref("pcr_7", None, "96-pcr", discard=True)
+            p.mag_dry("96-pcr", pcr_too_many, "30:minute", new_tip=False, new_instruction=False)
+
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True, new_instruction=True)
+        self.assertEqual(len(p.instructions), 3)
+
+        p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True, new_instruction=False)
+        self.assertEqual(len(p.instructions[-1].groups), 2)
+
+        with self.assertRaises(RuntimeError):
+            for plate in pcrs:
+                p.mag_dry("96-pcr", plate, "30:minute", new_tip=False, new_instruction=False)
+
 
 class AutopickTestCase(unittest.TestCase):
 

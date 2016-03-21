@@ -742,6 +742,53 @@ class AbsorbanceTestCase(unittest.TestCase):
                      "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
 
+    def test_temperature(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                     "test_reading", temperature="30:celsius")
+        self.assertEqual(p.instructions[0].temperature, "30:celsius")
+
+    def test_incubate(self):
+        from autoprotocol.util import incubate_params
+
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                     "test_reading",
+                     incubate_before=incubate_params(
+                                                     "10:second",
+                                                     "3:millimeter",
+                                                     True
+                                                     )
+                     )
+
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["orbital"], True)
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["amplitude"], "3:millimeter")
+        self.assertEqual(p.instructions[0].incubate_before["duration"], "10:second")
+
+        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                     "test_reading",
+                     incubate_before=incubate_params("10:second"))
+
+        self.assertFalse("shaking" in p.instructions[1].incubate_before)
+        self.assertEqual(p.instructions[1].incubate_before["duration"], "10:second")
+
+        with self.assertRaises(ValueError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("10:second", "-3:millimeter", True))
+
+        with self.assertRaises(ValueError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("10:second", "3:millimeter", "foo"))
+
+        with self.assertRaises(ValueError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("-10:second", "3:millimeter", True))
+
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("10:second", "3:millimeter"))
+
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
+
 
 class FluorescenceTestCase(unittest.TestCase):
     def test_single_well(self):
@@ -752,6 +799,51 @@ class FluorescenceTestCase(unittest.TestCase):
                        dataref="test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
 
+    def test_temperature(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", temperature="30:celsius")
+        self.assertEqual(p.instructions[0].temperature, "30:celsius")
+
+    def test_incubate(self):
+        from autoprotocol.util import incubate_params
+
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer", emission="610:nanometer",
+                       dataref="test_reading",
+                       incubate_before=incubate_params("10:second",
+                                                       "3:millimeter",
+                                                       True))
+
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["orbital"], True)
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["amplitude"], "3:millimeter")
+        self.assertEqual(p.instructions[0].incubate_before["duration"], "10:second")
+
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer", emission="610:nanometer",
+                       dataref="test_reading",
+                       incubate_before=incubate_params("10:second"))
+
+        self.assertFalse("shaking" in p.instructions[1].incubate_before)
+        self.assertEqual(p.instructions[1].incubate_before["duration"], "10:second")
+
+        with self.assertRaises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("10:second", "-3:millimeter", True))
+
+        with self.assertRaises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("10:second", "3:millimeter", "foo"))
+
+        with self.assertRaises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("-10:second", "3:millimeter", True))
+
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("10:second", "3:millimeter"))
+
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
+
 
 class LuminescenceTestCase(unittest.TestCase):
     def test_single_well(self):
@@ -759,6 +851,47 @@ class LuminescenceTestCase(unittest.TestCase):
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.luminescence(test_plate, test_plate.well(0), "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
+
+    def test_temperature(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.luminescence(test_plate, test_plate.well(0), "test_reading", temperature="30:celsius")
+        self.assertEqual(p.instructions[0].temperature, "30:celsius")
+
+    def test_incubate(self):
+        from autoprotocol.util import incubate_params
+
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                       incubate_before=incubate_params("10:second",
+                                                       "3:millimeter",
+                                                       True))
+
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["orbital"], True)
+        self.assertEqual(p.instructions[0].incubate_before["shaking"]["amplitude"], "3:millimeter")
+        self.assertEqual(p.instructions[0].incubate_before["duration"], "10:second")
+
+        p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                       incubate_before=incubate_params("10:second"))
+
+        self.assertFalse("shaking" in p.instructions[1].incubate_before)
+        self.assertEqual(p.instructions[1].incubate_before["duration"], "10:second")
+
+        with self.assertRaises(ValueError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("10:second", "-3:millimeter", True))
+
+        with self.assertRaises(ValueError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("10:second", "3:millimeter", "foo"))
+
+        with self.assertRaises(ValueError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("-10:second", "3:millimeter", True))
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("10:second", "3:millimeter"))
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
 
 
 class AcousticTransferTestCase(unittest.TestCase):

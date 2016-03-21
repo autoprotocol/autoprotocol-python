@@ -478,18 +478,34 @@ class Absorbance(Instruction):
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+    incubate_before: dict, optional
+        incubation prior to reading if desired
+        shake: dict, optional
+            shake parameters if desired
+                amplitude: str, Unit
+                    amplitude of shaking between 1 and 6:millimeter
+                orbital: bool
+                    True for oribital and False for linear shaking
+        duration: str, Unit, optional
+            time prior to plate reading
+    temperature: str, Unit, optional
+        set temperature to heat plate reading chamber
 
     """
 
-    def __init__(self, ref, wells, wavelength, dataref, flashes=25):
-        super(Absorbance, self).__init__({
-            "op": "absorbance",
-            "object": ref,
-            "wells": wells,
-            "wavelength": wavelength,
-            "num_flashes": flashes,
-            "dataref": dataref
-        })
+    def __init__(self, ref, wells, wavelength, dataref, flashes=25, incubate_before=None, temperature=None):
+        json_dict = {"op": "absorbance",
+                     "object": ref,
+                     "wells": wells,
+                     "wavelength": wavelength,
+                     "num_flashes": flashes,
+                     "dataref": dataref}
+        if incubate_before:
+            json_dict["incubate_before"] = incubate_before
+        if temperature:
+            json_dict["temperature"] = temperature
+
+        super(Absorbance, self).__init__(json_dict)
 
 
 class Fluorescence(Instruction):
@@ -512,19 +528,36 @@ class Fluorescence(Instruction):
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+    incubate_before: dict, optional
+        incubation prior to reading if desired
+        shake: dict, optional
+            shake parameters if desired
+                amplitude: str, Unit
+                    amplitude of shaking between 1 and 6:millimeter
+                orbital: bool
+                    True for oribital and False for linear shaking
+        duration: str, Unit, optional
+            time prior to plate reading
+    temperature: str, Unit, optional
+        set temperature to heat plate reading chamber
 
     """
 
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25):
-        super(Fluorescence, self).__init__({
+    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,  incubate_before=None, temperature=None):
+        json_dict = {
             "op": "fluorescence",
             "object": ref,
             "wells": wells,
             "excitation": excitation,
             "emission": emission,
             "num_flashes": flashes,
-            "dataref": dataref
-        })
+            "dataref": dataref}
+        if incubate_before:
+            json_dict["incubate_before"] = incubate_before
+        if temperature:
+            json_dict["temperature"] = temperature
+
+        super(Fluorescence, self).__init__(json_dict)
 
 
 class Luminescence(Instruction):
@@ -538,16 +571,34 @@ class Luminescence(Instruction):
     wells : list, WellGroup
         WellGroup or list of wells to be measured
     dataref : str
+    incubate_before: dict, optional
+        incubation prior to reading if desired
+        shake: dict, optional
+            shake parameters if desired
+                amplitude: str, Unit
+                    amplitude of shaking between 1 and 6:millimeter
+                orbital: bool
+                    True for oribital and False for linear shaking
+        duration: str, Unit, optional
+            time prior to plate reading
+    temperature: str, Unit, optional
+        set temperature to heat plate reading chamber
 
     """
 
-    def __init__(self, ref, wells, dataref):
-        super(Luminescence, self).__init__({
+    def __init__(self, ref, wells, dataref, incubate_before=None, temperature=None):
+        json_dict = {
             "op": "luminescence",
             "object": ref,
             "wells": wells,
             "dataref": dataref
-        })
+        }
+        if incubate_before:
+            json_dict["incubate_before"] = incubate_before
+        if temperature:
+            json_dict["temperature"] = temperature
+
+        super(Luminescence, self).__init__(json_dict)
 
 
 class Seal(Instruction):

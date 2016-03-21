@@ -2749,7 +2749,7 @@ class Protocol(object):
                         melting_end, melting_increment, melting_rate))
 
     def incubate(self, ref, where, duration, shaking=False, co2=0):
-        '''
+        """
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
 
@@ -2786,10 +2786,10 @@ class Protocol(object):
                 }
               ]
 
-        '''
+        """
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
-    def absorbance(self, ref, wells, wavelength, dataref, flashes=25):
+    def absorbance(self, ref, wells, wavelength, dataref, flashes=25, incubate_before=None, temperature=None):
         """
         Read the absorbance for the indicated wavelength for the indicated
         wells. Append an Absorbance instruction to the list of instructions for
@@ -2847,6 +2847,18 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+        incubate_before: dict, optional
+            incubation prior to reading if desired
+            shake: dict, optional
+                shake parameters if desired
+                    amplitude: str, Unit
+                        amplitude of shaking between 1 and 6:millimeter
+                    orbital: bool
+                        True for oribital and False for linear shaking
+            duration: str, Unit, optional
+                time prior to plate reading
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
 
         """
         if isinstance(wells, Well):
@@ -2854,10 +2866,10 @@ class Protocol(object):
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(
-            Absorbance(ref, wells, wavelength, dataref, flashes))
+            Absorbance(ref, wells, wavelength, dataref, flashes, incubate_before, temperature))
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
-                     flashes=25):
+                     flashes=25, incubate_before=None, temperature=None):
         """
         Read the fluoresence for the indicated wavelength for the indicated
         wells.  Append a Fluorescence instruction to the list of instructions
@@ -2921,6 +2933,18 @@ class Protocol(object):
             Name of this specific dataset of measured absorbances
         flashes : int, optional
             Number of flashes.
+        incubate_before: dict, optional
+            incubation prior to reading if desired
+            shake: dict, optional
+                shake parameters if desired
+                    amplitude: str, Unit
+                        amplitude of shaking between 1 and 6:millimeter
+                    orbital: bool
+                        True for oribital and False for linear shaking
+            duration: str, Unit, optional
+                time prior to plate reading
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
 
         """
         if isinstance(wells, Well):
@@ -2928,9 +2952,9 @@ class Protocol(object):
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(
-            Fluorescence(ref, wells, excitation, emission, dataref, flashes))
+            Fluorescence(ref, wells, excitation, emission, dataref, flashes, incubate_before, temperature))
 
-    def luminescence(self, ref, wells, dataref):
+    def luminescence(self, ref, wells, dataref, incubate_before=None, temperature=None):
         """
         Read luminescence of indicated wells.
 
@@ -2981,13 +3005,24 @@ class Protocol(object):
             WellGroup or list of wells to be measured
         dataref : str
             Name of this dataset of measured luminescence readings.
-
+        incubate_before: dict, optional
+            incubation prior to reading if desired
+            shake: dict, optional
+                shake parameters if desired
+                    amplitude: str, Unit
+                        amplitude of shaking between 1 and 6:millimeter
+                    orbital: bool
+                        True for oribital and False for linear shaking
+            duration: str, Unit, optional
+                time prior to plate reading
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
         """
         if isinstance(wells, Well):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
-        self.instructions.append(Luminescence(ref, wells, dataref))
+        self.instructions.append(Luminescence(ref, wells, dataref, incubate_before, temperature))
 
     def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
         """

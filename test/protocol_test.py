@@ -222,35 +222,35 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
 
-    def test_gt_750uL_transfer(self):
+    def test_gt_900uL_transfer(self):
         p = Protocol()
         c = p.ref("test", None, "96-deep", discard=True)
         p.transfer(
             c.well(0),
             c.well(1),
-            "1800:microliter"
+            "2000:microliter"
             )
         self.assertEqual(3, len(p.instructions[0].groups))
         self.assertEqual(
-            Unit(750, 'microliter'),
+            Unit(900, 'microliter'),
             p.instructions[0].groups[0]['transfer'][0]['volume']
             )
         self.assertEqual(
-            Unit(750, 'microliter'),
+            Unit(900, 'microliter'),
             p.instructions[0].groups[1]['transfer'][0]['volume']
             )
         self.assertEqual(
-            Unit(300, 'microliter'),
+            Unit(200, 'microliter'),
             p.instructions[0].groups[2]['transfer'][0]['volume']
             )
 
-    def test_gt_750uL_wellgroup_transfer(self):
+    def test_gt_900uL_wellgroup_transfer(self):
         p = Protocol()
         c = p.ref("test", None, "96-deep", discard=True)
         p.transfer(
             c.wells_from(0, 8, columnwise=True),
             c.wells_from(1, 8, columnwise=True),
-            '1800:microliter'
+            '2000:microliter'
             )
         self.assertEqual(
             24,
@@ -263,7 +263,7 @@ class TransferTestCase(unittest.TestCase):
         p.transfer(
             c.well(0),
             c.well(1),
-            "1800:microliter",
+            "2000:microliter",
             aspirate_source=aspirate_source(
                 depth("ll_bottom", distance=".004:meter")
                 )
@@ -397,10 +397,10 @@ class TransferTestCase(unittest.TestCase):
         self.assertFalse("mix_after" in p.instructions[0].groups[0]["transfer"][0])
         p.transfer(c.well(0), c.well(1), "20:microliter", mix_before=False)
         self.assertFalse("mix_before" in p.instructions[0].groups[1]["transfer"][0])
-        p.transfer(c.well(0), c.well(1), "1800:microliter", mix_after=False)
+        p.transfer(c.well(0), c.well(1), "2000:microliter", mix_after=False)
         for i in range(2, 5):
             self.assertFalse("mix_after" in p.instructions[0].groups[i]["transfer"][0])
-        p.transfer(c.well(0), c.well(1), "1800:microliter", mix_before=False)
+        p.transfer(c.well(0), c.well(1), "2000:microliter", mix_before=False)
         for i in range(5, 8):
             self.assertFalse("mix_before" in p.instructions[0].groups[i]["transfer"][0])
 

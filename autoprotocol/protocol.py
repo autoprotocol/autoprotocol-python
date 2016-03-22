@@ -848,13 +848,13 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            if v > Unit(750, "microliter"):
+            if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(v)
-                while diff > Unit(750, "microliter"):
+                while diff > Unit(900, "microliter"):
                     # Organize transfer options into dictionary (for json
                     # parsing)
 
-                    v = Unit(750, "microliter")
+                    v = Unit(900, "microliter")
 
                     xfer = {
                         "from": s,
@@ -915,7 +915,7 @@ class Protocol(object):
                     if v > Unit(0, "microliter"):
                         opts.append(xfer)
 
-                    diff -= Unit(750, "microliter")
+                    diff -= Unit(900, "microliter")
 
                 v = diff
 
@@ -4026,9 +4026,9 @@ class Protocol(object):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
             dest_group = []
-            if v > Unit(750, "microliter"):
-                diff = v - Unit(750, "microliter")
-                self.provision(resource_id, d, Unit(750, "microliter"))
+            if v > Unit(900, "microliter"):
+                diff = v - Unit(900, "microliter")
+                self.provision(resource_id, d, Unit(900, "microliter"))
                 while diff > Unit(0.0, "microliter"):
                     self.provision(resource_id, d, diff)
                     diff -= diff

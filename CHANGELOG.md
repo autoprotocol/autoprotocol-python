@@ -13,7 +13,7 @@ Changed
 Removed
 
 Fixed
-
+- Updated maximum tip capacity for a transfer operation to 900uL instead of 750uL
 
 
 ## v3.0.0 - 2016-03-17

@@ -113,3 +113,23 @@ class Unit(_Quantity):
 
     def __repr__(self):
         return "Unit({0}, '{1}')".format(self._magnitude, self._units)
+
+    def _mul_div(self, other, magnitude_op, units_op=None):
+        '''
+        Extends Pint's base _Quantity multiplication/division
+        implementation by checking for dimensionality
+        '''
+        if isinstance(other, Unit):
+            if self.dimensionality == other.dimensionality:
+                other = other.to(self.unit)
+        return super(Unit, self)._mul_div(other, magnitude_op, units_op)
+
+    def _imul_div(self, other, magnitude_op, units_op=None):
+        '''
+        Extends Pint's base _Quantity multiplication/division
+        implementation by checking for dimensionality
+        '''
+        if isinstance(other, Unit):
+            if self.dimensionality == other.dimensionality:
+                other = other.to(self.unit)
+        return super(Unit, self)._imul_div(other, magnitude_op, units_op)

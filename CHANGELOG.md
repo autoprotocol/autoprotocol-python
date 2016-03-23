@@ -9,6 +9,7 @@ Added
 - helper function in util.py to create incubation dictionaries
 
 Changed
+- Updated handling of multiplication and division of Units of the same dimension to automatically resolve when possible
 
 Removed
 

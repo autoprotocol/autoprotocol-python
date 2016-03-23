@@ -15,6 +15,27 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(Unit(1.5, 'microliter'), u2 / u1._magnitude)
         self.assertEqual(Unit(1, 'dimensionless'), u2//u1)
 
+    def test_dimensional_arithmetic(self):
+        u1 = Unit(200, 'microliter')
+        u2 = Unit(3, 'milliliter')
+        # Due to floating point imprecision, use AlmostEqual as the test
+        # condition
+        eps = Unit(10**-12, 'microliter')
+        self.assertAlmostEqual(Unit(3200, 'microliter'), u1 + u2,
+                               delta=eps)
+        self.assertAlmostEqual(Unit(3.2, 'milliliter'), u2 + u1,
+                               delta=eps)
+        self.assertAlmostEqual(Unit(-2800, 'microliter'), u1 - u2,
+                               delta=eps)
+        self.assertAlmostEqual(Unit(2.8, 'milliliter'), u2 - u1,
+                               delta=eps)
+        self.assertAlmostEqual(Unit(0.6, 'milliliter**2'), u2 * u1,
+                               delta=Unit(10**-12, 'milliliter**2'))
+        self.assertAlmostEqual(Unit(600000, 'microliter**2'), u1 * u2,
+                               delta=Unit(10**-5, 'microliter**2'))
+        self.assertAlmostEqual(Unit(15, 'dimensionless'), u2 / u1)
+        self.assertAlmostEqual(Unit(0.066666667, 'dimensionless'), u1 / u2)
+
     def test_comparison(self):
         u1 = Unit(20, 'microliter')
         u2 = Unit(30, 'microliter')
@@ -70,14 +91,11 @@ class UnitMathTestCase(unittest.TestCase):
                         Unit(2, 'meter'))
         self.assertTrue(Unit(20, 'microliter/second').to('liter/hour'),
                         Unit(0.072, 'liter / hour'))
-        # Due to floating point imprecision, we'll have to compare against
-        # an epsilon instead of directly testing equality for non base 2
-        # or very large/small numbers
-        eps = 10**-12
-        self.assertTrue(Unit(1000, 'microliter').to('milliliter')._magnitude <
-                        Unit(1, 'milliliter')._magnitude + eps)
-        self.assertTrue(Unit(1000, 'microliter').to('milliliter')._magnitude >
-                        Unit(1, 'milliliter')._magnitude - eps)
+        # Due to floating point imprecision, use AlmostEqual as the test
+        # condition
+        self.assertAlmostEqual(Unit(1000, 'microliter').to('milliliter'),
+                               Unit(1, 'milliliter'),
+                               delta=Unit(10**-12, 'milliliter'))
 
     def test_autoprotocol_format(self):
         # Ensure that string representation follows Autoprotocol specification
@@ -125,33 +143,17 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(Unit(2, 'petasecond'),
                          Unit(2*10**15, 'second'))
         # Due to float imprecision, direct comparisons for really large/small
-        # numbers are not possible. Use epsilon for tolerance
-        eps = 1 + 10**-12
-        self.assertTrue(Unit(2, 'exasecond').to('second')._magnitude <
-                        Unit(2*10**18, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2, 'exasecond').to('second')._magnitude >
-                        Unit(2*10**18, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2, 'zettasecond').to('second')._magnitude <
-                        Unit(2*10**21, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2, 'zettasecond').to('second')._magnitude >
-                        Unit(2*10**21, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2, 'yottasecond').to('second')._magnitude <
-                        Unit(2*10**24, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2, 'yottasecond').to('second')._magnitude >
-                        Unit(2*10**24, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2, 'zettasecond').to('second')._magnitude <
-                        Unit(2*10**21, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2, 'zettasecond').to('second')._magnitude >
-                        Unit(2*10**21, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2*10**24, 'yoctosecond').to('second')._magnitude <
-                        Unit(2, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2*10**24, 'yoctosecond').to('second')._magnitude >
-                        Unit(2, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2*10**21, 'zeptosecond').to('second')._magnitude <
-                        Unit(2, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2*10**21, 'zeptosecond').to('second')._magnitude >
-                        Unit(2, 'second')._magnitude / eps)
-        self.assertTrue(Unit(2*10**18, 'attosecond').to('second')._magnitude <
-                        Unit(2, 'second')._magnitude * eps)
-        self.assertTrue(Unit(2*10**18, 'attosecond').to('second')._magnitude >
-                        Unit(2, 'second')._magnitude / eps)
+        # numbers are not possible, use assertAlmostEqual
+        eps = Unit(10**-12, 'second')
+        self.assertAlmostEqual(Unit(2, 'exasecond').to('second'),
+                               Unit(2*10**18, 'second'), delta=eps)
+        self.assertAlmostEqual(Unit(2, 'zettasecond').to('second'),
+                               Unit(2*10**21, 'second'), delta=eps)
+        self.assertAlmostEqual(Unit(2, 'yottasecond').to('second'),
+                               Unit(2*10**24, 'second'), delta=eps)
+        self.assertAlmostEqual(Unit(2*10**24, 'yoctosecond').to('second'),
+                               Unit(2, 'second'), delta=eps)
+        self.assertAlmostEqual(Unit(2*10**21, 'zeptosecond').to('second'),
+                               Unit(2, 'second'), delta=eps)
+        self.assertAlmostEqual(Unit(2*10**18, 'attosecond').to('second'),
+                               Unit(2, 'second'), delta=eps)

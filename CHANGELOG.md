@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 - additional parameters to spectrophotometry instructions (absorbance, luminescence, fluorescence) to instruction.py and protocol.py
 - helper function in util.py to create incubation dictionaries
+- support for a new instruction for measure_concentration
 
 Changed
 
@@ -308,19 +309,3 @@ Removed
 ## v1.0.0 - 2014-01-22
 ---
 - generally outdated version that no one should look at anymore
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

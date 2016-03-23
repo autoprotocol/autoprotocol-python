@@ -1129,7 +1129,7 @@ class MeasureConcentrationTestCase(unittest.TestCase):
         test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
         for well in test_plate.all_wells():
             well.set_volume("150:microliter")
-        p.measure_concentration(test_plate.well(0), Unit(2, "microliter"), dataref="mc_test", measurement="DNA")
+        p.measure_concentration(wells=test_plate.well(0), dataref="mc_test", measurement="DNA", volume=Unit(2, "microliter"))
         self.assertEqual(len(p.instructions), 1)
 
     def test_measure_concentration_multi_well(self):
@@ -1137,16 +1137,16 @@ class MeasureConcentrationTestCase(unittest.TestCase):
         test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
         for well in test_plate.all_wells():
             well.set_volume("150:microliter")
-        p.measure_concentration(test_plate.wells_from(0, 96), Unit(2, "microliter"), dataref="mc_test", measurement="DNA")
+        p.measure_concentration(wells=test_plate.wells_from(0, 96), dataref="mc_test", measurement="DNA", volume=Unit(2, "microliter"))
         self.assertEqual(len(p.instructions), 1)
 
     def test_measure_concentration_multi_sample_class(self):
+        sample_classes = ["ssDNA", "DNA", "RNA", "protein"]
         p = Protocol()
         test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
         for well in test_plate.all_wells():
             well.set_volume("150:microliter")
-        for i, sample_class  in enumerate(["ssDNA", "DNA", "RNA", "protein"]):
-            p.measure_concentration(test_plate.well(i), Unit(2, "microliter"), dataref="mc_test_%s" % sample_class, measurement=sample_class)
+        for i, sample_class in enumerate(sample_classes):
+            p.measure_concentration(wells=test_plate.well(i), dataref="mc_test_%s" % sample_class, measurement=sample_class, volume=Unit(2, "microliter"))
+            self.assertEqual(p.as_dict()["instructions"][i]["measurement"], sample_class)
         self.assertEqual(len(p.instructions), 4)
-        for i, type in enumerate(["ssDNA", "DNA", "RNA", "protein"]):
-            self.assertEqual(p.as_dict()["instructions"][i]["measurement"], type)

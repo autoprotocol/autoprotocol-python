@@ -14,6 +14,7 @@ Removed
 
 Fixed
 - Updated maximum tip capacity for a transfer operation to 900uL instead of 750uL
+- Updated Unit package to default to `Autoprotocol` format representation for temperature and speed units
 
 
 ## v3.0.0 - 2016-03-17

@@ -79,6 +79,21 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertTrue(Unit(1000, 'microliter').to('milliliter')._magnitude >
                         Unit(1, 'milliliter')._magnitude - eps)
 
+    def test_autoprotocol_format(self):
+        # Ensure that string representation follows Autoprotocol specification
+        self.assertEqual(str(Unit(4.2, 'millisecond')), '4.2:millisecond')
+        self.assertEqual(str(Unit(4.2, 'second')), '4.2:second')
+        self.assertEqual(str(Unit(4.2, 'minute')), '4.2:minute')
+        self.assertEqual(str(Unit(4.2, 'hour')), '4.2:hour')
+        self.assertEqual(str(Unit(4.2, 'nanoliter')), '4.2:nanoliter')
+        self.assertEqual(str(Unit(4.2, 'microliter')), '4.2:microliter')
+        self.assertEqual(str(Unit(4.2, 'milliliter')), '4.2:milliliter')
+        self.assertEqual(str(Unit(4.2, 'rpm')), '4.2:rpm')
+        self.assertEqual(str(Unit(4.2, 'nanometer')), '4.2:nanometer')
+        self.assertEqual(str(Unit(4.2, 'celsius')), '4.2:celsius')
+        self.assertEqual(str(Unit(4.2, 'nanomole')), '4.2:nanomole')
+        self.assertEqual(str(Unit(4.2, 'micromole')), '4.2:micromole')
+
     def test_prefixes(self):
         # Test SI prefixes (yotta to yocto)
         self.assertEqual(Unit(2*10**15, 'femtosecond'),

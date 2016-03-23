@@ -15,8 +15,19 @@ else:
 
 '''
 
-# Preload UnitRegistry (Use default)
+# Preload UnitRegistry (Use default Pints definition file as a base)
 ureg = UnitRegistry()
+
+'''Map string representation of Pint units over to Autoprotocol format'''
+# Map Temperature Unit names
+ureg._units["degC"]._name = "celsius"
+ureg._units["celsius"]._name = "celsius"
+ureg._units["degF"]._name = "fahrenheit"
+ureg._units["fahrenheit"]._name = "fahrenheit"
+ureg._units["degR"]._name = "rankine"
+ureg._units["rankine"]._name = "rankine"
+# Map Speed Unit names
+ureg._units["revolutions_per_minute"]._name = "rpm"
 
 
 class Unit(_Quantity):

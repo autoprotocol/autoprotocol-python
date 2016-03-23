@@ -1044,7 +1044,8 @@ class Stamp(Instruction):
 class MeasureConcentration(Instruction):
 
     """
-    Quantify the concentration of DNA, ssDNA, RNA or Protein in the specified volume of the source aliquot.
+    Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
+    volume of the source aliquots.
 
     Parameters
     ----------
@@ -1055,7 +1056,8 @@ class MeasureConcentration(Instruction):
     dataref : str
         Name of this specific dataset of measurements
     measurement : str
-        Class of material to be measured. One of ["DNA", "ssDNA", "RNA", "protein"].
+        Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
+        "protein"].
 
     """
 

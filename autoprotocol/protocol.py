@@ -4348,3 +4348,63 @@ class Protocol(object):
                 parameters[str(k)] = v
 
         return parameters
+
+    def measure_concentration(self, wells, volume, dataref, measurement):
+        """
+        Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
+        volume of the source aliquots.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
+                storage=None, discard=True)
+            p.measure_concentration(test_plate.wells_from(0, 3),
+                Unit(2, "microliter"), dataref="mc_test", measurement="DNA")
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "test_plate": {
+                  "new": "96-flat",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                 {
+                    "volume": "2.0:microliter",
+                    "dataref": "mc_test",
+                    "object": [
+                        "test_plate/0",
+                        "test_plate/1",
+                        "test_plate/2"
+                    ],
+                    "op": "measure_concentration",
+                    "measurement": "DNA"
+                  }
+              ]
+            }
+
+
+        Parameters
+        ----------
+        wells : list, WellGroup
+            WellGroup of wells to be measured
+        volume : str, Unit
+            Volume of sample required for analysis
+        dataref : str
+            Name of this specific dataset of measurements
+        measurement : str
+            Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
+            "protein"].
+
+        """
+
+        self.instructions.append(MeasureConcentration(wells, volume, dataref, measurement))

@@ -1121,3 +1121,32 @@ class AutopickTestCase(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             p.autopick([agar_plate.well(0), agar_plate_1.well(1)], [dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+
+
+class MeasureConcentrationTestCase(unittest.TestCase):
+    def test_measure_concentration_single_well(self):
+        p = Protocol()
+        test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        for well in test_plate.all_wells():
+            well.set_volume("150:microliter")
+        p.measure_concentration(wells=test_plate.well(0), dataref="mc_test", measurement="DNA", volume=Unit(2, "microliter"))
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_measure_concentration_multi_well(self):
+        p = Protocol()
+        test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        for well in test_plate.all_wells():
+            well.set_volume("150:microliter")
+        p.measure_concentration(wells=test_plate.wells_from(0, 96), dataref="mc_test", measurement="DNA", volume=Unit(2, "microliter"))
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_measure_concentration_multi_sample_class(self):
+        sample_classes = ["ssDNA", "DNA", "RNA", "protein"]
+        p = Protocol()
+        test_plate = p.ref("test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        for well in test_plate.all_wells():
+            well.set_volume("150:microliter")
+        for i, sample_class in enumerate(sample_classes):
+            p.measure_concentration(wells=test_plate.well(i), dataref="mc_test_%s" % sample_class, measurement=sample_class, volume=Unit(2, "microliter"))
+            self.assertEqual(p.as_dict()["instructions"][i]["measurement"], sample_class)
+        self.assertEqual(len(p.instructions), 4)

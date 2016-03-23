@@ -1039,3 +1039,32 @@ class Stamp(Instruction):
             "op": "stamp",
             "groups": groups
         })
+
+
+class MeasureConcentration(Instruction):
+
+    """
+    Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
+    volume of the source aliquots.
+
+    Parameters
+    ----------
+    wells : list, WellGroup
+        WellGroup of wells to be measured
+    volume : str, Unit
+        Volume of sample required for analysis
+    dataref : str
+        Name of this specific dataset of measurements
+    measurement : str
+        Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
+        "protein"].
+
+    """
+
+    def __init__(self, wells, volume, dataref, measurement):
+        json_dict = {"op": "measure_concentration",
+                     "object": wells,
+                     "volume": volume,
+                     "dataref": dataref,
+                     "measurement": measurement}
+        super(MeasureConcentration, self).__init__(json_dict)

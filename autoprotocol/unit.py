@@ -32,32 +32,37 @@ ureg._units["revolutions_per_minute"]._name = "rpm"
 
 class Unit(_Quantity):
     """
-        A representation of a measure of physical quantities such as length,
-        mass, time and volume.
-        Uses Pint's Quantity as a base class for implementing units and
-        inherits functionalities such as conversions and proper unit
-        arithmetic.
-        Note that the magnitude is stored as a double-precision float, so
-        there are inherent issues when dealing with extremely large/small
-        numbers as well as numerical rounding for non-base 2 numbers.
+    A representation of a measure of physical quantities such as length,
+    mass, time and volume.
+    Uses Pint's Quantity as a base class for implementing units and
+    inherits functionalities such as conversions and proper unit
+    arithmetic.
+    Note that the magnitude is stored as a double-precision float, so
+    there are inherent issues when dealing with extremely large/small
+    numbers as well as numerical rounding for non-base 2 numbers.
 
-        Usage Examples
-            .. code-block:: python
+    Example
+    -------
 
-                vol_1 = Unit(10, 'microliter')
-                vol_2 = Unit(10, 'liter')
-                print(vol_1 + vol_2)
+        .. code-block:: python
 
-                time_1 = Unit(1, 'second')
-                speed_1 = vol_1/time_1
-                print (speed_1)
-                print (speed_1.to('liter/hour'))
+            vol_1 = Unit(10, 'microliter')
+            vol_2 = Unit(10, 'liter')
+            print(vol_1 + vol_2)
 
-        Output
-            .. code-block:: json
-                10000010.0:microliter
-                10.0:microliter / second
-                0.036:liter / hour
+            time_1 = Unit(1, 'second')
+            speed_1 = vol_1/time_1
+            print (speed_1)
+            print (speed_1.to('liter/hour'))
+
+    Returns
+    -------
+
+        .. code-block:: json
+
+            10000010.0:microliter
+            10.0:microliter / second
+            0.036:liter / hour
 
     """
     def __new__(cls, value, units=None):

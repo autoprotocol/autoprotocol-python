@@ -4,7 +4,10 @@
 .. toctree::
   :hidden:
 
-  Documentation <autoprotocol>
+  AP Protocol <protocol>
+  AP Container <container>
+  AP Container Type <container_type>
+  AP Other <autoprotocol>
   AUTHORS
   LICENSE
 

@@ -2663,8 +2663,7 @@ class Protocol(object):
                                   ]
                            },
                                {"cycles": 1,
-                                   "steps": [
-                                   {"temperature": "72:celsius", "duration":"10:minute"}]
+                                    "steps": [{"temperature": "72:celsius", "duration":"10:minute"}]
                                }
                           ])
 
@@ -2689,27 +2688,26 @@ class Protocol(object):
             p.seal(sample_plate)
 
             p.thermocycle(sample_plate,
-                          [
-                           {"cycles": 1,
+                          [{"cycles": 1,
                             "steps": [{
-                               "temperature": "95:celsius",
-                               "duration": "3:minute",
-                               }]
-                            },
-                            {"cycles": 40,
+                                "temperature": "95:celsius",
+                                "duration": "3:minute",
+                                }]
+                           },
+                           {"cycles": 40,
                                 "steps": [
-                                   {"temperature": "95:celsius",
-                                    "duration": "10:second",
-                                    "read": False},
-                                   {"temperature": "60:celsius",
-                                    "duration": "30:second",
-                                    "read": True},
-                                   ]
-                           }
-                          ],
+                                    {"temperature": "95:celsius",
+                                     "duration": "10:second",
+                                     "read": False},
+                                    {"temperature": "60:celsius",
+                                     "duration": "30:second",
+                                     "read": True},
+                                    ]
+                          }],
                           dataref = "my_qpcr_data",
-                          dyes = {"SYBR": sample_plate.all_wells().indices()
-                          })
+                          dyes = {
+                            "SYBR": sample_plate.all_wells().indices()}
+                          )
 
         Parameters
         ----------
@@ -2731,7 +2729,8 @@ class Protocol(object):
             Temperature by which to increment the melting curve. Accepted
             increment values are between 0.1 and 9.9 degrees celsius.
         melting_rate: str, Unit
-            Specifies the duration of each temperature step in the melting curve.
+            Specifies the duration of each temperature step in the melting
+            curve.
 
         Raises
         ------
@@ -2789,7 +2788,8 @@ class Protocol(object):
         """
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
-    def absorbance(self, ref, wells, wavelength, dataref, flashes=25, incubate_before=None, temperature=None):
+    def absorbance(self, ref, wells, wavelength, dataref, flashes=25,
+                   incubate_before=None, temperature=None):
         """
         Read the absorbance for the indicated wavelength for the indicated
         wells. Append an Absorbance instruction to the list of instructions for
@@ -2849,6 +2849,7 @@ class Protocol(object):
         flashes : int, optional
         incubate_before: dict, optional
             incubation prior to reading if desired
+
             shake: dict, optional
                 shake parameters if desired
                     amplitude: str, Unit
@@ -2857,6 +2858,7 @@ class Protocol(object):
                         True for oribital and False for linear shaking
             duration: str, Unit, optional
                 time prior to plate reading
+
         temperature: str, Unit, optional
             set temperature to heat plate reading chamber
 
@@ -2866,7 +2868,8 @@ class Protocol(object):
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(
-            Absorbance(ref, wells, wavelength, dataref, flashes, incubate_before, temperature))
+            Absorbance(ref, wells, wavelength, dataref, flashes,
+                       incubate_before, temperature))
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25, incubate_before=None, temperature=None):
@@ -2935,6 +2938,7 @@ class Protocol(object):
             Number of flashes.
         incubate_before: dict, optional
             incubation prior to reading if desired
+
             shake: dict, optional
                 shake parameters if desired
                     amplitude: str, Unit
@@ -2943,6 +2947,7 @@ class Protocol(object):
                         True for oribital and False for linear shaking
             duration: str, Unit, optional
                 time prior to plate reading
+
         temperature: str, Unit, optional
             set temperature to heat plate reading chamber
 
@@ -2952,9 +2957,11 @@ class Protocol(object):
         if isinstance(wells, WellGroup):
             wells = wells.indices()
         self.instructions.append(
-            Fluorescence(ref, wells, excitation, emission, dataref, flashes, incubate_before, temperature))
+            Fluorescence(ref, wells, excitation, emission, dataref, flashes,
+                         incubate_before, temperature))
 
-    def luminescence(self, ref, wells, dataref, incubate_before=None, temperature=None):
+    def luminescence(self, ref, wells, dataref, incubate_before=None,
+                     temperature=None):
         """
         Read luminescence of indicated wells.
 
@@ -3007,6 +3014,7 @@ class Protocol(object):
             Name of this dataset of measured luminescence readings.
         incubate_before: dict, optional
             incubation prior to reading if desired
+
             shake: dict, optional
                 shake parameters if desired
                     amplitude: str, Unit
@@ -3015,6 +3023,7 @@ class Protocol(object):
                         True for oribital and False for linear shaking
             duration: str, Unit, optional
                 time prior to plate reading
+
         temperature: str, Unit, optional
             set temperature to heat plate reading chamber
         """
@@ -3022,7 +3031,8 @@ class Protocol(object):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
-        self.instructions.append(Luminescence(ref, wells, dataref, incubate_before, temperature))
+        self.instructions.append(Luminescence(ref, wells, dataref,
+                                              incubate_before, temperature))
 
     def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
         """
@@ -3261,23 +3271,25 @@ class Protocol(object):
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
         """
-        Perform flow cytometry.The instruction will be executed within the voltage
-        range specified for each channel, optimized for the best sample
+        Perform flow cytometry.The instruction will be executed within the
+        voltage range specified for each channel, optimized for the best sample
         separation/distribution that can be achieved within these limits. The
         vendor will specify the device that this instruction is executed on and
-        which excitation and emission spectra are available. At least one negative
-        control is required, which will be used to define data acquisition
-        parameters as well as to determine any autofluorescent properties for the
-        sample set. Additional negative positive control samples are optional.
-        Positive control samples will be used to optimize single color signals and,
-        if desired, to minimize bleed into other channels.
+        which excitation and emission spectra are available. At least one
+        negative control is required, which will be used to define data
+        acquisition parameters as well as to determine any autofluorescent
+        properties for the sample set. Additional negative positive control
+        samples are optional. Positive control samples will be used to
+        optimize single color signals and, if desired, to minimize bleed into
+        other channels.
 
 
-        For each sample this instruction asks you to specify the `volume` and/or
-        `captured_events`. Vendors might also require `captured_events` in case
-        their device does not support volumetric sample intake. If both conditions
-        are supported, the vendor will specify if data will be collected only until
-        the first one is met or until both conditions are fulfilled.
+        For each sample this instruction asks you to specify the `volume`
+        and/or `captured_events`. Vendors might also require `captured_events`
+        in case their device does not support volumetric sample intake. If
+        both conditions are supported, the vendor will specify if data will be
+        collected only until the first one is met or until both conditions are
+        fulfilled.
 
         Example Usage:
 
@@ -4213,7 +4225,8 @@ class Protocol(object):
 
     def _count_mag_containers(self, mag, new_tip):
         """
-        Count the number of containers and tip protectors used in a magnetic_transfer instruction
+        Count the number of containers and tip protectors used in a
+        magnetic_transfer instruction
         """
 
         num_groups = len(self.instructions[-1].groups)
@@ -4349,10 +4362,11 @@ class Protocol(object):
 
         return parameters
 
-    def measure_concentration(self, wells, dataref, measurement, volume="2:microliter"):
+    def measure_concentration(self, wells, dataref, measurement,
+                              volume="2:microliter"):
         """
-        Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
-        volume of the source aliquots.
+        Measure the concentration of DNA, ssDNA, RNA or Protein in the
+        specified volume of the source aliquots.
 
         Example Usage:
 
@@ -4362,8 +4376,11 @@ class Protocol(object):
 
             test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
                 storage=None, discard=True)
-            p.measure_concentration(test_plate.wells_from(0, 3),
-                Unit(2, "microliter"), dataref="mc_test", measurement="DNA")
+            p.measure_concentration(test_plate.wells_from(0, 3), "mc_test",
+                "DNA")
+            p.measure_concentration(test_plate.wells_from(3, 3),
+                dataref="mc_test2", measurement="protein",
+                volume="4:microliter")
 
 
         Autoprotocol Output:
@@ -4407,4 +4424,5 @@ class Protocol(object):
 
         """
 
-        self.instructions.append(MeasureConcentration(wells, volume, dataref, measurement))
+        self.instructions.append(MeasureConcentration(wells, volume, dataref,
+                                                      measurement))

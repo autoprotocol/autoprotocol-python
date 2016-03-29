@@ -129,6 +129,26 @@ Protocol.flash_freeze()
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.flash_freeze
 
+Protocol.mag_incubate()
+~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.mag_incubate
+
+Protocol.mag_collect()
+~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.mag_collect
+
+Protocol.mag_dry()
+~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.mag_dry
+
+Protocol.mag_mix()
+~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.mag_mix
+
+Protocol.mag_release()
+~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.mag_release
+
 Protocol.measure_concentration()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.measure_concentration

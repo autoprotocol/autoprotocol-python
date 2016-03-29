@@ -2847,20 +2847,20 @@ class Protocol(object):
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-            shake: dict, optional
-                shake parameters if desired
-                    amplitude: str, Unit
-                        amplitude of shaking between 1 and 6:millimeter
-                    orbital: bool
-                        True for oribital and False for linear shaking
-            duration: str, Unit, optional
-                time prior to plate reading
+        .. code-block:: json
 
-        temperature: str, Unit, optional
-            set temperature to heat plate reading chamber
+            {
+              "shake": {
+                "amplitude": str, Unit
+                "orbital": bool
+                }
+            "duration": str, Unit
+            }
 
         """
         if isinstance(wells, Well):
@@ -2936,20 +2936,20 @@ class Protocol(object):
             Name of this specific dataset of measured absorbances
         flashes : int, optional
             Number of flashes.
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-            shake: dict, optional
-                shake parameters if desired
-                    amplitude: str, Unit
-                        amplitude of shaking between 1 and 6:millimeter
-                    orbital: bool
-                        True for oribital and False for linear shaking
-            duration: str, Unit, optional
-                time prior to plate reading
+        .. code-block:: json
 
-        temperature: str, Unit, optional
-            set temperature to heat plate reading chamber
+            {
+              "shake": {
+                "amplitude": str, Unit
+                "orbital": bool
+                }
+            "duration": str, Unit
+            }
 
         """
         if isinstance(wells, Well):
@@ -3012,20 +3012,21 @@ class Protocol(object):
             WellGroup or list of wells to be measured
         dataref : str
             Name of this dataset of measured luminescence readings.
+        temperature: str, Unit, optional
+            set temperature to heat plate reading chamber
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-            shake: dict, optional
-                shake parameters if desired
-                    amplitude: str, Unit
-                        amplitude of shaking between 1 and 6:millimeter
-                    orbital: bool
-                        True for oribital and False for linear shaking
-            duration: str, Unit, optional
-                time prior to plate reading
+        .. code-block:: json
 
-        temperature: str, Unit, optional
-            set temperature to heat plate reading chamber
+            {
+              "shake": {
+                "amplitude": str, Unit
+                "orbital": bool
+                }
+            "duration": str, Unit
+            }
+
         """
         if isinstance(wells, Well):
             wells = WellGroup(wells)

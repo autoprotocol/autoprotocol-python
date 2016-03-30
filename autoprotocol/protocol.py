@@ -2872,7 +2872,8 @@ class Protocol(object):
                        incubate_before, temperature))
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
-                     flashes=25, incubate_before=None, temperature=None):
+                     flashes=25, temperature=None, gain=None,
+                     incubate_before=None):
         """
         Read the fluoresence for the indicated wavelength for the indicated
         wells.  Append a Fluorescence instruction to the list of instructions
@@ -2938,6 +2939,8 @@ class Protocol(object):
             Number of flashes.
         temperature: str, Unit, optional
             set temperature to heat plate reading chamber
+        gain: float, optional
+            float between 0 and 1, multiplier of maximum signal amplification
         incubate_before: dict, optional
             incubation prior to reading if desired
 
@@ -2956,9 +2959,12 @@ class Protocol(object):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
+        if gain is not None and not (0 <= gain <= 1):
+            raise ValueError("fluoresence gain set to %s must be between "
+                             "0 and 1, inclusive" % gain)
         self.instructions.append(
             Fluorescence(ref, wells, excitation, emission, dataref, flashes,
-                         incubate_before, temperature))
+                         incubate_before, temperature, gain))
 
     def luminescence(self, ref, wells, dataref, incubate_before=None,
                      temperature=None):

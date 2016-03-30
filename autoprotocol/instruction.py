@@ -540,10 +540,12 @@ class Fluorescence(Instruction):
             time prior to plate reading
     temperature: str, Unit, optional
         set temperature to heat plate reading chamber
+    gain: float, optional
+            float between 0 and 1, multiplier of maximum signal amplification
 
     """
 
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,  incubate_before=None, temperature=None):
+    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,  incubate_before=None, temperature=None, gain=None):
         json_dict = {
             "op": "fluorescence",
             "object": ref,
@@ -556,6 +558,8 @@ class Fluorescence(Instruction):
             json_dict["incubate_before"] = incubate_before
         if temperature:
             json_dict["temperature"] = temperature
+        if gain is not None:
+            json_dict["gain"] = gain
 
         super(Fluorescence, self).__init__(json_dict)
 

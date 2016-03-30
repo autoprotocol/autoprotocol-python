@@ -805,6 +805,17 @@ class FluorescenceTestCase(unittest.TestCase):
         p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", temperature="30:celsius")
         self.assertEqual(p.instructions[0].temperature, "30:celsius")
 
+    def test_gain(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        for i in range(0, 10):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading_%s" % i, gain=(i*0.1))
+            self.assertEqual(p.instructions[i].gain, (i*0.1))
+
+        with self.assertRaises(ValueError):
+            for i in range(-6, 10, 5):
+                p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", gain=i)
+
     def test_incubate(self):
         from autoprotocol.util import incubate_params
 

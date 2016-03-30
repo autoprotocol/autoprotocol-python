@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- additional parameter, gain, to fluorescence
 
 Changed
 - adding magnetic separate functions to documentation

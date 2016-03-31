@@ -7,6 +7,7 @@ from .util import check_valid_origin
 from .util import check_stamp_append
 from .util import check_valid_mag
 from .util import check_valid_mag_params
+from .util import check_valid_incubate_params
 
 import sys
 if sys.version_info[0] >= 3:
@@ -2855,7 +2856,7 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "shake": {
+              "shaking": {
                 "amplitude": str, Unit
                 "orbital": bool
                 }
@@ -2867,6 +2868,10 @@ class Protocol(object):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
+
+        if incubate_before:
+            check_valid_incubate_params(incubate_before)
+
         self.instructions.append(
             Absorbance(ref, wells, wavelength, dataref, flashes,
                        incubate_before, temperature))
@@ -2947,7 +2952,7 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "shake": {
+              "shaking": {
                 "amplitude": str, Unit
                 "orbital": bool
                 }
@@ -2962,6 +2967,10 @@ class Protocol(object):
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError("fluoresence gain set to %s must be between "
                              "0 and 1, inclusive" % gain)
+
+        if incubate_before:
+            check_valid_incubate_params(incubate_before)
+
         self.instructions.append(
             Fluorescence(ref, wells, excitation, emission, dataref, flashes,
                          incubate_before, temperature, gain))
@@ -3026,7 +3035,7 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "shake": {
+              "shaking": {
                 "amplitude": str, Unit
                 "orbital": bool
                 }
@@ -3038,6 +3047,10 @@ class Protocol(object):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
             wells = wells.indices()
+
+        if incubate_before:
+            check_valid_incubate_params(incubate_before)
+
         self.instructions.append(Luminescence(ref, wells, dataref,
                                               incubate_before, temperature))
 

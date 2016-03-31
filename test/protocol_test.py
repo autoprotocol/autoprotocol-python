@@ -789,6 +789,18 @@ class AbsorbanceTestCase(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
 
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={'shaking': {'amplitude': '3:mm', 'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={'duration': '10:minute', 'shaking': {}})
+
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={'duration': '10:minute', 'shaking': {'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
+
 
 class FluorescenceTestCase(unittest.TestCase):
     def test_single_well(self):
@@ -855,6 +867,18 @@ class FluorescenceTestCase(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
 
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before={'shaking': {'amplitude': '3:mm', 'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before={'duration': '10:minute', 'shaking': {}})
+
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before={'duration': '10:minute', 'shaking': {'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer", emission="610:nanometer", dataref="test_reading", incubate_before={'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
+
 
 class LuminescenceTestCase(unittest.TestCase):
     def test_single_well(self):
@@ -903,6 +927,18 @@ class LuminescenceTestCase(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before=incubate_params("10:second", shake_orbital=True))
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before={'shaking': {'amplitude': '3:mm', 'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before={'duration': '10:minute', 'shaking': {}})
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before={'duration': '10:minute', 'shaking': {'orbital': True}})
+
+        with self.assertRaises(RuntimeError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading", incubate_before={'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
 
 
 class AcousticTransferTestCase(unittest.TestCase):

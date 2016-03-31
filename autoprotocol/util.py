@@ -293,27 +293,53 @@ def incubate_params(duration, shake_amplitude=None, shake_orbital=None):
     """
 
     incubate_dict = {}
-    if Unit.fromstring(duration) < Unit.fromstring("0:second"):
-        raise ValueError("duration: %s must be positive" % duration)
-    else:
-        incubate_dict["duration"] = duration
-
+    incubate_dict["duration"] = duration
     if (shake_amplitude is not None) and (shake_orbital is not None):
-        shake_dict = {}
-
-        if Unit.fromstring(shake_amplitude) < Unit.fromstring("0:millimeter"):
-            raise ValueError("shake_amplitude: %s must be positive" % shake_amplitude)
-        else:
-            shake_dict["amplitude"] = shake_amplitude
-
-        if not isinstance(shake_orbital, bool):
-            raise ValueError("shake_orbital: %s must be a boolean" % shake_orbital)
-        else:
-            shake_dict["orbital"] = shake_orbital
-
+        shake_dict = {
+            "amplitude": shake_amplitude,
+            "orbital": shake_orbital
+        }
         incubate_dict["shaking"] = shake_dict
-
-    if (shake_amplitude is not None) ^ (shake_orbital is not None):
+    elif (shake_amplitude is not None) ^ (shake_orbital is not None):
         raise RuntimeError("Both `shake_amplitude`: %s and `shake_orbital`: %s must not be None for shaking to be set" % (shake_amplitude, shake_orbital))
 
+    check_valid_incubate_params(incubate_dict)
+
     return incubate_dict
+
+
+def check_valid_incubate_params(idict):
+    """Check to be sure incubate_params are structured correctly
+
+    .. code-block:: json
+
+        {
+          "shaking": {
+            "amplitude": str, Unit
+            "orbital": bool
+            }
+        "duration": str, Unit
+        }
+
+    where duration is required, shaking is optional, and amplitude and orbital
+    are both required if shaking is specified.
+
+    """
+
+    if 'duration' not in idict:
+        raise RuntimeError("For the incubation dictionary: %s, `duration` must be specified" % idict)
+    else:
+        if Unit.fromstring(idict['duration']) <= Unit("0:second"):
+            raise ValueError("duration: %s must be positive" % idict['duration'])
+
+    if "shaking" in idict:
+        shaking = idict["shaking"]
+        if "orbital" in shaking and "amplitude" in shaking:
+            if not isinstance(shaking["orbital"], bool):
+                raise ValueError("shake_orbital: %s must be a boolean" % shaking["orbital"])
+            if Unit.fromstring(shaking["amplitude"]) < Unit.fromstring("0:millimeter"):
+                raise ValueError("shake_amplitude: %s must be positive" % shaking["amplitude"])
+        else:
+            raise RuntimeError("Both `shake_amplitude`: %s and `shake_orbital`: %s must not be None for shaking to be set" % (shaking.get("amplitude"), shaking.get("orbital")))
+
+    return True

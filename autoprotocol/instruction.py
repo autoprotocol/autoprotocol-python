@@ -480,7 +480,7 @@ class Absorbance(Instruction):
     flashes : int, optional
     incubate_before: dict, optional
         incubation prior to reading if desired
-        shake: dict, optional
+        shaking: dict, optional
             shake parameters if desired
                 amplitude: str, Unit
                     amplitude of shaking between 1 and 6:millimeter
@@ -530,7 +530,7 @@ class Fluorescence(Instruction):
     flashes : int, optional
     incubate_before: dict, optional
         incubation prior to reading if desired
-        shake: dict, optional
+        shaking: dict, optional
             shake parameters if desired
                 amplitude: str, Unit
                     amplitude of shaking between 1 and 6:millimeter
@@ -577,7 +577,7 @@ class Luminescence(Instruction):
     dataref : str
     incubate_before: dict, optional
         incubation prior to reading if desired
-        shake: dict, optional
+        shaking: dict, optional
             shake parameters if desired
                 amplitude: str, Unit
                     amplitude of shaking between 1 and 6:millimeter

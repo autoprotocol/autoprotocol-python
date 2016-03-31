@@ -107,7 +107,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         self.assertEqual(3, len(ws))
         self.assertIsInstance(ws, WellGroup)
         ws = self.c.wells("A1", ["A2", "A3"])
-        self.assertEquals(3, len(ws))
+        self.assertEqual(3, len(ws))
         self.assertIsInstance(ws, WellGroup)
         with self.assertRaises(ValueError):
             ws = self.c.wells("an invalid reference")

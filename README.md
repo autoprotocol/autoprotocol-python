@@ -178,6 +178,10 @@ The script above prints the following output to standard out by calling as_dict(
 A folder of SublimeText snippets for this library is included in this repo.  To use them, copy the folder to `~/Library/Application\ Support/Sublime\ Text\ 3/Packages/User`
 (replace with the version of Sublime Text you're using if it's not 3).
 
+## Disclaimers
+
+The Autoprotocol Python Library contains official support for units listed in the [Autoprotocol](http://www.autoprotocol.org) specification. Other units and abbreviations of units have been provided as a convenience.
+
 ## Contributing
 
 The easiest way to contribute is to fork this repository and submit a pull

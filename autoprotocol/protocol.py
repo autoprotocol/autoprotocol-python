@@ -3645,7 +3645,10 @@ class Protocol(object):
         mag = {}
         mag["object"] = container
         for kw in ["duration"]:
-            mag[kw] = locals()[kw]
+            val = locals()[kw]
+            if isinstance(val, str) and ":" in val:
+                val = Unit(val)
+            mag[kw] = val
 
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
@@ -3714,7 +3717,10 @@ class Protocol(object):
         mag = {}
         mag["object"] = container
         for kw in ("duration", "magnetize", "tip_position", "temperature"):
-            mag[kw] = locals()[kw]
+            val = locals()[kw]
+            if isinstance(val, str) and ":" in val:
+                val = Unit(val)
+            mag[kw] = val
 
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
@@ -3785,7 +3791,10 @@ class Protocol(object):
         mag = {}
         mag["object"] = container
         for kw in ("cycles", "pause_duration", "bottom_position", "temperature"):
-            mag[kw] = locals()[kw]
+            val = locals()[kw]
+            if isinstance(val, str) and ":" in val:
+                val = Unit(val)
+            mag[kw] = val
 
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "collect")
@@ -3803,7 +3812,7 @@ class Protocol(object):
             p = Protocol()
             plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
 
-            p.mag_release("96-pcr", plate, "30:second", "60:Hz", center=0.75,
+            p.mag_release("96-pcr", plate, "30:second", "60:hertz", center=0.75,
                           amplitude=0.25, temperature=None, new_tip=False,
                           new_instruction=False)
 
@@ -3819,7 +3828,7 @@ class Protocol(object):
                         "release": {
                           "center": 0.75,
                           "object": "plate_0",
-                          "frequency": "60:Hz",
+                          "frequency": "2:hertz",
                           "amplitude": 0.25,
                           "duration": "30:second",
                           "temperature": null
@@ -3841,7 +3850,7 @@ class Protocol(object):
         duration : str, Unit
             Total time for this sub-operation
         frequency : str, Unit
-            Cycles per second (Hz) that tips are raised and lowered
+            Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
         amplitude : float
@@ -3859,7 +3868,10 @@ class Protocol(object):
         mag = {}
         mag["object"] = container
         for kw in ("duration", "frequency", "center", "amplitude", "temperature"):
-            mag[kw] = locals()[kw]
+            val = locals()[kw]
+            if isinstance(val, str) and ":" in val:
+                val = Unit(val)
+            mag[kw] = val
 
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "release")
@@ -3877,7 +3889,7 @@ class Protocol(object):
             p = Protocol()
             plate = p.ref("plate_0", None, "96-pcr", storage="cold_20")
 
-            p.mag_mix("96-pcr", plate, "30:second", "60:Hz", center=0.75,
+            p.mag_mix("96-pcr", plate, "30:second", "60:hertz", center=0.75,
                       amplitude=0.25, magnetize=True, temperature=None,
                       new_tip=False, new_instruction=False)
 
@@ -3893,7 +3905,7 @@ class Protocol(object):
                         "mix": {
                           "center": 0.75,
                           "object": "plate_0",
-                          "frequency": "60:Hz",
+                          "frequency": "2:hertz",
                           "amplitude": 0.25,
                           "duration": "30:second",
                           "magnetize": true,
@@ -3916,7 +3928,7 @@ class Protocol(object):
         duration : str, Unit
             Total time for this sub-operation
         frequency : str, Unit
-            Cycles per second (Hz) that tips are raised and lowered
+            Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
         amplitude : float
@@ -3936,7 +3948,10 @@ class Protocol(object):
         mag = {}
         mag["object"] = container
         for kw in ("duration", "frequency", "center", "amplitude", "magnetize", "temperature"):
-            mag[kw] = locals()[kw]
+            val = locals()[kw]
+            if isinstance(val, str) and ":" in val:
+                val = Unit(val)
+            mag[kw] = val
 
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "mix")

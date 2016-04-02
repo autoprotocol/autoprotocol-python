@@ -1006,6 +1006,18 @@ class MagneticTransferTestCase(unittest.TestCase):
             with self.assertRaises(ValueError):
                 p.mag_dry("96-pcr", deep, "30:minute", new_tip=False, new_instruction=False)
 
+    def test_unit_converstion(self):
+        p = Protocol()
+        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+        p.mag_mix("96-pcr", pcr, "30:second", "5:hertz", center=0.75, amplitude=0.25, magnetize=True, temperature=None, new_tip=False, new_instruction=False)
+        out_dict = {'amplitude': 0.25,
+                    'center': 0.75,
+                    'duration': Unit(30.0, 'second'),
+                    'frequency': Unit(5.0, 'hertz'),
+                    'magnetize': True}
+        for k, v in out_dict.items():
+            self.assertEqual(p.instructions[-1].groups[0][0]["mix"][k], v)
+
     def test_temperature_valid(self):
         p = Protocol()
 

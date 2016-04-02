@@ -8,13 +8,16 @@ Added
 - additional parameter, gain, to fluorescence
 - checking for valid plate read incubate parameters
 - Unit(Unit(...)) now returns a Unit
+- disclaimer to README.md on unit support
 
 Changed
-- adding magnetic separate functions to documentation
+- adding magnetic transfer functions to documentation
+- magnetic transfer instructions to now pass relevant inputs through units
 
 Removed
 
 Fixed
+- documentation for magnetic transfer instructions correctly uses hertz
 
 ## v3.1.0 - 2016-03-24
 ---

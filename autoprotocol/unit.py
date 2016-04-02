@@ -69,6 +69,10 @@ class Unit(_Quantity):
         cls._REGISTRY = ureg
         cls.force_ndarray = False
 
+        # Automatically return Unit if Unit is provided
+        if isinstance(value, Unit):
+            return value
+
         # Automatically parse String if no units provided
         if not units and isinstance(value, string_type):
             try:

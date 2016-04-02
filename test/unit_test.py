@@ -77,6 +77,8 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(Unit(20, 'microliters'), Unit(20, 'microliter'))
         self.assertEqual(Unit(20, 'uliter'), Unit(20, 'microliter'))
         self.assertEqual(Unit(20, 'microl'), Unit(20, 'microliter'))
+        # Test return of calling Unit on an Unit instance
+        self.assertEqual(Unit(Unit(20, 'microliter')), Unit(20, 'microliter'))
 
     def test_compound_units(self):
         u1 = Unit(20, 'microliter/second')
@@ -108,9 +110,11 @@ class UnitMathTestCase(unittest.TestCase):
         self.assertEqual(str(Unit(4.2, 'milliliter')), '4.2:milliliter')
         self.assertEqual(str(Unit(4.2, 'rpm')), '4.2:rpm')
         self.assertEqual(str(Unit(4.2, 'nanometer')), '4.2:nanometer')
+        self.assertEqual(str(Unit(4.2, 'millimeter')), '4.2:millimeter')
         self.assertEqual(str(Unit(4.2, 'celsius')), '4.2:celsius')
         self.assertEqual(str(Unit(4.2, 'nanomole')), '4.2:nanomole')
         self.assertEqual(str(Unit(4.2, 'micromole')), '4.2:micromole')
+        self.assertEqual(str(Unit(4.2, 'hertz')), '4.2:hertz')
 
     def test_prefixes(self):
         # Test SI prefixes (yotta to yocto)

@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 - additional parameter, gain, to fluorescence
 - checking for valid plate read incubate parameters
+- Unit(Unit(...)) now returns a Unit
 
 Changed
 - adding magnetic separate functions to documentation

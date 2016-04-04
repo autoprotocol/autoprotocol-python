@@ -16,7 +16,6 @@ Protocol.ref()
 ~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.ref
 
-
 Protocol.append()
 ~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.append
@@ -32,6 +31,10 @@ Protocol.distribute()
 Protocol.transfer()
 ~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.transfer
+
+Protocol.acoustic_transfer()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.acoustic_transfer
 
 Protocol.consolidate()
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -9,6 +9,7 @@ Added
 - checking for valid plate read incubate parameters
 - Unit(Unit(...)) now returns a Unit
 - disclaimer to README.md on unit support
+- Unit support for `molar`
 
 Changed
 - adding magnetic transfer functions to documentation

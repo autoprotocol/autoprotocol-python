@@ -16,18 +16,21 @@ else:
 '''
 
 # Preload UnitRegistry (Use default Pints definition file as a base)
-ureg = UnitRegistry()
+_UnitRegistry = UnitRegistry()
 
 '''Map string representation of Pint units over to Autoprotocol format'''
 # Map Temperature Unit names
-ureg._units["degC"]._name = "celsius"
-ureg._units["celsius"]._name = "celsius"
-ureg._units["degF"]._name = "fahrenheit"
-ureg._units["fahrenheit"]._name = "fahrenheit"
-ureg._units["degR"]._name = "rankine"
-ureg._units["rankine"]._name = "rankine"
+_UnitRegistry._units["degC"]._name = "celsius"
+_UnitRegistry._units["celsius"]._name = "celsius"
+_UnitRegistry._units["degF"]._name = "fahrenheit"
+_UnitRegistry._units["fahrenheit"]._name = "fahrenheit"
+_UnitRegistry._units["degR"]._name = "rankine"
+_UnitRegistry._units["rankine"]._name = "rankine"
 # Map Speed Unit names
-ureg._units["revolutions_per_minute"]._name = "rpm"
+_UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
+
+'''Add support for Molarity Unit'''
+_UnitRegistry.define('molar = mole/liter = M')
 
 
 class Unit(_Quantity):
@@ -66,7 +69,7 @@ class Unit(_Quantity):
 
     """
     def __new__(cls, value, units=None):
-        cls._REGISTRY = ureg
+        cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False
 
         # Automatically return Unit if Unit is provided

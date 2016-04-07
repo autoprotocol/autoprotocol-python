@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+
+## v3.2.0 - 2016-04-07
+---
+Added
 - additional parameter, gain, to fluorescence
 - checking for valid plate read incubate parameters
 - Unit(Unit(...)) now returns a Unit
@@ -19,6 +30,7 @@ Removed
 
 Fixed
 - documentation for magnetic transfer instructions correctly uses hertz
+
 
 ## v3.1.0 - 2016-03-24
 ---

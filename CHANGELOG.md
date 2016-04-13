@@ -13,6 +13,18 @@ Removed
 Fixed
 
 
+## v3.3.0 - 2016-04-13
+---
+Added
+- csv-table input type to harness.py
+
+Changed
+
+Removed
+
+Fixed
+
+
 ## v3.2.0 - 2016-04-07
 ---
 Added

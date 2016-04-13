@@ -139,17 +139,18 @@ class ManifestTest(unittest.TestCase):
         self.assertTrue(isinstance(parsed['group_test']['test'], Well))
         with self.assertRaises(RuntimeError):
             protocol_info1 = ProtocolInfo({
-            'name': 'Test Errors',
-            'inputs': {
-                'group': {
-                    'type': 'group',
-                    'inputs': {
-                        'bool': 'bool',
-                        'aliquot': 'aliquot',
-                        'aliquot+': 'aliquot+'
+                'name': 'Test Errors',
+                'inputs': {
+                    'group': {
+                        'type': 'group',
+                        'inputs': {
+                            'bool': 'bool',
+                            'aliquot': 'aliquot',
+                            'aliquot+': 'aliquot+'
+                        }
                     }
                 }
-            }})
+            })
             parsed1 = protocol_info1.parse(self.protocol, {
                 'refs': {
                 },
@@ -158,12 +159,13 @@ class ManifestTest(unittest.TestCase):
                 }
             })
             protocol_info2 = ProtocolInfo({
-            'name': 'Test Errors',
-            'inputs': {
-                'group': {
-                    'type': 'group'
+                'name': 'Test Errors',
+                'inputs': {
+                    'group': {
+                        'type': 'group'
+                    }
                 }
-            }})
+            })
             parsed2 = protocol_info2.parse(self.protocol, {
                 'refs': {
                 },
@@ -175,7 +177,6 @@ class ManifestTest(unittest.TestCase):
                     }
                 }
             })
-
 
     def test_multigroup(self):
         protocol_info = ProtocolInfo({
@@ -310,6 +311,58 @@ class ManifestTest(unittest.TestCase):
                 }
             })
 
+    def test_csv_table(self):
+        protocol_info = ProtocolInfo({
+            'name': 'Test Basic Types',
+            'inputs': {
+                "table_test": {
+                    "template": {
+                        "header": ["Destination Well", "Source Well", "Final concentration in ug/ml"],
+                        "keys": ["dest_well", "source_well", "final_concentration_ugml"],
+                        "col_type": ["integer", "aliquot", "decimal"],
+                        "rows": [
+                            ["0", "ct17652537/0", "1.2"],
+                            ["1", "ct17652537/0", "4.37"]
+                        ],
+                        "label": "Test Table CSV"
+                    },
+                    "type": "csv-table",
+                    "label": "test table label"
+                }
+            }
+        })
+        parsed = protocol_info.parse(self.protocol, {
+            'refs': {
+                'ct1test': {'id': 'ct1test', 'type': 'micro-1.5', 'discard': True},
+                'ct2test': {'id': 'ct2test', 'type': 'micro-1.5', 'discard': True}
+            },
+            'parameters': {
+                "table_test": [
+                    {
+                        "dest_well": "integer",
+                        "source_well": "aliquot",
+                        "final_concentration_ugml": "decimal"
+                    },
+                    [
+                        {
+                            "dest_well": 0,
+                            "source_well": "ct1test/0",
+                            "final_concentration_ugml": 0.5
+                        },
+                        {
+                            "dest_well": 1,
+                            "source_well": "ct2test/0",
+                            "final_concentration_ugml": 0.6
+                        }
+                    ]
+                ]
+            }
+        })
+        self.assertTrue(isinstance(parsed['table_test'], list))
+        self.assertTrue(isinstance(parsed['table_test'][0], dict))
+        self.assertTrue('final_concentration_ugml' in parsed['table_test'][0])
+        self.assertTrue(isinstance(parsed['table_test'][1]['source_well'], Well))
+
     def test_blank_default(self):
         protocol_info = ProtocolInfo({
             'name': 'Test Basic Blank Defaults',
@@ -320,6 +373,7 @@ class ManifestTest(unittest.TestCase):
                 'decimal': 'decimal',
                 'volume': 'volume',
                 'temperature': 'temperature',
+                'csv-table': 'csv-table'
             }
         })
         parsed = protocol_info.parse(self.protocol, {
@@ -332,6 +386,7 @@ class ManifestTest(unittest.TestCase):
         self.assertIsNone(parsed['decimal'])
         self.assertIsNone(parsed['volume'])
         self.assertIsNone(parsed['temperature'])
+        self.assertIsInstance(parsed['csv-table'], list)
 
     def test_ref_default(self):
         protocol_info = ProtocolInfo({
@@ -387,18 +442,20 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual([{'bool': None}], parsed['group+'])
 
 
+
     def test_container_errors(self):
         with self.assertRaises(RuntimeError):
             protocol_info1 = ProtocolInfo({
-            'name': 'Test Errors',
-            'inputs': {
-                'cont': {
-                    'type': 'container'
+                'name': 'Test Errors',
+                'inputs': {
+                    'cont': {
+                        'type': 'container'
+                    }
                 }
-            }})
+            })
             parsed1 = protocol_info1.parse(self.protocol, {
                 'refs': {
-                    "my_cont":{
+                    "my_cont": {
                         "type": "micro-1.5",
                         "discard": True
                     }
@@ -409,7 +466,7 @@ class ManifestTest(unittest.TestCase):
             })
             parsed2 = protocol_info1.parse(self.protocol, {
                 'refs': {
-                    "my_cont":{
+                    "my_cont": {
                         "type": "micro-1.5",
                         "discard": True
                     }
@@ -420,7 +477,7 @@ class ManifestTest(unittest.TestCase):
             })
             parsed3 = protocol_info1.parse(self.protocol, {
                 'refs': {
-                    "my_cont":{
+                    "my_cont": {
                         "type": "micro-1.5",
                         "discard": True
                     }

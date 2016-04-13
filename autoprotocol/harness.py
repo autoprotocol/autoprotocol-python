@@ -52,6 +52,8 @@ def param_default(typeDesc):
             'value': default,
             'inputs': default_inputs
         }
+    elif typeDesc['type'] == 'csv-table':
+        return [{}, {}]
     else:
         return None
 
@@ -220,6 +222,23 @@ def convert_param(protocol, val, typeDesc):
                                "[{\"cycles\": integer, \n  \"steps\":[{\n    "
                                "\"duration\": duration, \n    \"temperature\": "
                                "temperature\n  }]\n}]")
+
+    elif type == 'csv-table':
+        try:
+            return [
+                {
+                    h: convert_param(protocol, v, typeDesc={"type": val[0].get(h), "label": "csv-table item (%s): %s"
+                                                            % (i, h)}) for h, v in row.items()
+                }
+                for i, row in enumerate(val[1])
+            ]
+
+        except (AttributeError, IndexError, TypeError):
+            label = typeDesc.get('label') or "[unknown]"
+            raise RuntimeError("The values supplied to %s (type csv-table) are improperly"
+                               "formatted. Format must be a list of dictionaries with the first."
+                               " dictionary comprising keys with associated column input types." % label)
+
     else:
         raise ValueError("Unknown input type %r" % type)
 

@@ -1425,3 +1425,17 @@ class MeasureConcentrationTestCase(unittest.TestCase):
             self.assertEqual(
                 p.as_dict()["instructions"][i]["measurement"], sample_class)
         self.assertEqual(len(p.instructions), 4)
+
+class GelPurifyTestCase(unittest.TestCase):
+    def test_gel_purify(self):
+        p = Protocol()
+        sample_wells = p.ref("test_plate", None, "96-pcr", discard=True).wells_from(0, 12)
+        extract_wells = [p.ref("extract_%s" % i, None, "micro-1.5", storage="cold_4").well(0)for i in sample_wells]
+        extract = [
+            {
+                "band_size_range": {"min_bp": 0, "max_bp": 10},
+                "elution_volume": "5:microliter",
+                "elution_buffer": "water", "lane": i, "destination": d
+            } for i, d in enumerate(extract_wells)
+        ]
+        p.gel_purify(sample_wells, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", extract)

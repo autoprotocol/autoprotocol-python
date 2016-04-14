@@ -212,6 +212,23 @@ def check_valid_mag_params(mag_dict):
         if not isinstance(mag_dict["magnetize"], bool):
             raise ValueError("Magnetize set at: %s, must be boolean" % mag_dict["magnetize"])
 
+def check_valid_gel_purify_params(extract):
+
+    if not isinstance(extract, list):
+        raise AttributeError("Extract parameters for gel gel_purify must be a list of extraction parameters in the "
+                             "form of [{'elution_volume': volume 'elution_buffer': str, 'lane': int, 'band_size_range':"
+                             " {'min_bp': int, 'max_bp': int, },'destination': well}, {...}]")
+    for i, ex in enumerate(extract):
+        if not isinstance(ex, dict):
+            raise AttributeError("All extraction parameters must be a dictionary with specific parameters. Extract "
+                                 "parameters for item %s in the extract list is incorrectly formated." % (i + 1))
+        if not (ex.keys() is ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]):
+            assert KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination'.")
+        if not isinstance(ex["band_size_range"], dict):
+            assert AttributeError("Extract parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
+        if not (ex["band_size_range"].keys() is ["min_bp", "max_bp"]):
+            assert KeyError("Extract parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
+
 
 class make_dottable_dict(dict):
 

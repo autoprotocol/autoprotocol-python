@@ -8,6 +8,7 @@ from .util import check_stamp_append
 from .util import check_valid_mag
 from .util import check_valid_mag_params
 from .util import check_valid_incubate_params
+from .util import check_valid_gel_purify_params
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3140,90 +3141,20 @@ class Protocol(object):
                                                  duration, dataref))
 
 
-    def gel_separate(self, wells, volume, matrix, ladder, duration, dataref, extract):
+    def gel_purify(self, wells, volume, matrix, ladder, duration, dataref, extract):
         """
-        Separate nucleic acids on an agarose gel.
+        Separate nucleic acids on an agarose gel and purify.
 
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            sample_plate = p.ref("sample_plate",
-                                 None,
-                                 "96-flat",
-                                 storage="warm_37")
-
-            p.gel_separate(sample_plate.wells_from(0,12), "10:microliter",
-                           "agarose(8,0.8%)", "ladder1", "11:minute",
-                           "genotyping_030214")
-
-        Autoprotocol Output:
-
-        .. code-block:: json
-
-            "instructions": [
-                {
-                  "dataref": "genotyping_030214",
-                  "matrix": "agarose(8,0.8%)",
-                  "volume": "10:microliter",
-                  "ladder": "ladder1",
-                  "objects": [
-                    "sample_plate/0",
-                    "sample_plate/1",
-                    "sample_plate/2",
-                    "sample_plate/3",
-                    "sample_plate/4",
-                    "sample_plate/5",
-                    "sample_plate/6",
-                    "sample_plate/7",
-                    "sample_plate/8",
-                    "sample_plate/9",
-                    "sample_plate/10",
-                    "sample_plate/11"
-                  ],
-                  "duration": "11:minute",
-                  "op": "gel_separate"
-                }
-            ]
-
-        Parameters
-        ----------
-        wells : list, WellGroup
-            List of string well references or WellGroup containing wells to be
-            separated on gel.
-        volume : str, Unit
-            Volume of liquid to be transferred from each well specified to a
-            lane of the gel.
-        matrix : str
-            Matrix (gel) in which to gel separate samples
-        ladder : str
-            Ladder by which to measure separated fragment size
-        duration : str, Unit
-            Length of time to run current through gel.
-        dataref : str
-            Name of this set of gel separation results.
         """
 
-        if not isinstance(extract, list):
-            raise AttributeError(
-                "extract parameters for gel gel_purify must be a list of extraction parameters in the "
-                "form of [{'elution_volume': volume' elution_buffer': str, 'lane': int, 'band_size_range':"
-                " {'min_bp': int, 'max_bp': int, },'destination': well}, {...}]")
-        for i, extract_param in enumerate(extract):
-            if not isinstance(extract_param, dict):
-                raise AttributeError("all extracts must be dicts")
-            assert k.keys() is ["elution_buffer", "volume", "lane", "band_size_range", "destination"], "gel key error"]
-            assert k["band_size_range"] 
-
-
+        check_valid_gel_purify_params(extract)
 
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1
             for x in xrange(0, len(wells), max_well):
                 self.gel_purify(wells[x:x+max_well], volume, matrix, ladder,
-                                  duration, "%s_%d" % (dataref, datarefs))
+                                  duration, "%s_%d" % (dataref, datarefs), extract)
                 datarefs += 1
         else:
             self.instructions.append(GelPurify(wells, volume, matrix, ladder,

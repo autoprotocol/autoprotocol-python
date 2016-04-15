@@ -3140,11 +3140,66 @@ class Protocol(object):
             self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
                                                  duration, dataref))
 
-
     def gel_purify(self, wells, volume, matrix, ladder, duration, dataref, extract):
         """
-        Separate nucleic acids on an agarose gel and purify.
+        Separate nucleic acids on an agarose gel and purify according to parameters.
 
+        Example Usage:
+
+            .. code-block:: python
+
+                p = Protocol()
+                sample_well = p.ref("test_plate", None, "96-pcr", discard=True).well(0)
+                extract_well = p.ref("extract", None, "micro-1.5", storage="cold_4").well(0)
+                extract = [
+                    {
+                        "band_size_range": {"min_bp": 20, "max_bp": 40},
+                        "elution_volume": "5:microliter",
+                        "elution_buffer": "water", "lane": 0, "destination": extract_well
+                    }
+                ]
+                p.gel_purify(sample_well, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", extract)
+
+
+        Parameters
+        ----------
+        wells: list, WellGroup
+            List of string well references or WellGroup containing wells to be
+            separated on gel.
+        volume: str, Unit
+            Volume of liquid to be transferred from each well specified to a
+            lane of the gel.
+        matrix: str
+            Matrix (gel) in which to gel separate samples
+        ladder: str
+            Ladder by which to measure separated fragment size
+        duration: str, Unit
+            Length of time to run current through gel.
+        dataref: str
+            Name of this set of gel separation results.
+        extract: List of dicts
+            Dictionary containing parameters for gel extraction, must be in the form of:
+
+            ..code-block:: python
+
+                [
+                  {
+                    "elution_volume": Unit,
+                    "elution_buffer": str,
+                    "destination" Well,
+                    "band_size_range: {
+                      "min_bp: int,
+                      "max_bp" int
+                    }
+                  }
+                ]
+
+        Raises:
+        -------
+        AttributeError:
+            If extract parameters are not a list of dictionaries.
+        KeyError:
+            If extract parameters do not contain the specified parameter keys.
         """
 
         check_valid_gel_purify_params(extract)
@@ -3154,12 +3209,11 @@ class Protocol(object):
             datarefs = 1
             for x in xrange(0, len(wells), max_well):
                 self.gel_purify(wells[x:x+max_well], volume, matrix, ladder,
-                                  duration, "%s_%d" % (dataref, datarefs), extract)
+                                duration, "%s_%d" % (dataref, datarefs), extract)
                 datarefs += 1
         else:
             self.instructions.append(GelPurify(wells, volume, matrix, ladder,
-                                                 duration, dataref, extract))
-
+                                     duration, dataref, extract))
 
     def seal(self, ref, type="ultra-clear"):
         """

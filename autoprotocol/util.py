@@ -212,6 +212,7 @@ def check_valid_mag_params(mag_dict):
         if not isinstance(mag_dict["magnetize"], bool):
             raise ValueError("Magnetize set at: %s, must be boolean" % mag_dict["magnetize"])
 
+
 def check_valid_gel_purify_params(extract):
 
     if not isinstance(extract, list):

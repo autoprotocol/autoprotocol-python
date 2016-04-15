@@ -3201,10 +3201,13 @@ class Protocol(object):
         KeyError:
             If extract parameters do not contain the specified parameter keys.
         """
-
-        check_valid_gel_purify_params(extract)
+        well_lane_dests = []
 
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        
+        check_valid_gel_purify_params(extract)
+
+
         if len(wells) > max_well:
             datarefs = 1
             for x in xrange(0, len(wells), max_well):

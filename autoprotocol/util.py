@@ -231,6 +231,18 @@ def check_valid_gel_purify_params(extract):
             assert KeyError("Extract parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
 
 
+def make_gel_extract_param(well, elution_buffer, elution_volume, max_bp, min_bp, destination, lane=None):
+        return {
+            "band_size_range": {
+                "min_bp": min_bp, "max_bp": max_bp
+            },
+            "elution_volume": elution_volume,
+            "elution_buffer": elution_buffer,
+            "lane": lane,
+            "destination": destination
+        }
+
+
 class make_dottable_dict(dict):
 
     '''Enable dictionaries to be accessed using dot notation instead of bracket

@@ -1426,6 +1426,7 @@ class MeasureConcentrationTestCase(unittest.TestCase):
                 p.as_dict()["instructions"][i]["measurement"], sample_class)
         self.assertEqual(len(p.instructions), 4)
 
+
 class GelPurifyTestCase(unittest.TestCase):
     def test_gel_purify(self):
         p = Protocol()
@@ -1439,3 +1440,9 @@ class GelPurifyTestCase(unittest.TestCase):
             } for i, d in enumerate(extract_wells)
         ]
         p.gel_purify(sample_wells, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", extract)
+        self.assertEqual(len(p.instructions), 2)
+        with self.assertRaises(AttributeError):
+            p.gel_purify(sample_wells, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", {"broken": "extract"})
+        del extract[2]["band_size_range"]
+        with self.assertRaises(KeyError):
+            p.gel_purify(sample_wells, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", extract)

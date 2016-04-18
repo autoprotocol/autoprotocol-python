@@ -517,6 +517,57 @@ class Container(object):
 
         return self.wells(wells)
 
+    def set_storage(self, storage):
+        """
+        Set the storage condition of a container, will overwrite
+        an existing storage condition, will remove discard True.
+
+        Parameters
+        ----------
+        storage : str
+            Storage condition.
+
+        Raises
+        ----------
+        TypeError :
+            If storage condition not of type str.
+
+        """
+        if not isinstance(storage, basestring):
+            raise TypeError("Storage condition given ({0}) is not of type str. {1}.".format(storage, type(storage)))
+        self.storage = storage
+        return self
+
+    def discard(self):
+        """
+        Set the storage condition of a container to None and
+        container to be discarded if ref in protocol.
+
+        Example
+        ----------
+
+            .. code-block:: python
+
+                p = Protocol()
+                container = p.ref("new_container", cont_type="96-pcr", storage="cold_20")
+                p.incubate(c, "warm_37", "30:minute")
+                container.discard()
+
+                Autoprotocol generated:
+
+                .. code-block:: json
+
+                   "refs": {
+                      "new_container": {
+                        "new": "96-pcr",
+                        "discard": true
+                      }
+                    }
+
+        """
+        self.storage = None
+        return self
+
     def __repr__(self):
         """
         Return a string representation of a Container using the specified name.

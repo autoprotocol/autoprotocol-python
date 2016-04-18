@@ -364,6 +364,16 @@ class Protocol(object):
                     if len(well.properties) > 0:
                         outs[n][str(well.index)][
                             "properties"] = well.properties
+            # assign any storage or discard condition changes to ref
+            if "store" in ref.opts:
+                ref.opts["store"] = ref.container.storage
+            if ref.container.storage is None and "discard" not in ref.opts:
+                ref.opts["discard"] = True
+                del ref.opts["store"]
+            elif ref.container.storage is not None and "discard" in ref.opts:
+                ref.opts["store"] = {"where": ref.container.storage}
+                del ref.opts["discard"]
+
         if outs:
             return {
                 "refs": dict(

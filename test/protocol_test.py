@@ -80,6 +80,18 @@ class RefTestCase(unittest.TestCase):
         self.assertTrue(p.refs["test"].opts["discard"])
         self.assertFalse("where" in p.refs["test"].opts)
 
+    def test_storage_condition_change(self):
+        p = Protocol()
+        c1 = p.ref("discard_test", None, "micro-2.0", storage="cold_20")
+        self.assertEqual(p.refs["discard_test"].opts["store"]["where"], "cold_20")
+        with self.assertRaises(KeyError):
+            p.as_dict()["refs"]["discard_test"]["discard"]
+        c1.discard()
+        self.assertTrue(p.as_dict()["refs"]["discard_test"]["discard"])
+        with self.assertRaises(KeyError):
+            p.as_dict()["refs"]["discard_test"]["store"]
+        c1.set_storage("cold_4")
+        self.assertEqual(p.as_dict()["refs"]["discard_test"]["store"]["where"], "cold_4")
 
 class ThermocycleTestCase(unittest.TestCase):
     def test_thermocycle_append(self):

@@ -223,16 +223,19 @@ def check_valid_gel_purify_params(extract):
         if not isinstance(ex, dict):
             raise AttributeError("All extraction parameters must be a dictionary with specific parameters. Extract "
                                  "parameters for item %s in the extract list is incorrectly formated." % (i + 1))
-        if not (ex.keys() is ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]):
-            assert KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination'.")
+        if not all(k in ex.keys() for k in ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]):
+            raise KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination'.")
         if not isinstance(ex["band_size_range"], dict):
-            assert AttributeError("Extract parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
-        if not (ex["band_size_range"].keys() is ["min_bp", "max_bp"]):
-            assert KeyError("Extract parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
+            raise AttributeError("Extract parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
+        if not all(k in ex["band_size_range"].keys() for k in ["min_bp", "max_bp"]):
+            raise KeyError("Extract parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
+        if not ex["band_size_range"]["max_bp"] > ex["band_size_range"]["min_bp"]:
+            raise ValueError("max_bp must be greater than min_bp")
 
 
 def make_gel_extract_param(well, elution_buffer, elution_volume, max_bp, min_bp, destination, lane=None):
         return {
+            "source_well": well,
             "band_size_range": {
                 "min_bp": min_bp, "max_bp": max_bp
             },

@@ -499,14 +499,13 @@ class GelPurify(Instruction):
 
     """
 
-    def __init__(self, wells, volume, matrix, ladder, duration, dataref, extract):
+    def __init__(self, wells, volume, matrix, ladder, dataref, extract):
         super(GelPurify, self).__init__({
             "op": "gel_purify",
             "objects": wells,
             "volume": volume,
             "matrix": matrix,
             "ladder": ladder,
-            "duration": duration,
             "dataref": dataref,
             "extract": extract
         })

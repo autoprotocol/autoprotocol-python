@@ -3140,7 +3140,7 @@ class Protocol(object):
             self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
                                                  duration, dataref))
 
-    def gel_purify(self, wells, volume, matrix, ladder, duration, dataref, extract):
+    def gel_purify(self, extracts, volume, matrix, ladder, dataref):
         """
         Separate nucleic acids on an agarose gel and purify according to parameters.
 
@@ -3149,23 +3149,47 @@ class Protocol(object):
             .. code-block:: python
 
                 p = Protocol()
-                sample_well = p.ref("test_plate", None, "96-pcr", discard=True).well(0)
-                extract_well = p.ref("extract", None, "micro-1.5", storage="cold_4").well(0)
-                extract = [
-                    {
-                        "band_size_range": {"min_bp": 20, "max_bp": 40},
-                        "elution_volume": "5:microliter",
-                        "elution_buffer": "water", "lane": 0, "destination": extract_well
-                    }
-                ]
-                p.gel_purify(sample_well, "10:microliter", "agarose(8,0.8%)", "ladder1", "15:minute", "gel_purify_test", extract)
+                sample_wells = p.ref("test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+                extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5", storage="cold_4").well(0) for i in sample_wells]
+                extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 60, extract_wells[i]) for i, w in enumerate(sample_wells)]
 
+                extracts[0] >>
+
+                {
+                  "band_size_range": {
+                      "max_bp": 80,
+                      "min_bp": 60
+                      },
+                  "elution_buffer": "TE",
+                  "elution_volume": "5:microliter",
+                  "destination": Well(Container(extract_Well(Container(test_plate), 0, None)), 0, None),
+                  "lane": None,
+                  "source_well": Well(Container(test_plate), 0, None)
+                }
+
+                p.gel_purify(extracts, "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_example")
 
         Parameters
         ----------
-        wells: list, WellGroup
-            List of string well references or WellGroup containing wells to be
-            separated on gel.
+        extracts: List of dicts
+            Dictionary containing parameters for gel extraction, must be in the form of:
+
+            ..code-block:: python
+
+                [
+                  {
+                    "source_well": Well,
+                    "elution_volume": Unit,
+                    "elution_buffer": str,
+                    "destination": Well,
+                    "lane": int or None,
+                    "band_size_range: {
+                      "min_bp": int,
+                      "max_bp": int
+                    }
+                  }
+                ]
+
         volume: str, Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
@@ -3173,50 +3197,57 @@ class Protocol(object):
             Matrix (gel) in which to gel separate samples
         ladder: str
             Ladder by which to measure separated fragment size
-        duration: str, Unit
-            Length of time to run current through gel.
         dataref: str
             Name of this set of gel separation results.
-        extract: List of dicts
-            Dictionary containing parameters for gel extraction, must be in the form of:
 
-            ..code-block:: python
 
-                [
-                  {
-                    "elution_volume": Unit,
-                    "elution_buffer": str,
-                    "destination" Well,
-                    "band_size_range: {
-                      "min_bp: int,
-                      "max_bp" int
-                    }
-                  }
-                ]
-
-        Raises:
+        Raises
         -------
         AttributeError:
             If extract parameters are not a list of dictionaries.
         KeyError:
             If extract parameters do not contain the specified parameter keys.
+        ValueError:
+            If min_bp is greater than max_bp.
+        RuntimeError:
+            If gel extract lanes are set for some but not all extract wells.
+        RuntimeError:
+            If designating an extract lane and all lanes do not fit on single gel type.
+        TypeError:
+            If lane designated for gel extracts is not an integer.
+        ValueError:
+            If designated lane index is outside lanes within the gel.
+
         """
-        well_lane_dests = []
 
+        # check extract parameters are in the proper form
+        check_valid_gel_purify_params(extracts)
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
-        
-        check_valid_gel_purify_params(extract)
 
+        # check if any gel extract lanes are set, if so, assert all are set and within one gel
+        lane_set = [e["lane"] for e in extracts]
+        if None in lane_set:
+            if filter(None, lane_set):
+                raise RuntimeError("If setting a gel lane, gel lanes must be set for every extract.")
+        if None not in lane_set:
+            if len(extracts) <= max_well:
+                raise RuntimeError("If designating an extract gel lane, all samples must fit on one gel.")
+            for l in lane_set:
+                if not isinstance(l, int):
+                    raise TypeError("Designated gel extract lanes must be of type integer.")
+                if l not in range(1, max_well + 1):
+                    raise ValueError("Designated gel lanes must be within the lanes available in the gel")
 
-        if len(wells) > max_well:
-            datarefs = 1
-            for x in xrange(0, len(wells), max_well):
-                self.gel_purify(wells[x:x+max_well], volume, matrix, ladder,
-                                duration, "%s_%d" % (dataref, datarefs), extract)
-                datarefs += 1
-        else:
+        datarefs = 1
+        for x in xrange(0, len(extracts), max_well):
+            gel_set = extracts[x:x+max_well]
+            for i, w in enumerate(gel_set):
+                if w["lane"] is None:
+                    w["lane"] = (i + 1)
+            wells = [w["source_well"] for w in gel_set]
             self.instructions.append(GelPurify(wells, volume, matrix, ladder,
-                                     duration, dataref, extract))
+                                               datarefs, gel_set))
+            datarefs += 1
 
     def seal(self, ref, type="ultra-clear"):
         """

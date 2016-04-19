@@ -3222,7 +3222,10 @@ class Protocol(object):
 
         # check extract parameters are in the proper form
         check_valid_gel_purify_params(extracts)
-        max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        try:
+            max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        except (AttributeError, IndexError):
+            raise RuntimeError("Matrix specified is not properly formatted.")
 
         # check if any gel extract lanes are set, if so, assert all are set and within one gel
         lane_set = [e["lane"] for e in extracts]

@@ -1501,6 +1501,8 @@ class GelPurifyTestCase(unittest.TestCase):
         sample_wells = p.ref("test_plate", None, "96-pcr", discard=True).wells_from(0, 10)
         extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5", storage="cold_4").well(0) for i in sample_wells]
         extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 79, extract_wells[i]) for i, w in enumerate(sample_wells)]
+        with self.assertRaises(RuntimeError):
+            p.gel_purify(extracts, "10:microliter", "bad_gel", "ladder1", "gel_purify_test")
         p.gel_purify(extracts, "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(p.instructions[0].extract[-1]["lane"], 8)

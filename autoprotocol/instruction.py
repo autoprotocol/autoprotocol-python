@@ -477,8 +477,6 @@ class GelPurify(Instruction):
         Agarose concentration and number of wells on gel used for separation
     ladder : str
         Size range of ladder to be used to compare band size to
-    duration : str, Unit
-        Length of time to run gel separation
     dataref : str
         Name of dataset containing fragment sizes returned
     extract: list of Dictionary

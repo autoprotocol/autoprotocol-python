@@ -366,7 +366,7 @@ class Protocol(object):
                             "properties"] = well.properties
             # assign any storage or discard condition changes to ref
             if "store" in ref.opts:
-                ref.opts["store"] = ref.container.storage
+                ref.opts["store"] = {"where": ref.container.storage}
             if ref.container.storage is None and "discard" not in ref.opts:
                 ref.opts["discard"] = True
                 del ref.opts["store"]

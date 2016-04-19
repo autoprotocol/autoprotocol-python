@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
-
+ - discard() and and set_storage() methods for containers
 Changed
 
 Removed

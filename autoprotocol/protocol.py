@@ -3230,7 +3230,7 @@ class Protocol(object):
             if filter(None, lane_set):
                 raise RuntimeError("If setting a gel lane, gel lanes must be set for every extract.")
         if None not in lane_set:
-            if len(extracts) <= max_well:
+            if not len(extracts) <= max_well:
                 raise RuntimeError("If designating an extract gel lane, all samples must fit on one gel.")
             for l in lane_set:
                 if not isinstance(l, int):

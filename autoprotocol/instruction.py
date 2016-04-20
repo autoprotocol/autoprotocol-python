@@ -485,7 +485,7 @@ class GelPurify(Instruction):
 
           "extract": [{
                 "elution_volume": volume,
-                "elution_buffer": string "water" | "TE",
+                "elution_buffer": string, "water" | "TE",
                 "lane": int,
                 "band_size_range": {
                   "min_bp": int,

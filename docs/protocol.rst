@@ -88,6 +88,10 @@ Protocol.gel_separate()
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.gel_separate
 
+Protocol.gel_purify()
+~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.gel_purify
+
 Protocol.seal()
 ~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.seal

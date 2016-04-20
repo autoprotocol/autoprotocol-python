@@ -38,6 +38,14 @@ Container.inner_wells()
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.container.Container.inner_wells
 
+Container.discard()
+~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.Container.discard
+
+Container.set_storage()
+~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.Container.set_storage
+
 container.Well
 --------------
 .. autoclass:: autoprotocol.container.Well

@@ -214,6 +214,7 @@ def check_valid_mag_params(mag_dict):
 
 
 def check_valid_gel_purify_params(extract):
+    from .container import Well
 
     if not isinstance(extract, list):
         raise AttributeError("Extract parameters for gel gel_purify must be a list of extraction parameters in the "
@@ -224,7 +225,13 @@ def check_valid_gel_purify_params(extract):
             raise AttributeError("All extraction parameters must be a dictionary with specific parameters. Extract "
                                  "parameters for item %s in the extract list is incorrectly formated." % (i + 1))
         if not all(k in ex.keys() for k in ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]):
-            raise KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination'.")
+            raise KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination' 'elution_volume'.")
+        if not isinstance(ex["elution_volume"], Unit):
+            raise ValueError("All extract elution volumes must be of type Unit.")
+        if ex["elution_volume"] <= Unit(0, "microliter"):
+            raise ValueError("Extraction elution volumes must be greater than 0.")
+        if not isinstance(ex["destination"], Well):
+            raise ValueError("All extract elution destinations must be of type Well.")
         if not isinstance(ex["band_size_range"], dict):
             raise AttributeError("Extract parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
         if not all(k in ex["band_size_range"].keys() for k in ["min_bp", "max_bp"]):
@@ -239,7 +246,7 @@ def make_gel_extract_param(well, elution_buffer, elution_volume, max_bp, min_bp,
             "band_size_range": {
                 "min_bp": min_bp, "max_bp": max_bp
             },
-            "elution_volume": elution_volume,
+            "elution_volume": Unit(elution_volume),
             "elution_buffer": elution_buffer,
             "lane": lane,
             "destination": destination

@@ -1437,7 +1437,7 @@ class GelPurifyTestCase(unittest.TestCase):
             {
                 "source_well": sample_wells[i],
                 "band_size_range": {"min_bp": 0, "max_bp": 10},
-                "elution_volume": "5:microliter",
+                "elution_volume": Unit("5:microliter"),
                 "elution_buffer": "water",
                 "lane": i,
                 "destination": d
@@ -1466,7 +1466,7 @@ class GelPurifyTestCase(unittest.TestCase):
             {
                 "source_well": sample_wells[i],
                 "band_size_range": {"min_bp": 60, "max_bp": 80},
-                "elution_volume": "5:microliter",
+                "elution_volume": Unit("5:microliter"),
                 "elution_buffer": "water",
                 "lane": None,
                 "destination": d
@@ -1475,6 +1475,7 @@ class GelPurifyTestCase(unittest.TestCase):
         p.gel_purify(sample_wells, extract, "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(p.instructions[-1].extract[1]["lane"], 1)
+        self.assertEqual(p.instructions[0].extract[7]["lane"], 7)
 
     def test_gel_purify_one_lane(self):
         p = Protocol()
@@ -1484,7 +1485,7 @@ class GelPurifyTestCase(unittest.TestCase):
             {
                 "source_well": sample_wells[i],
                 "band_size_range": {"min_bp": 60, "max_bp": 80},
-                "elution_volume": "5:microliter",
+                "elution_volume": Unit("5:microliter"),
                 "elution_buffer": "water",
                 "lane": None,
                 "destination": d
@@ -1496,6 +1497,8 @@ class GelPurifyTestCase(unittest.TestCase):
         extract[7]["lane"] = None
         p.gel_purify(sample_wells, extract, "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
+        self.assertEqual(p.instructions[-1].extract[0]["lane"], 0)
+        self.assertEqual(p.instructions[0].extract[7]["lane"], 7)
 
     def test_make_gel_extract_params(self):
         p = Protocol()
@@ -1503,9 +1506,23 @@ class GelPurifyTestCase(unittest.TestCase):
         extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5", storage="cold_4").well(0) for i in sample_wells]
         extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 79, extract_wells[i]) for i, w in enumerate(sample_wells)]
         with self.assertRaises(RuntimeError):
+            p.gel_purify(sample_wells, extracts[:7], "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
+        with self.assertRaises(RuntimeError):
             p.gel_purify(sample_wells, extracts, "10:microliter", "bad_gel", "ladder1", "gel_purify_test")
         p.gel_purify(sample_wells, extracts, "10:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(p.instructions[0].extract[-1]["lane"], 7)
         self.assertEqual(p.instructions[-1].extract[0]["lane"], 0)
         self.assertEqual(p.instructions[-1].extract[1]["lane"], 1)
+
+    def test_gel_purify_extract_param_checker(self):
+        p = Protocol()
+        sample_wells = p.ref("test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+        extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5", storage="cold_4").well(0) for i in sample_wells]
+        extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 79, extract_wells[i]) for i, w in enumerate(sample_wells)]
+        extracts[7]["elution_volume"] = "not_a_unit"
+        with self.assertRaises(ValueError):
+            p.gel_purify(sample_wells, extracts, "5:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")
+        extracts[3]["destination"] = "not_a_well"
+        with self.assertRaises(ValueError):
+            p.gel_purify(sample_wells[:4], extracts[:4], "5:microliter", "agarose(8,0.8%)", "ladder1", "gel_purify_test")

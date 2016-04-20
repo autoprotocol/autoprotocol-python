@@ -3214,6 +3214,12 @@ class Protocol(object):
             If extract parameters do not contain the specified parameter keys.
         ValueError:
             If min_bp is greater than max_bp.
+        ValueError:
+            If extract destination is not of type Well.
+        ValueError:
+            IF extract elution volume is not of type Unit
+        ValueError:
+            if extract elution volume is not greater than 0.
         RuntimeError:
             If gel extract lanes are set for some but not all extract wells.
         RuntimeError:
@@ -3257,7 +3263,7 @@ class Protocol(object):
                 if l not in range(max_well):
                     raise ValueError("Designated gel lanes must be within the lanes available in the gel")
 
-        l_max = max(lane_set)
+        l_max = max([e["lane"] for e in extracts])
         if l_max >= len(samples):
             raise RuntimeError("Lanes set for extraction must not be greater than the samples. Max lane {:1} is greater than {:2}.".format(l_max, len(samples)))
 

@@ -8,6 +8,7 @@ from .util import check_stamp_append
 from .util import check_valid_mag
 from .util import check_valid_mag_params
 from .util import check_valid_incubate_params
+from .util import check_valid_gel_purify_params
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3138,6 +3139,159 @@ class Protocol(object):
         else:
             self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
                                                  duration, dataref))
+
+    def gel_purify(self, samples, extracts, volume, matrix, ladder, dataref):
+        """
+        Separate nucleic acids on an agarose gel and purify according to
+        parameters. If gel extract lanes are not specified, they will be
+        sequentially ordered.
+
+        Example Usage:
+
+            .. code-block:: python
+
+                p = Protocol()
+                sample_wells = p.ref("test_plate", None, "96-pcr",
+                                     discard=True).wells_from(0, 8)
+                extract_wells = [p.ref("extract_" + str(i.index), None,
+                                       "micro-1.5", storage="cold_4").well(0)
+                                 for i in sample_wells]
+
+
+                extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80,
+                                                   60, extract_wells[i])
+                            for i, w in enumerate(sample_wells)]
+
+                extracts[0] >>
+
+                {
+                    "band_size_range": {
+                        "max_bp": 80,
+                        "min_bp": 60
+                        },
+                    "elution_buffer": "TE",
+                    "elution_volume": Unit(5.0, "microliter"),
+                    "destination": Well(Container(extract_0), 0, None),
+                    "lane": None,
+                    "source_well": Well(Container(test_plate), 0, None)
+                }
+
+                p.gel_purify(sample_wells, extracts, "10:microliter",
+                             "select_size(8,0.8%)", "ladder1",
+                             "gel_purify_example")
+
+        Parameters
+        ----------
+        samples : list, WellGroup
+            List of string well references or WellGroup containing wells to be
+            separated on gel.
+        extracts: List of dicts
+            Dictionary containing parameters for gel extraction, must be in the
+            form of:
+
+            ..code-block:: python
+
+                [
+                  {
+                    "elution_volume": Unit,
+                    "elution_buffer": str,
+                    "destination": Well,
+                    "lane": int or None,
+                    "band_size_range: {
+                      "min_bp": int,
+                      "max_bp": int
+                    }
+                  }
+                ]
+
+        volume: str, Unit
+            Volume of liquid to be transferred from each well specified to a
+            lane of the gel.
+        matrix: str
+            Matrix (gel) in which to gel separate samples
+        ladder: str
+            Ladder by which to measure separated fragment size
+        dataref: str
+            Name of this set of gel separation results.
+
+
+        Raises
+        -------
+        RuntimeError:
+            If matrix is not properly formatted.
+        AttributeError:
+            If extract parameters are not a list of dictionaries.
+        KeyError:
+            If extract parameters do not contain the specified parameter keys.
+        ValueError:
+            If min_bp is greater than max_bp.
+        ValueError:
+            If extract destination is not of type Well.
+        ValueError:
+            IF extract elution volume is not of type Unit
+        ValueError:
+            if extract elution volume is not greater than 0.
+        RuntimeError:
+            If gel extract lanes are set for some but not all extract wells.
+        RuntimeError:
+            If all samples do not fit on single gel type.
+        TypeError:
+            If lane designated for gel extracts is not an integer.
+        ValueError:
+            If designated lane index is outside lanes within the gel.
+        RuntimeError:
+            If maximum lane set is greater than samples on gel.
+        RuntimeError:
+            If lanes not designated and number of extracts not equal to number
+            of samples.
+
+        """
+        try:
+            max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        except (AttributeError, IndexError):
+            raise RuntimeError("Matrix specified is not properly formatted.")
+
+        # assert all samples are within specified gel size
+        if len(samples) > max_well:
+            raise RuntimeError("All samples must fit within a single gel."
+                               "Specified gel has {:1} wells, {:2} samples"
+                               "submitted. Please split your samples amongst"
+                               "multiple gel_purify instructions."
+                               .format(max_well, len(samples)))
+
+        # check extract parameters are in the proper form
+        check_valid_gel_purify_params(extracts)
+
+        # check if any gel extract lanes are set, if not set lanes sequentially
+        lane_set = [e["lane"] for e in extracts]
+        gel_lanes = range(len(samples))
+        if None in lane_set:
+            if list(filter(None, lane_set)):
+                raise RuntimeError("If setting a gel lane, gel lanes must be"
+                                   "set for every extract.")
+            if len(extracts) is not len(samples):
+                raise RuntimeError("If not designating an extract lane, number"
+                                   "of samples must equal number of extract"
+                                   "parameters.")
+            for i, l in enumerate(extracts):
+                l["lane"] = gel_lanes[i]
+        if None not in lane_set:
+            for l in lane_set:
+                if not isinstance(l, int):
+                    raise TypeError("Designated gel extract lanes must be of type"
+                                    "integer. {:1} is of {:2}.".format(l, type(l)))
+                if l not in range(max_well):
+                    raise ValueError("Designated gel lanes must be within the"
+                                     "lanes available in the gel")
+
+        l_max = max([e["lane"] for e in extracts])
+        if l_max >= len(samples):
+            raise RuntimeError("Lanes set for extraction must not be greater"
+                               "than the samples. Max lane {:1} is greater than"
+                               " {:2}.".format(l_max, len(samples)))
+
+        self.instructions.append(GelPurify(samples, volume, matrix, ladder,
+                                           dataref, extracts))
 
     def seal(self, ref, type="ultra-clear"):
         """

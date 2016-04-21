@@ -460,6 +460,55 @@ class GelSeparate(Instruction):
         })
 
 
+class GelPurify(Instruction):
+
+    """
+    Separate nucleic acids on an agarose gel and purify.
+
+    Parameters
+    ----------
+    wells : list, WellGroup
+        WellGroup of wells to be purified
+    volume : str, Unit
+        Volume of sample required for analysis
+    dataref : str
+        Name of this specific dataset of measurements
+    matrix : str
+        Agarose concentration and number of wells on gel used for separation
+    ladder : str
+        Size range of ladder to be used to compare band size to
+    dataref : str
+        Name of dataset containing fragment sizes returned
+    extract: list of Dictionary
+
+        .. code-block:: json
+
+          "extract": [{
+                "elution_volume": volume,
+                "elution_buffer": string, "water" | "TE",
+                "lane": int,
+                "band_size_range": {
+                  "min_bp": int,
+                  "max_bp": int,
+                },
+                "destination": well
+              },
+              {...}]
+
+    """
+
+    def __init__(self, wells, volume, matrix, ladder, dataref, extract):
+        super(GelPurify, self).__init__({
+            "op": "gel_purify",
+            "objects": wells,
+            "volume": volume,
+            "matrix": matrix,
+            "ladder": ladder,
+            "dataref": dataref,
+            "extract": extract
+        })
+
+
 class Absorbance(Instruction):
 
     """

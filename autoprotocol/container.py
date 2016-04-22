@@ -359,9 +359,9 @@ class Container(object):
         `ContainerType.robotize()`_ for more information.
 
         """
-        if not isinstance(well_ref, (basestring, int, Well)):
+        if not isinstance(well_ref, (basestring, int, Well, list)):
             raise TypeError("Well reference given is not of type 'str' \
-                            'int', or 'Well'.")
+                            'int', 'Well' or 'list'.")
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
@@ -373,8 +373,9 @@ class Container(object):
         `ContainerType.humanize()`_ for more information.
 
         """
-        if not isinstance(well_ref, int):
-            raise TypeError("Well reference given is not of type 'int'.")
+        if not isinstance(well_ref, (int, basestring, list)):
+            raise TypeError("Well reference given is not of type 'int',"
+                            "'str' or 'list'.")
         return self.container_type.humanize(well_ref)
 
     def decompose(self, well_ref):

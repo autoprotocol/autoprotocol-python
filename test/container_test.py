@@ -50,6 +50,7 @@ class ContainerWellRefTestCase(unittest.TestCase):
     def test_humanize(self):
         self.assertEqual("A1", self.c.well(0).humanize())
         self.assertEqual("B3", self.c.well(7).humanize())
+        self.assertEqual(["A1", "B2"], self.c.humanize([0, 6]))
         # check bounds
         with self.assertRaises(ValueError):
             self.c.humanize(20)
@@ -62,13 +63,14 @@ class ContainerWellRefTestCase(unittest.TestCase):
     def test_robotize(self):
         self.assertEqual(0, self.c.robotize("A1"))
         self.assertEqual(7, self.c.robotize("B3"))
+        self.assertEqual([0, 6], self.c.robotize(["A1", "B2"]))
         # check bounds
         with self.assertRaises(ValueError):
             self.c.robotize("A10")
             self.c.robotize("J1")
         # check input type
         with self.assertRaises(TypeError):
-            self.c.robotize(["A1", "A2"])
+            self.c.robotize(["A1", 0.1])
 
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):

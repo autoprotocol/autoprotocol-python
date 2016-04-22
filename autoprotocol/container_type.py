@@ -20,7 +20,8 @@ class ContainerType(namedtuple("ContainerType",
                     ["name", "is_tube", "well_count",
                      "well_depth_mm", "well_volume_ul",
                      "well_coating", "sterile", "capabilities",
-                     "shortname", "col_count", "dead_volume_ul", "safe_min_volume_ul"])):
+                     "shortname", "col_count", "dead_volume_ul",
+                     "safe_min_volume_ul"])):
 
     """
     The ContainerType class holds the capabilities and properties of a
@@ -75,18 +76,20 @@ class ContainerType(namedtuple("ContainerType",
             5
             >>> my_plate.robotize(my_plate.well(3))
             3
+            >>> my_plate.robotize(["A1", "A2"])
+            [0, 1]
 
         Parameters
         ----------
-        well_ref : str, int, Well
-          Well reference to be robotized in string, integer or Well object
-          form.
+        well_ref : str, int, Well, list[str or int or Well]
+            Well reference to be robotized in string, integer or Well object
+            form. Also accepts lists of str, int or Well.
 
         Returns
         ----------
-        well_ref : int
-          Well reference passed as rowwise integer (left-to-right,
-          top-to-bottom, starting at 0 = A1).
+        well_ref : int, list
+            Single or list of Well references passed as rowwise integer
+            (left-to-right, top-to-bottom, starting at 0 = A1).
 
         Raises
         ------
@@ -94,9 +97,12 @@ class ContainerType(namedtuple("ContainerType",
             If well reference given exceeds container dimensions.
 
         """
+        if isinstance(well_ref, list):
+            return [self.robotize(well) for well in well_ref]
+
         if not isinstance(well_ref, (basestring, int, Well)):
-            raise TypeError("ContainerType.robotize(): Well reference given "
-                            "is not of type 'str', 'int', or 'Well'.")
+            raise TypeError("ContainerType.robotize(): Well reference (%s) given "
+                            "is not of type 'str', 'int', or 'Well'." % well_ref)
 
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
@@ -142,11 +148,15 @@ class ContainerType(namedtuple("ContainerType",
             'A1'
             >>> my_plate.humanize(5)
             'B3'
+            >>> my_plate.humanize('0')
+            'A1'
 
         Parameters
         ----------
-        well_ref : int
-          Well reference to be humanized in integer form.
+        well_ref : int, str, list[int or str]
+            Well reference to be humanized in integer or string form.
+            If string is provided, it has to be parseable into an int.
+            Also accepts lists of int or str
 
         Returns
         -------
@@ -159,9 +169,17 @@ class ContainerType(namedtuple("ContainerType",
             If well reference given exceeds container dimensions.
 
         """
-        if not isinstance(well_ref, int):
+        if isinstance(well_ref, list):
+            return [self.humanize(well) for well in well_ref]
+
+        if not isinstance(well_ref, (int, str)):
             raise TypeError("ContainerType.humanize(): Well reference given "
-                            "is not of type 'int'.")
+                            "is not of type 'int' or 'str'.")
+        try:
+            well_ref = int(well_ref)
+        except:
+            raise TypeError("ContainerType.humanize(): Well reference given"
+                            "is not parseable into 'int' format.")
         # Check bounds
         if well_ref >= self.well_count or well_ref < 0:
                 raise ValueError("ContainerType.humanize(): Well reference "

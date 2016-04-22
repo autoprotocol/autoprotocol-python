@@ -93,6 +93,8 @@ class ContainerType(namedtuple("ContainerType",
 
         Raises
         ------
+        TypeError
+            If well reference given is not an accepted type.
         ValueError
             If well reference given exceeds container dimensions.
 
@@ -165,6 +167,8 @@ class ContainerType(namedtuple("ContainerType",
 
         Raises
         ------
+        TypeError
+            If well reference given is not an accepted type.
         ValueError
             If well reference given exceeds container dimensions.
 
@@ -172,7 +176,7 @@ class ContainerType(namedtuple("ContainerType",
         if isinstance(well_ref, list):
             return [self.humanize(well) for well in well_ref]
 
-        if not isinstance(well_ref, (int, str)):
+        if not isinstance(well_ref, (int, basestring)):
             raise TypeError("ContainerType.humanize(): Well reference given "
                             "is not of type 'int' or 'str'.")
         try:

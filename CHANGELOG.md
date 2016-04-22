@@ -7,7 +7,8 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
  - discard() and and set_storage() methods for containers
  - gel_purify instruction to instruction.py and protocol.py
- - support for list for container_type.robotize, container_type.humanize
+ - support for list input type for humanize and robotize (container and container_type)
+
 Changed
 
 Removed

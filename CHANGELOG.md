@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v.3.4.0 - 2016-04-22
+---
+Added
  - discard() and and set_storage() methods for containers
  - gel_purify instruction to instruction.py and protocol.py
  - support for list input type for humanize and robotize (container and container_type)
@@ -14,7 +24,6 @@ Changed
 Removed
 
 Fixed
-
 
 ## v3.3.0 - 2016-04-13
 ---
@@ -26,7 +35,6 @@ Changed
 Removed
 
 Fixed
-
 
 ## v3.2.0 - 2016-04-07
 ---
@@ -45,7 +53,6 @@ Removed
 
 Fixed
 - documentation for magnetic transfer instructions correctly uses hertz
-
 
 ## v3.1.0 - 2016-03-24
 ---

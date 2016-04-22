@@ -240,9 +240,8 @@ def check_valid_gel_purify_params(extract):
             raise ValueError("max_bp must be greater than min_bp")
 
 
-def make_gel_extract_param(well, elution_buffer, elution_volume, max_bp, min_bp, destination, lane=None):
+def make_gel_extract_param(elution_buffer, elution_volume, max_bp, min_bp, destination, lane=None):
         return {
-            "source_well": well,
             "band_size_range": {
                 "min_bp": min_bp, "max_bp": max_bp
             },

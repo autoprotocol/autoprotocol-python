@@ -3158,7 +3158,7 @@ class Protocol(object):
                                  for i in sample_wells]
 
 
-                extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80,
+                extracts = [make_gel_extract_param("TE", "5:microliter", 80,
                                                    60, extract_wells[i])
                             for i, w in enumerate(sample_wells)]
 
@@ -3172,8 +3172,7 @@ class Protocol(object):
                     "elution_buffer": "TE",
                     "elution_volume": Unit(5.0, "microliter"),
                     "destination": Well(Container(extract_0), 0, None),
-                    "lane": None,
-                    "source_well": Well(Container(test_plate), 0, None)
+                    "lane": None
                 }
 
                 p.gel_purify(sample_wells, extracts, "10:microliter",

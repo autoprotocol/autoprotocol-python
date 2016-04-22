@@ -1521,7 +1521,7 @@ class GelPurifyTestCase(unittest.TestCase):
                              discard=True).wells_from(0, 8)
         extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5",
                                storage="cold_4").well(0) for i in sample_wells]
-        extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 79,
+        extracts = [make_gel_extract_param("TE", "5:microliter", 80, 79,
                                            extract_wells[i])
                     for i, w in enumerate(sample_wells)]
         with self.assertRaises(RuntimeError):
@@ -1543,7 +1543,7 @@ class GelPurifyTestCase(unittest.TestCase):
                              discard=True).wells_from(0, 8)
         extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5",
                                storage="cold_4").well(0) for i in sample_wells]
-        extracts = [make_gel_extract_param(w, "TE", "5:microliter", 80, 79,
+        extracts = [make_gel_extract_param("TE", "5:microliter", 80, 79,
                                            extract_wells[i])
                     for i, w in enumerate(sample_wells)]
         extracts[7]["elution_volume"] = "not_a_unit"

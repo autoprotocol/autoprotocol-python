@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ---
 Added
 - measure_mass instruction
+- measure_volume instruction
 
 Changed
 

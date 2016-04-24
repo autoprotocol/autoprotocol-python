@@ -4684,3 +4684,55 @@ class Protocol(object):
             raise TypeError("Only Container or list of Container allowed")
 
         self.instructions.append(MeasureMass(containers, dataref))
+
+    def measure_volume(self, wells, dataref):
+        """
+        Measure the volume of a WellGroup.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
+                storage=None, discard=True)
+            p.measure_volume(test_plate.from_wells(0,2), "test_data")
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "test_plate": {
+                  "new": "96-flat",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                 {
+                    "dataref": "test_data",
+                    "object": [
+                        "test_plate/0",
+                        "test_plate/1"
+                    ],
+                    "op": "measure_volume"
+                  }
+              ]
+            }
+
+
+        Parameters
+        ----------
+        containers : list, Container
+            list of containers to be measured
+        dataref : str
+            Name of this specific dataset of measurements
+
+        """
+
+        wells = WellGroup(wells)
+
+        self.instructions.append(MeasureVolume(wells, dataref))

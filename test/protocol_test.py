@@ -1458,6 +1458,23 @@ class MeasureMassTestCase(unittest.TestCase):
             p.measure_mass("foo", "test_ref")
 
 
+class MeasureVolumeTestCase(unittest.TestCase):
+
+    def test_measure_volume_single_well(self):
+        p = Protocol()
+        test_plate = p.ref(
+            "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        p.measure_volume(test_plate.well(0), "test_ref")
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_measure_volume_list_well(self):
+        p = Protocol()
+        test_plate = p.ref(
+            "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        p.measure_volume(test_plate.wells_from(0, 12), "test_ref")
+        self.assertEqual(len(p.instructions), 1)
+
+
 class GelPurifyTestCase(unittest.TestCase):
     def test_gel_purify_lane_set(self):
         p = Protocol()

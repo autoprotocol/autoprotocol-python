@@ -1428,6 +1428,38 @@ class MeasureConcentrationTestCase(unittest.TestCase):
         self.assertEqual(len(p.instructions), 4)
 
 
+class MeasureMassTestCase(unittest.TestCase):
+
+    def test_measure_mass_single_container(self):
+        p = Protocol()
+        test_plate = p.ref(
+            "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        p.measure_mass(test_plate, "test_ref")
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_measure_mass_list_containers(self):
+        p = Protocol()
+        test_plates = [p.ref(
+            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None, discard=True) for i in range(5)]
+        p.measure_mass(test_plates, "test_ref")
+        self.assertEqual(len(p.instructions), 1)
+
+    def test_measure_mass_bad_list(self):
+        p = Protocol()
+        test_plates = [p.ref(
+            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None, discard=True) for i in range(5)]
+        test_plates.append("foo")
+        with self.assertRaises(TypeError):
+            p.measure_mass(test_plates, "test_ref")
+
+    def test_measure_mass_bad_input(self):
+        p = Protocol()
+        test_plates = [p.ref(
+            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None, discard=True) for i in range(5)]
+        with self.assertRaises(TypeError):
+            p.measure_mass("foo", "test_ref")
+
+
 class GelPurifyTestCase(unittest.TestCase):
     def test_gel_purify_lane_set(self):
         p = Protocol()

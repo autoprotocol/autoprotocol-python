@@ -4626,3 +4626,61 @@ class Protocol(object):
 
         self.instructions.append(MeasureConcentration(wells, volume, dataref,
                                                       measurement))
+
+    def measure_mass(self, containers, dataref):
+        """
+        Measure the mass of a list of containers.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
+                storage=None, discard=True)
+            p.measure_mass([test_plate], "test_data")
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "test_plate": {
+                  "new": "96-flat",
+                  "discard": true
+                }
+              },
+              "instructions": [
+                 {
+                    "dataref": "test_data",
+                    "object": [
+                        "test_plate
+                    ],
+                    "op": "measure_mass"
+                  }
+              ]
+            }
+
+
+        Parameters
+        ----------
+        containers : list, Container
+            list of containers to be measured
+        dataref : str
+            Name of this specific dataset of measurements
+
+        """
+
+        if isinstance(containers, Container):
+            containers = [containers]
+        elif isinstance(containers, list):
+            for container in containers:
+                if not isinstance(container, Container):
+                    raise TypeError("Only list of Container allowed")
+        else:
+            raise TypeError("Only Container or list of Container allowed")
+
+        self.instructions.append(MeasureMass(containers, dataref))

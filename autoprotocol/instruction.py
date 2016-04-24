@@ -1121,3 +1121,22 @@ class MeasureConcentration(Instruction):
                      "dataref": dataref,
                      "measurement": measurement}
         super(MeasureConcentration, self).__init__(json_dict)
+
+
+class MeasureMass(Instruction):
+    """
+    Measure the mass of containers
+
+    Parameters
+    ----------
+    refs : list of containers
+        list of containers
+    dataref: str
+        Name of the data for the measurement
+    """
+
+    def __init__(self, refs, dataref):
+        json_dict = {"op": "measure_mass",
+                     "object": refs,
+                     "dataref": dataref}
+        super(MeasureMass, self).__init__(json_dict)

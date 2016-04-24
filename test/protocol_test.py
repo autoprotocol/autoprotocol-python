@@ -1454,8 +1454,6 @@ class MeasureMassTestCase(unittest.TestCase):
 
     def test_measure_mass_bad_input(self):
         p = Protocol()
-        test_plates = [p.ref(
-            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None, discard=True) for i in range(5)]
         with self.assertRaises(TypeError):
             p.measure_mass("foo", "test_ref")
 

@@ -1124,8 +1124,8 @@ class Protocol(object):
     def acoustic_transfer(self, source, dest, volume, one_source=False,
                           droplet_size="25:nanoliter"):
         """
-        Specify source and destination wells for transfering liquid via an acoustic
-        liquid handler.  Droplet size is usually device-specific.
+        Specify source and destination wells for transfering liquid via an
+        acoustic liquid handler.  Droplet size is usually device-specific.
 
         Parameters
         ----------
@@ -1154,56 +1154,56 @@ class Protocol(object):
             Volume representing a droplet_size.  The volume of each `transfer`
             group should be a multiple of this volume.
 
+
         Example Usage:
 
         .. code-block:: python
 
-            p.acoustic_transfer(echo.wells(0,1).set_volume("12:nanoliter"),
-                                plate.wells_from(0,5), "4:nanoliter",
-                                one_source=True)
+            p.acoustic_transfer(
+                echo.wells(0,1).set_volume("12:nanoliter"),
+                plate.wells_from(0,5), "4:nanoliter", one_source=True)
+
 
         Autoprotocol Output:
 
         .. code-block:: json
 
-              "instructions": [
+            "instructions": [
+            {
+              "groups": [
                 {
-                  "groups": [
+                  "transfer": [
                     {
-                      "transfer": [
-                        {
-                          "volume": "0.004:microliter",
-                          "to": "plate/0",
-                          "from": "echo_plate/0"
-                        },
-                        {
-                          "volume": "0.004:microliter",
-                          "to": "plate/1",
-                          "from": "echo_plate/0"
-                        },
-                        {
-                          "volume": "0.004:microliter",
-                          "to": "plate/2",
-                          "from": "echo_plate/0"
-                        },
-                        {
-                          "volume": "0.004:microliter",
-                          "to": "plate/3",
-                          "from": "echo_plate/1"
-                        },
-                        {
-                          "volume": "0.004:microliter",
-                          "to": "plate/4",
-                          "from": "echo_plate/1"
-                        }
-                      ]
+                      "volume": "0.004:microliter",
+                      "to": "plate/0",
+                      "from": "echo_plate/0"
+                    },
+                    {
+                      "volume": "0.004:microliter",
+                      "to": "plate/1",
+                      "from": "echo_plate/0"
+                    },
+                    {
+                      "volume": "0.004:microliter",
+                      "to": "plate/2",
+                      "from": "echo_plate/0"
+                    },
+                    {
+                      "volume": "0.004:microliter",
+                      "to": "plate/3",
+                      "from": "echo_plate/1"
+                    },
+                    {
+                      "volume": "0.004:microliter",
+                      "to": "plate/4",
+                      "from": "echo_plate/1"
                     }
-                  ],
-                  "droplet_size": "25:microliter",
-                  "op": "acoustic_transfer"
+                  ]
                 }
-              ]
-            }
+              ],
+              "droplet_size": "25:microliter",
+              "op": "acoustic_transfer"
+            }]
 
         """
         transfers = []
@@ -2530,6 +2530,7 @@ class Protocol(object):
             * 1 cycle:
                 * 72 degrees for 10 minutes
 
+
         .. code-block:: python
 
             p = Protocol()
@@ -2565,59 +2566,59 @@ class Protocol(object):
                              }
                         ])
 
+
         Autoprotocol Output:
 
         .. code-block:: json
 
             "instructions": [
+            {
+              "object": "sample_plate",
+              "op": "seal"
+            },
+            {
+              "volume": "10:microliter",
+              "dataref": null,
+              "object": "sample_plate",
+              "groups": [
                 {
-                  "object": "sample_plate",
-                  "op": "seal"
+                  "cycles": 1,
+                  "steps": [
+                    {
+                      "duration": "5:minute",
+                      "temperature": "95:celsius"
+                    }
+                  ]
                 },
                 {
-                  "volume": "10:microliter",
-                  "dataref": null,
-                  "object": "sample_plate",
-                  "groups": [
+                  "cycles": 30,
+                  "steps": [
                     {
-                      "cycles": 1,
-                      "steps": [
-                        {
-                          "duration": "5:minute",
-                          "temperature": "95:celsius"
-                        }
-                      ]
+                      "duration": "30:second",
+                      "temperature": "95:celsius"
                     },
                     {
-                      "cycles": 30,
-                      "steps": [
-                        {
-                          "duration": "30:second",
-                          "temperature": "95:celsius"
-                        },
-                        {
-                          "duration": "20:second",
-                          "temperature": "56:celsius"
-                        },
-                        {
-                          "duration": "20:second",
-                          "temperature": "72:celsius"
-                        }
-                      ]
+                      "duration": "20:second",
+                      "temperature": "56:celsius"
                     },
                     {
-                      "cycles": 1,
-                      "steps": [
-                        {
-                          "duration": "10:minute",
-                          "temperature": "72:celsius"
-                        }
-                      ]
+                      "duration": "20:second",
+                      "temperature": "72:celsius"
                     }
-                  ],
-                  "op": "thermocycle"
+                  ]
+                },
+                {
+                  "cycles": 1,
+                  "steps": [
+                    {
+                      "duration": "10:minute",
+                      "temperature": "72:celsius"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "op": "thermocycle"
+            }]
 
 
         To gradient thermocycle a container according to the protocol:
@@ -2682,6 +2683,7 @@ class Protocol(object):
         To conduct a qPCR, at least one dye type and the dataref field has to
         be specified.
         The example below uses SYBR dye and the following temperature profile:
+
             * 1 cycle:
                 * 95 degrees for 3 minutes
             * 40 cycles:
@@ -2864,15 +2866,15 @@ class Protocol(object):
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-        .. code-block:: json
+            .. code-block:: json
 
-            {
-              "shaking": {
-                "amplitude": str, Unit
-                "orbital": bool
+                {
+                  "shaking": {
+                    "amplitude": str, Unit
+                    "orbital": bool
+                    }
+                "duration": str, Unit
                 }
-            "duration": str, Unit
-            }
 
         """
         if isinstance(wells, Well):
@@ -2956,19 +2958,19 @@ class Protocol(object):
         temperature: str, Unit, optional
             set temperature to heat plate reading chamber
         gain: float, optional
-            float between 0 and 1, multiplier of maximum signal amplification
+            float between 0 and 1, multiplier, gain=0.2 of maximum signal amplification
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-        .. code-block:: json
+            .. code-block:: json
 
-            {
-              "shaking": {
-                "amplitude": str, Unit
-                "orbital": bool
+                {
+                  "shaking": {
+                    "amplitude": str, Unit
+                    "orbital": bool
+                    }
+                "duration": str, Unit
                 }
-            "duration": str, Unit
-            }
 
         """
         if isinstance(wells, Well):
@@ -3043,15 +3045,15 @@ class Protocol(object):
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-        .. code-block:: json
+            .. code-block:: json
 
-            {
-              "shaking": {
-                "amplitude": str, Unit
-                "orbital": bool
+                {
+                  "shaking": {
+                    "amplitude": str, Unit
+                    "orbital": bool
+                    }
+                "duration": str, Unit
                 }
-            "duration": str, Unit
-            }
 
         """
         if isinstance(wells, Well):

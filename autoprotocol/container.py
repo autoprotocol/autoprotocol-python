@@ -148,6 +148,12 @@ class WellGroup(object):
             wells = [wells]
         elif isinstance(wells, WellGroup):
             wells = wells.wells
+        elif isinstance(wells, list):
+            if not all(isinstance(well, Well) for well in wells):
+                raise TypeError("All elements in list must be wells")
+        else:
+            raise TypeError("Wells must be Well, list of wells, WellGroup.")
+
         self.wells = wells
 
     def set_properties(self, properties):
@@ -266,7 +272,7 @@ class WellGroup(object):
             raise TypeError("You can only add a Well or WellGroups \
                                 together.")
         if isinstance(other, Well):
-            return WellGroup(self.wells.append(other))
+            return WellGroup(self.wells + [other])
         else:
             return WellGroup(self.wells + other.wells)
 

@@ -5,12 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- measure_mass instruction
+- measure_volume instruction
 
 Changed
 
 Removed
 
 Fixed
+ - WellGroup checks that all elements are wells
+ - Concatenation of Well to WellGroup no longer returns None
 
 ## v.3.4.0 - 2016-04-22
 ---

@@ -167,7 +167,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         ws_bigger = self.c.all_wells() + another_container.all_wells()
         self.assertEqual(30, len(ws_bigger))
         ws_plus_well = ws + another_container.well(0)
-        self.assertEqual(16, len(ws))
+        self.assertEqual(16, len(ws_plus_well))
         with self.assertRaises(TypeError):
             ws = ws + "not a well"
 

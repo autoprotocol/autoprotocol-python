@@ -4687,7 +4687,7 @@ class Protocol(object):
 
     def measure_volume(self, wells, dataref):
         """
-        Measure the volume of a WellGroup.
+        Measure the volume of each well in wells.
 
         Example Usage:
 
@@ -4726,8 +4726,8 @@ class Protocol(object):
 
         Parameters
         ----------
-        containers : list, Container
-            list of containers to be measured
+        wells : list, well, WellGroup
+            list of wells to be measured
         dataref : str
             Name of this specific dataset of measurements
 

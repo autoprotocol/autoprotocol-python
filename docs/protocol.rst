@@ -160,6 +160,14 @@ Protocol.measure_concentration()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.measure_concentration
 
+Protocol.measure_mass()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.measure_mass
+
+Protocol.measure_volume()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.measure_volume
+
 protocol.Ref
 ------------
 

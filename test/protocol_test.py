@@ -851,19 +851,19 @@ class StampTestCase(unittest.TestCase):
             list(range(12))), "5:microliter", shape={"rows": 8, "columns": 1}, one_source=True)
         self.assertEqual(len(p.instructions[0].groups), 12)
 
-    # def test_implicit_uncover(self):
-    #     p = Protocol()
-    #     plateCount = 2
-    #     plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat",
-    #                        discard=True, cover="universal")
-    #                  for x in range(plateCount)]
-    #     for x in plateList:
-    #         self.assertTrue(x.cover)
-    #     p.stamp(plateList[0], plateList[1], "5:microliter")
-    #     for x in plateList:
-    #         self.assertFalse(x.cover)
-    #     self.assertTrue(len(p.instructions) == 3)
-    #     self.assertTrue(p.instructions[0].op == "uncover")
+    def test_implicit_uncover(self):
+        p = Protocol()
+        plateCount = 2
+        plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat",
+                           discard=True, cover="universal")
+                     for x in range(plateCount)]
+        for x in plateList:
+            self.assertTrue(x.cover)
+        p.stamp(plateList[0], plateList[1], "5:microliter")
+        for x in plateList:
+            self.assertFalse(x.cover)
+        self.assertTrue(len(p.instructions) == 3)
+        self.assertTrue(p.instructions[0].op == "uncover")
 
 
 class RefifyTestCase(unittest.TestCase):

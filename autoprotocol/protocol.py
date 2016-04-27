@@ -1508,6 +1508,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._adjust_cover(s.container, "acoustic_transfer")
+            self._adjust_cover(d.container, "acoustic_transfer")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2157,6 +2159,8 @@ class Protocol(object):
                             osta.append(st)
                 v = diff
 
+            self._adjust_cover(s.container, "stamp")
+            self._adjust_cover(d.container, "stamp")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2630,10 +2634,10 @@ class Protocol(object):
             well = WellGroup([well])
         if isinstance(well, list):
             well = WellGroup(well)
-<<<<<<< d5e1845538e0d3dcc882b4805da93b2508fbbe4e
         if one_tip:
             group = []
             for w in well.wells:
+                self._adjust_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2644,6 +2648,7 @@ class Protocol(object):
             self._pipette([{"mix": group}])
         else:
             for w in well.wells:
+                self._adjust_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2651,17 +2656,6 @@ class Protocol(object):
                     "repetitions": repetitions
                 }
                 self._pipette([{"mix": [opts]}])
-=======
-        for w in well.wells:
-            self._adjust_cover(w.container, "mix")
-            opts = {
-                "well": w,
-                "volume": volume,
-                "speed": speed,
-                "repetitions": repetitions
-            }
-            self._pipette([{"mix": [opts]}])
->>>>>>> pull request 85 cover_state adds
 
     def dispense(self, ref, reagent, columns, speed_percentage=None):
         """
@@ -2889,12 +2883,8 @@ class Protocol(object):
             dispenser.
 
         """
-<<<<<<< d5e1845538e0d3dcc882b4805da93b2508fbbe4e
-        if (speed_percentage is not None and
-=======
         self._adjust_cover(ref, "dispense to")
-        if (speed_percentage != None and
->>>>>>> pull request 85 cover_state adds
+        if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         columns = []
@@ -3873,6 +3863,7 @@ class Protocol(object):
 
             self.instructions.append(GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
 
+
     def seal(self, ref, type="ultra-clear"):
         """
         Seal indicated container using the automated plate sealer.
@@ -4348,6 +4339,9 @@ class Protocol(object):
         pick["min_abort"] = min_abort
 
         group = [pick]
+
+        [self._adjust_cover(s.container, "autopick") for s in pick["from"]]
+        [self._adjust_cover(d.container, "autopick") for d in pick["to"]]
 
         if (not newpick and self.instructions and
                 self.instructions[-1].op == "autopick" and

@@ -3,7 +3,7 @@ import json
 import io
 from .protocol import Protocol
 from .unit import Unit, UnitError
-from .container import WellGroup
+from .container import WellGroup, SEAL_TYPES, COVER_TYPES
 from . import UserError
 import argparse
 import sys
@@ -283,7 +283,8 @@ class ProtocolInfo(object):
                 ref.get('id'),
                 ref['type'],
                 storage=ref.get('store'),
-                discard=ref.get('discard'))
+                discard=ref.get('discard'),
+                cover=ref.get('cover'))
             aqs = ref.get('aliquots')
             if aqs:
                 for idx in aqs:
@@ -351,7 +352,7 @@ class Manifest(object):
                                "associated manifest.json file." % name)
 
 
-def run(fn, protocol_name=None):
+def run(fn, protocol_name=None, seal_on_store=True):
     """
     Run the protocol specified by the function.
 
@@ -383,6 +384,8 @@ def run(fn, protocol_name=None):
 
     try:
         fn(protocol, params)
+        if seal_on_store:
+            seal_on_store(protocol)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -422,3 +425,95 @@ def _thermocycle_error_text():
     }]
   }]
 (You can intermix gradient and non-gradient steps)"""
+
+def seal_on_store(protocol):
+    '''
+    Implicitly adds seal/cover instructions to the end of a run for containers
+    that do not have a cover.   If no cover or seal instructions involving a
+    given container were present in a protocol, cover type applied defaults first to
+    "seal" if its within the capabilities of the container type, otherwise
+    to "cover".
+    Example:
+    .. code-block:: python
+        def dostuff(p, params):
+        cont = params['container']
+        p.transfer(cont.well(0), cont.well(1), "3:microliter")
+        p.seal(cont)
+        p.unseal(cont)
+        p.cover(cont)
+        p.uncover(cont)
+    Autoprotocol output
+    .. code-block:: json
+        {
+          "refs": {
+            "plate": {
+              "new": "96-pcr",
+              "cover": "standard",
+              "store": {
+                "where": "ambient"
+              }
+            }
+          },
+          "instructions": [
+            {
+              "groups": [
+                {
+                  "transfer": [
+                    {
+                      "volume": "3.0:microliter",
+                      "to": "plate/1",
+                      "from": "plate/0"
+                    }
+                  ]
+                }
+              ],
+              "op": "pipette"
+            },
+            {
+              "object": "plate",
+              "type": "ultra-clear",
+              "op": "seal"
+            },
+            {
+              "object": "plate",
+              "op": "unseal"
+            },
+            {
+              "lid": "standard",
+              "object": "plate",
+              "op": "cover"
+            },
+            {
+              "object": "plate",
+              "op": "uncover"
+            },
+            {
+              "lid": "standard",
+              "object": "plate",
+              "op": "cover"
+            }
+          ]
+        }
+    '''
+    for name, ref in protocol.refs.items():
+        cover = None
+        action = None
+        cont_type = ref.opts.get("type") or ref.opts.get("new")
+        if not ref.opts.get("cover") and "store" in ref.opts.keys():
+            for i in protocol.instructions:
+                if i.data.get("object") == ref.container:
+                    if i.op == "seal":
+                        cover = i.data['type']
+                        action = "seal"
+                    elif i.op == "cover":
+                        cover = i.data['lid']
+                        action = "cover"
+            if cover:
+                cov = getattr(protocol, action)
+                cov(ref.container)
+            elif "seal" in _CONTAINER_TYPES[cont_type].capabilities:
+                protocol.seal(ref.container)
+            elif "cover" in _CONTAINER_TYPES[cont_type].capabilities:
+                protocol.cover(ref.container)
+            else:
+                continue

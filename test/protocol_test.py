@@ -192,6 +192,21 @@ class DistributeTestCase(unittest.TestCase):
         self.assertTrue(Unit(5, 'microliter'), c.well(1).volume)
         self.assertTrue(Unit(15, 'microliter'), c.well(0).volume)
 
+    def test_uncover_before_distribute(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.distribute(c.well(0).set_volume("20:microliter"),
+                     c.well(1),
+                     "5:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual("distribute",
+                         list(p.as_dict()["instructions"][-1]["groups"][0].keys())[0])
+        self.assertTrue(5, c.well(1).volume.value)
+        self.assertTrue(15, c.well(0).volume.value)
+        self.assertEqual(p.instructions[-2].op, "uncover")
+        self.assertFalse(c.cover)
+
     def test_distribute_multiple_wells(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
@@ -250,6 +265,18 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+
+    def test_uncover_before_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.transfer(c.well(0), c.well(1), "20:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
+        self.assertEqual(None, c.well(0).volume)
+        self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+        self.assertTrue(p.instructions[-2].op == "uncover")
+        self.assertFalse(c.cover)
 
     def test_gt_900uL_transfer(self):
         p = Protocol()
@@ -823,6 +850,20 @@ class StampTestCase(unittest.TestCase):
         p.stamp(plateList[0].wells(list(range(4))), plateList[1].wells(
             list(range(12))), "5:microliter", shape={"rows": 8, "columns": 1}, one_source=True)
         self.assertEqual(len(p.instructions[0].groups), 12)
+
+    def test_implicit_uncover(self):
+        p = Protocol()
+        plateCount = 2
+        plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat",
+                           discard=True, cover="universal")
+                     for x in range(plateCount)]
+        for x in plateList:
+            self.assertTrue(x.cover)
+        p.stamp(plateList[0], plateList[1], "5:microliter")
+        for x in plateList:
+            self.assertFalse(x.cover)
+        self.assertTrue(len(p.instructions) == 3)
+        self.assertTrue(p.instructions[0].op == "uncover")
 
 
 class RefifyTestCase(unittest.TestCase):
@@ -1865,3 +1906,43 @@ class IlluminaSeqTestCase(unittest.TestCase):
                           ],
                           "nextseq", "high", "none", 250, "index_too_high",
                           {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 9})
+            p.gel_purify(sample_wells[:4], extracts[:4], "5:microliter",
+                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+
+
+class CoverStatusTestCase(unittest.TestCase):
+    def test_ref_cover_status(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "ultra-clear")
+        self.assertTrue(p.refs[cont.name].opts['cover'])
+
+    def test_ref_invalid_seal(self):
+        p = Protocol()
+        with self.assertRaises(AttributeError):
+            cont = p.ref("cont", None, "96-pcr", discard=True, cover="clear")
+            self.assertFalse(cont.cover)
+            self.assertFalse(cont.cover == "clear")
+            self.assertFalse(p.refs[cont.name].opts['cover'])
+
+    def test_implicit_unseal(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True)
+        self.assertFalse(cont.cover)
+        p.seal(cont)
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "ultra-clear")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)
+
+    def test_implicit_uncover(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-flat", discard=True)
+        self.assertFalse(cont.cover)
+        p.cover(cont, "universal")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "universal")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)
+>>>>>>> pull request 85 cover_state adds

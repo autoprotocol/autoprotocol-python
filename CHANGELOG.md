@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- track plate cover status - Container objects now have a `cover` attribute, implicit plate unsealing or uncovering prior to steps that require the plate to be uncovered.
 
 Changed
 
@@ -66,6 +67,7 @@ Added
 - measure_mass instruction
 - measure_volume instruction
 - illumina_sequence instruction
+
 
 Changed
 - gel purify parameters have changed

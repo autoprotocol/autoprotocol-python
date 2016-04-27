@@ -1,4 +1,4 @@
-from .container import Container, Well, WellGroup
+from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *  # flake8: noqa
@@ -154,7 +154,7 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
-    def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
+    def ref(self, name, id=None, cont_type=None, storage=None, discard=None, cover=None):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
         and return a Container with the id, container type and storage or
@@ -247,6 +247,9 @@ class Protocol(object):
         except ValueError:
             raise RuntimeError("You must specify a ref's container type.")
 
+        if cover and (cover in SEAL_TYPES or cover in COVER_TYPES):
+            opts["cover"] = cover
+
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
@@ -255,7 +258,7 @@ class Protocol(object):
             raise RuntimeError("You must specify either a valid storage "
                                "condition or set discard=True for a Ref.")
         container = Container(
-            id, cont_type, name=name, storage=storage if storage else None)
+            id, cont_type, name=name, storage=storage if storage else None, cover=cover if cover else None)
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -803,6 +806,8 @@ class Protocol(object):
                 }
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
+            self._adjust_cover(d["from"].container, "pipette from")
+            [self._adjust_cover(t['well'].container, "pipette to") for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -1053,6 +1058,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._adjust_cover(s.container, "pipette from")
+            self._adjust_cover(d.container, "pipette into")
             if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(900, "microliter"):
@@ -3880,6 +3887,13 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
+        if type not in SEAL_TYPES:
+            raise RuntimeError("%s is not a valid seal type" % type)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = type
+            ref.cover = type
+        else:
+            return
         self.instructions.append(Seal(ref, type))
 
     def unseal(self, ref):
@@ -3922,6 +3936,11 @@ class Protocol(object):
             Container to be unsealed
 
         """
+        if ref.is_sealed():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Unseal(ref))
 
     def cover(self, ref, lid='standard'):
@@ -3959,6 +3978,13 @@ class Protocol(object):
             Type of lid to cover container with
 
         """
+        if lid not in COVER_TYPES:
+            raise RuntimeError("%s is not a valid lid type" % lid)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = lid
+            ref.cover = lid
+        else:
+            return
         self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
@@ -4001,6 +4027,11 @@ class Protocol(object):
             Container to remove lid from
 
         """
+        if ref.is_covered():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
@@ -4242,6 +4273,8 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
+        self._adjust_cover(source.container, "spread")
+        self._adjust_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
         if dest.volume:
             dest.volume += volume
@@ -4949,6 +4982,13 @@ class Protocol(object):
             self.instructions[-1].groups += groups
         else:
             self.instructions.append(Pipette(groups))
+
+    def _adjust_cover(self, container, action):
+        if not (container.is_covered() or container.is_sealed()):
+            return
+        else:
+            status = "cover" if container.cover in COVER_TYPES else "seal"
+            eval("self.un%s(container)" % status)
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """

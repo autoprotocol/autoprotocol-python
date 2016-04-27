@@ -3,6 +3,7 @@ import json
 import io
 from .protocol import Protocol
 from .unit import Unit, UnitError
+from .container_type import _CONTAINER_TYPES
 from .container import WellGroup, SEAL_TYPES, COVER_TYPES
 from . import UserError
 import argparse
@@ -425,6 +426,7 @@ def _thermocycle_error_text():
     }]
   }]
 (You can intermix gradient and non-gradient steps)"""
+
 
 def seal_on_store(protocol):
     '''

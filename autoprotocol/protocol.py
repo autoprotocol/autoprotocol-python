@@ -1267,7 +1267,7 @@ class Protocol(object):
         if not isinstance(dest, (Well, str)):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well.")
-
+        self._adjust_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
         if isinstance(volumes, list):
@@ -1287,6 +1287,7 @@ class Protocol(object):
         from_wells = []
         # Generate instructions for each transfer from source wells
         for s, v in zip(sources, volumes):
+            self._adjust_cover(s.container, "consolidate from")
             source_opts = {}
             source_opts["well"] = s
             source_opts["volume"] = v
@@ -2629,6 +2630,7 @@ class Protocol(object):
             well = WellGroup([well])
         if isinstance(well, list):
             well = WellGroup(well)
+<<<<<<< d5e1845538e0d3dcc882b4805da93b2508fbbe4e
         if one_tip:
             group = []
             for w in well.wells:
@@ -2649,6 +2651,17 @@ class Protocol(object):
                     "repetitions": repetitions
                 }
                 self._pipette([{"mix": [opts]}])
+=======
+        for w in well.wells:
+            self._adjust_cover(w.container, "mix")
+            opts = {
+                "well": w,
+                "volume": volume,
+                "speed": speed,
+                "repetitions": repetitions
+            }
+            self._pipette([{"mix": [opts]}])
+>>>>>>> pull request 85 cover_state adds
 
     def dispense(self, ref, reagent, columns, speed_percentage=None):
         """
@@ -2760,6 +2773,8 @@ class Protocol(object):
             dispenser.
 
         """
+
+        self._adjust_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2874,7 +2889,12 @@ class Protocol(object):
             dispenser.
 
         """
+<<<<<<< d5e1845538e0d3dcc882b4805da93b2508fbbe4e
         if (speed_percentage is not None and
+=======
+        self._adjust_cover(ref, "dispense to")
+        if (speed_percentage != None and
+>>>>>>> pull request 85 cover_state adds
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         columns = []
@@ -3611,6 +3631,8 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
+        for w in wells:
+            self._adjust_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1

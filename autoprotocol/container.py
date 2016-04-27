@@ -311,6 +311,7 @@ class Container(object):
         self.id = id
         self.container_type = container_type
         self.storage = storage
+        self.cover = cover
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):

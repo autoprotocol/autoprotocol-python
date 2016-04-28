@@ -232,57 +232,89 @@ def check_valid_mag_params(mag_dict):
             raise ValueError("Magnetize set at: %s, must be boolean" % mag_dict["magnetize"])
 
 
-def check_valid_gel_purify_params(extract):
+def check_valid_gel_purify_band(band):
     from .container import Well
 
-    if not isinstance(extract, list):
+    if not isinstance(band, dict):
         error_str = dedent("""
-            Extract parameters for gel_purify must be a list of extraction parameters in the form of
-                [{
-                    'elution_volume': volume
-                    'elution_buffer': str,
-                    'lane': int,
-                     'band_size_range': {'min_bp': int, 'max_bp': int, },'destination': well
-                  }, {...}]
+            Bands for gel_purify must be a dictionary in the form of
+                {
+                  'elution_volume': volume,
+                  'elution_buffer': str,
+                  'band_size_range': {
+                    'min_bp': int,
+                    'max_bp': int
+                    },
+                  'destination': well
+                }
         """)
         raise AttributeError(error_str)
 
-    for i, ex in enumerate(extract):
-        if not isinstance(ex, dict):
-            raise AttributeError("All extraction parameters must be a dictionary with specific parameters. Extract "
-                                 "parameters for item %s in the extract list is incorrectly formated." % (i + 1))
-
-        extract_keys = ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]
-
-        if not all(k in ex.keys() for k in extract_keys):
-            extract_keys_quoted = ["'{}'".format(key) for key in extract_keys]
-            extract_keys_str = ', '.join(extract_keys_quoted)
-
-            raise KeyError("Extract parameter keys must be: {}.".format(extract_keys_str))
-        if not isinstance(ex["elution_volume"], Unit):
-            raise ValueError("All extract elution volumes must be of type Unit.")
-        if ex["elution_volume"] <= Unit(0, "microliter"):
-            raise ValueError("Extraction elution volumes must be greater than 0.")
-        if not isinstance(ex["destination"], Well):
-            raise ValueError("All extract elution destinations must be of type Well.")
-        if not isinstance(ex["band_size_range"], dict):
-            raise AttributeError("Extract parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
-        if not all(k in ex["band_size_range"].keys() for k in ["min_bp", "max_bp"]):
-            raise KeyError("Extract parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
-        if not ex["band_size_range"]["max_bp"] > ex["band_size_range"]["min_bp"]:
-            raise ValueError("max_bp must be greater than min_bp")
+    if not all(k in band.keys() for k in ["elution_buffer", "band_size_range", "destination", "elution_volume"]):
+        raise KeyError("Band parameter keys must be: 'elution_buffer', 'band_size_range', 'destination' 'elution_volume'.")
+    if not isinstance(band["elution_volume"], Unit):
+        raise ValueError("All band elution volumes must be of type Unit.")
+    if band["elution_volume"] <= Unit(0, "microliter"):
+        raise ValueError("Band elution volume: %s must be greater than 0:microliter." % band["elution_volume"])
+    if not isinstance(band["destination"], Well):
+        raise ValueError("All band destinations must be of type Well.")
+    if not isinstance(band["band_size_range"], dict):
+        raise AttributeError("Band parameter 'band_size_range' must be a dict with keys: 'max_bp', 'min_bp.")
+    if not all(k in band["band_size_range"].keys() for k in ["min_bp", "max_bp"]):
+        raise KeyError("Band parameter 'band_size_range' keys must be: 'max_bp', 'min_bp'.")
+    if not band["band_size_range"]["max_bp"] > band["band_size_range"]["min_bp"]:
+        raise ValueError("max_bp must be greater than min_bp")
 
 
-def make_gel_extract_param(elution_buffer, elution_volume, max_bp, min_bp, destination, lane=None):
-        return {
-            "band_size_range": {
-                "min_bp": min_bp, "max_bp": max_bp
-            },
-            "elution_volume": Unit(elution_volume),
-            "elution_buffer": elution_buffer,
-            "lane": lane,
-            "destination": destination
-        }
+def check_valid_gel_purify_extract(extract):
+
+    from .container import Well
+
+    if not isinstance(extract, dict):
+        raise AttributeError("Extract for gel_purify must be a dictionary in the form of {'source': well, 'band_list': list, 'gel': int, 'lane': int}")
+    if not all(k in extract.keys() for k in ["source", "band_list", "lane", "gel"]):
+        raise KeyError("Extract parameter keys must be 'source', 'band_list', 'lane', 'gel'.")
+    if not isinstance(extract["source"], Well):
+        raise ValueError("All extract sources must be of type Well.")
+
+    for band in extract["band_list"]:
+        check_valid_gel_purify_band(band)
+
+
+def make_gel_extract_params(source, band_list, lane=None, gel=None):
+
+    if isinstance(band_list, dict):
+        band_list = [band_list]
+
+    for band in band_list:
+        check_valid_gel_purify_band(band)
+
+    extract = {
+        "source": source,
+        "band_list": band_list,
+        "lane": lane,
+        "gel": gel
+    }
+
+    check_valid_gel_purify_extract(extract)
+
+    return extract
+
+
+def make_band_param(elution_buffer, elution_volume, max_bp, min_bp, destination):
+
+    band = {
+        "band_size_range": {
+            "min_bp": min_bp, "max_bp": max_bp
+        },
+        "elution_volume": Unit(elution_volume),
+        "elution_buffer": elution_buffer,
+        "destination": destination
+    }
+
+    check_valid_gel_purify_band(band)
+
+    return band
 
 
 class make_dottable_dict(dict):

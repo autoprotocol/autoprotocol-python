@@ -9,6 +9,7 @@ Added
 - measure_volume instruction
 
 Changed
+- gel purify parameters have changed
 
 Removed
 

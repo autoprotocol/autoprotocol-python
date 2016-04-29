@@ -1,7 +1,7 @@
 from .container import Container, Well, WellGroup
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
-from .instruction import *
+from .instruction import * # flake8: noqa
 from .pipette_tools import assign
 from .util import check_valid_origin
 from .util import check_stamp_append

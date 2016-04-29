@@ -1,4 +1,5 @@
 from .unit import Unit
+from textwrap import dedent
 
 '''
     :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
@@ -137,18 +138,22 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
     """
     Checks whether current stamp can be appended to previous stamp instruction.
     """
+    prev_cols = prev_xfer_list[0]["shape"]["columns"]
+    prev_rows = prev_xfer_list[0]["shape"]["rows"]
+    cols = current_xfer["shape"]["columns"]
+    rows = current_xfer["shape"]["rows"]
+
     # Ensure Instruction contains either all full plate or selective (all rows
     # or all columns)
-    if ((prev_xfer_list[0]["shape"]["columns"] == 12 and prev_xfer_list[0][
-         "shape"]["rows"] == 8) and (current_xfer["shape"]["columns"] == 12 and current_xfer["shape"]["rows"] == 8)):
+    if (prev_cols == cols == 12) and (prev_rows == rows == 8):
         axis_key = None
-    elif prev_xfer_list[0]["shape"]["columns"] == 12:
+    elif prev_cols == 12:
         axis_key = "rows"
-        if current_xfer["shape"]["columns"] != 12:
+        if cols != 12:
             return False
-    elif prev_xfer_list[0]["shape"]["rows"] == 8:
+    elif prev_rows == 8:
         axis_key = "columns"
-        if current_xfer["shape"]["rows"] != 8:
+        if rows != 8:
             return False
 
     # Ensure Instruction contain the same volume type as defined by TCLE
@@ -182,32 +187,46 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
 
 
 def check_valid_mag(container, head):
+    shortname = container.container_type.shortname
+
     if head == "96-deep":
-        if container.container_type.shortname not in ["96-v-kf", "96-deep-kf", "96-deep"]:
-            raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
+        if shortname not in ["96-v-kf", "96-deep-kf", "96-deep"]:
+            raise ValueError("{} container is not compatible with {} head"
+                             .format(container.container_type.shortname, head))
     elif head == "96-pcr":
-        if container.container_type.shortname not in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]:
-            raise ValueError("%s container is not compatible with %s head" % (container.container_type.shortname, head))
+        if shortname not in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]:
+            raise ValueError("{} container is not compatible with {} head"
+                             .format(container.container_type.shortname, head))
 
 
 def check_valid_mag_params(mag_dict):
     if "frequency" in mag_dict:
         if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:hertz"):
-            raise ValueError("Frequency set at %s, must not be less than 0:hertz" % mag_dict["frequency"])
+            raise ValueError("Frequency set at {}, must not be less than 0:hertz"
+                             .format(mag_dict["frequency"]))
+
     if "temperature" in mag_dict and mag_dict["temperature"]:
         if Unit.fromstring(mag_dict["temperature"]) < Unit.fromstring("-273.15:celsius"):
-            raise ValueError("Temperature set at %s, must not be less than absolute zero'" % mag_dict["temperature"])
+            raise ValueError("Temperature set at {}, must not be less than absolute zero'"
+                             .format(mag_dict["temperature"]))
     elif "temperature" in mag_dict and not mag_dict["temperature"]:
             del mag_dict["temperature"]
+
     if "amplitude" in mag_dict:
         if mag_dict["amplitude"] > mag_dict["center"]:
-            raise ValueError("'amplitude': %s, must be less than 'center': %s" % (mag_dict["amplitude"], mag_dict["center"]))
+            raise ValueError("'amplitude': {}, must be less than 'center': {}"
+                             .format(mag_dict["amplitude"], mag_dict["center"]))
         if mag_dict["amplitude"] < 0:
             raise ValueError("Amplitude set at %s, must not be negative" % mag_dict["amplitude"])
+
     if any(kw in mag_dict for kw in ("center", "bottom_position", "tip_position")):
-        position = mag_dict.get("center", mag_dict.get("bottom_position", mag_dict.get("tip_position")))
+        tip_position = mag_dict.get("tip_position")
+        bottom_position = mag_dict.get("bottom_position", tip_position)
+        position = mag_dict.get("center", bottom_position)
+
         if position < 0:
             raise ValueError("Tip head position set at %s, must not be negative" % position)
+
     if "magnetize" in mag_dict:
         if not isinstance(mag_dict["magnetize"], bool):
             raise ValueError("Magnetize set at: %s, must be boolean" % mag_dict["magnetize"])
@@ -217,15 +236,29 @@ def check_valid_gel_purify_params(extract):
     from .container import Well
 
     if not isinstance(extract, list):
-        raise AttributeError("Extract parameters for gel gel_purify must be a list of extraction parameters in the "
-                             "form of [{'elution_volume': volume 'elution_buffer': str, 'lane': int, 'band_size_range':"
-                             " {'min_bp': int, 'max_bp': int, },'destination': well}, {...}]")
+        error_str = dedent("""
+            Extract parameters for gel_purify must be a list of extraction parameters in the form of
+                [{
+                    'elution_volume': volume
+                    'elution_buffer': str,
+                    'lane': int,
+                     'band_size_range': {'min_bp': int, 'max_bp': int, },'destination': well
+                  }, {...}]
+        """)
+        raise AttributeError(error_str)
+
     for i, ex in enumerate(extract):
         if not isinstance(ex, dict):
             raise AttributeError("All extraction parameters must be a dictionary with specific parameters. Extract "
                                  "parameters for item %s in the extract list is incorrectly formated." % (i + 1))
-        if not all(k in ex.keys() for k in ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]):
-            raise KeyError("Extract parameter keys must be: 'elution_buffer', 'lane', 'band_size_range', 'destination' 'elution_volume'.")
+
+        extract_keys = ["elution_buffer", "lane", "band_size_range", "destination", "elution_volume"]
+
+        if not all(k in ex.keys() for k in extract_keys):
+            extract_keys_quoted = ["'{}'".format(key) for key in extract_keys]
+            extract_keys_str = ', '.join(extract_keys_quoted)
+
+            raise KeyError("Extract parameter keys must be: {}.".format(extract_keys_str))
         if not isinstance(ex["elution_volume"], Unit):
             raise ValueError("All extract elution volumes must be of type Unit.")
         if ex["elution_volume"] <= Unit(0, "microliter"):
@@ -340,7 +373,8 @@ def incubate_params(duration, shake_amplitude=None, shake_orbital=None):
         }
         incubate_dict["shaking"] = shake_dict
     elif (shake_amplitude is not None) ^ (shake_orbital is not None):
-        raise RuntimeError("Both `shake_amplitude`: %s and `shake_orbital`: %s must not be None for shaking to be set" % (shake_amplitude, shake_orbital))
+        raise RuntimeError("Both `shake_amplitude`: {} and `shake_orbital`: {} "
+                           "must not be None for shaking to be set".format(shake_amplitude, shake_orbital))
 
     check_valid_incubate_params(incubate_dict)
 
@@ -379,6 +413,8 @@ def check_valid_incubate_params(idict):
             if Unit.fromstring(shaking["amplitude"]) < Unit.fromstring("0:millimeter"):
                 raise ValueError("shake_amplitude: %s must be positive" % shaking["amplitude"])
         else:
-            raise RuntimeError("Both `shake_amplitude`: %s and `shake_orbital`: %s must not be None for shaking to be set" % (shaking.get("amplitude"), shaking.get("orbital")))
+            raise RuntimeError("Both `shake_amplitude`: {} and `shake_orbital`: "
+                               "{} must not be None for shaking to be set"
+                               .format(shaking.get("amplitude"), shaking.get("orbital")))
 
     return True

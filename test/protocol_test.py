@@ -1,12 +1,10 @@
 import unittest
+from autoprotocol.container import Container, WellGroup
+from autoprotocol.instruction import Thermocycle, Incubate, Spin
+from autoprotocol.pipette_tools import * # flake8: noqa
 from autoprotocol.protocol import Protocol, Ref
-from autoprotocol.instruction import Instruction, Thermocycle, Incubate, Pipette, Spin
-from autoprotocol.container_type import ContainerType
-from autoprotocol.container import Container, WellGroup, Well
 from autoprotocol.unit import Unit
 from autoprotocol.util import make_gel_extract_param
-from autoprotocol.pipette_tools import *
-import json
 
 
 class ProtocolMultipleExistTestCase(unittest.TestCase):

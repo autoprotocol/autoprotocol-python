@@ -12,5 +12,9 @@ setup(
     install_requires=[
         'Pint>=0.7.2'
     ],
+    tests_require=[
+        'coverage>=4.0.3',
+        'tox>=2.3.1'
+    ],
     packages=['autoprotocol']
 )

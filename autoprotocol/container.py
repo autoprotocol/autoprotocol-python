@@ -434,15 +434,15 @@ class Container(object):
         num_rows = self.container_type.row_count()
         inner_wells = []
         if columnwise:
-            for c in xrange(1, num_cols-1):
+            for c in xrange(1, num_cols - 1):
                 wells = []
-                for r in xrange(1, num_rows-1):
-                    wells.append((r*num_cols)+c)
+                for r in xrange(1, num_rows - 1):
+                    wells.append((r * num_cols) + c)
                 inner_wells.extend(wells)
         else:
             well = num_cols
-            for i in xrange(1, num_rows-1):
-                inner_wells.extend(xrange(well+1, well+(num_cols-1)))
+            for i in xrange(1, num_rows - 1):
+                inner_wells.extend(xrange(well + 1, well + (num_cols - 1)))
                 well += num_cols
         inner_wells = [self._wells[x] for x in inner_wells]
         return WellGroup(inner_wells)
@@ -541,7 +541,9 @@ class Container(object):
 
         """
         if not isinstance(storage, basestring):
-            raise TypeError("Storage condition given ({0}) is not of type str. {1}.".format(storage, type(storage)))
+            raise TypeError("Storage condition given ({0}) is not of type str. {1}."
+                            .format(storage, type(storage)))
+
         self.storage = storage
         return self
 

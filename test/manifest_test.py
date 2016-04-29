@@ -1,5 +1,5 @@
 import unittest
-from autoprotocol.harness import ProtocolInfo, run, Manifest
+from autoprotocol.harness import ProtocolInfo, Manifest
 from autoprotocol import Protocol, Unit, Well, WellGroup
 import json
 
@@ -93,24 +93,24 @@ class ManifestTest(unittest.TestCase):
                     'volume': 3,
                     'time': '30:second',
                     'temperature': '25:celsius'
-                    }
-                })
+                }
+            })
             parsed = protocol_info.parse(self.protocol, {
                 'refs': {},
                 'parameters': {
                     'volume': "3:microliter",
                     'time': "hello",
                     'temperature': '25:celsius'
-                    }
-                })
+                }
+            })
             parsed = protocol_info.parse(self.protocol, {
                 'refs': {},
                 'parameters': {
                     'volume': "3:microliter",
                     'time': "30:second",
                     'temperature': 25
-                    }
-                })
+                }
+            })
 
     def test_group(self):
         protocol_info = ProtocolInfo({
@@ -151,7 +151,7 @@ class ManifestTest(unittest.TestCase):
                     }
                 }
             })
-            parsed1 = protocol_info1.parse(self.protocol, {
+            protocol_info1.parse(self.protocol, {
                 'refs': {
                 },
                 'parameters': {
@@ -166,7 +166,7 @@ class ManifestTest(unittest.TestCase):
                     }
                 }
             })
-            parsed2 = protocol_info2.parse(self.protocol, {
+            protocol_info2.parse(self.protocol, {
                 'refs': {
                 },
                 'parameters': {
@@ -210,23 +210,23 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(1, parsed['group_test'][1]['test'].index)
         with self.assertRaises(RuntimeError):
             parsed = protocol_info.parse(self.protocol, {
-            'refs': {
-                'ct1test': {'id': 'ct1test', 'type': '96-pcr', 'discard': True}
-            },
-            'parameters': {
-                'group_test': {
-                    'test': 'ct1test/0',
-                    'test': 'ct1test/1'
+                'refs': {
+                    'ct1test': {'id': 'ct1test', 'type': '96-pcr', 'discard': True}
+                },
+                'parameters': {
+                    'group_test': {
+                        'test': 'ct1test/0',
+                        'test': 'ct1test/1'
                     }
                 }
             })
             protocol_info = ProtocolInfo({
-            'name': 'Test Basic Types',
-            'inputs': {
-                'group_test': {
-                    'type': 'group+'
+                'name': 'Test Basic Types',
+                'inputs': {
+                    'group_test': {
+                        'type': 'group+'
+                    }
                 }
-            }
             })
             parsed = protocol_info.parse(self.protocol, {
                 'refs': {
@@ -441,8 +441,6 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(0, len(parsed['group']['aliquot+']))
         self.assertEqual([{'bool': None}], parsed['group+'])
 
-
-
     def test_container_errors(self):
         with self.assertRaises(RuntimeError):
             protocol_info1 = ProtocolInfo({
@@ -453,7 +451,7 @@ class ManifestTest(unittest.TestCase):
                     }
                 }
             })
-            parsed1 = protocol_info1.parse(self.protocol, {
+            protocol_info1.parse(self.protocol, {
                 'refs': {
                     "my_cont": {
                         "type": "micro-1.5",
@@ -464,7 +462,7 @@ class ManifestTest(unittest.TestCase):
                     "cont": "my_cont/0"
                 }
             })
-            parsed2 = protocol_info1.parse(self.protocol, {
+            protocol_info1.parse(self.protocol, {
                 'refs': {
                     "my_cont": {
                         "type": "micro-1.5",
@@ -475,7 +473,7 @@ class ManifestTest(unittest.TestCase):
                     "cont": "another_cont"
                 }
             })
-            parsed3 = protocol_info1.parse(self.protocol, {
+            protocol_info1.parse(self.protocol, {
                 'refs': {
                     "my_cont": {
                         "type": "micro-1.5",
@@ -487,8 +485,6 @@ class ManifestTest(unittest.TestCase):
                 }
             })
 
-
-
     # Test parsing of local manifest file
     def test_json_parse(self):
         protocol = Protocol()
@@ -496,4 +492,4 @@ class ManifestTest(unittest.TestCase):
             manifest_json = f.read()
             manifest = Manifest(json.loads(manifest_json))
             source = json.loads(manifest_json)['protocols'][0]['preview']
-            params = manifest.protocol_info('TestMethod').parse(protocol, source)
+            manifest.protocol_info('TestMethod').parse(protocol, source)

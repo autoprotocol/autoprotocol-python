@@ -172,8 +172,8 @@ def convert_param(protocol, val, typeDesc):
                     for k in typeDesc['inputs']
                     } for x in val]
         except (TypeError, AttributeError):
-            raise RuntimeError("The value supplied to input '%s' (type group+) must be in the form of"
-                               " a list of dictionaries" % typeDesc['label'])
+            raise RuntimeError("The value supplied to input '%s' (type group+) must be in"
+                               " the form of a list of dictionaries" % typeDesc['label'])
         except KeyError as e:
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("The value supplied to input '%s' (type group+) is missing "
@@ -193,8 +193,8 @@ def convert_param(protocol, val, typeDesc):
         except (KeyError, AttributeError) as e:
             label = typeDesc.get('label') or "[unknown]"
             if e in ["value", "inputs"]:
-                raise RuntimeError("The value supplied to input '%s' (type group-choice) is missing "
-                                   "a(n) %s field." % (label, e))
+                raise RuntimeError("The value supplied to input '%s' (type group-choice) "
+                                   "is missing a(n) %s field." % (label, e))
     elif type == 'thermocycle':
         try:
             return [
@@ -225,19 +225,28 @@ def convert_param(protocol, val, typeDesc):
 
     elif type == 'csv-table':
         try:
-            return [
-                {
-                    h: convert_param(protocol, v, typeDesc={"type": val[0].get(h), "label": "csv-table item (%s): %s"
-                                                            % (i, h)}) for h, v in row.items()
-                }
-                for i, row in enumerate(val[1])
-            ]
+            values = []
+            for i, row in enumerate(val[1]):
+                value = {}
+                for header, header_value in row.items():
+                    typeDesc = {
+                        "type": val[0].get(header),
+                        "label": "csv-table item (%s): %s" % (i, header)
+                    }
+
+                    value[header] = convert_param(protocol, header_value, typeDesc=typeDesc)
+
+                values.append(value)
+
+            return values
 
         except (AttributeError, IndexError, TypeError):
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The values supplied to %s (type csv-table) are improperly"
-                               "formatted. Format must be a list of dictionaries with the first."
-                               " dictionary comprising keys with associated column input types." % label)
+            raise RuntimeError(
+                "The values supplied to %s (type csv-table) are improperly"
+                "formatted. Format must be a list of dictionaries with the first."
+                " dictionary comprising keys with associated column input types." % label
+            )
 
     else:
         raise ValueError("Unknown input type %r" % type)

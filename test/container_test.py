@@ -91,7 +91,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         row_count = dummy_type.well_count / dummy_type.col_count
         for i in xrange(15):
             row, col = self.c.decompose(ws[i].index)
-            self.assertEqual(i, row+col*row_count)
+            self.assertEqual(i, row + col * row_count)
 
     def test_innerwells(self):
         big_dummy_type = make_dummy_type(well_count=20)
@@ -172,11 +172,13 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
             ws = ws + "not a well"
 
     def test_quadrant(self):
-        c = lambda container_type: Container(None, container_type)
-        plate_96 = c(make_dummy_type(well_count=96, col_count=12))
-        plate_384 = c(make_dummy_type(well_count=384, col_count=24))
-        plate_1536 = c(make_dummy_type(well_count=1536, col_count=48))
-        pathological_plate = c(make_dummy_type(well_count=384, col_count=96))
+        def create_container(container_type):
+            return Container(None, container_type)
+
+        plate_96 = create_container(make_dummy_type(well_count=96, col_count=12))
+        plate_384 = create_container(make_dummy_type(well_count=384, col_count=24))
+        plate_1536 = create_container(make_dummy_type(well_count=1536, col_count=48))
+        pathological_plate = create_container(make_dummy_type(well_count=384, col_count=96))
 
         for plate in plate_96, plate_384:
             ws = plate.quadrant(0)

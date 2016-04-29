@@ -347,8 +347,10 @@ class Thermocycle(Instruction):
         dye_names = reduce(lambda x, y: x.union(y),
                            [set(well_map[k]) for k in well_map])
         if Thermocycle.find_invalid_dyes(dye_names):
-            raise ValueError("thermocycle instruction supplied the following "
-                             "invalid dyes: %s" % ", ".join(Thermocycle.find_invalid_dyes(dye_names)))
+            invalid_dyes = ", ".join(Thermocycle.find_invalid_dyes(dye_names))
+            raise ValueError("thermocycle instruction supplied the following invalid dyes: {}"
+                             .format(invalid_dyes))
+
         dye_map = {dye: [] for dye in dye_names}
         for well in well_map:
             dyes = well_map[well]
@@ -542,7 +544,8 @@ class Absorbance(Instruction):
 
     """
 
-    def __init__(self, ref, wells, wavelength, dataref, flashes=25, incubate_before=None, temperature=None):
+    def __init__(self, ref, wells, wavelength, dataref, flashes=25,
+                 incubate_before=None, temperature=None):
         json_dict = {"op": "absorbance",
                      "object": ref,
                      "wells": wells,
@@ -594,7 +597,8 @@ class Fluorescence(Instruction):
 
     """
 
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,  incubate_before=None, temperature=None, gain=None):
+    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,
+                 incubate_before=None, temperature=None, gain=None):
         json_dict = {
             "op": "fluorescence",
             "object": ref,

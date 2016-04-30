@@ -8,7 +8,7 @@ from .util import check_stamp_append
 from .util import check_valid_mag
 from .util import check_valid_mag_params
 from .util import check_valid_incubate_params
-from .util import check_valid_gel_purify_params
+from .util import check_valid_gel_purify_extract
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3142,11 +3142,18 @@ class Protocol(object):
             self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
                                                  duration, dataref))
 
-    def gel_purify(self, samples, extracts, volume, matrix, ladder, dataref):
+    def gel_purify(self, extracts, volume, matrix, ladder, dataref):
         """
         Separate nucleic acids on an agarose gel and purify according to
         parameters. If gel extract lanes are not specified, they will be
-        sequentially ordered.
+        sequentially ordered and purified on as many gels as necessary.
+
+        Each element in extracts specifies a source loaded in a single lane of
+        gel with a list of bands that will be purified from that lane. If the
+        same source is to be run on separate lanes, a new dictionary must be
+        added to extracts. It is also possible to add an element to extract
+        with a source but without a list of bands. In that case, the source
+        will be run in a lane without extraction.
 
         Example Usage:
 
@@ -3160,32 +3167,41 @@ class Protocol(object):
                                  for i in sample_wells]
 
 
-                extracts = [make_gel_extract_param("TE", "5:microliter", 80,
-                                                   60, extract_wells[i])
-                            for i, w in enumerate(sample_wells)]
+                extracts = [make_gel_extract_params(
+                                w,
+                                make_band_param(
+                                    "TE",
+                                    "5:microliter",
+                                    80,
+                                    79,
+                                    extract_wells[i]))
+                                for i, w in enumerate(sample_wells)]
 
                 extracts[0] >>
 
                 {
-                    "band_size_range": {
+                  "band_list": [
+                    {
+                      "band_size_range": {
                         "max_bp": 80,
-                        "min_bp": 60
-                        },
-                    "elution_buffer": "TE",
-                    "elution_volume": Unit(5.0, "microliter"),
-                    "destination": Well(Container(extract_0), 0, None),
-                    "lane": None
+                        "min_bp": 79
+                      },
+                      "destination": Well(Container(extract_0), 0, None),
+                      "elution_buffer": "TE",
+                      "elution_volume": "Unit(5.0, 'microliter')"
+                    }
+                  ],
+                  "gel": None,
+                  "lane": None,
+                  "source": Well(Container(test_plate), 0, None)
                 }
 
-                p.gel_purify(sample_wells, extracts, "10:microliter",
+                p.gel_purify(extracts, "10:microliter",
                              "select_size(8,0.8%)", "ladder1",
                              "gel_purify_example")
 
         Parameters
         ----------
-        samples : list, WellGroup
-            List of string well references or WellGroup containing wells to be
-            separated on gel.
         extracts: List of dicts
             Dictionary containing parameters for gel extraction, must be in the
             form of:
@@ -3194,17 +3210,45 @@ class Protocol(object):
 
                 [
                   {
-                    "elution_volume": Unit,
-                    "elution_buffer": str,
-                    "destination": Well,
-                    "lane": int or None,
-                    "band_size_range: {
-                      "min_bp": int,
-                      "max_bp": int
+                  "band_list": [
+                    {
+                      "band_size_range": {
+                        "max_bp": int,
+                        "min_bp": int
+                      },
+                      "destination": Well,
+                      "elution_buffer": str,
+                      "elution_volume": Volume
                     }
+                  ],
+                  "gel": int or None,
+                  "lane": int or None,
+                  "source": Well
                   }
                 ]
 
+            util.make_gel_extract_params() and util.make_band_param() can be
+            used to create these dictionaries
+        band_list: list of dicts
+            List of bands to be extracted from the lane
+        band_size_range: dict
+            Dictionary for the size range of the band to be extracted
+        max_bp: int
+            Maximum size for the band
+        min_bp: int
+            Minimum size for the band
+        destination: Well
+            Well to place the extracted material
+        elution_buffer: str
+            Buffer to use to extract the band, commonly "water"
+        elution_volume: str, Unit
+            Volume of elution_buffer to extract the band into
+        gel: int
+            Integer identifier for the gel if using multiple gels
+        lane: int
+            Integer identifier for the lane of a gel to run the source
+        source: Well
+            Well from whcih to purify the material
         volume: str, Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
@@ -3229,7 +3273,7 @@ class Protocol(object):
         ValueError:
             If extract destination is not of type Well.
         ValueError:
-            IF extract elution volume is not of type Unit
+            If extract elution volume is not of type Unit
         ValueError:
             if extract elution volume is not greater than 0.
         RuntimeError:
@@ -3238,61 +3282,94 @@ class Protocol(object):
             If all samples do not fit on single gel type.
         TypeError:
             If lane designated for gel extracts is not an integer.
-        ValueError:
-            If designated lane index is outside lanes within the gel.
         RuntimeError:
-            If maximum lane set is greater than samples on gel.
+            If designated lane index is outside lanes within the gel.
         RuntimeError:
             If lanes not designated and number of extracts not equal to number
             of samples.
 
         """
+
+        from itertools import groupby
+        from operator import itemgetter
+
         try:
             max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         except (AttributeError, IndexError):
             raise RuntimeError("Matrix specified is not properly formatted.")
 
-        # assert all samples are within specified gel size
-        if len(samples) > max_well:
-            raise RuntimeError("All samples must fit within a single gel."
-                               "Specified gel has {:1} wells, {:2} samples"
-                               "submitted. Please split your samples amongst"
-                               "multiple gel_purify instructions."
-                               .format(max_well, len(samples)))
+        volume = Unit(volume)
+        if volume <= Unit("0:microliter"):
+            raise ValueError("Volume: %s, must be greater than 0:microliter" % volume)
 
-        # check extract parameters are in the proper form
-        check_valid_gel_purify_params(extracts)
+        if not isinstance(ladder, str):
+            raise TypeError("Ladder: %s, must be a string" % ladder)
 
-        # check if any gel extract lanes are set, if not set lanes sequentially
+        if not isinstance(dataref, str):
+            raise TypeError("Datref: %s, must be a string" % dataref)
+
+        if not isinstance(extracts, list):
+            extracts = [extracts]
+
+        for e in extracts:
+            check_valid_gel_purify_extract(e)
+
+        gel_set = [e["gel"] for e in extracts]
         lane_set = [e["lane"] for e in extracts]
-        gel_lanes = range(len(samples))
-        if None in lane_set:
-            if list(filter(None, lane_set)):
-                raise RuntimeError("If setting a gel lane, gel lanes must be"
-                                   "set for every extract.")
-            if len(extracts) is not len(samples):
-                raise RuntimeError("If not designating an extract lane, number"
-                                   "of samples must equal number of extract"
-                                   "parameters.")
-            for i, l in enumerate(extracts):
-                l["lane"] = gel_lanes[i]
-        if None not in lane_set:
-            for l in lane_set:
-                if not isinstance(l, int):
-                    raise TypeError("Designated gel extract lanes must be of type"
-                                    "integer. {:1} is of {:2}.".format(l, type(l)))
-                if l not in range(max_well):
-                    raise ValueError("Designated gel lanes must be within the"
-                                     "lanes available in the gel")
 
-        l_max = max([e["lane"] for e in extracts])
-        if l_max >= len(samples):
-            raise RuntimeError("Lanes set for extraction must not be greater"
-                               "than the samples. Max lane {:1} is greater than"
-                               " {:2}.".format(l_max, len(samples)))
+        if None in gel_set:
+            if any(gel_set):
+                raise RuntimeError("If one extract has gel set, all extracts must have gel set")
+            else:
+                if None in lane_set:
+                    if any(lane_set):
+                        raise RuntimeError("If one extract has lane set, all extracts must have lane set")
+                    else:
+                        for i, e in enumerate(extracts):
+                            e["gel"] = i // max_well
+                            e["lane"] = i % max_well
+                else:
+                    for e in extracts:
+                        e["gel"] = 0
 
-        self.instructions.append(GelPurify(samples, volume, matrix, ladder,
-                                           dataref, extracts))
+        sort_key = itemgetter("gel")
+        parsed_extracts = [list(grp) for key, grp in groupby(sorted(extracts, key=sort_key), key=sort_key)]
+
+        for pe in parsed_extracts:
+
+            lane_set = [e["lane"] for e in pe]
+
+            if len(lane_set) > max_well:
+                raise RuntimeError("The gel is not large enough to accomodate all lanes: gel has %s wells, %s lanes specified" % (max_well, len(lane_set)))
+
+            if None in lane_set:
+                if any(lane_set):
+                    raise RuntimeError("If one extract has lane set, all extracts must have lane set")
+                else:
+                    for i, e in enumerate(pe):
+                        e["lane"] = i % max_well
+                    lane_set = [e["lane"] for e in pe]
+
+            if sorted(lane_set) != list(range(0, max(lane_set) + 1)):
+                raise RuntimeError("Lanes must be contiguous, unique, and start from 0")
+
+            if len(parsed_extracts) > 1:
+                dataref_gel = "%s_%s" % (dataref, pe[0]["gel"])
+            else:
+                dataref_gel = dataref
+
+            pe = sorted(pe, key=itemgetter("lane"))
+
+            samples = [e["source"] for e in pe]
+
+            pe_unpacked = []
+            for e in pe:
+                for b in e["band_list"]:
+                    ext = b
+                    ext["lane"] = e["lane"]
+                    pe_unpacked.append(ext)
+
+            self.instructions.append(GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
 
     def seal(self, ref, type="ultra-clear"):
         """

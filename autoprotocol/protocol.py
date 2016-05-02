@@ -2500,6 +2500,8 @@ class Protocol(object):
             "spin_direction" defaults to ["cw"].
 
         """
+        if not flow_direction:
+            flow_direction = "inward"
         if flow_direction not in ["inward", "outward"]:
             raise ValueError("The specified value for flow_direction was not "
                              "valid. If specifying, please choose either "

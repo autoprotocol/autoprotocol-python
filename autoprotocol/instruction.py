@@ -213,7 +213,7 @@ class Spin(Instruction):
 
     """
 
-    def __init__(self, ref, acceleration, duration, flow_direction, spin_direction):
+    def __init__(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
         super(Spin, self).__init__({
             "op": "spin",
             "object": ref,

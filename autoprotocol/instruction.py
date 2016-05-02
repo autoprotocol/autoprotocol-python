@@ -193,20 +193,34 @@ class Spin(Instruction):
     ----------
     ref : Ref, str
         Container to be centrifuged.
-    acceleration : str
+    acceleration : str, Unit
         Amount of acceleration to be applied to the container, expressed in
         units of "g" or "meter/second^2"
-    duration : str
+    duration : str, Unit
         Amount of time to apply acceleration.
+    flow_direction: str
+        Specifies the direction contents will tend toward with respect to
+        the container. Valid directions are "inward" and "outward", default
+        value is "inward".
+    spin_direction: list of strings
+        A list of "cw" (clockwise), "cww" (counterclockwise). For each
+        element in the list, the container will be spun in the stated
+        direction for the set "acceleration" and "duration". Default values
+        are derived from the "flow_direction". If "flow_direction" is
+        "outward", then "spin_direction" defaults to ["cw", "ccw"]. If
+        "flow_direction" is "inward", then "spin_direction" defaults to
+        ["cw"].
 
     """
 
-    def __init__(self, ref, acceleration, duration):
+    def __init__(self, ref, acceleration, duration, flow_direction, spin_direction):
         super(Spin, self).__init__({
             "op": "spin",
             "object": ref,
             "acceleration": acceleration,
-            "duration": duration
+            "duration": duration,
+            "flow_direction": flow_direction,
+            "spin_direction": spin_direction
         })
 
 

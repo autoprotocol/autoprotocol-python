@@ -1,7 +1,7 @@
 from .container import Container, Well, WellGroup
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
-from .instruction import * # flake8: noqa
+from .instruction import *  # flake8: noqa
 from .pipette_tools import assign
 from .util import check_valid_origin
 from .util import check_stamp_append
@@ -2321,7 +2321,7 @@ class Protocol(object):
             dispenser.
 
         """
-        if (speed_percentage != None and
+        if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         if not isinstance(columns, list):
@@ -2435,7 +2435,7 @@ class Protocol(object):
             dispenser.
 
         """
-        if (speed_percentage != None and
+        if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
         columns = []
@@ -2443,7 +2443,7 @@ class Protocol(object):
             columns.append({"column": col, "volume": volume})
         self.dispense(ref, reagent, columns, speed_percentage)
 
-    def spin(self, ref, acceleration, duration):
+    def spin(self, ref, acceleration, duration, flow_direction="inward", spin_direction=None):
         """
         Apply acceleration to a container.
 
@@ -2457,7 +2457,7 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
-            p.spin(sample_plate, "700:meter/second^2", "20:minute")
+            p.spin(sample_plate, "1000:g", "20:minute", flow_direction="outward)
 
         Autoprotocol Output:
 
@@ -2467,6 +2467,11 @@ class Protocol(object):
                 {
                   "acceleration": "700:meter/second^2",
                   "duration": "20:minute",
+                  "flow_direction": "outward",
+                  "spin_direction": [
+                    "cw",
+                    "ccw"
+                  ]
                   "object": "sample_plate",
                   "op": "spin"
                 }
@@ -2475,15 +2480,39 @@ class Protocol(object):
         Parameters
         ----------
         ref : str, Ref
-            The plate to be centrifuged.
+            The container to be centrifuged.
         acceleration: str, Unit
             Acceleration to be applied to the plate, in units of `g` or
             `meter/second^2`.
         duration: str, Unit
             Length of time that acceleration should be applied.
+        flow_direction: str
+            Specifies the direction contents will tend toward with respect to
+            the container. Valid directions are "inward" and "outward", default
+            value is "inward".
+        spin_direction: list of strings
+            A list of "cw" (clockwise), "cww" (counterclockwise). For each
+            element in the list, the container will be spun in the stated
+            direction for the set "acceleration" and "duration". Default values
+            are derived from the "flow_direction" parameter. If
+            "flow_direction" is "outward", then "spin_direction" defaults to
+            ["cw", "ccw"]. If "flow_direction" is "inward", then
+            "spin_direction" defaults to ["cw"].
 
         """
-        self.instructions.append(Spin(ref, acceleration, duration))
+        if flow_direction not in ["inward", "outward"]:
+            raise ValueError("The specified value for flow_direction was not "
+                             "valid. If specifying, please choose either "
+                             "'inward' or 'outward'")
+
+        default_directions = {"inward": ["cw"], "outward": ["cw", "ccw"]}
+        if not spin_direction:
+            spin_direction = default_directions[flow_direction]
+
+        if not all(s in ["cw", "ccw"] for s in spin_direction):
+            raise ValueError("Spin directions must be 'cw' or 'ccw'.")
+
+        self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
     def thermocycle(self, ref, groups,
                     volume="10:microliter",

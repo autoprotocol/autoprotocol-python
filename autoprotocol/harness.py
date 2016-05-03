@@ -1,5 +1,6 @@
 from __future__ import print_function
 import json
+from builtins import bytes
 from .protocol import Protocol
 from .unit import Unit
 from .container import WellGroup

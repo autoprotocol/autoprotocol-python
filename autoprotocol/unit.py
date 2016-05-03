@@ -121,7 +121,7 @@ class Unit(_Quantity):
             return Unit(s)
 
     def __str__(self):
-        return ":".join([str(self._magnitude), self.unit])
+        return ":".join([str(self._magnitude), "^".join(self.unit.split("**"))]).replace(" ", "")
 
     def __repr__(self):
         return "Unit({0}, '{1}')".format(self._magnitude, self._units)

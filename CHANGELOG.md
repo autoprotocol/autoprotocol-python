@@ -18,6 +18,7 @@ Fixed
  - Concatenation of Well to WellGroup no longer returns None
  - gel string in documentation
  - fix harness to be python3 compatible
+ - Compatibility of Unit for acceleration
 
 ## v.3.4.0 - 2016-04-22
 ---

@@ -1494,23 +1494,23 @@ class GelPurifyTestCase(unittest.TestCase):
         ]
         with self.assertRaises(RuntimeError):
             p.gel_purify(extract_too_many_samples,
-                         "10:microliter", "select_size(8,0.8%)", "ladder1",
+                         "10:microliter", "size_select(8,0.8%)", "ladder1",
                          "gel_purify_test")
         extract = extract_too_many_samples[:8]
         p.gel_purify(extract, "10:microliter",
-                     "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                     "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
         with self.assertRaises(KeyError):
             p.gel_purify({"broken": "extract"}, "10:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         extract[2]["band_list"][0]["band_size_range"]["min_bp"] = 20
         with self.assertRaises(ValueError):
             p.gel_purify(extract, "10:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         del extract[2]["band_list"][0]["band_size_range"]
         with self.assertRaises(KeyError):
             p.gel_purify(extract, "10:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")
 
     def test_gel_purify_no_lane(self):
         p = Protocol()
@@ -1532,7 +1532,7 @@ class GelPurifyTestCase(unittest.TestCase):
             } for i, d in enumerate(extract_wells)
         ]
         p.gel_purify(extract, "10:microliter",
-                     "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                     "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 3)
         self.assertEqual(p.instructions[0].extract[1]["lane"], 1)
         self.assertEqual(p.instructions[2].extract[-1]["lane"], 3)
@@ -1559,10 +1559,10 @@ class GelPurifyTestCase(unittest.TestCase):
         extract[7]["lane"] = 5
         with self.assertRaises(RuntimeError):
             p.gel_purify(extract, "10:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         extract[7]["lane"] = None
         p.gel_purify(extract, "10:microliter",
-                     "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                     "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(p.instructions[-1].extract[0]["lane"], 0)
         self.assertEqual(p.instructions[0].extract[7]["lane"], 7)
@@ -1582,7 +1582,7 @@ class GelPurifyTestCase(unittest.TestCase):
             p.gel_purify(extracts, "10:microliter", "bad_gel",
                          "ladder1", "gel_purify_test")
         p.gel_purify(extracts, "10:microliter",
-                     "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                     "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(p.instructions[0].extract[-1]["lane"], 7)
         self.assertEqual(p.instructions[-1].extract[0]["lane"], 0)
@@ -1602,8 +1602,8 @@ class GelPurifyTestCase(unittest.TestCase):
         extracts[7]["band_list"][0]["elution_volume"] = "not_a_unit"
         with self.assertRaises(ValueError):
             p.gel_purify(extracts, "5:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         extracts[3]["band_list"][0]["destination"] = "not_a_well"
         with self.assertRaises(ValueError):
             p.gel_purify(extracts[:4], "5:microliter",
-                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+                         "size_select(8,0.8%)", "ladder1", "gel_purify_test")

@@ -3197,7 +3197,7 @@ class Protocol(object):
                 }
 
                 p.gel_purify(extracts, "10:microliter",
-                             "select_size(8,0.8%)", "ladder1",
+                             "size_select(8,0.8%)", "ladder1",
                              "gel_purify_example")
 
         Parameters

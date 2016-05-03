@@ -16,6 +16,7 @@ Removed
 Fixed
  - WellGroup checks that all elements are wells
  - Concatenation of Well to WellGroup no longer returns None
+ - gel string in documentation
 
 ## v.3.4.0 - 2016-04-22
 ---

@@ -4642,7 +4642,7 @@ class Protocol(object):
     def measure_concentration(self, wells, dataref, measurement,
                               volume="2:microliter"):
         """
-        Measure the concentration of DNA, ssDNA, RNA or Protein in the
+        Measure the concentration of DNA, ssDNA, RNA or protein in the
         specified volume of the source aliquots.
 
         Example Usage:
@@ -4682,7 +4682,8 @@ class Protocol(object):
                     ],
                     "op": "measure_concentration",
                     "measurement": "DNA"
-                  }
+                },
+                ...
               ]
             }
 

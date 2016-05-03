@@ -2465,7 +2465,7 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "acceleration": "700:meter/second^2",
+                  "acceleration": "1000:g",
                   "duration": "20:minute",
                   "flow_direction": "outward",
                   "spin_direction": [
@@ -2500,19 +2500,29 @@ class Protocol(object):
             "spin_direction" defaults to ["cw"].
 
         """
-        if not flow_direction:
-            flow_direction = "inward"
-        if flow_direction not in ["inward", "outward"]:
+        if flow_direction and flow_direction not in ["inward", "outward"]:
             raise ValueError("The specified value for flow_direction was not "
                              "valid. If specifying, please choose either "
                              "'inward' or 'outward'")
 
         default_directions = {"inward": ["cw"], "outward": ["cw", "ccw"]}
-        if not spin_direction:
+        if spin_direction is None and flow_direction:
             spin_direction = default_directions[flow_direction]
+
+        if spin_direction is not None:
+            if not isinstance(spin_direction, list):
+                raise TypeError("Spin directions must be in the form of a list.")
+            if len(spin_direction) is 0:
+                raise ValueError("Spin direction must be a list containing at "
+                                 "least one spin direction ('cw', 'ccw')")
 
         if not all(s in ["cw", "ccw"] for s in spin_direction):
             raise ValueError("Spin directions must be 'cw' or 'ccw'.")
+
+        try:
+            duration = Unit(duration)
+        except (ValueError) as e:
+            raise ValueError("Duration must be a unit. %s" % e)
 
         self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
 

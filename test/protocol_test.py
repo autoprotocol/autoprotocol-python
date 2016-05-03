@@ -1481,16 +1481,13 @@ class SpinTestCase(unittest.TestCase):
         p.spin(test_plate, "1000:g", "20:minute")
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="outward")
         p.spin(test_plate, "1000:g", "20:minute", spin_direction=["ccw", "cw", "ccw"])
-        p.spin(test_plate, "1000:g", "20:minute", spin_direction=[])
-        self.assertEqual(len(p.instructions), 4)
+        self.assertEqual(len(p.instructions), 3)
         self.assertEqual(p.instructions[0].flow_direction, "inward")
         self.assertEqual(p.instructions[0].spin_direction, ["cw"])
         self.assertEqual(p.instructions[1].flow_direction, "outward")
         self.assertEqual(p.instructions[1].spin_direction, ["cw", "ccw"])
         self.assertEqual(p.instructions[2].flow_direction, "inward")
         self.assertEqual(p.instructions[2].spin_direction, ["ccw", "cw", "ccw"])
-        self.assertEqual(p.instructions[3].flow_direction, "inward")
-        self.assertEqual(p.instructions[3].spin_direction, ["cw"])
 
     def test_spin_bad_values(self):
         p = Protocol()
@@ -1500,6 +1497,10 @@ class SpinTestCase(unittest.TestCase):
             p.spin(test_plate2, "1000:g", "20:minute", flow_direction="bad_value")
         with self.assertRaises(ValueError):
             p.spin(test_plate2, "1000:g", "20:minute", spin_direction=["cw", "bad_value"])
+        with self.assertRaises(TypeError):
+            p.spin(test_plate2, "1000:g", "20:minute", spin_direction={})
+        with self.assertRaises(ValueError):
+            p.spin(test_plate2, "1000:g", "20:minute", spin_direction=[])
 
 
 class GelPurifyTestCase(unittest.TestCase):

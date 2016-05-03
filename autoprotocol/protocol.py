@@ -2443,7 +2443,7 @@ class Protocol(object):
             columns.append({"column": col, "volume": volume})
         self.dispense(ref, reagent, columns, speed_percentage)
 
-    def spin(self, ref, acceleration, duration, flow_direction="inward", spin_direction=None):
+    def spin(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
         """
         Apply acceleration to a container.
 
@@ -2500,7 +2500,7 @@ class Protocol(object):
             "spin_direction" defaults to ["cw"].
 
         """
-        if flow_direction and flow_direction not in ["inward", "outward"]:
+        if flow_direction is not None and flow_direction not in ["inward", "outward"]:
             raise ValueError("The specified value for flow_direction was not "
                              "valid. If specifying, please choose either "
                              "'inward' or 'outward'")
@@ -2516,7 +2516,7 @@ class Protocol(object):
                 raise ValueError("Spin direction must be a list containing at "
                                  "least one spin direction ('cw', 'ccw')")
 
-        if not all(s in ["cw", "ccw"] for s in spin_direction):
+        if spin_direction and not all(s in ["cw", "ccw"] for s in spin_direction):
             raise ValueError("Spin directions must be 'cw' or 'ccw'.")
 
         try:

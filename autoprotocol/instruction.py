@@ -214,14 +214,18 @@ class Spin(Instruction):
     """
 
     def __init__(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
-        super(Spin, self).__init__({
+        spin_json = {
             "op": "spin",
             "object": ref,
             "acceleration": acceleration,
-            "duration": duration,
-            "flow_direction": flow_direction,
-            "spin_direction": spin_direction
-        })
+            "duration": duration
+        }
+        if flow_direction is not None:
+            spin_json["flow_direction"] = flow_direction
+        if spin_direction is not None:
+            spin_json["spin_direction"] = spin_direction
+
+        super(Spin, self).__init__(spin_json)
 
 
 class Thermocycle(Instruction):

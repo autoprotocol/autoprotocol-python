@@ -357,10 +357,10 @@ def run(fn, protocol_name=None):
         help='JSON-formatted protocol configuration file')
     args = parser.parse_args()
 
-    source = json.loads(open(args.config, 'r').read().decode("utf-8"))
+    source = json.loads(bytes(open(args.config, 'r').read(), "utf-8").decode("utf-8"))
     protocol = Protocol()
     if protocol_name:
-        manifest_json = open('manifest.json', 'r').read().decode('utf-8')
+        manifest_json = bytes(open('manifest.json', 'r').read(), "utf-8").decode('utf-8')
         manifest = Manifest(json.loads(manifest_json))
         params = manifest.protocol_info(protocol_name).parse(protocol, source)
     else:

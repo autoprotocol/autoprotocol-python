@@ -2095,9 +2095,74 @@ class Protocol(object):
         dataref : str
           Name of sequencing dataset that will be returned.
 
+        Raises
+        ------
+        TypeError:
+          if flowcell, sequencer, mode, index and dataref are not of type str.
+        ValueError:
+          if flowcell, sequencer, mode, index are not of type a valid option.
+
         """
 
-        self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode, index, library_size, datare))
+        valid_flowcells = ["asf", "PE", "SR", "asdf"]
+        #  valid sequencers and max number of lanes
+        valid_sequencers = {"miseq": 1, "hiseq": 8, "nextseq": 4}
+        valid_modes = ["rapid", "mid", "high"]
+        valid_indices = ["single", "dual", "none"]
+        if not isinstance(flowcell, str):
+            raise TypeError("Illumina sequencing flowcell: %s, must be a string"
+                            "" % flowcell)
+        if flowcell not in valid_flowcells:
+            raise ValueError("Illumina sequencing flowcell type must be one of:"
+                             " {}.".format(', '.join(valid_flowcells)))
+        if not isinstance(lanes, list):
+            raise TypeError("Illumina sequencing lanes must be a list of dicts")
+
+        if not all(isinstance(l, dict) for l in lanes):
+            raise TypeError("Illumina sequencing lanes must be a list of dicts")
+        if not all(k in l.keys() for k in ["object", "library_concentration"]
+                   for l in lanes):
+            raise TypeError("Each Illumina sequencing lane must contain an "
+                            "'object' and a 'library_concentration'")
+        if len(lanes) > valid_sequencers[sequencer]:
+            raise ValueError("The type of sequencer selected ({}) only has {} "
+                             "lane(s).  You specified {}. Please submit "
+                             "additional Illumina Sequencing instructions."
+                             "".format(sequencer,
+                                       valid_sequencers[sequencer],
+                                       len(lanes)))
+        if not all(isinstance(l["object"], Well) for l in lanes):
+            raise TypeError("Each Illumina sequencing object must be of type "
+                            "Well")
+        if not all(isinstance(l["library_concentration"], (float, int))
+                   for l in lanes):
+            raise TypeError("Each Illumina sequencing library_concentration "
+                            "must be a number.")
+        if not isinstance(sequencer, str):
+            raise TypeError("Illumina sequencer: %s, must be a string"
+                            % sequencer)
+        if sequencer not in valid_sequencers.keys():
+            raise ValueError("Illumina sequencer must be one of: {}."
+                             "".format(', '.join(valid_sequencers.keys())))
+        if not isinstance(mode, str):
+            raise TypeError("Illumina sequencing mode: %s, must be a "
+                            "string" % mode)
+        if mode not in valid_modes:
+            raise ValueError("Illumina sequencing mode must be one of: {}."
+                             "".format(', '.join(valid_modes)))
+        if not isinstance(index, str):
+            raise TypeError("Illumina sequencing index: %s, must be a string"
+                            % index)
+        if index not in valid_indices:
+            raise ValueError("Illumina sequencing index must be one of: {}."
+                             "".format(', '.join(valid_indices)))
+        if not isinstance(dataref, str):
+            raise TypeError("dataref: %s, must be a string" % dataref)
+        if not isinstance(library_size, int):
+            raise TypeError("library_size: %s, must be an integer." % library_size)
+
+        self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
+                                             index, library_size, dataref))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

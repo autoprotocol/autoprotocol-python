@@ -1,6 +1,6 @@
 from __future__ import print_function
 import json
-from builtins import bytes
+import io
 from .protocol import Protocol
 from .unit import Unit
 from .container import WellGroup
@@ -358,10 +358,10 @@ def run(fn, protocol_name=None):
         help='JSON-formatted protocol configuration file')
     args = parser.parse_args()
 
-    source = json.loads(bytes(open(args.config, 'r').read(), "utf-8").decode("utf-8"))
+    source = json.loads(io.open(args.config, encoding='utf-8').read())
     protocol = Protocol()
     if protocol_name:
-        manifest_json = bytes(open('manifest.json', 'r').read(), "utf-8").decode('utf-8')
+        manifest_json = io.open('manifest.json', encoding='utf-8').read()
         manifest = Manifest(json.loads(manifest_json))
         params = manifest.protocol_info(protocol_name).parse(protocol, source)
     else:

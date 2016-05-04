@@ -415,6 +415,54 @@ class Incubate(Instruction):
         })
 
 
+class IlluminaSeq(Instruction):
+
+    """
+    Load aliquots into specified lanes for Illumina sequencing.
+    The specified aliquots should already contain the appropriate mix for
+    sequencing and require a library concentration reported in
+    ng/uL.
+
+    Parameters
+    ----------
+    flowcell : str
+      Flowcell designation: "SR" or " "PE"
+    lanes : list of dicts
+        .. code-block:: json
+
+          "lanes": [{
+                "object": aliquot, Well,
+                "library_concentration": decimal, // ng/uL
+              },
+              {...}]
+    sequencer : str
+      Sequencer designation: "miseq", "hiseq" or "nextseq"
+    mode : str
+      Mode designation: "rapid", "mid" or "high"
+    index : str
+      Index designation: "single", "dual" or "none"
+    library_size: integer
+        Library size expressed as an integer of basepairs
+    dataref : str
+      Name of sequencing dataset that will be returned.
+
+    """
+
+    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
+        i_seq = {
+            "op": "illumina_sequence",
+            "flowcell": flowcell,
+            "lanes": lanes,
+            "sequencer": sequencer,
+            "mode": mode,
+            "index": index,
+            "library_size": library_size,
+            "dataref": dataref
+        }
+
+        super(IlluminaSeq, self).__init__(i_seq)
+
+
 class SangerSeq(Instruction):
 
     """

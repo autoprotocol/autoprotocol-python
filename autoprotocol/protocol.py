@@ -2065,6 +2065,40 @@ class Protocol(object):
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
 
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
+        """
+        Load aliquots into specified lanes for Illumina sequencing.
+        The specified aliquots should already contain the appropriate mix for
+        sequencing and require a library concentration reported in
+        ng/uL.
+
+        Parameters
+        ----------
+        flowcell : str
+          Flowcell designation: "SR" or " "PE"
+        lanes : list of dicts
+            .. code-block:: json
+
+              "lanes": [{
+                    "object": aliquot, Well,
+                    "library_concentration": decimal, // ng/uL
+                  },
+                  {...}]
+        sequencer : str
+          Sequencer designation: "miseq", "hiseq" or "nextseq"
+        mode : str
+          Mode designation: "rapid", "mid" or "high"
+        index : str
+          Index designation: "single", "dual" or "none"
+        library_size: integer
+            Library size expressed as an integer of basepairs
+        dataref : str
+          Name of sequencing dataset that will be returned.
+
+        """
+
+        self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode, index, library_size, datare))
+
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """
         Send the indicated wells of the container specified for Sanger sequencing.

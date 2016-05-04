@@ -2072,6 +2072,79 @@ class Protocol(object):
         sequencing and require a library concentration reported in
         ng/uL.
 
+        Example Usage:
+
+          .. code-block:: python
+
+              p = Protocol()
+              sample_wells = p.ref(
+                  "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+
+              p.illuminaseq("PE",
+                            [
+                                {"object": sample_wells[0], "library_concentration": 1.0},
+                                {"object": sample_wells[1], "library_concentration": 5.32},
+                                {"object": sample_wells[2], "library_concentration": 54},
+                                {"object": sample_wells[3], "library_concentration": 20},
+                                {"object": sample_wells[4], "library_concentration": 23},
+                                {"object": sample_wells[5], "library_concentration": 23},
+                                {"object": sample_wells[6], "library_concentration": 21},
+                                {"object": sample_wells[7], "library_concentration": 62}
+                            ],
+                            "hiseq", "mid", 'none', 250, "my_illumina")
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+          "instructions": [
+            {
+              "dataref": "my_illumina",
+              "index": "none",
+              "lanes": [
+                {
+                  "object": "test_plate/0",
+                  "library_concentration": 1.0
+                },
+                {
+                  "object": "test_plate/1",
+                  "library_concentration": 5.32
+                },
+                {
+                  "object": "test_plate/2",
+                  "library_concentration": 54
+                },
+                {
+                  "object": "test_plate/3",
+                  "library_concentration": 20
+                },
+                {
+                  "object": "test_plate/4",
+                  "library_concentration": 23
+                },
+                {
+                  "object": "test_plate/5",
+                  "library_concentration": 23
+                },
+                {
+                  "object": "test_plate/6",
+                  "library_concentration": 21
+                },
+                {
+                  "object": "test_plate/7",
+                  "library_concentration": 62
+                }
+              ],
+              "flowcell": "PE",
+              "mode": "mid",
+              "sequencer": "hiseq",
+              "library_size": 250,
+              "op": "illumina_sequence"
+            }
+          ]
+        }
+
+
         Parameters
         ----------
         flowcell : str
@@ -2098,32 +2171,45 @@ class Protocol(object):
         Raises
         ------
         TypeError:
-          if flowcell, sequencer, mode, index and dataref are not of type str.
+          If index and dataref are not of type str.
+        TypeError:
+          If library_concentration is not a number.
+        TypeError:
+          If library_size is not an integer.
         ValueError:
-          if flowcell, sequencer, mode, index are not of type a valid option.
-
+          If flowcell, sequencer, mode, index are not of type a valid option.
+        ValueError:
+          If number of lanes specified is more than the maximum lanes of the
+          specified type of sequencer.
         """
 
         valid_flowcells = ["asf", "PE", "SR", "asdf"]
-        #  valid sequencers and max number of lanes
+        #  currently available sequencers and max number of lanes
         valid_sequencers = {"miseq": 1, "hiseq": 8, "nextseq": 4}
         valid_modes = ["rapid", "mid", "high"]
         valid_indices = ["single", "dual", "none"]
-        if not isinstance(flowcell, str):
-            raise TypeError("Illumina sequencing flowcell: %s, must be a string"
-                            "" % flowcell)
+
         if flowcell not in valid_flowcells:
             raise ValueError("Illumina sequencing flowcell type must be one of:"
                              " {}.".format(', '.join(valid_flowcells)))
+        if sequencer not in valid_sequencers.keys():
+            raise ValueError("Illumina sequencer must be one of: {}."
+                             "".format(', '.join(valid_sequencers.keys())))
         if not isinstance(lanes, list):
             raise TypeError("Illumina sequencing lanes must be a list of dicts")
 
-        if not all(isinstance(l, dict) for l in lanes):
-            raise TypeError("Illumina sequencing lanes must be a list of dicts")
-        if not all(k in l.keys() for k in ["object", "library_concentration"]
-                   for l in lanes):
-            raise TypeError("Each Illumina sequencing lane must contain an "
-                            "'object' and a 'library_concentration'")
+        for l in lanes:
+            if not isinstance(l, dict):
+                raise TypeError("Illumina sequencing lanes must be a list of dicts")
+            if not all(k in l.keys() for k in ["object", "library_concentration"]):
+                raise TypeError("Each Illumina sequencing lane must contain an "
+                                "'object' and a 'library_concentration'")
+            if not isinstance(l["object"], Well):
+                raise TypeError("Each Illumina sequencing object must be of type "
+                                "Well")
+            if not isinstance(l["library_concentration"], (float, int)):
+                raise TypeError("Each Illumina sequencing library_concentration "
+                                "must be a number.")
         if len(lanes) > valid_sequencers[sequencer]:
             raise ValueError("The type of sequencer selected ({}) only has {} "
                              "lane(s).  You specified {}. Please submit "
@@ -2131,28 +2217,9 @@ class Protocol(object):
                              "".format(sequencer,
                                        valid_sequencers[sequencer],
                                        len(lanes)))
-        if not all(isinstance(l["object"], Well) for l in lanes):
-            raise TypeError("Each Illumina sequencing object must be of type "
-                            "Well")
-        if not all(isinstance(l["library_concentration"], (float, int))
-                   for l in lanes):
-            raise TypeError("Each Illumina sequencing library_concentration "
-                            "must be a number.")
-        if not isinstance(sequencer, str):
-            raise TypeError("Illumina sequencer: %s, must be a string"
-                            % sequencer)
-        if sequencer not in valid_sequencers.keys():
-            raise ValueError("Illumina sequencer must be one of: {}."
-                             "".format(', '.join(valid_sequencers.keys())))
-        if not isinstance(mode, str):
-            raise TypeError("Illumina sequencing mode: %s, must be a "
-                            "string" % mode)
         if mode not in valid_modes:
             raise ValueError("Illumina sequencing mode must be one of: {}."
                              "".format(', '.join(valid_modes)))
-        if not isinstance(index, str):
-            raise TypeError("Illumina sequencing index: %s, must be a string"
-                            % index)
         if index not in valid_indices:
             raise ValueError("Illumina sequencing index must be one of: {}."
                              "".format(', '.join(valid_indices)))

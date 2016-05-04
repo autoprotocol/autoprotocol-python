@@ -449,7 +449,7 @@ class IlluminaSeq(Instruction):
     """
 
     def __init__(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
-        i_seq = {
+        super(IlluminaSeq, self).__init__({
             "op": "illumina_sequence",
             "flowcell": flowcell,
             "lanes": lanes,
@@ -458,9 +458,7 @@ class IlluminaSeq(Instruction):
             "index": index,
             "library_size": library_size,
             "dataref": dataref
-        }
-
-        super(IlluminaSeq, self).__init__(i_seq)
+        })
 
 
 class SangerSeq(Instruction):

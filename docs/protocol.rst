@@ -52,6 +52,10 @@ Protocol.stamp()
 ~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.stamp
 
+Protocol.illuminaseq()
+~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.illuminaseq
+
 Protocol.sangerseq()
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.sangerseq

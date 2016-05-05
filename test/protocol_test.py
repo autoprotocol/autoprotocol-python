@@ -1669,7 +1669,7 @@ class IlluminaSeqTestCase(unittest.TestCase):
                           {"object": sample_wells[6], "library_concentration": 21},
                           {"object": sample_wells[7], "library_concentration": 62}
                       ],
-                      "hiseq", "mid", 'none', 250, "dataref")
+                      "hiseq", "rapid", 'none', 250, "dataref")
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(len(p.instructions[1].lanes), 8)
 
@@ -1680,9 +1680,13 @@ class IlluminaSeqTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             p.illuminaseq("PE", "not_a_list", "nextseq", "mid", 'none', 250, "bad_lane_param")
         with self.assertRaises(ValueError):
+            p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
+                          {"object": sample_wells[1], "library_concentration": 2}],
+                          "nextseq", "rapid", 'none', 34, "dataref")
+        with self.assertRaises(ValueError):
             p.illuminaseq("PE",
                           [
                               {"object": sample_wells[0], "library_concentration": 1.0},
                               {"object": sample_wells[1], "library_concentration": 2}
                           ],
-                          "miseq", "mid", 'none', 250, "not_enough_lanes")
+                          "miseq", "high", 'none', 250, "not_enough_lanes")

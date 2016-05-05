@@ -2091,7 +2091,7 @@ class Protocol(object):
                                 {"object": sample_wells[6], "library_concentration": 21},
                                 {"object": sample_wells[7], "library_concentration": 62}
                             ],
-                            "hiseq", "mid", 'none', 250, "my_illumina")
+                            "hiseq", "rapid", 'none', 250, "my_illumina")
 
         Autoprotocol Output:
 
@@ -2150,6 +2150,7 @@ class Protocol(object):
         flowcell : str
           Flowcell designation: "SR" or " "PE"
         lanes : list of dicts
+
             .. code-block:: json
 
               "lanes": [{
@@ -2157,6 +2158,7 @@ class Protocol(object):
                     "library_concentration": decimal, // ng/uL
                   },
                   {...}]
+
         sequencer : str
           Sequencer designation: "miseq", "hiseq" or "nextseq"
         mode : str
@@ -2183,10 +2185,23 @@ class Protocol(object):
           specified type of sequencer.
         """
 
-        valid_flowcells = ["asf", "PE", "SR", "asdf"]
-        #  currently available sequencers and max number of lanes
-        valid_sequencers = {"miseq": 1, "hiseq": 8, "nextseq": 4}
-        valid_modes = ["rapid", "mid", "high"]
+        valid_flowcells = ["PE", "SR"]
+        #  currently available sequencers, modes and max number of lanes
+        valid_sequencers = {
+            "miseq": {
+                "max_lanes": 1,
+                "modes": ["high"]
+            },
+            "hiseq": {
+                "max_lanes": 8,
+                "modes": ["high", "rapid"]
+            },
+            "nextseq": {
+                "max_lanes": 4,
+                "modes": ["high", "mid"]
+            }
+        }
+
         valid_indices = ["single", "dual", "none"]
 
         if flowcell not in valid_flowcells:
@@ -2210,16 +2225,20 @@ class Protocol(object):
             if not isinstance(l["library_concentration"], (float, int)):
                 raise TypeError("Each Illumina sequencing library_concentration "
                                 "must be a number.")
-        if len(lanes) > valid_sequencers[sequencer]:
+        if len(lanes) > valid_sequencers[sequencer]["max_lanes"]:
             raise ValueError("The type of sequencer selected ({}) only has {} "
                              "lane(s).  You specified {}. Please submit "
                              "additional Illumina Sequencing instructions."
                              "".format(sequencer,
-                                       valid_sequencers[sequencer],
+                                       valid_sequencers[sequencer]["max_lanes"],
                                        len(lanes)))
-        if mode not in valid_modes:
-            raise ValueError("Illumina sequencing mode must be one of: {}."
-                             "".format(', '.join(valid_modes)))
+        if mode not in valid_sequencers[sequencer]["modes"]:
+            raise ValueError("The type of sequencer selected ({}) has valid"
+                             " modes: {}.You specified: {}."
+                             "".format(sequencer,
+                                       ', '.join(valid_sequencers[sequencer]["modes"]),
+                                       mode)
+                             )
         if index not in valid_indices:
             raise ValueError("Illumina sequencing index must be one of: {}."
                              "".format(', '.join(valid_indices)))

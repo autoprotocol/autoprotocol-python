@@ -428,6 +428,7 @@ class IlluminaSeq(Instruction):
     flowcell : str
       Flowcell designation: "SR" or " "PE"
     lanes : list of dicts
+
         .. code-block:: json
 
           "lanes": [{
@@ -435,6 +436,7 @@ class IlluminaSeq(Instruction):
                 "library_concentration": decimal, // ng/uL
               },
               {...}]
+
     sequencer : str
       Sequencer designation: "miseq", "hiseq" or "nextseq"
     mode : str

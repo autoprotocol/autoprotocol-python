@@ -193,7 +193,7 @@ class Spin(Instruction):
     ----------
     ref : Ref, str
         Container to be centrifuged.
-    acceleration : str, Unit
+    acceleration : str
         Amount of acceleration to be applied to the container, expressed in
         units of "g" or "meter/second^2"
     duration : str, Unit

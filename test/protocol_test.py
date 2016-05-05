@@ -1472,6 +1472,43 @@ class MeasureVolumeTestCase(unittest.TestCase):
         self.assertEqual(len(p.instructions), 1)
 
 
+class SpinTestCase(unittest.TestCase):
+
+    def test_spin_default(self):
+        p = Protocol()
+        test_plate = p.ref(
+            "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
+        p.spin(test_plate, "1000:g", "20:minute")
+        p.spin(test_plate, "1000:g", "20:minute", flow_direction="outward")
+        p.spin(test_plate, "1000:g", "20:minute", spin_direction=["ccw", "cw", "ccw"])
+        p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
+        self.assertEqual(len(p.instructions), 4)
+        with self.assertRaises(AttributeError):
+            p.instructions[0].flow_direction
+        with self.assertRaises(AttributeError):
+            p.instructions[0].spin_direction
+        self.assertEqual(p.instructions[1].flow_direction, "outward")
+        self.assertEqual(p.instructions[1].spin_direction, ["cw", "ccw"])
+        with self.assertRaises(AttributeError):
+            p.instructions[2].flow_direction
+        self.assertEqual(p.instructions[2].spin_direction, ["ccw", "cw", "ccw"])
+        self.assertEqual(p.instructions[3].flow_direction, "inward")
+        self.assertEqual(p.instructions[3].spin_direction, ["cw"])
+
+    def test_spin_bad_values(self):
+        p = Protocol()
+        test_plate2 = p.ref(
+            "test_plate2", id=None, cont_type="96-flat", storage=None, discard=True)
+        with self.assertRaises(ValueError):
+            p.spin(test_plate2, "1000:g", "20:minute", flow_direction="bad_value")
+        with self.assertRaises(ValueError):
+            p.spin(test_plate2, "1000:g", "20:minute", spin_direction=["cw", "bad_value"])
+        with self.assertRaises(TypeError):
+            p.spin(test_plate2, "1000:g", "20:minute", spin_direction={})
+        with self.assertRaises(ValueError):
+            p.spin(test_plate2, "1000:g", "20:minute", spin_direction=[])
+
+
 class GelPurifyTestCase(unittest.TestCase):
     def test_gel_purify_lane_set(self):
         p = Protocol()

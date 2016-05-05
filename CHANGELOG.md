@@ -10,6 +10,7 @@ Added
 
 Changed
 - gel purify parameters have changed
+- Spin instruction takes directional parameters
 
 Removed
 

@@ -2065,6 +2065,191 @@ class Protocol(object):
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
 
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
+        """
+        Load aliquots into specified lanes for Illumina sequencing.
+        The specified aliquots should already contain the appropriate mix for
+        sequencing and require a library concentration reported in
+        ng/uL.
+
+        Example Usage:
+
+          .. code-block:: python
+
+              p = Protocol()
+              sample_wells = p.ref(
+                  "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+
+              p.illuminaseq("PE",
+                            [
+                                {"object": sample_wells[0], "library_concentration": 1.0},
+                                {"object": sample_wells[1], "library_concentration": 5.32},
+                                {"object": sample_wells[2], "library_concentration": 54},
+                                {"object": sample_wells[3], "library_concentration": 20},
+                                {"object": sample_wells[4], "library_concentration": 23},
+                                {"object": sample_wells[5], "library_concentration": 23},
+                                {"object": sample_wells[6], "library_concentration": 21},
+                                {"object": sample_wells[7], "library_concentration": 62}
+                            ],
+                            "hiseq", "rapid", 'none', 250, "my_illumina")
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+          "instructions": [
+            {
+              "dataref": "my_illumina",
+              "index": "none",
+              "lanes": [
+                {
+                  "object": "test_plate/0",
+                  "library_concentration": 1.0
+                },
+                {
+                  "object": "test_plate/1",
+                  "library_concentration": 5.32
+                },
+                {
+                  "object": "test_plate/2",
+                  "library_concentration": 54
+                },
+                {
+                  "object": "test_plate/3",
+                  "library_concentration": 20
+                },
+                {
+                  "object": "test_plate/4",
+                  "library_concentration": 23
+                },
+                {
+                  "object": "test_plate/5",
+                  "library_concentration": 23
+                },
+                {
+                  "object": "test_plate/6",
+                  "library_concentration": 21
+                },
+                {
+                  "object": "test_plate/7",
+                  "library_concentration": 62
+                }
+              ],
+              "flowcell": "PE",
+              "mode": "mid",
+              "sequencer": "hiseq",
+              "library_size": 250,
+              "op": "illumina_sequence"
+            }
+          ]
+        }
+
+
+        Parameters
+        ----------
+        flowcell : str
+          Flowcell designation: "SR" or " "PE"
+        lanes : list of dicts
+
+            .. code-block:: json
+
+              "lanes": [{
+                    "object": aliquot, Well,
+                    "library_concentration": decimal, // ng/uL
+                  },
+                  {...}]
+
+        sequencer : str
+          Sequencer designation: "miseq", "hiseq" or "nextseq"
+        mode : str
+          Mode designation: "rapid", "mid" or "high"
+        index : str
+          Index designation: "single", "dual" or "none"
+        library_size: integer
+            Library size expressed as an integer of basepairs
+        dataref : str
+          Name of sequencing dataset that will be returned.
+
+        Raises
+        ------
+        TypeError:
+          If index and dataref are not of type str.
+        TypeError:
+          If library_concentration is not a number.
+        TypeError:
+          If library_size is not an integer.
+        ValueError:
+          If flowcell, sequencer, mode, index are not of type a valid option.
+        ValueError:
+          If number of lanes specified is more than the maximum lanes of the
+          specified type of sequencer.
+        """
+
+        valid_flowcells = ["PE", "SR"]
+        #  currently available sequencers, modes and max number of lanes
+        valid_sequencers = {
+            "miseq": {
+                "max_lanes": 1,
+                "modes": ["high"]
+            },
+            "hiseq": {
+                "max_lanes": 8,
+                "modes": ["high", "rapid"]
+            },
+            "nextseq": {
+                "max_lanes": 4,
+                "modes": ["high", "mid"]
+            }
+        }
+
+        valid_indices = ["single", "dual", "none"]
+
+        if flowcell not in valid_flowcells:
+            raise ValueError("Illumina sequencing flowcell type must be one of:"
+                             " {}.".format(', '.join(valid_flowcells)))
+        if sequencer not in valid_sequencers.keys():
+            raise ValueError("Illumina sequencer must be one of: {}."
+                             "".format(', '.join(valid_sequencers.keys())))
+        if not isinstance(lanes, list):
+            raise TypeError("Illumina sequencing lanes must be a list of dicts")
+
+        for l in lanes:
+            if not isinstance(l, dict):
+                raise TypeError("Illumina sequencing lanes must be a list of dicts")
+            if not all(k in l.keys() for k in ["object", "library_concentration"]):
+                raise TypeError("Each Illumina sequencing lane must contain an "
+                                "'object' and a 'library_concentration'")
+            if not isinstance(l["object"], Well):
+                raise TypeError("Each Illumina sequencing object must be of type "
+                                "Well")
+            if not isinstance(l["library_concentration"], (float, int)):
+                raise TypeError("Each Illumina sequencing library_concentration "
+                                "must be a number.")
+        if len(lanes) > valid_sequencers[sequencer]["max_lanes"]:
+            raise ValueError("The type of sequencer selected ({}) only has {} "
+                             "lane(s).  You specified {}. Please submit "
+                             "additional Illumina Sequencing instructions."
+                             "".format(sequencer,
+                                       valid_sequencers[sequencer]["max_lanes"],
+                                       len(lanes)))
+        if mode not in valid_sequencers[sequencer]["modes"]:
+            raise ValueError("The type of sequencer selected ({}) has valid"
+                             " modes: {}.You specified: {}."
+                             "".format(sequencer,
+                                       ', '.join(valid_sequencers[sequencer]["modes"]),
+                                       mode)
+                             )
+        if index not in valid_indices:
+            raise ValueError("Illumina sequencing index must be one of: {}."
+                             "".format(', '.join(valid_indices)))
+        if not isinstance(dataref, str):
+            raise TypeError("dataref: %s, must be a string" % dataref)
+        if not isinstance(library_size, int):
+            raise TypeError("library_size: %s, must be an integer." % library_size)
+
+        self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
+                                             index, library_size, dataref))
+
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """
         Send the indicated wells of the container specified for Sanger sequencing.

@@ -1644,3 +1644,49 @@ class GelPurifyTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             p.gel_purify(extracts[:4], "5:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
+
+
+class IlluminaSeqTestCase(unittest.TestCase):
+
+    def test_illumina_seq(self):
+        p = Protocol()
+        sample_wells = p.ref(
+            "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+        p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
+                      {"object": sample_wells[1], "library_concentration": 2}],
+                      "nextseq", "mid", 'none', 34, "dataref")
+
+        self.assertEqual(len(p.instructions), 1)
+
+        p.illuminaseq("PE",
+                      [
+                          {"object": sample_wells[0], "library_concentration": 1.0},
+                          {"object": sample_wells[1], "library_concentration": 5.32},
+                          {"object": sample_wells[2], "library_concentration": 54},
+                          {"object": sample_wells[3], "library_concentration": 20},
+                          {"object": sample_wells[4], "library_concentration": 23},
+                          {"object": sample_wells[5], "library_concentration": 23},
+                          {"object": sample_wells[6], "library_concentration": 21},
+                          {"object": sample_wells[7], "library_concentration": 62}
+                      ],
+                      "hiseq", "rapid", 'none', 250, "dataref")
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[1].lanes), 8)
+
+    def test_illumina_bad_params(self):
+        p = Protocol()
+        sample_wells = p.ref(
+            "test_plate", None, "96-pcr", discard=True).wells_from(0, 3)
+        with self.assertRaises(TypeError):
+            p.illuminaseq("PE", "not_a_list", "nextseq", "mid", 'none', 250, "bad_lane_param")
+        with self.assertRaises(ValueError):
+            p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
+                          {"object": sample_wells[1], "library_concentration": 2}],
+                          "nextseq", "rapid", 'none', 34, "dataref")
+        with self.assertRaises(ValueError):
+            p.illuminaseq("PE",
+                          [
+                              {"object": sample_wells[0], "library_concentration": 1.0},
+                              {"object": sample_wells[1], "library_concentration": 2}
+                          ],
+                          "miseq", "high", 'none', 250, "not_enough_lanes")

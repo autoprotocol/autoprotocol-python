@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v.3.5.0 - 2016-05-06
+---
+Added
 - measure_mass instruction
 - measure_volume instruction
 - illumina_sequence instruction

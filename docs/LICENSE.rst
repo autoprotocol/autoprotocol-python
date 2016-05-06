@@ -1,7 +1,7 @@
 License
 =======
 
-Copyright (c) 2015, Transcriptic Inc
+Copyright (c) 2016, Transcriptic Inc
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -1123,6 +1123,34 @@ class AcousticTransferTestCase(unittest.TestCase):
         self.assertTrue(
             p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(0))
 
+    def test_droplet_size(self):
+        p = Protocol()
+        echo = p.ref("echo", None, "384-echo", discard=True)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+        with self.assertRaises(RuntimeError):
+            p.acoustic_transfer(echo.wells(0, 1).set_volume("2:microliter"),
+                                dest.wells(0, 1), "1:microliter",
+                                droplet_size="26:nanoliter")
+        with self.assertRaises(RuntimeError):
+            p.acoustic_transfer(echo.wells(0, 1).set_volume("2:microliter"),
+                                dest.wells(0, 1), "1.31:microliter")
+
+class MixTestCase(unittest.TestCase):
+
+    def test_mix(self):
+        p = Protocol()
+        w = p.ref("test", None, "micro-1.5", discard=True).well(0).set_volume("20:microliter")
+        p.mix(w, "5:microliter")
+        self.assertEqual(Unit(20, "microliter"), w.volume)
+        self.assertTrue("mix" in p.instructions[-1].groups[-1])
+
+    def test_mix_one_tip(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.mix(c.wells(0, 1, 2), "5:microliter", one_tip=False)
+        self.assertEqual(len(p.instructions[-1].groups), 3)
+        p.mix(c.wells(0, 1, 2, 4), "5:microliter", one_tip=True)
+        self.assertEqual(len(p.instructions[-1].groups), 4)
 
 class MagneticTransferTestCase(unittest.TestCase):
 

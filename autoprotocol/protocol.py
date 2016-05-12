@@ -1249,7 +1249,7 @@ class Protocol(object):
         vol_errors = []
         for vol_d in volume:
             if not (vol_d/droplet_size)._magnitude.is_integer():
-                vol_errors.append(vol)
+                vol_errors.append(vol_d)
         if len(vol_errors) > 0:
             raise RuntimeError("Transfer volume has to be a multiple of "
                                "the droplet size. This is not true for the "

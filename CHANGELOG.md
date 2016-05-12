@@ -12,7 +12,19 @@ Removed
 
 Fixed
 
-## v.3.5.0 - 2016-05-06
+## v3.5.1
+---
+Added
+- mix allows one_tip=True
+
+Changed
+
+Removed
+
+Fixed
+- acoustic_transfer handling of droplet size
+
+## v3.5.0 - 2016-05-06
 ---
 Added
 - measure_mass instruction
@@ -32,7 +44,7 @@ Fixed
  - fix harness to be python3 compatible
  - Compatibility of Unit for acceleration
 
-## v.3.4.0 - 2016-04-22
+## v3.4.0 - 2016-04-22
 ---
 Added
  - discard() and and set_storage() methods for containers

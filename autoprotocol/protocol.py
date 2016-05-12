@@ -1211,6 +1211,7 @@ class Protocol(object):
         dest = WellGroup(dest)
         len_source = len(source.wells)
         len_dest = len(dest.wells)
+        droplet_size = Unit.fromstring(droplet_size)
 
         # Auto-generate well-group if only 1 well specified and using >1 source
         if not one_source:
@@ -1245,7 +1246,14 @@ class Protocol(object):
                                "transferred to each destination well, each "
                                "destination well must have a corresponding "
                                "volume in the form of a list.")
-
+        vol_errors = []
+        for vol_d in volume:
+            if not (vol_d/droplet_size)._magnitude.is_integer():
+                vol_errors.append(vol)
+        if len(vol_errors) > 0:
+            raise RuntimeError("Transfer volume has to be a multiple of "
+                               "the droplet size. This is not true for the "
+                               "following volumes: {} ".format(vol_errors))
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
             try:
@@ -1281,6 +1289,7 @@ class Protocol(object):
                             else:
                                 sources.append(s)
                                 destinations.append(d)
+                                vol = int(vol/droplet_size) * droplet_size
                                 volumes.append(vol)
                                 vol_d -= vol
                                 vol_d._magnitude = round(
@@ -2326,7 +2335,7 @@ class Protocol(object):
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
-            repetitions=10):
+            repetitions=10, one_tip=False):
         """
         Mix specified well using a new pipette tip
 
@@ -2378,6 +2387,8 @@ class Protocol(object):
             flowrate of liquid during mixing
         repetitions : int, optional
             number of times to aspirate and expell liquid during mixing
+        one_tip : bool
+            mix all wells with a single tip
 
         """
         if not isinstance(well, (Well, basestring, WellGroup, list)):
@@ -2387,6 +2398,26 @@ class Protocol(object):
             well = WellGroup([well])
         if isinstance(well, list):
             well = WellGroup(well)
+        if one_tip:
+            group = []
+            for w in well.wells:
+                opts = {
+                    "well": w,
+                    "volume": volume,
+                    "speed": speed,
+                    "repetitions": repetitions
+                }
+                group.append(opts)
+            self._pipette([{"mix": group}])
+        else:
+            for w in well.wells:
+                opts = {
+                    "well": w,
+                    "volume": volume,
+                    "speed": speed,
+                    "repetitions": repetitions
+                }
+                self._pipette([{"mix": [opts]}])
         for w in well.wells:
             opts = {
                 "well": w,

@@ -2418,14 +2418,6 @@ class Protocol(object):
                     "repetitions": repetitions
                 }
                 self._pipette([{"mix": [opts]}])
-        for w in well.wells:
-            opts = {
-                "well": w,
-                "volume": volume,
-                "speed": speed,
-                "repetitions": repetitions
-            }
-            self._pipette([{"mix": [opts]}])
 
     def dispense(self, ref, reagent, columns, speed_percentage=None):
         """

@@ -58,7 +58,6 @@ def param_default(typeDesc):
     else:
         return None
 
-
 def convert_param(protocol, val, typeDesc):
     """
     Convert parameters based on their input types
@@ -201,28 +200,28 @@ def convert_param(protocol, val, typeDesc):
             return [
                 {
                     'cycles': g['cycles'],
-                    'steps': [
-                        {
-                            'duration': Unit.fromstring(s['duration']),
-                            'temperature': Unit.fromstring(s['temperature']),
-                            'read': s["read"] == "True"
-                        }
-                        if 'read' in s else
-                        {
-                            'duration': Unit.fromstring(s['duration']),
-                            'temperature': Unit.fromstring(s['temperature'])
-                        }
-                        for s in g['steps']
-                    ]
+                    'steps': [convert_param(protocol, s, 'thermocycle_step') for s in g['steps']]
                 }
                 for g in val
             ]
         except (TypeError, KeyError):
-            raise RuntimeError("Thermocycle input types must take a list of"
-                               " dictionaries in the form of:\n"
-                               "[{\"cycles\": integer, \n  \"steps\":[{\n    "
-                               "\"duration\": duration, \n    \"temperature\": "
-                               "temperature\n  }]\n}]")
+            raise RuntimeError(_thermocycle_error_text())
+            
+    elif type == 'thermocycle_step':
+        output = {'duration': Unit.fromstring(val['duration'])}
+
+        if 'gradient' in val:
+            output['gradient'] = {
+                'top': Unit.fromstring(val['gradient']['top']),
+                'bottom': Unit.fromstring(val['gradient']['bottom'])
+            }
+        else:
+            output['temperature'] = Unit.fromstring(val['temperature'])
+
+        if 'read' in val:
+            output['read'] = val['read'] == 'True'
+
+        return output  # errors caught by thermocycle parent
 
     elif type == 'csv-table':
         try:
@@ -381,3 +380,29 @@ def run(fn, protocol_name=None):
         return
 
     print(json.dumps(protocol.as_dict(), indent=2))
+
+def _thermocycle_error_text():
+    """
+    Returns formatted error text for thermocycle value errors
+    """
+
+    return """Thermocycle input types must take a list of dictionaries in the form of:
+  [{"cycles": integer,
+    "steps": [{
+      "duration": duration,
+      "temperature": temperature
+      "read": boolean (optional)
+    }]
+  }]
+--or--
+  [{"cycles": integer,
+    "steps": [{
+      "duration": duration,
+      "gradient": {
+        "top": temperature,
+        "bottom": temperature
+      }
+      "read": boolean (optional)
+    }]
+  }]
+(You can intermix gradient and non-gradient steps)"""

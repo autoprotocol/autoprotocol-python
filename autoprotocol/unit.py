@@ -33,6 +33,25 @@ _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 _UnitRegistry.define('molar = mole/liter = M')
 
 
+class UnitError(Exception):
+    """
+    Exceptions from creating new Unit instances with bad inputs.
+    """
+
+    message_text = "Unit error for %s"
+
+    def __init__(self, value):
+        super(UnitError, self).__init__(self.message_text % value)
+        self.value = value
+
+class UnitStringError(UnitError):
+    message_text = "Invalid format for %s: when building a Unit from a "
+                   "string argument, string must be in \'1:meter\' format."
+
+class UnitValueError(UnitError):
+    message_text = "Invalid value for %s: when building a Unit from a "
+                   "value argument, value must be numeric."
+
 class Unit(_Quantity):
     """
     A representation of a measure of physical quantities such as length,
@@ -80,12 +99,12 @@ class Unit(_Quantity):
         if not units and isinstance(value, string_type):
             try:
                 value, units = value.split(":")
-            except:
-                raise ValueError("Incorrect Unit format. When passing a "
-                                 "string argument, Unit has to be in "
-                                 "\'1:meter\' format.")
-
-        return super(Unit, cls).__new__(cls, float(value), units)
+            except ValueError:
+                raise UnitStringError(value)
+        try:
+            return super(Unit, cls).__new__(cls, float(value), units)
+        except ValueError:
+            raise UnitValueError(value)
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()

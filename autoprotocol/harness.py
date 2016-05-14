@@ -2,7 +2,7 @@ from __future__ import print_function
 import json
 import io
 from .protocol import Protocol
-from .unit import Unit
+from .unit import Unit, UnitError
 from .container import WellGroup
 from . import UserError
 import argparse
@@ -94,15 +94,15 @@ def convert_param(protocol, val, typeDesc):
             return WellGroup([convert_param(protocol, a, 'aliquot') for a in val])
         except:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type aliquot+) is improperly"
-                               " formatted." % label)
+            raise RuntimeError("The value supplied to input '%s' (type aliquot+) is improperly "
+                               "formatted." % label)
     elif type == 'aliquot++':
         try:
             return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
         except:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type aliquot++) is improperly"
-                               " formatted." % label)
+            raise RuntimeError("The value supplied to input '%s' (type aliquot++) is improperly "
+                               "formatted." % label)
     elif type == 'container':
 
         try:
@@ -116,21 +116,26 @@ def convert_param(protocol, val, typeDesc):
             return [convert_param(protocol, cont, 'container') for cont in val]
         except:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type container+) is improperly"
-                               " formatted." % label)
-    elif type in ['volume', 'time', 'temperature', 'length']:
-        # TODO: this should be a separate 'condition' type, rather than
-        # overloading 'temperature'.
+            raise RuntimeError("The value supplied to input '%s' (type container+) is improperly "
+                               "formatted." % label)
+    elif type in ['volume', 'time', 'length']:
         try:
-            if type == 'temperature' and \
-                    val in ['ambient', 'warm_30', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
+            return Unit.fromstring(val)
+        except UnitError as e:
+            raise RuntimeError("The value supplied (%s) as a unit of '%s' is "
+                               "improperly formatted. Units of %s must be in "
+                               "the form: 'number:unit'" % (e.value, type, type))
+    elif type == 'temperature':
+        try:
+            if val in ['ambient', 'warm_30', 'warm_37', 'cold_4', 'cold_20', 'cold_80']:
                 return val
             else:
                 return Unit.fromstring(val)
-        except (ValueError, AttributeError):
-            raise RuntimeError("Values supplied to temperature input types must"
-                               " be either storage conditions (ex: \"cold_20\")"
-                               " or temperature units in the form of \"value:unit\"")
+        except UnitError as e:
+            raise RuntimeError("Invalid temperature value for %s: temperature "
+                               "input types must be either storage conditions "
+                               "(ex: 'cold_20') or temperature units in the "
+                               "form of 'number:unit'" % e.value)
     elif type in 'bool':
         return bool(val)
     elif type in 'csv':
@@ -142,15 +147,15 @@ def convert_param(protocol, val, typeDesc):
             return int(val)
         except ValueError:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type integer) is improperly"
-                               " formatted." % label)
+            raise RuntimeError("The value supplied to input '%s' (type integer) is improperly "
+                               "formatted." % label)
     elif type == 'decimal':
         try:
             return float(val)
         except ValueError:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type decimal) is improperly"
-                               " formatted." % label)
+            raise RuntimeError("The value supplied to input '%s' (type decimal) is improperly "
+                               "formatted." % label)
     elif type == 'group':
         try:
             return {
@@ -163,8 +168,8 @@ def convert_param(protocol, val, typeDesc):
                                "a(n) %s field." % (label, e))
         except AttributeError:
             label = typeDesc.get('label') or "[unknown]"
-            raise RuntimeError("The value supplied to input '%s' (type group) is improperly"
-                               " formatted." % label)
+            raise RuntimeError("The value supplied to input '%s' (type group) is improperly "
+                               "formatted." % label)
     elif type == 'group+':
         try:
             return [{
@@ -172,8 +177,8 @@ def convert_param(protocol, val, typeDesc):
                     for k in typeDesc['inputs']
                     } for x in val]
         except (TypeError, AttributeError):
-            raise RuntimeError("The value supplied to input '%s' (type group+) must be in"
-                               " the form of a list of dictionaries" % typeDesc['label'])
+            raise RuntimeError("The value supplied to input '%s' (type group+) must be in "
+                               "the form of a list of dictionaries" % typeDesc['label'])
         except KeyError as e:
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError("The value supplied to input '%s' (type group+) is missing "
@@ -206,22 +211,32 @@ def convert_param(protocol, val, typeDesc):
             ]
         except (TypeError, KeyError):
             raise RuntimeError(_thermocycle_error_text())
-            
-    elif type == 'thermocycle_step':
-        output = {'duration': Unit.fromstring(val['duration'])}
 
-        if 'gradient' in val:
-            output['gradient'] = {
-                'top': Unit.fromstring(val['gradient']['top']),
-                'bottom': Unit.fromstring(val['gradient']['bottom'])
-            }
-        else:
-            output['temperature'] = Unit.fromstring(val['temperature'])
+    elif type == 'thermocycle_step':
+        try:
+            output = {'duration': Unit.fromstring(val['duration'])}
+        except UnitError as e:
+            raise RuntimeError("Invalid duration value for %s: duration input types must "
+                               "be time units in the form of 'number:unit'" % e.value)
+
+        try:
+            if 'gradient' in val:
+                output['gradient'] = {
+                    'top': Unit.fromstring(val['gradient']['top']),
+                    'bottom': Unit.fromstring(val['gradient']['bottom'])
+                }
+            else:
+                output['temperature'] = Unit.fromstring(val['temperature'])
+        except UnitError as e:
+            raise RuntimeError("Invalid temperature value for %s: thermocycle temperature "
+                               "input types must be temperature units in the form of "
+                               "'number:unit'" % e.value)
 
         if 'read' in val:
             output['read'] = val['read'] == 'True'
 
-        return output  # errors caught by thermocycle parent
+        return output
+
 
     elif type == 'csv-table':
         try:
@@ -243,9 +258,9 @@ def convert_param(protocol, val, typeDesc):
         except (AttributeError, IndexError, TypeError):
             label = typeDesc.get('label') or "[unknown]"
             raise RuntimeError(
-                "The values supplied to %s (type csv-table) are improperly"
-                "formatted. Format must be a list of dictionaries with the first."
-                " dictionary comprising keys with associated column input types." % label
+                "The values supplied to %s (type csv-table) are improperly "
+                "formatted. Format must be a list of dictionaries with the first "
+                "dictionary comprising keys with associated column input types." % label
             )
 
     else:

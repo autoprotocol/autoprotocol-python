@@ -44,13 +44,16 @@ class UnitError(Exception):
         super(UnitError, self).__init__(self.message_text % value)
         self.value = value
 
+
 class UnitStringError(UnitError):
-    message_text = "Invalid format for %s: when building a Unit from a "
-                   "string argument, string must be in \'1:meter\' format."
+    message_text = ("Invalid format for %s: when building a Unit from a "
+                    "string argument, string must be in \'1:meter\' format.")
+
 
 class UnitValueError(UnitError):
-    message_text = "Invalid value for %s: when building a Unit from a "
-                   "value argument, value must be numeric."
+    message_text = ("Invalid value for %s: when building a Unit from a "
+                    "value argument, value must be numeric.")
+
 
 class Unit(_Quantity):
     """

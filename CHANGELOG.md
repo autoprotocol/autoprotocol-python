@@ -12,7 +12,19 @@ Removed
 
 Fixed
 
-## v3.5.1
+## v3.5.2 - 2015-05-13
+---
+Added
+- Unit specific error handling
+
+Changed
+
+Removed
+
+Fixed
+- thermocycle gradient steps in harness.py
+
+## v3.5.1 - 2015-05-12
 ---
 Added
 - mix allows one_tip=True

@@ -58,6 +58,7 @@ def param_default(typeDesc):
     else:
         return None
 
+
 def convert_param(protocol, val, typeDesc):
     """
     Convert parameters based on their input types
@@ -237,7 +238,6 @@ def convert_param(protocol, val, typeDesc):
 
         return output
 
-
     elif type == 'csv-table':
         try:
             values = []
@@ -395,6 +395,7 @@ def run(fn, protocol_name=None):
         return
 
     print(json.dumps(protocol.as_dict(), indent=2))
+
 
 def _thermocycle_error_text():
     """

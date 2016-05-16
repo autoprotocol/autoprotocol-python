@@ -234,7 +234,7 @@ def convert_param(protocol, val, typeDesc):
                                "'number:unit'" % e.value)
 
         if 'read' in val:
-            output['read'] = val['read'] == 'True'
+            output['read'] = val['read']
 
         return output
 

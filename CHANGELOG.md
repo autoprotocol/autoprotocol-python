@@ -12,6 +12,17 @@ Removed
 
 Fixed
 
+## v3.5.3 - 2015-05-16
+---
+Added
+
+Changed
+- harness.py returns proper boolean for thermocycle types
+
+Removed
+
+Fixed
+
 ## v3.5.2 - 2015-05-13
 ---
 Added

@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_release("${1:Str head}", ${2:Container container}, "${3:Str duration}", "${4:Str frequency}", ${5:Float center}, ${6:Float amplitude}, "${7:Str temperature}", new_tip=${8:Bool False}, new_instruction=${9:Bool False})
+]]></content>
+    <tabTrigger>mag_release</tabTrigger>
+    <scope>source.python</scope>
+    <description>Release beads into container</description>
+</snippet>

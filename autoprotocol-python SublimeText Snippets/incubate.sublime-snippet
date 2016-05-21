@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-incubate(${1:ref}, ${2:where}, ${3:duration}, shaking=${4:False}, co2=${5:0})
+incubate(${1:Container ref}, "${2:Str storage}", "${3:Str duration}", shaking=${4:Bool False}, co2=${5:Int 0})
 ]]></content>
     <tabTrigger>incubate</tabTrigger>
     <scope>source.python</scope>
+    <description>Incubate for duration</description>
 </snippet>

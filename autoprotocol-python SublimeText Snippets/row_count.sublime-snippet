@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+row_count()
+]]></content>
+    <tabTrigger>row_count</tabTrigger>
+    <scope>source.python</scope>
+    <description>Return num rows</description>
+</snippet>

@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+__repr__()
+]]></content>
+    <tabTrigger>__repr__</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns a string</description>
+</snippet>

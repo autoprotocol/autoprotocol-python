@@ -1,6 +1,8 @@
 <snippet>
     <content><![CDATA[
-oligosynthesize(${1:oligos})
+oligosynthesize(${1:[Dict oligos]})
 ]]></content>
     <tabTrigger>oligosynthesize</tabTrigger>
+    <scope>source.python</scope>
+    <description>Synthesize oligonucleotides</description>
 </snippet>

@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+__len__()
+]]></content>
+    <tabTrigger>__len__</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns num Wells</description>
+</snippet>

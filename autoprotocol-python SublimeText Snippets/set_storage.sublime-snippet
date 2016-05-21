@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+set_storage("${1:storage}")
+]]></content>
+    <tabTrigger>set_storage</tabTrigger>
+    <scope>source.python</scope>
+    <description>Set container storage</description>
+</snippet>

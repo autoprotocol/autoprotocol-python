@@ -4,4 +4,5 @@ well(${1:index})
 ]]></content>
     <tabTrigger>well</tabTrigger>
     <scope>source.python</scope>
+    <description>Returns a well object</description>
 </snippet>

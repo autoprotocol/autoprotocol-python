@@ -4,4 +4,5 @@ humanize(${1:well_ref})
 ]]></content>
     <tabTrigger>humanize</tabTrigger>
     <scope>source.python</scope>
+    <description>Returns a string</description>
 </snippet>

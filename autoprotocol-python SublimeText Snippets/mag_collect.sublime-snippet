@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_collect("${1:Str head}", ${2:Container container}, ${3:Int cycles}, "${4:Str pause_duration}", temperature="${5:Str temp}", new_tip=${6:Bool False}, new_instruction=${7:Bool False})
+]]></content>
+    <tabTrigger>mag_collect</tabTrigger>
+    <scope>source.python</scope>
+    <description>Collect beads from container</description>
+</snippet>

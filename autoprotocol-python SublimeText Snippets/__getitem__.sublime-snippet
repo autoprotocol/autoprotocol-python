@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+__getitem__(${1:Int key})
+]]></content>
+    <tabTrigger>__getitem__</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns a specific Well</description>
+</snippet>

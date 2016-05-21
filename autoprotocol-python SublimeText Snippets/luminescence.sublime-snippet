@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-luminescence(${1:ref}, ${2:wells}, ${3:dataref})
+luminescence(${1:Container ref}, ${2:WellGroup wells}, "${3:Str dataref}")
 ]]></content>
     <tabTrigger>luminescence</tabTrigger>
     <scope>source.python</scope>
+    <description>Read luminescence of well</description>
 </snippet>

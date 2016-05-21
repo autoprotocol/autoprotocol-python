@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+run(${1:function})
+]]></content>
+    <tabTrigger>run</tabTrigger>
+    <scope>source.python</scope>
+    <description>Run the protocol specified</description>
+</snippet>

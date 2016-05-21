@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-uncover(${1:ref})
+uncover(${1:Container ref})
 ]]></content>
     <tabTrigger>uncover</tabTrigger>
     <scope>source.python</scope>
+    <description>Remove lid from container</description>
 </snippet>

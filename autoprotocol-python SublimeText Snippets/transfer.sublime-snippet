@@ -1,7 +1,6 @@
 <snippet>
-    <content><![CDATA[transfer(${1:source}, ${2:dest}, ${3:volume})]]></content>
-    <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+    <content><![CDATA[transfer(${1:WellGroup source}, ${2:WellGroup dest}, "${3:Str volume}")]]></content>
     <tabTrigger>transfer</tabTrigger>
-    <!-- Optional: Set a scope to limit where the snippet will trigger -->
     <scope>source.python</scope>
+    <description>Transfer liquid between wells</description>
 </snippet>

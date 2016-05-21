@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_incubate("${1:Str head}", ${2:Container container}, "${3:Str duration}", magnetize=${4:Bool False}, tip_position=${5:Float num}, temperature="${6:Str temp}", new_tip=${7:Bool False}, new_instruction=${8:Bool False})
+]]></content>
+    <tabTrigger>mag_incubate</tabTrigger>
+    <scope>source.python</scope>
+    <description>Incubate container with tips</description>
+</snippet>

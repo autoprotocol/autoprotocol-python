@@ -1,7 +1,6 @@
 <snippet>
-    <content><![CDATA[
-distribute(${1:source}, ${2:dest}, ${3:volume}, allow_carryover=${4:False})
-]]></content>
+    <content><![CDATA[distribute(${1:WellGroup source}, ${2:WellGroup dest}, "${3:Str volume}")]]></content>
     <tabTrigger>distribute</tabTrigger>
     <scope>source.python</scope>
+    <description>Distribute liquid</description>
 </snippet>

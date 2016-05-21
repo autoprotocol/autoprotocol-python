@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-spin(${1:ref}, ${2:acceleration}, ${3:duration})
+spin(${1:Container ref}, "${2:Str acceleration}", "${3:Str duration}", flow_direction="${4:Str content_direction}", direction=${5:["Str spin_direction"]})
 ]]></content>
     <tabTrigger>spin</tabTrigger>
     <scope>source.python</scope>
+    <description>Spin container</description>
 </snippet>

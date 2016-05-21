@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-cover(${1:ref})
+cover(${1:Container ref}, lid=${2:Str lid})
 ]]></content>
     <tabTrigger>cover</tabTrigger>
     <scope>source.python</scope>
+    <description>Places lid on container</description>
 </snippet>

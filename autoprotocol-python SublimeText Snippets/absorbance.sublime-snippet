@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-absorbance(${1:ref}, ${2:wells}, ${3:wavelength}, ${4:dataref})
+absorbance(${1:Container ref}, ${2:WellGroup wells}, "${3:Str wavelength}", "${4:Str dataref}")
 ]]></content>
     <tabTrigger>absorbance</tabTrigger>
     <scope>source.python</scope>
+    <description>Read well absorbance</description>
 </snippet>

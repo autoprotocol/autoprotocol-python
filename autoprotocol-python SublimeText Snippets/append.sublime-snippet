@@ -1,0 +1,6 @@
+<snippet>
+	<content><![CDATA[append(${1:instructions})]]></content>
+	<tabTrigger>append</tabTrigger>
+	<scope>source.python</scope>
+	<description>Appends instruction objects</description> 
+</snippet>

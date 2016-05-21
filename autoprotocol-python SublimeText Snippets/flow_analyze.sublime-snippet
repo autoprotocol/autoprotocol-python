@@ -1,6 +1,8 @@
 <snippet>
     <content><![CDATA[
-flow_analyze(${1:dataref}, ${2:FSC}, ${3:SSC}, ${4:neg_controls}, ${5:samples})
+flow_analyze("${1:Str dataref}", ${2:Dict FSC}, ${3:Dict SSC}, ${4:[Dict neg_controls]}, ${5:[Dict samples]})
 ]]></content>
     <tabTrigger>flow_analyze</tabTrigger>
+    <scope>source.python</scope>
+    <description>Perform flow cytometry</description>
 </snippet>

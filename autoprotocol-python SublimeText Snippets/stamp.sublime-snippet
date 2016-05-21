@@ -1,7 +1,6 @@
 <snippet>
-    <content><![CDATA[
-stamp(${1:source}, ${2:dest}, ${3:volume}, shape=${4:dict(rows=8, columns=12))}
-]]></content>
+    <content><![CDATA[stamp(${1:WellGroup source}, ${2:WellGroup dest}, "${3:volume}")]]></content>
     <tabTrigger>stamp</tabTrigger>
     <scope>source.python</scope>
+    <description>List of transfers</description>
 </snippet>

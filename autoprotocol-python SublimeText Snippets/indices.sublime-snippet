@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+indices()
+]]></content>
+    <tabTrigger>indices</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns string of wells</description>
+</snippet>

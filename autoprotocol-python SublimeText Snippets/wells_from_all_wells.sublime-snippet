@@ -1,7 +1,0 @@
-<snippet>
-    <content><![CDATA[
-wells_from(${1:start}, ${2:num})
-]]></content>
-    <tabTrigger>wells_from</tabTrigger>
-    <scope>source.python</scope>
-</snippet>

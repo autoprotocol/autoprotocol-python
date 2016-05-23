@@ -1,5 +1,5 @@
 <snippet>
-    <content><![CDATA[sangerseq(${1:Container cont}, "${2:Str type", ${3:WellGroup wells}, ${4:Container primer}, "${5:Str dataref}")]]></content>
+    <content><![CDATA[sangerseq(${1:Container cont}, "${2:Str type}", ${3:WellGroup wells}, ${4:Container primer}, "${5:Str dataref}")]]></content>
     <tabTrigger>sangerseq</tabTrigger>
     <scope>source.python</scope>
     <description>Sanger seq wells</description>

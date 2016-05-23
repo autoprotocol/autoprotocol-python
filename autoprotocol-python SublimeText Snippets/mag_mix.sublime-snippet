@@ -4,5 +4,5 @@ mag_mix("${1:Str head}", ${2:Container container}, "${3:Str duration}", "${4:Str
 ]]></content>
     <tabTrigger>mag_mix</tabTrigger>
     <scope>source.python</scope>
-    <description>Dry beads</description>
+    <description>Mix beads</description>
 </snippet>

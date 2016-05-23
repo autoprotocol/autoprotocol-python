@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-ref(${1:Str name}, id=${2:Str None}, cont_type="${3:Str ContainerTyper}")
+ref("${1:Str name}", id="${2:Str None}", cont_type="${3:Str ContainerTyper}")
 ]]></content>
     <tabTrigger>ref</tabTrigger>
     <scope>source.python</scope>

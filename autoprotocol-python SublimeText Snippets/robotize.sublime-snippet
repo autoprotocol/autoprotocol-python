@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-robotize("${1:well_ref}")
+robotize("${1:Str well_ref}")
 ]]></content>
     <tabTrigger>robotize</tabTrigger>
     <scope>source.python</scope>

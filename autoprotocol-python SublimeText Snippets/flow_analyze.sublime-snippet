@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-flow_analyze("${1:Str dataref}", ${2:Dict FSC}, ${3:Dict SSC}, ${4:[Dict neg_controls]}, ${5:[Dict samples]})
+flow_analyze(dataref="${1:Str dataref}", FSC=${2:Dict FSC}, SSC=${3:Dict SSC}, neg_controls=${4:[Dict neg_controls]}, samples=${5:[Dict samples]})
 ]]></content>
     <tabTrigger>flow_analyze</tabTrigger>
     <scope>source.python</scope>

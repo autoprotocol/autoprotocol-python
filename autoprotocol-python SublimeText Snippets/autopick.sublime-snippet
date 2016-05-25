@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-autopick(${1:[Well sources]}, ${2:[Well dests]}, min_abort=${3:0}, ${4:Dict criteria}, dataref="${5:Str autopick}",newpick=${6:Bool False})
+autopick(sources=${1:[Well sources]}, dests=${2:[Well dests]})
 ]]></content>
     <tabTrigger>autopick</tabTrigger>
     <scope>source.python</scope>

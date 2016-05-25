@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-flash_freeze(${1:Container container}, "${2:Str duration}")
+flash_freeze(container=${1:Container container}, duration="${2:Str duration}")
 ]]></content>
     <tabTrigger>flash_freeze</tabTrigger>
     <scope>source.python</scope>

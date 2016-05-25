@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-provision("${1:Str resource_id}", ${2:WellGroup dests}, "${3:[Str volumes]}")
+provision(resource_id="${1:Str resource_id}", dests=${2:WellGroup dests}, volumes="${3:[Str volumes]}")
 ]]></content>
     <tabTrigger>provision</tabTrigger>
     <scope>source.python</scope>

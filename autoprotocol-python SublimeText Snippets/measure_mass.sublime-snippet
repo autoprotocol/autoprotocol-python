@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-measure_mass(${1:[Container containers]}, "${2:Str dataref}")
+measure_mass(containers=${1:[Container containers]}, dataref="${2:Str dataref}")
 ]]></content>
 	<tabTrigger>measure_mass</tabTrigger>
 	<scope>source.python</scope>

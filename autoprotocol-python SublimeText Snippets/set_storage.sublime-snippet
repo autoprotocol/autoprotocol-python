@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-set_storage("${1:Str storage}")
+set_storage(storage="${1:Str storage}")
 ]]></content>
     <tabTrigger>set_storage</tabTrigger>
     <scope>source.python</scope>

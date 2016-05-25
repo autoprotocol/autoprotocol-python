@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-gel_separate(${1:WellGroup wells}, "${2:Str volume}", "${3:Str matrix}", "${4:Str ladder}", "${5:Str duration}", "${6:Str dataref}")
+gel_separate(wells=${1:WellGroup wells}, volume="${2:Str volume}", matrix="${3:Str matrix}", ladder="${4:Str ladder}", duration="${5:Str duration}", dataref="${6:Str dataref}")
 ]]></content>
     <tabTrigger>gel_separate</tabTrigger>
     <scope>source.python</scope>

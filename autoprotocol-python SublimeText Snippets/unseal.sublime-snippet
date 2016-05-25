@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-unseal(${1:Container ref})
+unseal(ref=${1:Container ref})
 ]]></content>
     <tabTrigger>unseal</tabTrigger>
     <scope>source.python</scope>

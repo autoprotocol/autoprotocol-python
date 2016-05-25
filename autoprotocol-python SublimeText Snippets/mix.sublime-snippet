@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-mix(${1:WellGroup well}, volume="${2:volume}", speed="${3:Str speed}", repetitions=${4:10})
+mix(well=${1:WellGroup well})
 ]]></content>
     <tabTrigger>mix</tabTrigger>
     <scope>source.python</scope>

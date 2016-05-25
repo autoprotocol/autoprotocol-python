@@ -1,6 +1,6 @@
 <snippet>
 	<content><![CDATA[
-measure_volume(${1:[WellGroup wells]}, "${2:Str dataref}")
+measure_volume(wells=${1:WellGroup wells}, dataref="${2:Str dataref}")
 ]]></content>
 	<tabTrigger>measure_volume</tabTrigger>
 	<scope>source.python</scope>

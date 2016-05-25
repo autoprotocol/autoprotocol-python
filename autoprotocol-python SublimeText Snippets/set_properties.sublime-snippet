@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-set_properties(${1:Dict properties})
+set_properties(properties=${1:Dict properties})
 ]]></content>
     <tabTrigger>set_properties</tabTrigger>
     <scope>source.python</scope>

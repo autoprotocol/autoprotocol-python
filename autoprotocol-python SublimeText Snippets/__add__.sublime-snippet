@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-__add__(${1:WellGroup well})
-]]></content>
-    <tabTrigger>__add__</tabTrigger>
-    <scope>source.python</scope>
-    <description>Append Well to WellGroup</description>
-</snippet>

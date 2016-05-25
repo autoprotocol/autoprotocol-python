@@ -1,8 +1,0 @@
-<snippet>
-	<content><![CDATA[
-Container("${1:Str ID}", ${2:ContainerType}, "${3:Str name}")
-]]></content>
-	<tabTrigger>Container</tabTrigger>
-	<scope>source.python</scope>
-	<description>Returns a Container</description>
-</snippet>

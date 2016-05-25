@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-dispense_full_plate(${1:Container ref}, "${2:Str reagent}", "${3:Str volume}")
+dispense_full_plate(ref=${1:Container ref}, reagent="${2:Str reagent}", volume="${3:Str volume}")
 ]]></content>
     <tabTrigger>dispense_full_plate</tabTrigger>
     <scope>source.python</scope>

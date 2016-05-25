@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-image_plate(${1:Container ref}, "${2:Str mode}", "${3:Str dataref}")
+image_plate(ref=${1:Container ref}, mode="${2:Str mode}", dataref="${3:Str dataref}")
 ]]></content>
     <tabTrigger>image_plate</tabTrigger>
     <scope>source.python</scope>

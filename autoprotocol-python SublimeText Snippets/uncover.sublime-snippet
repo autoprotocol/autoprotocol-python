@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-uncover(${1:Container ref})
+uncover(ref=${1:Container ref})
 ]]></content>
     <tabTrigger>uncover</tabTrigger>
     <scope>source.python</scope>

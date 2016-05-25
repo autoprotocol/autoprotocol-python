@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-gel_purify(${1:[Dict extracts]}, "${2:Str volume}", "${3:Str matrix}", "${4:Str ladder}", "${5:Str dataref}")
+gel_purify(extracts=${1:[Dict extracts]}, volume="${2:Str volume}", matrix="${3:Str matrix}", ladder="${4:Str ladder}", dataref="${5:Str dataref}")
 ]]></content>
     <tabTrigger>gel_purify</tabTrigger>
     <scope>source.python</scope>

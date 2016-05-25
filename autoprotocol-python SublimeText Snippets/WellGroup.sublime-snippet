@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-WellGroup(${1:Well wells})
+WellGroup(wells=${1:Well wells})
 ]]></content>
     <tabTrigger>WellGroup</tabTrigger>
     <scope>source.python</scope>

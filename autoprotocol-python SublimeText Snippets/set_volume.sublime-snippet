@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-set_volume("${1:Str vol}")
+set_volume(vol="${1:Str vol}")
 ]]></content>
     <tabTrigger>set_volume</tabTrigger>
     <scope>source.python</scope>

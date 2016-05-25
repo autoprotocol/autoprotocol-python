@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-Manifest(${1:JSON object})
-]]></content>
-    <tabTrigger>Manifest</tabTrigger>
-    <scope>source.python</scope>
-    <description>Object representation</description>
-</snippet>

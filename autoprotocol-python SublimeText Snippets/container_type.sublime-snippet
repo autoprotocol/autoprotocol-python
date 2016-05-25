@@ -1,5 +1,5 @@
 <snippet>
-	<content><![CDATA[container_type(${1:shortname})]]></content>
+	<content><![CDATA[container_type]]></content>
 	<tabTrigger>container_type</tabTrigger>
 	<scope>source.python</scope>
 	<description>Returns ContainerTyper</description>

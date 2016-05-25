@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-thermocycle(${1:Container ref}, ${2:[groups]}, "${3:Str melting_start}", "${4:Str melting_end}", "${5:Str melting_increment}", "${6:Str melting_rate}")
+thermocycle(ref=${1:Container ref}, groups=${2:[groups]})
 ]]></content>
     <tabTrigger>thermocycle</tabTrigger>
     <scope>source.python</scope>

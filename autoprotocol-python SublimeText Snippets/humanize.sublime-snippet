@@ -1,6 +1,6 @@
 <snippet>
     <content><![CDATA[
-humanize(${1:Int well_ref})
+humanize(well_ref=${1:Int well_ref})
 ]]></content>
     <tabTrigger>humanize</tabTrigger>
     <scope>source.python</scope>

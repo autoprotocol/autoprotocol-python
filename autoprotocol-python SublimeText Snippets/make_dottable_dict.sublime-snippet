@@ -4,4 +4,5 @@ make_dottable_dict(${1:dict})
 ]]></content>
     <tabTrigger>make_dottable_dict</tabTrigger>
     <scope>source.python</scope>
+    <description>Enable dictionaries to be accessed</description>
 </snippet>

@@ -1,8 +1,8 @@
 <snippet>
     <content><![CDATA[
-humanize(well_ref=${1:Int well_ref})
+humanize()
 ]]></content>
     <tabTrigger>humanize</tabTrigger>
     <scope>source.python</scope>
-    <description>Returns a string</description>
+    <description>Returns the string from a well</description>
 </snippet>

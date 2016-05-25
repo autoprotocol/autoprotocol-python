@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+consolidate(sources=${1:WellGroup source}, dest=${2:Well destination}, volumes="${3:Str volumes}")
+]]></content>
+    <tabTrigger>consolidate</tabTrigger>
+    <scope>source.python</scope>
+    <description>Consolidates source into dest</description>
+</snippet>

@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-fromstring(${1:s})
+fromstring(${1:Str s})
 ]]></content>
     <tabTrigger>fromstring</tabTrigger>
     <scope>source.python</scope>
+    <description>Convert string to Unit</description>
 </snippet>

@@ -1,0 +1,7 @@
+<snippet>
+	<content><![CDATA[
+acoustic_transfer(source=${1:WellGroup source}, dest=${2:WellGroup destination}, volume="${3:Str volume}")]]></content>
+	<tabTrigger>acoustic_transfer</tabTrigger>
+	<scope>source.python</scope>
+	<description>Transfer liquid via acoustics</description>
+</snippet>

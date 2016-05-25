@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_mix(head="${1:Str head}", container=${2:Container container}, duration="${3:Str duration}", frequency="${4:Str frequency}")
+]]></content>
+    <tabTrigger>mag_mix</tabTrigger>
+    <scope>source.python</scope>
+    <description>Mix beads</description>
+</snippet>

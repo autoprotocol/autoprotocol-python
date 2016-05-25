@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_dry(head="${1:Str head}", container=${2:Container container}, duration="${3:Str duration}")
+]]></content>
+    <tabTrigger>mag_dry</tabTrigger>
+    <scope>source.python</scope>
+    <description>Dry beads</description>
+</snippet>

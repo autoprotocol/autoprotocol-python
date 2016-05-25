@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+illuminaseq(flowcell="${1:Str flowcell}", lanes=${2:[Dict lanes]}, sequencer="${3:Str sequencer}", mode="${4:Str mode}", index="${5:Str index}", library_size=${6:Int library_size}, dataref="${7:Str dataref}")
+]]></content>
+    <tabTrigger>illuminaseq</tabTrigger>
+    <scope>source.python</scope>
+    <description>Load aliquots for Illumina</description>
+</snippet>

@@ -1,9 +1,8 @@
 <snippet>
     <content><![CDATA[
-ref(${1:name}, id=${2:None}, cont_type="${3:cont_type}", storage=${4:None}, discard=${5:None})
+ref(name="${1:Str name}", id="${2:Str ID}", cont_type="${3:Str ContainerType}", storage="${4:Sr storage}")
 ]]></content>
-    <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
     <tabTrigger>ref</tabTrigger>
-    <!-- Optional: Set a scope to limit where the snippet will trigger -->
     <scope>source.python</scope>
+    <description>Returns a Container object</description>
 </snippet>

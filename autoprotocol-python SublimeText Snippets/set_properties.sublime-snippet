@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+set_properties(properties=${1:Dict properties})
+]]></content>
+    <tabTrigger>set_properties</tabTrigger>
+    <scope>source.python</scope>
+    <description>Set well property</description>
+</snippet>

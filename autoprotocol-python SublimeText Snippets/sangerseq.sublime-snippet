@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-sangerseq(${1:container}, [${2:wells}], ${3:dataref})
+sangerseq(cont=${1:Container cont}, wells=${2:WellGroup wells}, dataref="${3:Str dataref}")
 ]]></content>
     <tabTrigger>sangerseq</tabTrigger>
     <scope>source.python</scope>
+    <description>Sanger seq wells</description>
 </snippet>

@@ -2266,11 +2266,12 @@ class Protocol(object):
                 raise TypeError("Cycles must be a dict.")
             if not all(c in valid_cycles for c in cycles.keys()):
                 raise KeyError("Valid cycle parameters are: {}".format(', '.join(valid_cycles)))
+            if "read_1" not in cycles.keys():
+                raise ValueError("If specifying cycles, 'read_1' must be designated.")
             if flowcell == "SR" and "read_2" in cycles.keys():
                 raise RuntimeError("SR does not have a second read: 'read_2'.")
             if not all(isinstance(i, int) for i in cycles.values()):
                 raise ValueError("Cycles must be specified as an integer.")
-
             for read in ["read_1", "read_2"]:
                 if cycles.get(read):
                     if cycles[read] > valid_sequencers[sequencer]["max_cycles_read"]:
@@ -2282,6 +2283,9 @@ class Protocol(object):
                     if cycles[ind] > 8:
                         raise ValueError("The maximum number of cycles for {} is {}."
                                          "".format(ind, max_cycles_ind))
+                # set index 1 and 2 to default 0 if not otherwise specified
+                else:
+                    cycles[ind] = 0
 
         self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
                                              index, library_size, dataref, cycles))

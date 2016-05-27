@@ -816,6 +816,17 @@ class RefifyTestCase(unittest.TestCase):
         wellgroup = refs["plate"].wells_from("A2", 3)
         self.assertEqual(p._refify(wellgroup), ["test/1", "test/2", "test/3"])
 
+        # refify Unit
+        a_unit = Unit("30:microliter")
+        self.assertEqual(p._refify(a_unit), "30.0:microliter")
+
+        # refify Instruction
+        p.cover(refs["plate"])
+        self.assertEqual(p._refify(p.instructions[0]), p._refify(p.instructions[0].data))
+
+        # refify Ref
+        self.assertEqual(p._refify(p.refs["test"]), p.refs["test"].opts)
+
         # refify other
         s = "randomstring"
         i = 24
@@ -839,6 +850,87 @@ class OutsTestCase(unittest.TestCase):
             list(p.as_dict()['outs'].values())[0]['0']['name'] == 'test_well')
         self.assertTrue(
             list(p.as_dict()['outs'].values())[0]['0']['properties']['test'] == 'foo')
+
+
+class InstructionIndexTestCase(unittest.TestCase):
+
+    def test_instruction_index(self):
+        p = Protocol()
+        plate = p.ref("plate", None, "96-flat", discard=True)
+
+        with self.assertRaises(ValueError):
+            p.get_instruction_index()
+        p.cover(plate)
+        self.assertEqual(p.get_instruction_index(), 0)
+        p.uncover(plate)
+        self.assertEqual(p.get_instruction_index(), 1)
+
+
+class TimeConstrainstTestCase(unittest.TestCase):
+
+    def test_time_constraint(self):
+        p = Protocol()
+
+        plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+        plate_2 = p.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+
+        p.cover(plate_1)
+        time_point_1 = p.get_instruction_index()
+        p.cover(plate_2)
+        time_point_2 = p.get_instruction_index()
+
+        with self.assertRaises(AttributeError):
+            p.time_constraints
+
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": time_point_1, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": time_point_2, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_2, "state": "start"}, {"mark": time_point_1, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        self.assertEqual(len(p.time_constraints), 6)
+
+        p.add_time_constraint({"mark": time_point_1, "state": "end"}, {"mark": time_point_2, "state": "end"},
+                              "10:minute", True)
+
+        self.assertEqual(len(p.time_constraints), 8)
+
+    def test_time_constraint_checker(self):
+        p = Protocol()
+
+        plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+        plate_2 = p.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+
+        p.cover(plate_1)
+        p.cover(plate_2)
+
+        with self.assertRaises(ValueError):
+            p.add_time_constraint({"mark": -1, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(TypeError):
+            p.add_time_constraint({"mark": "foo", "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(TypeError):
+            p.add_time_constraint({"mark": plate_1, "state": "foo"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(ValueError):
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_2, "state": "end"}, "-10:minute")
+
+        with self.assertRaises(RuntimeError):
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(RuntimeError):
+            p.add_time_constraint({"mark": plate_1, "state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(KeyError):
+            p.add_time_constraint({"mark": plate_1}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(KeyError):
+            p.add_time_constraint({"state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
 
 
 class AbsorbanceTestCase(unittest.TestCase):

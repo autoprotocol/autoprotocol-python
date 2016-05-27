@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- Time constraints
 
 Changed
 - illuminaseq allows cycle specification

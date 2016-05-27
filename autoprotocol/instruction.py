@@ -450,8 +450,8 @@ class IlluminaSeq(Instruction):
 
     """
 
-    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
-        super(IlluminaSeq, self).__init__({
+    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles):
+        seq = {
             "op": "illumina_sequence",
             "flowcell": flowcell,
             "lanes": lanes,
@@ -460,7 +460,10 @@ class IlluminaSeq(Instruction):
             "index": index,
             "library_size": library_size,
             "dataref": dataref
-        })
+        }
+        if cycles:
+            seq["cycles"] = cycles
+        super(IlluminaSeq, self).__init__(seq)
 
 
 class SangerSeq(Instruction):

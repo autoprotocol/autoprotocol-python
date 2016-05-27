@@ -2195,26 +2195,28 @@ class Protocol(object):
         """
 
         valid_flowcells = ["PE", "SR"]
-        #  currently available sequencers, modes and max number of lanes
+        #  currently available sequencers, modes and max number of lanes and cycles
         valid_sequencers = {
             "miseq": {
                 "max_lanes": 1,
                 "modes": ["high"],
-                "max_cycles": 600
+                "max_cycles_read": 600
             },
             "hiseq": {
                 "max_lanes": 8,
                 "modes": ["high", "rapid"],
-                "max_cycles": 500
+                "max_cycles_read": 500
             },
             "nextseq": {
                 "max_lanes": 4,
                 "modes": ["high", "mid"],
-                "max_cycles": 300
+                "max_cycles_read": 300
             }
         }
 
         valid_indices = ["single", "dual", "none"]
+        valid_cycles = ["index_1", "index_2", "read_1", "read_2"]
+        max_cycles_ind = 8
 
         if flowcell not in valid_flowcells:
             raise ValueError("Illumina sequencing flowcell type must be one of:"
@@ -2259,21 +2261,30 @@ class Protocol(object):
         if not isinstance(library_size, int):
             raise TypeError("library_size: %s, must be an integer." % library_size)
 
-        valid_cycles = ["index_1", "index_2", "read_1", "read_2"]
         if cycles:
-            if not isinstance(cycles, list):
-                raise TypeError("Cycles must be a list...")
-            if not all(c for c in cycles) in valid_cycles:
-                raise KeyError("Valid cycle parameters....")
-            if flowcell == "SR" and "read_2" in cycles:
-                raise RuntimeError("SR does not have read 2.")
-            if not all( in extract.keys() for k in ["source", "band_list", "lane", "gel"]):
-        raise KeyError("Extract parameter keys must be 'source', 'band_list', 'lane', 'gel'.")
+            if not isinstance(cycles, dict):
+                raise TypeError("Cycles must be a dict.")
+            if not all(c in valid_cycles for c in cycles.keys()):
+                raise KeyError("Valid cycle parameters are: {}".format(', '.join(valid_cycles)))
+            if flowcell == "SR" and "read_2" in cycles.keys():
+                raise RuntimeError("SR does not have a second read: 'read_2'.")
+            if not all(isinstance(i, int) for i in cycles.values()):
+                raise ValueError("Cycles must be specified as an integer.")
 
-
+            for read in ["read_1", "read_2"]:
+                if cycles.get(read):
+                    if cycles[read] > valid_sequencers[sequencer]["max_cycles_read"]:
+                        raise ValueError("The maximum number of cycles for {} is {}."
+                                         "".format(read,
+                                                   valid_sequencers[sequencer]["max_cycles_read"]))
+            for ind in ["index_1", "index_2"]:
+                if cycles.get(ind):
+                    if cycles[ind] > 8:
+                        raise ValueError("The maximum number of cycles for {} is {}."
+                                         "".format(ind, max_cycles_ind))
 
         self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
-                                             index, library_size, dataref))
+                                             index, library_size, dataref, cycles))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

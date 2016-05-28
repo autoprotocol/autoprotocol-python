@@ -1697,9 +1697,22 @@ class IlluminaSeqTestCase(unittest.TestCase):
                           {"object": sample_wells[6], "library_concentration": 21},
                           {"object": sample_wells[7], "library_concentration": 62}
                       ],
-                      "hiseq", "rapid", 'none', 250, "dataref")
+                      "hiseq", "rapid", 'none', 250, "dataref",
+                      {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 4})
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(len(p.instructions[1].lanes), 8)
+
+    def test_illumina_seq_default(self):
+        p = Protocol()
+        sample_wells = p.ref(
+            "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+        p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
+                      {"object": sample_wells[1], "library_concentration": 2}],
+                      "nextseq", "mid", 'none', 34, "dataref", {"read_1": 100})
+
+        self.assertEqual(len(p.instructions), 1)
+        self.assertTrue("index_1" in p.instructions[0].cycles)
+        self.assertEqual(0, p.instructions[0].cycles["index_2"])
 
     def test_illumina_bad_params(self):
         p = Protocol()
@@ -1718,3 +1731,18 @@ class IlluminaSeqTestCase(unittest.TestCase):
                               {"object": sample_wells[1], "library_concentration": 2}
                           ],
                           "miseq", "high", 'none', 250, "not_enough_lanes")
+        with self.assertRaises(RuntimeError):
+            p.illuminaseq("SR",
+                          [
+                              {"object": sample_wells[0], "library_concentration": 1.0},
+                              {"object": sample_wells[1], "library_concentration": 2}
+                          ],
+                          "nextseq", "high", "none", 250, "wrong_seq", {"read_2": 500, "read_1": 2})
+        with self.assertRaises(ValueError):
+            p.illuminaseq("PE",
+                          [
+                              {"object": sample_wells[0], "library_concentration": 1.0},
+                              {"object": sample_wells[1], "library_concentration": 2}
+                          ],
+                          "nextseq", "high", "none", 250, "index_too_high",
+                          {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 9})

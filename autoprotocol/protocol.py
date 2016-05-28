@@ -2074,7 +2074,7 @@ class Protocol(object):
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
 
-    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref):
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles=None):
         """
         Load aliquots into specified lanes for Illumina sequencing.
         The specified aliquots should already contain the appropriate mix for
@@ -2195,23 +2195,28 @@ class Protocol(object):
         """
 
         valid_flowcells = ["PE", "SR"]
-        #  currently available sequencers, modes and max number of lanes
+        #  currently available sequencers, modes and max number of lanes and cycles
         valid_sequencers = {
             "miseq": {
                 "max_lanes": 1,
-                "modes": ["high"]
+                "modes": ["high"],
+                "max_cycles_read": 600
             },
             "hiseq": {
                 "max_lanes": 8,
-                "modes": ["high", "rapid"]
+                "modes": ["high", "rapid"],
+                "max_cycles_read": 500
             },
             "nextseq": {
                 "max_lanes": 4,
-                "modes": ["high", "mid"]
+                "modes": ["high", "mid"],
+                "max_cycles_read": 300
             }
         }
 
         valid_indices = ["single", "dual", "none"]
+        valid_cycles = ["index_1", "index_2", "read_1", "read_2"]
+        max_cycles_ind = 8
 
         if flowcell not in valid_flowcells:
             raise ValueError("Illumina sequencing flowcell type must be one of:"
@@ -2256,8 +2261,34 @@ class Protocol(object):
         if not isinstance(library_size, int):
             raise TypeError("library_size: %s, must be an integer." % library_size)
 
+        if cycles:
+            if not isinstance(cycles, dict):
+                raise TypeError("Cycles must be a dict.")
+            if not all(c in valid_cycles for c in cycles.keys()):
+                raise KeyError("Valid cycle parameters are: {}".format(', '.join(valid_cycles)))
+            if "read_1" not in cycles.keys():
+                raise ValueError("If specifying cycles, 'read_1' must be designated.")
+            if flowcell == "SR" and "read_2" in cycles.keys():
+                raise RuntimeError("SR does not have a second read: 'read_2'.")
+            if not all(isinstance(i, int) for i in cycles.values()):
+                raise ValueError("Cycles must be specified as an integer.")
+            for read in ["read_1", "read_2"]:
+                if cycles.get(read):
+                    if cycles[read] > valid_sequencers[sequencer]["max_cycles_read"]:
+                        raise ValueError("The maximum number of cycles for {} is {}."
+                                         "".format(read,
+                                                   valid_sequencers[sequencer]["max_cycles_read"]))
+            for ind in ["index_1", "index_2"]:
+                if cycles.get(ind):
+                    if cycles[ind] > 8:
+                        raise ValueError("The maximum number of cycles for {} is {}."
+                                         "".format(ind, max_cycles_ind))
+                # set index 1 and 2 to default 0 if not otherwise specified
+                else:
+                    cycles[ind] = 0
+
         self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
-                                             index, library_size, dataref))
+                                             index, library_size, dataref, cycles))
 
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """

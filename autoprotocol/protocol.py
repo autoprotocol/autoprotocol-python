@@ -4998,12 +4998,18 @@ class Protocol(object):
         else:
             self.instructions.append(Pipette(groups))
 
-    def _adjust_cover(self, container, action):
+    def _remove_cover(self, container, action):
         if not (container.is_covered() or container.is_sealed()):
             return
+        elif container.cover in COVER_TYPES:
+            self.uncover(container)
+        elif container.cover in SEAL_TYPES:
+            self.unseal(container)
         else:
-            status = "cover" if container.cover in COVER_TYPES else "seal"
-            eval("self.un%s(container)" % status)
+            raise RuntimeError("The operation {} requires an uncovered "
+                               "container, however, {} is not a "
+                               "recognized cover or seal type."
+                               "".format(action, container.cover))
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """

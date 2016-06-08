@@ -436,6 +436,7 @@ def seal_on_store(protocol):
     "seal" if its within the capabilities of the container type, otherwise
     to "cover".
     Example:
+
     .. code-block:: python
         def dostuff(p, params):
         cont = params['container']
@@ -444,7 +445,9 @@ def seal_on_store(protocol):
         p.unseal(cont)
         p.cover(cont)
         p.uncover(cont)
+
     Autoprotocol output
+
     .. code-block:: json
         {
           "refs": {

@@ -1945,4 +1945,3 @@ class CoverStatusTestCase(unittest.TestCase):
         self.assertTrue(cont.cover == "universal")
         p.mix(cont.well(0))
         self.assertFalse(cont.cover)
->>>>>>> pull request 85 cover_state adds

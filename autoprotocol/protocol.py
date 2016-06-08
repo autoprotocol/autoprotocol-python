@@ -806,8 +806,8 @@ class Protocol(object):
                 }
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
-            self._adjust_cover(d["from"].container, "pipette from")
-            [self._adjust_cover(t['well'].container, "pipette to") for t in d['to']]
+            self._remove_cover(d["from"].container, "pipette from")
+            [self._remove_cover(t['well'].container, "pipette to") for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -1058,8 +1058,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            self._adjust_cover(s.container, "pipette from")
-            self._adjust_cover(d.container, "pipette into")
+            self._remove_cover(s.container, "pipette from")
+            self._remove_cover(d.container, "pipette into")
             if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(900, "microliter"):
@@ -1267,7 +1267,7 @@ class Protocol(object):
         if not isinstance(dest, (Well, str)):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well.")
-        self._adjust_cover(dest.container, "consolidate into")
+        self._remove_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
         if isinstance(volumes, list):
@@ -1287,7 +1287,7 @@ class Protocol(object):
         from_wells = []
         # Generate instructions for each transfer from source wells
         for s, v in zip(sources, volumes):
-            self._adjust_cover(s.container, "consolidate from")
+            self._remove_cover(s.container, "consolidate from")
             source_opts = {}
             source_opts["well"] = s
             source_opts["volume"] = v
@@ -1508,8 +1508,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            self._adjust_cover(s.container, "acoustic_transfer")
-            self._adjust_cover(d.container, "acoustic_transfer")
+            self._remove_cover(s.container, "acoustic_transfer")
+            self._remove_cover(d.container, "acoustic_transfer")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2159,8 +2159,8 @@ class Protocol(object):
                             osta.append(st)
                 v = diff
 
-            self._adjust_cover(s.container, "stamp")
-            self._adjust_cover(d.container, "stamp")
+            self._remove_cover(s.container, "stamp")
+            self._remove_cover(d.container, "stamp")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2637,7 +2637,7 @@ class Protocol(object):
         if one_tip:
             group = []
             for w in well.wells:
-                self._adjust_cover(w.container, "mix")
+                self._remove_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2648,7 +2648,7 @@ class Protocol(object):
             self._pipette([{"mix": group}])
         else:
             for w in well.wells:
-                self._adjust_cover(w.container, "mix")
+                self._remove_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2768,7 +2768,7 @@ class Protocol(object):
 
         """
 
-        self._adjust_cover(ref, "dispense to")
+        self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2883,7 +2883,7 @@ class Protocol(object):
             dispenser.
 
         """
-        self._adjust_cover(ref, "dispense to")
+        self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -3622,7 +3622,7 @@ class Protocol(object):
             Name of this set of gel separation results.
         """
         for w in wells:
-            self._adjust_cover(w.container, "gel separate")
+            self._remove_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1
@@ -3862,7 +3862,6 @@ class Protocol(object):
                     pe_unpacked.append(ext)
 
             self.instructions.append(GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
-
 
     def seal(self, ref, type="ultra-clear"):
         """
@@ -4286,8 +4285,8 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
-        self._adjust_cover(source.container, "spread")
-        self._adjust_cover(dest.container, "spread")
+        self._remove_cover(source.container, "spread")
+        self._remove_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
         if dest.volume:
             dest.volume += volume
@@ -4340,8 +4339,8 @@ class Protocol(object):
 
         group = [pick]
 
-        [self._adjust_cover(s.container, "autopick") for s in pick["from"]]
-        [self._adjust_cover(d.container, "autopick") for d in pick["to"]]
+        [self._remove_cover(s.container, "autopick") for s in pick["from"]]
+        [self._remove_cover(d.container, "autopick") for d in pick["to"]]
 
         if (not newpick and self.instructions and
                 self.instructions[-1].op == "autopick" and

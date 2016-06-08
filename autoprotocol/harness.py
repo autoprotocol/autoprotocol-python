@@ -353,7 +353,7 @@ class Manifest(object):
                                "associated manifest.json file." % name)
 
 
-def run(fn, protocol_name=None, seal_on_store=True):
+def run(fn, protocol_name=None, seal_after_run=True):
     """
     Run the protocol specified by the function.
 
@@ -366,7 +366,11 @@ def run(fn, protocol_name=None, seal_on_store=True):
     ----------
     fn : function
         Function that generates Autoprotocol
-
+    protocol_name :  str, optional
+        str matching the "name" value in the manifest.json file
+    seal_after_run : bool, optional
+        Implicitly add a seal/cover to all stored refs within the protocol
+        using seal_on_store()
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -385,7 +389,7 @@ def run(fn, protocol_name=None, seal_on_store=True):
 
     try:
         fn(protocol, params)
-        if seal_on_store:
+        if seal_after_run:
             seal_on_store(protocol)
     except UserError as e:
         print(json.dumps({

@@ -259,6 +259,211 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
+    def add_time_constraint(self, from_dict, to_dict, time_between, mirror=False):
+        """
+        Add time constraints from from_dict to to_dict. Time constraints ensure that the time from the from_dict
+        to the to_dict does not exceed the time_between given. Care should be taken when applying time constraints as
+        constraints may make some protocols impossible to schedule or run.
+
+        Though autoprotocol orders instructions in a list, instructions do not need to be run in the order they are
+        listed and instead depend on the preceding dependencies. Time constraints should be added with such limitations
+        in mind.
+
+        Constraints are directional; use mirror=True if the time constraint should be added in both directions.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            plate_1 = protocol.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+            plate_2 = protocol.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+
+            protocol.cover(plate_1)
+            time_point_1 = protocol.get_instruction_index()
+
+            protocol.cover(plate_2)
+            time_point_2 = protocol.get_instruction_index()
+
+            protocol.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": time_point_1, "state": "end"}, "1:minute")
+            protocol.add_time_constraint({"mark": time_point_2, "state": "start"}, {"mark": time_point_1, "state": "start"}, "1:minute", True)
+
+
+        returns:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "plate_1": {
+                  "new": "96-flat",
+                  "discard": true
+                },
+                "plate_2": {
+                  "new": "96-flat",
+                  "discard": true
+                }
+              },
+              "time_constraints": [
+                {
+                  "to": {
+                    "instruction_end": 0
+                  },
+                  "less_than": "1.0:minute",
+                  "from": {
+                    "ref_start": "plate_1"
+                  }
+                },
+                {
+                  "to": {
+                    "instruction_start": 0
+                  },
+                  "less_than": "1.0:minute",
+                  "from": {
+                    "instruction_start": 1
+                  }
+                },
+                {
+                  "to": {
+                    "instruction_start": 1
+                  },
+                  "less_than": "1.0:minute",
+                  "from": {
+                    "instruction_start": 0
+                  }
+                }
+              ],
+              "instructions": [
+                {
+                  "lid": "standard",
+                  "object": "plate_1",
+                  "op": "cover"
+                },
+                {
+                  "lid": "standard",
+                  "object": "plate_2",
+                  "op": "cover"
+                }
+              ]
+            }
+
+
+        Parameters
+        ----------
+        from_dict: dict
+            Dictionary defining the initial time constraint condition.
+            Composed of keys: "mark" and "state"
+            "mark": int or Container
+                instruction index of container
+            "state": "start" or "end"
+                specifies either the start or end of the "mark" point
+        to_dict: dict
+            Dictionary defining the end time constraint condition.
+            Specified in the same format as from_dict
+        time_between : str, Unit
+            max time between from_dict and to_dict
+        mirror: bool, optional
+            choice to mirror the from and to positions when time constraints should be added in both directions
+
+        Raises
+        ------
+        ValueError
+            If an instruction mark is less than 0
+        TypeError
+            If mark is not container or integer
+        TypeError
+            If state not in ['start', 'end']
+        KeyError
+            If to_dict or from_dict does not contain 'mark'
+        KeyError
+            If to_dict or from_dict does not contain 'state'
+        ValueError
+            If time is less than '0:second'
+        RuntimeError
+            If from_dict and to_dict are equal
+        RuntimeError
+            If from_dict["marker"] and to_dict["marker"] are equal and from_dict["state"] = "end"
+        """
+
+        inst_string = 'instruction_'
+        cont_string = 'ref_'
+
+        state_strings = ['start', 'end']
+
+        time_const = {}
+
+        keys = []
+
+        time_between = Unit(time_between)
+
+        for m in [from_dict, to_dict]:
+            if "mark" in m:
+                if isinstance(m["mark"], Container):
+                    k = cont_string
+                elif isinstance(m["mark"], int):
+                    k = inst_string
+                    if m["mark"] < 0:
+                        raise ValueError("The instruction 'mark' in %s must be greater than and equal to 0" % m)
+                else:
+                    raise TypeError("The 'mark' in %s must be Container or Integer" % m)
+            else:
+                raise KeyError("The %s dict must contain `mark`" % m)
+
+            if "state" in m:
+                if m["state"] in state_strings:
+                    k += m["state"]
+                else:
+                    raise TypeError("The 'state' in %s must be in %s" % (m, ", ".join(state_strings)))
+            else:
+                raise KeyError("The %s dict must contain 'state'" % m)
+
+            keys.append(k)
+
+        if time_between < Unit(0, 'second'):
+            raise ValueError("The 'time_between': %s cannot be less than '0:second'" % time_between)
+
+        if from_dict["mark"] == to_dict["mark"]:
+            if from_dict["state"] == to_dict["state"]:
+                raise RuntimeError("The from_dict: %s and to_dict: %s are the same" % (from_dict, to_dict))
+            if from_dict["state"] == "end":
+                raise RuntimeError("The from_dict: %s cannot come before the to_dict %s" % (from_dict, to_dict))
+
+        time_const["from"] = {keys[0]: from_dict["mark"]}
+        time_const["to"] = {keys[1]: to_dict["mark"]}
+        time_const["less_than"] = time_between
+
+        setattr(self, "time_constraints", (getattr(self, "time_constraints", []) + [time_const]))
+
+        if mirror:
+            self.add_time_constraint(to_dict, from_dict, time_between, mirror=False)
+
+    def get_instruction_index(self):
+        """
+        Get index of the last appended instruction
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+
+            p.cover(plate_1)
+            time_point_1 = p.get_instruction_index()  # time_point_1 = 0
+
+        Raises
+        ------
+        ValueError
+            If an instruction index is less than 0
+        Returns
+        -------
+        int
+            Index of the preceding instruction
+        """
+        instruction_index = len(self.instructions) - 1
+        if instruction_index < 0:
+            raise ValueError("Instruction index less than 0")
+        return instruction_index
+
     def append(self, instructions):
         """
         Append instruction(s) to the list of Instruction objects associated
@@ -349,8 +554,8 @@ class Protocol(object):
         Returns
         -------
         dict
-            dict with keys "refs" and "instructions", each of which contain
-            the "refified" contents of their corresponding Protocol attribute.
+            dict with keys "refs" and "instructions" and optionally "time_constraints" and "outs",
+            each of which contain the "refified" contents of their corresponding Protocol attribute.
 
         """
         outs = {}
@@ -376,26 +581,14 @@ class Protocol(object):
                 del ref.opts["discard"]
 
         if outs:
-            return {
-                "refs": dict(
-                    (key, value.opts)
-                    for key, value in self.refs.items()
-                ),
-                "instructions": list(map(lambda x: self._refify(x.data),
-                                         self.instructions)),
-                "outs": outs
-            }
+            setattr(self, "outs", outs)
 
-        else:
+        prop_list = [a for a in dir(self) if not a.startswith('__') and not callable(getattr(self, a))]
 
-            return {
-                "refs": dict(
-                    (key, value.opts)
-                    for key, value in self.refs.items()
-                ),
-                "instructions": list(map(lambda x: self._refify(x.data),
-                                         self.instructions))
-            }
+        explicit_props = ["outs", "refs", "instructions", "time_constraints"]
+
+        return {attr: self._refify(getattr(self, attr)) for attr in prop_list if attr in explicit_props}
+
 
     def store(self, container, condition):
         """
@@ -4800,6 +4993,19 @@ class Protocol(object):
         return num_containers
 
     def _refify(self, op_data):
+        """
+        Unpacks protocol objects into Autoprotocol compliant ones
+
+        Used by as_dict().
+        Parameters
+        ----------
+        op_data: any protocol object
+
+        Returns
+        -------
+        Autoprotocol compliant objects
+
+        """
         if type(op_data) is dict:
             return {k: self._refify(v) for k, v in op_data.items()}
         elif type(op_data) is list:
@@ -4812,6 +5018,10 @@ class Protocol(object):
             return self._ref_for_container(op_data)
         elif isinstance(op_data, Unit):
             return str(op_data)
+        elif isinstance(op_data, Instruction):
+            return self._refify(op_data.data)
+        elif isinstance(op_data, Ref):
+            return op_data.opts
         else:
             return op_data
 

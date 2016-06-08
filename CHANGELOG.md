@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v3.6.0 - 2015-06-07
+---
+Added
 - Time constraints
 
 Changed

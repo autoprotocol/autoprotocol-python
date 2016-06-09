@@ -2231,7 +2231,7 @@ class Protocol(object):
                 maxContainers = 2
             else:
                 maxTransfers = 8
-                maxContainers = 3
+                maxContainers = 2
             if new_group:
                 self.instructions.append(Stamp([trans]))
             elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
@@ -2257,7 +2257,7 @@ class Protocol(object):
                     maxContainers = 2
                 else:
                     maxTransfers = 8
-                    maxContainers = 3
+                    maxContainers = 2
                 if new_group:
                     self.instructions.append(Stamp([trans]))
                 elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):

@@ -729,6 +729,33 @@ class StampTestCase(unittest.TestCase):
                 "31:microliter")
         self.assertEqual(len(p.instructions), 3)
 
+        # Test: Check on max transfer limit - Row-wise
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                           discard=True) for x in range(3)]
+        # Mixture of columns
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=3, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=4, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+        # Maximum number of row transfers
+        for i in range(8):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[0].groups), 3)
+        self.assertEqual(len(p.instructions[1].groups), 8)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 3)
+        p.stamp(plateList[0].well("A1"), plateList[2].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 4)
+
     def test_one_tip(self):
 
         p = Protocol()

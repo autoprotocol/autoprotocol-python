@@ -11,6 +11,7 @@ Changed
 Removed
 
 Fixed
+- Stamp separates row stamps with more than 2 containers
 
 ## v3.6.0 - 2015-06-07
 ---

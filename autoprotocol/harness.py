@@ -3,7 +3,6 @@ import json
 import io
 from .protocol import Protocol
 from .unit import Unit, UnitError
-from .container_type import _CONTAINER_TYPES
 from .container import WellGroup, SEAL_TYPES, COVER_TYPES
 from . import UserError
 import argparse
@@ -439,70 +438,73 @@ def seal_on_store(protocol):
     given container were present in a protocol, cover type applied defaults first to
     "seal" if its within the capabilities of the container type, otherwise
     to "cover".
-    Example:
 
-    .. code-block:: python
-        def dostuff(p, params):
-        cont = params['container']
-        p.transfer(cont.well(0), cont.well(1), "3:microliter")
-        p.seal(cont)
-        p.unseal(cont)
-        p.cover(cont)
-        p.uncover(cont)
+    Example Usage:
+
+        .. code-block:: python
+
+            def example_method(protocol, params):
+            cont = params['container']
+            p.transfer(cont.well("A1"), cont.well("A2"), "10:microliter")
+            p.seal(cont)
+            p.unseal(cont)
+            p.cover(cont)
+            p.uncover(cont)
 
     Autoprotocol output
 
-    .. code-block:: json
-        {
-          "refs": {
-            "plate": {
-              "new": "96-pcr",
-              "cover": "standard",
-              "store": {
-                "where": "ambient"
-              }
-            }
-          },
-          "instructions": [
+        .. code-block:: json
             {
-              "groups": [
-                {
-                  "transfer": [
-                    {
-                      "volume": "3.0:microliter",
-                      "to": "plate/1",
-                      "from": "plate/0"
-                    }
-                  ]
+              "refs": {
+                "plate": {
+                  "new": "96-pcr",
+                  "cover": "standard",
+                  "store": {
+                    "where": "ambient"
+                  }
                 }
-              ],
-              "op": "pipette"
-            },
-            {
-              "object": "plate",
-              "type": "ultra-clear",
-              "op": "seal"
-            },
-            {
-              "object": "plate",
-              "op": "unseal"
-            },
-            {
-              "lid": "standard",
-              "object": "plate",
-              "op": "cover"
-            },
-            {
-              "object": "plate",
-              "op": "uncover"
-            },
-            {
-              "lid": "standard",
-              "object": "plate",
-              "op": "cover"
+              },
+              "instructions": [
+                {
+                  "groups": [
+                    {
+                      "transfer": [
+                        {
+                          "volume": "10.0:microliter",
+                          "to": "plate/1",
+                          "from": "plate/0"
+                        }
+                      ]
+                    }
+                  ],
+                  "op": "pipette"
+                },
+                {
+                  "object": "plate",
+                  "type": "ultra-clear",
+                  "op": "seal"
+                },
+                {
+                  "object": "plate",
+                  "op": "unseal"
+                },
+                {
+                  "lid": "standard",
+                  "object": "plate",
+                  "op": "cover"
+                },
+                {
+                  "object": "plate",
+                  "op": "uncover"
+                },
+                {
+                  "lid": "standard",
+                  "object": "plate",
+                  "op": "cover"
+                }
+              ]
             }
-          ]
-        }
+
     '''
     for name, ref in protocol.refs.items():
         cover = None

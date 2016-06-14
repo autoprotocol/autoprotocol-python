@@ -1,0 +1,23 @@
+<snippet>
+	<content><![CDATA[
+{
+  "type": "group",
+  "description": "${1:...}",
+  "label": "${2:...}",
+  "inputs": {
+    "${3:input1_name}":
+      ${4:"input1_type",
+      },
+    "${5:input2_name}":
+      ${6: "new_input_type",
+    }
+  }
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>another_group</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+</snippet>
+
+

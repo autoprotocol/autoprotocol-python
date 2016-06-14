@@ -1,0 +1,18 @@
+<snippet>
+	<content><![CDATA[
+{
+  "label": "${1:...}",
+  "description": "${2:...}",
+  "default": [
+    ${3:"call another_thermo for cycle"}
+    ${4:"call another_thermo for cycle"}
+  ]
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>thermocycle</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+</snippet>
+
+

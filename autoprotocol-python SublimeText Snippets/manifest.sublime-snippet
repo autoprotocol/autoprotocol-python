@@ -1,0 +1,35 @@
+<snippet>
+	<content><![CDATA[
+{
+  "format": "python",
+  "license": "MIT",
+  "protocols": [
+    {
+      "name": "${1:NAME}",
+      "version": "1.0.0",
+      "display_name": "${2:DISPLAY NAME}", 
+      "description": "${3:This is a sample description.}",
+      "command_string": "python ${4:sample5.py}",
+      "inputs": {
+        "${5:input_name}":
+          ${6:input_type,
+        },
+        "${7:input2_name}":
+          ${8: input2_type,
+        }
+      },
+      "preview": {
+        "refs":{},
+        "parameters": {}
+      }
+    }
+  ]
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>manifest</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+</snippet>
+
+

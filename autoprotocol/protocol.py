@@ -2543,9 +2543,9 @@ class Protocol(object):
         type : str
           Type of sequencing reaction to take place ("standard" or "rca"),
           defaults to "standard"
-        wells : list of str
-          Well indices of the container that contain appropriate materials to
-          be sent for sequencing.
+        wells : list, WellGroup, Well
+            WellGroup of wells to be measured or a list of well references in
+            the form of ["A1", "B1", "C5", ...]
         primer : container
           Tube containing sufficient primer for all RCA reactions.  This field
           will be ignored if you specify the sequencing type as "standard".
@@ -2558,6 +2558,10 @@ class Protocol(object):
         if type == "rca" and not primer:
             raise RuntimeError("You must specify the location of primer for "
                                "RCA sequencing reactions.")
+
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
+
         if isinstance(wells, WellGroup):
             container = set([w.container for w in wells])
             if len(container) > 1:
@@ -2566,8 +2570,8 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. SangerSeq wells accepts either a "
-                             "WellGroup or well indices")
+            raise ValueError("Unknown input. SangerSeq wells accepts either a Well, a "
+                             "WellGroup, or well indices")
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
@@ -3369,8 +3373,17 @@ class Protocol(object):
         """
         if isinstance(wells, Well):
             wells = WellGroup(wells)
+
         if isinstance(wells, WellGroup):
-            wells = wells.indices()
+            container = set([w.container for w in wells])
+            if len(container) > 1:
+                raise ValueError(
+                    "All wells need to be on one container for Absorbance")
+            wells = [str(w.index) for w in wells]
+
+        if not isinstance(wells, list):
+            raise ValueError("Unknown input. Absorbance wells accepts either a Well, "
+                             "a WellGroup, or well indices")
 
         if incubate_before:
             check_valid_incubate_params(incubate_before)
@@ -3465,8 +3478,18 @@ class Protocol(object):
         """
         if isinstance(wells, Well):
             wells = WellGroup(wells)
+
         if isinstance(wells, WellGroup):
-            wells = wells.indices()
+            container = set([w.container for w in wells])
+            if len(container) > 1:
+                raise ValueError(
+                    "All wells need to be on one container for Fluorescence")
+            wells = [str(w.index) for w in wells]
+
+        if not isinstance(wells, list):
+            raise ValueError("Unknown input. Fluorescence wells accepts either a Well, "
+                             "a WellGroup, or well indices")
+
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError("fluoresence gain set to %s must be between "
                              "0 and 1, inclusive" % gain)
@@ -3527,7 +3550,8 @@ class Protocol(object):
         ref : str, Container
             Container to plate read.
         wells : list, WellGroup, Well
-            WellGroup or list of wells to be measured
+            WellGroup of wells to be measured or a list of well references in
+            the form of ["A1", "B1", "C5", ...]
         dataref : str
             Name of this dataset of measured luminescence readings.
         temperature: str, Unit, optional
@@ -3549,8 +3573,15 @@ class Protocol(object):
         if isinstance(wells, Well):
             wells = WellGroup(wells)
         if isinstance(wells, WellGroup):
-            wells = wells.indices()
+            container = set([w.container for w in wells])
+            if len(container) > 1:
+                raise ValueError(
+                    "All wells need to be on one container for Luminescence")
+            wells = [str(w.index) for w in wells]
 
+        if not isinstance(wells, list):
+            raise ValueError("Unknown input. Luminescence wells accepts either a Well, "
+                             "a WellGroup or well indices")
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 
@@ -5241,7 +5272,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : list, WellGroup
+        wells : list, WellGroup, Well
             WellGroup of wells to be measured
         volume : str, Unit
             Volume of sample required for analysis
@@ -5252,6 +5283,16 @@ class Protocol(object):
             "protein"].
 
         """
+        if isinstance(wells, Well):
+          wells = WellGroup(wells)
+
+        if not isinstance(wells, (WellGroup, list)):
+          raise TypeError("Only Well, WellGroup, or list of Well allowed")
+
+        if isinstance(wells, list):
+          for well in wells:
+            if not isinstance(well, Well):
+              raise TypeError("Only list of Well allowed")
 
         self.instructions.append(MeasureConcentration(wells, volume, dataref,
                                                       measurement))
@@ -5361,7 +5402,15 @@ class Protocol(object):
             Name of this specific dataset of measurements
 
         """
+        if isinstance(wells, Well):
+          wells = WellGroup(wells)
 
-        wells = WellGroup(wells)
+        if not isinstance(wells, (WellGroup, list)):
+          raise TypeError("Only Well, WellGroup, or list of Well allowed")
+
+        if isinstance(wells, list):
+          for well in wells:
+            if not isinstance(well, Well):
+              raise TypeError("Only list of Well allowed")
 
         self.instructions.append(MeasureVolume(wells, dataref))

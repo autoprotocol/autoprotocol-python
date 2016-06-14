@@ -399,9 +399,11 @@ class Protocol(object):
                 elif isinstance(m["mark"], int):
                     k = inst_string
                     if m["mark"] < 0:
-                        raise ValueError("The instruction 'mark' in %s must be greater than and equal to 0" % m)
+                        raise ValueError(
+                            "The instruction 'mark' in %s must be greater than and equal to 0" % m)
                 else:
-                    raise TypeError("The 'mark' in %s must be Container or Integer" % m)
+                    raise TypeError(
+                        "The 'mark' in %s must be Container or Integer" % m)
             else:
                 raise KeyError("The %s dict must contain `mark`" % m)
 
@@ -409,29 +411,35 @@ class Protocol(object):
                 if m["state"] in state_strings:
                     k += m["state"]
                 else:
-                    raise TypeError("The 'state' in %s must be in %s" % (m, ", ".join(state_strings)))
+                    raise TypeError("The 'state' in %s must be in %s" %
+                                    (m, ", ".join(state_strings)))
             else:
                 raise KeyError("The %s dict must contain 'state'" % m)
 
             keys.append(k)
 
         if time_between < Unit(0, 'second'):
-            raise ValueError("The 'time_between': %s cannot be less than '0:second'" % time_between)
+            raise ValueError(
+                "The 'time_between': %s cannot be less than '0:second'" % time_between)
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
-                raise RuntimeError("The from_dict: %s and to_dict: %s are the same" % (from_dict, to_dict))
+                raise RuntimeError(
+                    "The from_dict: %s and to_dict: %s are the same" % (from_dict, to_dict))
             if from_dict["state"] == "end":
-                raise RuntimeError("The from_dict: %s cannot come before the to_dict %s" % (from_dict, to_dict))
+                raise RuntimeError(
+                    "The from_dict: %s cannot come before the to_dict %s" % (from_dict, to_dict))
 
         time_const["from"] = {keys[0]: from_dict["mark"]}
         time_const["to"] = {keys[1]: to_dict["mark"]}
         time_const["less_than"] = time_between
 
-        setattr(self, "time_constraints", (getattr(self, "time_constraints", []) + [time_const]))
+        setattr(self, "time_constraints", (getattr(
+            self, "time_constraints", []) + [time_const]))
 
         if mirror:
-            self.add_time_constraint(to_dict, from_dict, time_between, mirror=False)
+            self.add_time_constraint(
+                to_dict, from_dict, time_between, mirror=False)
 
     def get_instruction_index(self):
         """
@@ -580,7 +588,8 @@ class Protocol(object):
         if outs:
             setattr(self, "outs", outs)
 
-        prop_list = [a for a in dir(self) if not a.startswith('__') and not callable(getattr(self, a))]
+        prop_list = [a for a in dir(self) if not a.startswith(
+            '__') and not callable(getattr(self, a))]
 
         explicit_props = ["outs", "refs", "instructions", "time_constraints"]
 
@@ -808,7 +817,8 @@ class Protocol(object):
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
             self._remove_cover(d["from"].container, "pipette from")
-            [self._remove_cover(t['well'].container, "pipette to") for t in d['to']]
+            [self._remove_cover(t['well'].container, "pipette to")
+             for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -1101,7 +1111,7 @@ class Protocol(object):
                         xfer["mix_before"] = {
                             "volume": mix_kwargs.get(
                                 "mix_vol_b") or mix_kwargs.get(
-                                "mix_vol") or v/2,
+                                "mix_vol") or v / 2,
                             "repetitions": mix_kwargs.get(
                                 "repetitions_b") or mix_kwargs.get(
                                 "repetitions") or 10,
@@ -1113,7 +1123,7 @@ class Protocol(object):
                         xfer["mix_after"] = {
                             "volume":  mix_kwargs.get(
                                 "mix_vol_a") or mix_kwargs.get(
-                                "mix_vol") or v/2,
+                                "mix_vol") or v / 2,
                             "repetitions": mix_kwargs.get(
                                 "repetitions_a") or mix_kwargs.get(
                                 "repetitions") or 10,
@@ -1160,13 +1170,13 @@ class Protocol(object):
                                    " mix_after=True.")
             if mix_kwargs.get("mix_before"):
                 xfer["mix_before"] = {
-                    "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v/2,
+                    "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v / 2,
                     "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
                     "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
             if mix_kwargs.get("mix_after"):
                 xfer["mix_after"] = {
-                    "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v/2,
+                    "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v / 2,
                     "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
                     "speed": mix_kwargs.get("flowrate_a") or mix_kwargs.get("flowrate") or "100:microliter/second"
                 }
@@ -1469,7 +1479,7 @@ class Protocol(object):
                                "volume in the form of a list.")
         vol_errors = []
         for vol_d in volume:
-            if not (vol_d/droplet_size)._magnitude.is_integer():
+            if not (vol_d / droplet_size)._magnitude.is_integer():
                 vol_errors.append(vol_d)
         if len(vol_errors) > 0:
             raise RuntimeError("Transfer volume has to be a multiple of "
@@ -1510,7 +1520,7 @@ class Protocol(object):
                             else:
                                 sources.append(s)
                                 destinations.append(d)
-                                vol = int(vol/droplet_size) * droplet_size
+                                vol = int(vol / droplet_size) * droplet_size
                                 volumes.append(vol)
                                 vol_d -= vol
                                 vol_d._magnitude = round(
@@ -1907,13 +1917,13 @@ class Protocol(object):
                     if w.container.container_type.col_count == 24:
                         if columnWise:
                             source_wells = [w.container.wells_from(
-                                w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                w, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                         else:
                             source_wells = [w.container.wells_from(
-                                w, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                w, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
                     else:
                         source_wells = w.container.wells_from(
-                            w, c*r, columnWise)
+                            w, c * r, columnWise)
                     if not all([s.volume >= w.volume for s in source_wells]):
                         raise RuntimeError("Each well in a shape must have "
                                            "the same or greater volume as the "
@@ -2037,8 +2047,8 @@ class Protocol(object):
 
                     # Logic for splitting volume in half once less than
                     # 2*max_tip_volum
-                    if diff < max_tip_vol*2:
-                        diff = diff/2
+                    if diff < max_tip_vol * 2:
+                        diff = diff / 2
                         v = diff
 
                         xfer = {
@@ -2054,23 +2064,23 @@ class Protocol(object):
                         if d.container.container_type.col_count == 24:
                             if columnWise:
                                 dest_wells = [d.container.wells_from(
-                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                             else:
                                 dest_wells = [d.container.wells_from(
-                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
                         else:
                             dest_wells = d.container.wells_from(
-                                d, c*r, columnWise)
+                                d, c * r, columnWise)
                         if s.container.container_type.col_count == 24:
                             if columnWise:
                                 source_wells = [s.container.wells_from(
-                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                             else:
                                 source_wells = [s.container.wells_from(
-                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
                         else:
                             source_wells = s.container.wells_from(
-                                s, c*r, columnWise)
+                                s, c * r, columnWise)
                         for well in source_wells:
                             if well.volume:
                                 well.volume -= v
@@ -2127,23 +2137,23 @@ class Protocol(object):
                         if d.container.container_type.col_count == 24:
                             if columnWise:
                                 dest_wells = [d.container.wells_from(
-                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                             else:
                                 dest_wells = [d.container.wells_from(
-                                    d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
                         else:
                             dest_wells = d.container.wells_from(
-                                d, c*r, columnWise)
+                                d, c * r, columnWise)
                         if s.container.container_type.col_count == 24:
                             if columnWise:
                                 source_wells = [s.container.wells_from(
-                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                             else:
                                 source_wells = [s.container.wells_from(
-                                    s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
                         else:
                             source_wells = s.container.wells_from(
-                                s, c*r, columnWise)
+                                s, c * r, columnWise)
                         for well in source_wells:
                             if well.volume:
                                 well.volume -= v
@@ -2197,21 +2207,21 @@ class Protocol(object):
             if d.container.container_type.col_count == 24:
                 if columnWise:
                     dest_wells = [d.container.wells_from(
-                        d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                        d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                 else:
                     dest_wells = [d.container.wells_from(
-                        d, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
             else:
-                dest_wells = d.container.wells_from(d, c*r, columnWise)
+                dest_wells = d.container.wells_from(d, c * r, columnWise)
             if s.container.container_type.col_count == 24:
                 if columnWise:
                     source_wells = [s.container.wells_from(
-                        s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//16) % 2 == 0]
+                        s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
                 else:
                     source_wells = [s.container.wells_from(
-                        s, c*r*4, columnWise)[x] for x in range(c*r*4) if (x % 2) == (x//24) % 2 == 0]
+                        s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
             else:
-                source_wells = s.container.wells_from(s, c*r, columnWise)
+                source_wells = s.container.wells_from(s, c * r, columnWise)
             for well in source_wells:
                 if well.volume:
                     well.volume -= v
@@ -2423,7 +2433,8 @@ class Protocol(object):
         """
 
         valid_flowcells = ["PE", "SR"]
-        #  currently available sequencers, modes and max number of lanes and cycles
+        # currently available sequencers, modes and max number of lanes and
+        # cycles
         valid_sequencers = {
             "miseq": {
                 "max_lanes": 1,
@@ -2453,11 +2464,13 @@ class Protocol(object):
             raise ValueError("Illumina sequencer must be one of: {}."
                              "".format(', '.join(valid_sequencers.keys())))
         if not isinstance(lanes, list):
-            raise TypeError("Illumina sequencing lanes must be a list of dicts")
+            raise TypeError(
+                "Illumina sequencing lanes must be a list of dicts")
 
         for l in lanes:
             if not isinstance(l, dict):
-                raise TypeError("Illumina sequencing lanes must be a list of dicts")
+                raise TypeError(
+                    "Illumina sequencing lanes must be a list of dicts")
             if not all(k in l.keys() for k in ["object", "library_concentration"]):
                 raise TypeError("Each Illumina sequencing lane must contain an "
                                 "'object' and a 'library_concentration'")
@@ -2472,13 +2485,15 @@ class Protocol(object):
                              "lane(s).  You specified {}. Please submit "
                              "additional Illumina Sequencing instructions."
                              "".format(sequencer,
-                                       valid_sequencers[sequencer]["max_lanes"],
+                                       valid_sequencers[
+                                           sequencer]["max_lanes"],
                                        len(lanes)))
         if mode not in valid_sequencers[sequencer]["modes"]:
             raise ValueError("The type of sequencer selected ({}) has valid"
                              " modes: {}.You specified: {}."
                              "".format(sequencer,
-                                       ', '.join(valid_sequencers[sequencer]["modes"]),
+                                       ', '.join(valid_sequencers[
+                                                 sequencer]["modes"]),
                                        mode)
                              )
         if index not in valid_indices:
@@ -2487,15 +2502,18 @@ class Protocol(object):
         if not isinstance(dataref, str):
             raise TypeError("dataref: %s, must be a string" % dataref)
         if not isinstance(library_size, int):
-            raise TypeError("library_size: %s, must be an integer." % library_size)
+            raise TypeError(
+                "library_size: %s, must be an integer." % library_size)
 
         if cycles:
             if not isinstance(cycles, dict):
                 raise TypeError("Cycles must be a dict.")
             if not all(c in valid_cycles for c in cycles.keys()):
-                raise KeyError("Valid cycle parameters are: {}".format(', '.join(valid_cycles)))
+                raise KeyError("Valid cycle parameters are: {}".format(
+                    ', '.join(valid_cycles)))
             if "read_1" not in cycles.keys():
-                raise ValueError("If specifying cycles, 'read_1' must be designated.")
+                raise ValueError(
+                    "If specifying cycles, 'read_1' must be designated.")
             if flowcell == "SR" and "read_2" in cycles.keys():
                 raise RuntimeError("SR does not have a second read: 'read_2'.")
             if not all(isinstance(i, int) for i in cycles.values()):
@@ -2554,7 +2572,7 @@ class Protocol(object):
                     "A4",
                     "A5"
                   ],
-                  "op": "sangerseq"
+                  "op": "sanger_sequence"
                 }
               ]
 
@@ -2993,7 +3011,8 @@ class Protocol(object):
 
         if spin_direction is not None:
             if not isinstance(spin_direction, list):
-                raise TypeError("Spin directions must be in the form of a list.")
+                raise TypeError(
+                    "Spin directions must be in the form of a list.")
             if len(spin_direction) is 0:
                 raise ValueError("Spin direction must be a list containing at "
                                  "least one spin direction ('cw', 'ccw')")
@@ -3011,7 +3030,8 @@ class Protocol(object):
 
         if not ref.container_type.is_tube:
             self._add_cover(ref, "spin")
-        self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
+        self.instructions.append(
+            Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
     def thermocycle(self, ref, groups,
                     volume="10:microliter",
@@ -3703,7 +3723,7 @@ class Protocol(object):
         if len(wells) > max_well:
             datarefs = 1
             for x in xrange(0, len(wells), max_well):
-                self.gel_separate(wells[x:x+max_well], volume, matrix, ladder,
+                self.gel_separate(wells[x:x + max_well], volume, matrix, ladder,
                                   duration, "%s_%d" % (dataref, datarefs))
                 datarefs += 1
         else:
@@ -3770,7 +3790,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        extracts: List of dicts
+        extracts: List of dicts       
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
@@ -3868,7 +3888,8 @@ class Protocol(object):
 
         volume = Unit(volume)
         if volume <= Unit("0:microliter"):
-            raise ValueError("Volume: %s, must be greater than 0:microliter" % volume)
+            raise ValueError(
+                "Volume: %s, must be greater than 0:microliter" % volume)
 
         if not isinstance(ladder, str):
             raise TypeError("Ladder: %s, must be a string" % ladder)
@@ -3887,11 +3908,13 @@ class Protocol(object):
 
         if None in gel_set:
             if any(gel_set):
-                raise RuntimeError("If one extract has gel set, all extracts must have gel set")
+                raise RuntimeError(
+                    "If one extract has gel set, all extracts must have gel set")
             else:
                 if None in lane_set:
                     if any(lane_set):
-                        raise RuntimeError("If one extract has lane set, all extracts must have lane set")
+                        raise RuntimeError(
+                            "If one extract has lane set, all extracts must have lane set")
                     else:
                         for i, e in enumerate(extracts):
                             e["gel"] = i // max_well
@@ -3901,25 +3924,29 @@ class Protocol(object):
                         e["gel"] = 0
 
         sort_key = itemgetter("gel")
-        parsed_extracts = [list(grp) for key, grp in groupby(sorted(extracts, key=sort_key), key=sort_key)]
+        parsed_extracts = [list(grp) for key, grp in groupby(
+            sorted(extracts, key=sort_key), key=sort_key)]
 
         for pe in parsed_extracts:
 
             lane_set = [e["lane"] for e in pe]
 
             if len(lane_set) > max_well:
-                raise RuntimeError("The gel is not large enough to accomodate all lanes: gel has %s wells, %s lanes specified" % (max_well, len(lane_set)))
+                raise RuntimeError("The gel is not large enough to accomodate all lanes: gel has %s wells, %s lanes specified" % (
+                    max_well, len(lane_set)))
 
             if None in lane_set:
                 if any(lane_set):
-                    raise RuntimeError("If one extract has lane set, all extracts must have lane set")
+                    raise RuntimeError(
+                        "If one extract has lane set, all extracts must have lane set")
                 else:
                     for i, e in enumerate(pe):
                         e["lane"] = i % max_well
                     lane_set = [e["lane"] for e in pe]
 
             if sorted(lane_set) != list(range(0, max(lane_set) + 1)):
-                raise RuntimeError("Lanes must be contiguous, unique, and start from 0")
+                raise RuntimeError(
+                    "Lanes must be contiguous, unique, and start from 0")
 
             if len(parsed_extracts) > 1:
                 dataref_gel = "%s_%s" % (dataref, pe[0]["gel"])
@@ -3937,7 +3964,8 @@ class Protocol(object):
                     ext["lane"] = e["lane"]
                     pe_unpacked.append(ext)
 
-            self.instructions.append(GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
+            self.instructions.append(
+                GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
 
     def seal(self, ref, type=None):
         """
@@ -4179,7 +4207,7 @@ class Protocol(object):
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
         """
-        Perform flow cytometry.The instruction will be executed within the
+        Perform flow cytometry. The instruction will be executed within the
         voltage range specified for each channel, optimized for the best sample
         separation/distribution that can be achieved within these limits. The
         vendor will specify the device that this instruction is executed on and
@@ -4201,8 +4229,63 @@ class Protocol(object):
 
         Example Usage:
 
+        .. code-block:: python
+
+            p = Protocol()
+            dataref = "test_ref" 
+            FSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
+                   "area": True, "height": True, "weight": False}
+            SSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
+                   "area": True, "height": True, "weight": False}
+            neg_controls = {"well": "well0", "volume": "100:microliter",
+                            "captured_events": 5, "channel": "channel0"}
+            samples = [
+                {"well": "well0", "volume": "100:microliter", "captured_events": 9}]
+
+            p.flow_analyze(dataref, FSC, SSC, neg_controls,
+                           samples, colors=None, pos_controls=None)
+
 
         Autoprotocol Output:
+        .. code-block:: json
+
+            {
+              "channels": {
+                "FSC": {
+                  "voltage_range": {
+                    "high": "280:volt",
+                    "low": "230:volt"
+                  },
+                  "area": true,
+                  "height": true,
+                  "weight": false
+                },
+                "SSC": {
+                  "voltage_range": {
+                    "high": "280:volt",
+                    "low": "230:volt"
+                  },
+                  "area": true,
+                  "height": true,
+                  "weight": false
+                }
+              },
+              "op": "flow_analyze",
+              "negative_controls": {
+                "channel": "channel0",
+                "well": "well0",
+                "volume": "100:microliter",
+                "captured_events": 5
+              },
+              "dataref": "test_ref",
+              "samples": [
+                {
+                  "well": "well0",
+                  "volume": "100:microliter",
+                  "captured_events": 9
+                }
+              ]
+            }
 
         Parameters
         ----------
@@ -4231,7 +4314,7 @@ class Protocol(object):
                 {
                   "voltage_range": {
                     "low": <voltage>,
-                    "high": <voltage>"
+                    "high": <voltage>"       
                     },
                   "area": true,             //default: true
                   "height": true,           //default: false
@@ -4259,7 +4342,7 @@ class Protocol(object):
                 {
                     "well": well,
                     "volume": volume,
-                    "captured_events": integer,     // optional, default infinity
+                    "captured_events": integer     // optional, default infinity
                 }
 
             at least one sample is required
@@ -5103,7 +5186,7 @@ class Protocol(object):
                                    " destination wells")
             volume = [Unit.fromstring(x) for x in volume]
         else:
-            volume = [Unit.fromstring(volume)]*len(dst_group.wells)
+            volume = [Unit.fromstring(volume)] * len(dst_group.wells)
         for d, v in list(zip(dst_group.wells, volume)):
             v = v.to("ul")
             if len(distributes) == 0 or src.volume < v:
@@ -5159,7 +5242,7 @@ class Protocol(object):
         if (container.is_covered() or container.is_sealed()):
             return
         elif "cover" in container.container_type.capabilities:
-                self.cover(container, container.container_type.cover_types[0])
+            self.cover(container, container.container_type.cover_types[0])
         elif "seal" in container.container_type.capabilities:
             self.seal(container, container.container_type.seal_types[0])
         else:
@@ -5215,7 +5298,8 @@ class Protocol(object):
 
         num_groups = len(self.instructions[-1].groups)
 
-        containers = [list(g.values())[0]["object"] for group in self.instructions[-1].groups for g in group]
+        containers = [list(g.values())[0]["object"]
+                      for group in self.instructions[-1].groups for g in group]
         containers.append(mag["object"])
         containers = list(set(containers))
         num_containers = len(containers)

@@ -1,7 +1,7 @@
 import unittest
 from autoprotocol.container import Container, WellGroup
 from autoprotocol.instruction import Thermocycle, Incubate, Spin
-from autoprotocol.pipette_tools import * # flake8: noqa
+from autoprotocol.pipette_tools import *  # flake8: noqa
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit
 
@@ -610,13 +610,13 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Ensure individual transfers are appended one at a time
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
 
         for i in range(maxFullTransfers):
             p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                     "10:microliter")
-            self.assertEqual(i+1, len(p.instructions[0].groups))
+            self.assertEqual(i + 1, len(p.instructions[0].groups))
 
         # Ensure new stamp operation overflows into new instruction
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
@@ -627,21 +627,21 @@ class StampTestCase(unittest.TestCase):
         # Test: Maximum number of containers on a deck
         maxContainers = 3
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
-                           discard=True) for x in range(maxContainers+1)]
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
+                           discard=True) for x in range(maxContainers + 1)]
 
-        for i in range(maxContainers-1):
-            p.stamp(plateList[i], plateList[i+1], "10:microliter")
+        for i in range(maxContainers - 1):
+            p.stamp(plateList[i], plateList[i + 1], "10:microliter")
         self.assertEqual(1, len(p.instructions))
-        self.assertEqual(maxContainers-1, len(p.instructions[0].groups))
+        self.assertEqual(maxContainers - 1, len(p.instructions[0].groups))
 
-        p.stamp(plateList[maxContainers-1].well("A1"),
+        p.stamp(plateList[maxContainers - 1].well("A1"),
                 plateList[maxContainers].well("A1"), "10:microliter")
         self.assertEqual(2, len(p.instructions))
 
         # Test: Ensure col/row/full plate stamps are in separate instructions
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
 
         p.stamp(plateList[0].well("G1"), plateList[1].well("G1"),
@@ -668,7 +668,7 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Check on max transfer limit - Full plate
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
 
         for i in range(maxFullTransfers):
@@ -684,7 +684,7 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Check on max transfer limit - Row-wise
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
         # Mixture of rows
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
@@ -710,7 +710,7 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Check on max transfer limit - Col-wise
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
         # Mixture of columns
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
@@ -734,7 +734,7 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Check on switching between tip volume types
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(2)]
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
                 "31:microliter")
@@ -758,7 +758,7 @@ class StampTestCase(unittest.TestCase):
 
         # Test: Check on max transfer limit - Row-wise
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
                            discard=True) for x in range(3)]
         # Mixture of columns
         p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
@@ -788,7 +788,7 @@ class StampTestCase(unittest.TestCase):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_384" % str(
-            x+1), None, "384-flat", discard=True) for x in range(plateCount)]
+            x + 1), None, "384-flat", discard=True) for x in range(plateCount)]
         p.stamp(plateList[0], plateList[1], "330:microliter", one_tip=True)
         self.assertEqual(len(p.instructions[0].groups[0]["transfer"]), 12)
         self.assertEqual(len(p.instructions[0].groups), 1)
@@ -798,7 +798,7 @@ class StampTestCase(unittest.TestCase):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_384" % str(
-            x+1), None, "384-flat", discard=True) for x in range(plateCount)]
+            x + 1), None, "384-flat", discard=True) for x in range(plateCount)]
         with self.assertRaises(RuntimeError):
             p.stamp(WellGroup([plateList[0].well(0), plateList[0].well(1)]), WellGroup([plateList[
                     1].well(0), plateList[1].well(1)]), ["20:microliter", "90:microliter"], one_tip=True)
@@ -811,7 +811,7 @@ class StampTestCase(unittest.TestCase):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_384" % str(
-            x+1), None, "384-flat", discard=True) for x in range(plateCount)]
+            x + 1), None, "384-flat", discard=True) for x in range(plateCount)]
         p.stamp(plateList[0].wells(list(range(12))), plateList[1].wells(
             list(range(12))), "30:microliter", shape={"rows": 8, "columns": 1})
         self.assertEqual(len(p.instructions[0].groups), 12)
@@ -820,7 +820,7 @@ class StampTestCase(unittest.TestCase):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_96" % str(
-            x+1), None, "96-flat", discard=True) for x in range(plateCount)]
+            x + 1), None, "96-flat", discard=True) for x in range(plateCount)]
         p.stamp(plateList[0], plateList[1], "296:microliter")
         self.assertEqual(2, len(p.instructions[0].groups))
         self.assertEqual(
@@ -836,7 +836,7 @@ class StampTestCase(unittest.TestCase):
         p = Protocol()
         plateCount = 2
         plateList = [p.ref("plate_%s_384" % str(
-            x+1), None, "384-flat", discard=True) for x in range(plateCount)]
+            x + 1), None, "384-flat", discard=True) for x in range(plateCount)]
         with self.assertRaises(RuntimeError):
             p.stamp(plateList[0].wells(list(range(4))), plateList[1].wells(list(
                 range(12))), "30:microliter", shape={"rows": 8, "columns": 1}, one_source=True)
@@ -854,7 +854,7 @@ class StampTestCase(unittest.TestCase):
     def test_implicit_uncover(self):
         p = Protocol()
         plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat",
+        plateList = [p.ref("plate_%s_384" % str(x + 1), None, "384-flat",
                            discard=True, cover="universal")
                      for x in range(plateCount)]
         for x in plateList:
@@ -890,7 +890,8 @@ class RefifyTestCase(unittest.TestCase):
 
         # refify Instruction
         p.cover(refs["plate"])
-        self.assertEqual(p._refify(p.instructions[0]), p._refify(p.instructions[0].data))
+        self.assertEqual(p._refify(p.instructions[0]), p._refify(
+            p.instructions[0].data))
 
         # refify Ref
         self.assertEqual(p._refify(p.refs["test"]), p.refs["test"].opts)
@@ -956,9 +957,12 @@ class TimeConstrainstTestCase(unittest.TestCase):
                               "10:minute")
         p.add_time_constraint({"mark": time_point_2, "state": "start"}, {"mark": time_point_1, "state": "end"},
                               "10:minute")
-        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
-        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
-        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {
+                              "mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {
+                              "mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {
+                              "mark": plate_2, "state": "end"}, "10:minute")
 
         self.assertEqual(len(p.time_constraints), 6)
 
@@ -977,28 +981,36 @@ class TimeConstrainstTestCase(unittest.TestCase):
         p.cover(plate_2)
 
         with self.assertRaises(ValueError):
-            p.add_time_constraint({"mark": -1, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+            p.add_time_constraint(
+                {"mark": -1, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
 
         with self.assertRaises(TypeError):
-            p.add_time_constraint({"mark": "foo", "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+            p.add_time_constraint({"mark": "foo", "state": "start"}, {
+                                  "mark": plate_2, "state": "end"}, "10:minute")
 
         with self.assertRaises(TypeError):
-            p.add_time_constraint({"mark": plate_1, "state": "foo"}, {"mark": plate_2, "state": "end"}, "10:minute")
+            p.add_time_constraint({"mark": plate_1, "state": "foo"}, {
+                                  "mark": plate_2, "state": "end"}, "10:minute")
 
         with self.assertRaises(ValueError):
-            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_2, "state": "end"}, "-10:minute")
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {
+                                  "mark": plate_2, "state": "end"}, "-10:minute")
 
         with self.assertRaises(RuntimeError):
-            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_1, "state": "start"}, "10:minute")
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {
+                                  "mark": plate_1, "state": "start"}, "10:minute")
 
         with self.assertRaises(RuntimeError):
-            p.add_time_constraint({"mark": plate_1, "state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
+            p.add_time_constraint({"mark": plate_1, "state": "end"}, {
+                                  "mark": plate_1, "state": "start"}, "10:minute")
 
         with self.assertRaises(KeyError):
-            p.add_time_constraint({"mark": plate_1}, {"mark": plate_1, "state": "start"}, "10:minute")
+            p.add_time_constraint({"mark": plate_1}, {
+                                  "mark": plate_1, "state": "start"}, "10:minute")
 
         with self.assertRaises(KeyError):
-            p.add_time_constraint({"state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
+            p.add_time_constraint(
+                {"state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
 
 
 class AbsorbanceTestCase(unittest.TestCase):
@@ -1014,7 +1026,8 @@ class AbsorbanceTestCase(unittest.TestCase):
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         with self.assertRaises(ValueError):
-            p.absorbance(test_plate, "bad_well_ref",  wavelength="450:nanometer", dataref="bad_wells")
+            p.absorbance(test_plate, "bad_well_ref",
+                         wavelength="450:nanometer", dataref="bad_wells")
 
     def test_temperature(self):
         p = Protocol()
@@ -1110,8 +1123,8 @@ class FluorescenceTestCase(unittest.TestCase):
         test_plate = p.ref("test", None, "96-flat", discard=True)
         for i in range(0, 10):
             p.fluorescence(test_plate, test_plate.well(0), excitation="587:nanometer",
-                           emission="610:nanometer", dataref="test_reading_%s" % i, gain=(i*0.1))
-            self.assertEqual(p.instructions[i].gain, (i*0.1))
+                           emission="610:nanometer", dataref="test_reading_%s" % i, gain=(i * 0.1))
+            self.assertEqual(p.instructions[i].gain, (i * 0.1))
 
         with self.assertRaises(ValueError):
             for i in range(-6, 10, 5):
@@ -1305,7 +1318,8 @@ class MixTestCase(unittest.TestCase):
 
     def test_mix(self):
         p = Protocol()
-        w = p.ref("test", None, "micro-1.5", discard=True).well(0).set_volume("20:microliter")
+        w = p.ref("test", None, "micro-1.5",
+                  discard=True).well(0).set_volume("20:microliter")
         p.mix(w, "5:microliter")
         self.assertEqual(Unit(20, "microliter"), w.volume)
         self.assertTrue("mix" in p.instructions[-1].groups[-1])
@@ -1343,7 +1357,7 @@ class MagneticTransferTestCase(unittest.TestCase):
         for i, pcr in enumerate(pcrs):
             p.mag_dry(
                 "96-pcr", pcr, "30:minute", new_tip=False, new_instruction=False)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i+1)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i + 1)
 
         for i, deep in enumerate(deeps):
             if i == 0:
@@ -1352,7 +1366,7 @@ class MagneticTransferTestCase(unittest.TestCase):
                 n_i = False
             p.mag_dry(
                 "96-deep", deep, "30:minute", new_tip=False, new_instruction=n_i)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i+1)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i + 1)
 
         bad_pcrs = [p.ref("bad_pcr_%s" % cont_type, None,
                           cont_type, discard=True) for cont_type in ["96-pcr"]]
@@ -1390,7 +1404,7 @@ class MagneticTransferTestCase(unittest.TestCase):
         for i in range(27, 96):
             p.mag_incubate(
                 "96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i - 26)
 
         for i in range(-300, -290):
             with self.assertRaises(ValueError):
@@ -1405,7 +1419,7 @@ class MagneticTransferTestCase(unittest.TestCase):
         for i in range(27, 96):
             p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" %
                       i, center=1, amplitude=0)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i-26)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i - 26)
 
         for i in range(-10, -5):
             with self.assertRaises(ValueError):
@@ -1436,17 +1450,17 @@ class MagneticTransferTestCase(unittest.TestCase):
 
         for i in range(0, 200):
             p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                      center=float(i)/100, amplitude=0)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+1)
+                      center=float(i) / 100, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 4 + 1)
             p.mag_collect(
-                "96-pcr", pcr, 5, "30:second", bottom_position=float(i)/100)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+2)
+                "96-pcr", pcr, 5, "30:second", bottom_position=float(i) / 100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 4 + 2)
             p.mag_incubate(
-                "96-pcr", pcr, "30:minute", tip_position=float(i)/100)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+3)
+                "96-pcr", pcr, "30:minute", tip_position=float(i) / 100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 4 + 3)
             p.mag_release(
-                "96-pcr", pcr, "30:second", "1:hertz", center=float(i)/100, amplitude=0)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*4+4)
+                "96-pcr", pcr, "30:second", "1:hertz", center=float(i) / 100, amplitude=0)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 4 + 4)
 
         for i in range(-1, 3, 4):
             with self.assertRaises(ValueError):
@@ -1467,11 +1481,11 @@ class MagneticTransferTestCase(unittest.TestCase):
 
         for i in range(0, 100):
             p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                      center=1, amplitude=float(i)/100)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*2+1)
+                      center=1, amplitude=float(i) / 100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 2 + 1)
             p.mag_release(
-                "96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=float(i)/100)
-            self.assertEqual(len(p.instructions[-1].groups[0]), i*2+2)
+                "96-pcr", pcr, "30:second", "1:hertz", center=1, amplitude=float(i) / 100)
+            self.assertEqual(len(p.instructions[-1].groups[0]), i * 2 + 2)
 
         for i in range(-1, 2, 3):
             with self.assertRaises(ValueError):
@@ -1546,41 +1560,41 @@ class AutopickTestCase(unittest.TestCase):
             None, p.container_type("6-flat"), name="agar_plate_1")
 
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [
-                   dest_plate.well(1)]*4, min_abort=0, dataref="0", newpick=False)
+                   dest_plate.well(1)] * 4, min_abort=0, dataref="0", newpick=False)
 
         self.assertEqual(len(p.instructions), 1)
         self.assertEqual(len(p.instructions[0].groups), 1)
         self.assertEqual(len(p.instructions[0].groups[0]["from"]), 2)
 
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [
-                   dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=True)
+                   dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=True)
 
         self.assertEqual(len(p.instructions), 2)
 
         p.autopick([agar_plate.well(0), agar_plate.well(1)], [
-                   dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+                   dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=False)
 
         self.assertEqual(len(p.instructions), 2)
 
         for i in range(20):
             p.autopick([agar_plate.well(i % 6), agar_plate.well(
-                (i+1) % 6)], [dest_plate.well(i % 96)]*4, min_abort=i, dataref="1", newpick=False)
+                (i + 1) % 6)], [dest_plate.well(i % 96)] * 4, min_abort=i, dataref="1", newpick=False)
 
         self.assertEqual(len(p.instructions), 2)
 
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [
-                   dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+                   dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=False)
 
         self.assertEqual(len(p.instructions), 3)
 
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)], [
-                   dest_plate.well(1)]*4, min_abort=0, dataref="2", newpick=False)
+                   dest_plate.well(1)] * 4, min_abort=0, dataref="2", newpick=False)
 
         self.assertEqual(len(p.instructions), 4)
 
         with self.assertRaises(RuntimeError):
             p.autopick([agar_plate.well(0), agar_plate_1.well(1)], [
-                       dest_plate.well(1)]*4, min_abort=0, dataref="1", newpick=False)
+                       dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=False)
 
 
 class MeasureConcentrationTestCase(unittest.TestCase):
@@ -1675,7 +1689,8 @@ class SpinTestCase(unittest.TestCase):
             "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
         p.spin(test_plate, "1000:g", "20:minute")
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="outward")
-        p.spin(test_plate, "1000:g", "20:minute", spin_direction=["ccw", "cw", "ccw"])
+        p.spin(test_plate, "1000:g", "20:minute",
+               spin_direction=["ccw", "cw", "ccw"])
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
         self.assertEqual(len(p.instructions), 5)
         with self.assertRaises(AttributeError):
@@ -1686,7 +1701,8 @@ class SpinTestCase(unittest.TestCase):
         self.assertEqual(p.instructions[2].spin_direction, ["cw", "ccw"])
         with self.assertRaises(AttributeError):
             p.instructions[3].flow_direction
-        self.assertEqual(p.instructions[3].spin_direction, ["ccw", "cw", "ccw"])
+        self.assertEqual(p.instructions[3].spin_direction, [
+                         "ccw", "cw", "ccw"])
         self.assertEqual(p.instructions[4].flow_direction, "inward")
         self.assertEqual(p.instructions[4].spin_direction, ["cw"])
 
@@ -1695,9 +1711,11 @@ class SpinTestCase(unittest.TestCase):
         test_plate2 = p.ref(
             "test_plate2", id=None, cont_type="96-flat", storage=None, discard=True)
         with self.assertRaises(ValueError):
-            p.spin(test_plate2, "1000:g", "20:minute", flow_direction="bad_value")
+            p.spin(test_plate2, "1000:g", "20:minute",
+                   flow_direction="bad_value")
         with self.assertRaises(ValueError):
-            p.spin(test_plate2, "1000:g", "20:minute", spin_direction=["cw", "bad_value"])
+            p.spin(test_plate2, "1000:g", "20:minute",
+                   spin_direction=["cw", "bad_value"])
         with self.assertRaises(TypeError):
             p.spin(test_plate2, "1000:g", "20:minute", spin_direction={})
         with self.assertRaises(ValueError):
@@ -1705,6 +1723,7 @@ class SpinTestCase(unittest.TestCase):
 
 
 class GelPurifyTestCase(unittest.TestCase):
+
     def test_gel_purify_lane_set(self):
         p = Protocol()
         sample_wells = p.ref("test_plate", None, "96-pcr",
@@ -1848,21 +1867,29 @@ class IlluminaSeqTestCase(unittest.TestCase):
         sample_wells = p.ref(
             "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
         p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
-                      {"object": sample_wells[1], "library_concentration": 2}],
+                             {"object": sample_wells[1], "library_concentration": 2}],
                       "nextseq", "mid", 'none', 34, "dataref")
 
         self.assertEqual(len(p.instructions), 1)
 
         p.illuminaseq("PE",
                       [
-                          {"object": sample_wells[0], "library_concentration": 1.0},
-                          {"object": sample_wells[1], "library_concentration": 5.32},
-                          {"object": sample_wells[2], "library_concentration": 54},
-                          {"object": sample_wells[3], "library_concentration": 20},
-                          {"object": sample_wells[4], "library_concentration": 23},
-                          {"object": sample_wells[5], "library_concentration": 23},
-                          {"object": sample_wells[6], "library_concentration": 21},
-                          {"object": sample_wells[7], "library_concentration": 62}
+                          {"object": sample_wells[0],
+                              "library_concentration": 1.0},
+                          {"object": sample_wells[
+                              1], "library_concentration": 5.32},
+                          {"object": sample_wells[2],
+                              "library_concentration": 54},
+                          {"object": sample_wells[3],
+                              "library_concentration": 20},
+                          {"object": sample_wells[4],
+                              "library_concentration": 23},
+                          {"object": sample_wells[5],
+                              "library_concentration": 23},
+                          {"object": sample_wells[6],
+                              "library_concentration": 21},
+                          {"object": sample_wells[7],
+                              "library_concentration": 62}
                       ],
                       "hiseq", "rapid", 'none', 250, "dataref",
                       {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 4})
@@ -1874,7 +1901,7 @@ class IlluminaSeqTestCase(unittest.TestCase):
         sample_wells = p.ref(
             "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
         p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
-                      {"object": sample_wells[1], "library_concentration": 2}],
+                             {"object": sample_wells[1], "library_concentration": 2}],
                       "nextseq", "mid", 'none', 34, "dataref", {"read_1": 100})
 
         self.assertEqual(len(p.instructions), 1)
@@ -1886,30 +1913,37 @@ class IlluminaSeqTestCase(unittest.TestCase):
         sample_wells = p.ref(
             "test_plate", None, "96-pcr", discard=True).wells_from(0, 3)
         with self.assertRaises(TypeError):
-            p.illuminaseq("PE", "not_a_list", "nextseq", "mid", 'none', 250, "bad_lane_param")
+            p.illuminaseq("PE", "not_a_list", "nextseq",
+                          "mid", 'none', 250, "bad_lane_param")
         with self.assertRaises(ValueError):
             p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
-                          {"object": sample_wells[1], "library_concentration": 2}],
+                                 {"object": sample_wells[1], "library_concentration": 2}],
                           "nextseq", "rapid", 'none', 34, "dataref")
         with self.assertRaises(ValueError):
             p.illuminaseq("PE",
                           [
-                              {"object": sample_wells[0], "library_concentration": 1.0},
-                              {"object": sample_wells[1], "library_concentration": 2}
+                              {"object": sample_wells[
+                                  0], "library_concentration": 1.0},
+                              {"object": sample_wells[
+                                  1], "library_concentration": 2}
                           ],
                           "miseq", "high", 'none', 250, "not_enough_lanes")
         with self.assertRaises(RuntimeError):
             p.illuminaseq("SR",
                           [
-                              {"object": sample_wells[0], "library_concentration": 1.0},
-                              {"object": sample_wells[1], "library_concentration": 2}
+                              {"object": sample_wells[
+                                  0], "library_concentration": 1.0},
+                              {"object": sample_wells[
+                                  1], "library_concentration": 2}
                           ],
                           "nextseq", "high", "none", 250, "wrong_seq", {"read_2": 500, "read_1": 2})
         with self.assertRaises(ValueError):
             p.illuminaseq("PE",
                           [
-                              {"object": sample_wells[0], "library_concentration": 1.0},
-                              {"object": sample_wells[1], "library_concentration": 2}
+                              {"object": sample_wells[
+                                  0], "library_concentration": 1.0},
+                              {"object": sample_wells[
+                                  1], "library_concentration": 2}
                           ],
                           "nextseq", "high", "none", 250, "index_too_high",
                           {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 9})
@@ -1918,6 +1952,7 @@ class IlluminaSeqTestCase(unittest.TestCase):
 
 
 class CoverStatusTestCase(unittest.TestCase):
+
     def test_ref_cover_status(self):
         p = Protocol()
         cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")

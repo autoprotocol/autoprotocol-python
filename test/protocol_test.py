@@ -1010,6 +1010,12 @@ class AbsorbanceTestCase(unittest.TestCase):
                      "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
 
+    def test_bad_well(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(ValueError):
+            p.absorbance(test_plate, "bad_well_ref",  wavelength="450:nanometer", dataref="bad_wells")
+
     def test_temperature(self):
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)

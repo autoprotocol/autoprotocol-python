@@ -1,4 +1,4 @@
-from .container import Container, Well, WellGroup
+from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *  # flake8: noqa
@@ -154,7 +154,7 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
-    def ref(self, name, id=None, cont_type=None, storage=None, discard=None):
+    def ref(self, name, id=None, cont_type=None, storage=None, discard=None, cover=None):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
         and return a Container with the id, container type and storage or
@@ -247,6 +247,9 @@ class Protocol(object):
         except ValueError:
             raise RuntimeError("You must specify a ref's container type.")
 
+        if cover and (cover in SEAL_TYPES or cover in COVER_TYPES):
+            opts["cover"] = cover
+
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
@@ -255,7 +258,7 @@ class Protocol(object):
             raise RuntimeError("You must specify either a valid storage "
                                "condition or set discard=True for a Ref.")
         container = Container(
-            id, cont_type, name=name, storage=storage if storage else None)
+            id, cont_type, name=name, storage=storage if storage else None, cover=cover if cover else None)
         self.refs[name] = Ref(name, opts, container)
         return container
 
@@ -803,6 +806,8 @@ class Protocol(object):
                 }
             if allow_carryover:
                 opts["allow_carryover"] = allow_carryover
+            self._remove_cover(d["from"].container, "pipette from")
+            [self._remove_cover(t['well'].container, "pipette to") for t in d['to']]
             opts["from"] = d["from"]
             opts["to"] = d["to"]
 
@@ -1053,6 +1058,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._remove_cover(s.container, "pipette from")
+            self._remove_cover(d.container, "pipette into")
             if v > Unit(900, "microliter"):
                 diff = Unit.fromstring(v)
                 while diff > Unit(900, "microliter"):
@@ -1260,7 +1267,7 @@ class Protocol(object):
         if not isinstance(dest, (Well, str)):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well.")
-
+        self._remove_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
         if isinstance(volumes, list):
@@ -1280,6 +1287,7 @@ class Protocol(object):
         from_wells = []
         # Generate instructions for each transfer from source wells
         for s, v in zip(sources, volumes):
+            self._remove_cover(s.container, "consolidate from")
             source_opts = {}
             source_opts["well"] = s
             source_opts["volume"] = v
@@ -1500,6 +1508,8 @@ class Protocol(object):
                                    "associated with it.")
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
+            self._remove_cover(s.container, "acoustic_transfer")
+            self._remove_cover(d.container, "acoustic_transfer")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2149,6 +2159,8 @@ class Protocol(object):
                             osta.append(st)
                 v = diff
 
+            self._remove_cover(s.container, "stamp")
+            self._remove_cover(d.container, "stamp")
             xfer = {
                 "from": s,
                 "to": d,
@@ -2625,6 +2637,7 @@ class Protocol(object):
         if one_tip:
             group = []
             for w in well.wells:
+                self._remove_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2635,6 +2648,7 @@ class Protocol(object):
             self._pipette([{"mix": group}])
         else:
             for w in well.wells:
+                self._remove_cover(w.container, "mix")
                 opts = {
                     "well": w,
                     "volume": volume,
@@ -2753,6 +2767,8 @@ class Protocol(object):
             dispenser.
 
         """
+
+        self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -2867,6 +2883,7 @@ class Protocol(object):
             dispenser.
 
         """
+        self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
@@ -3604,6 +3621,8 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
+        for w in wells:
+            self._remove_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             datarefs = 1
@@ -3880,6 +3899,13 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
+        if type not in SEAL_TYPES:
+            raise RuntimeError("%s is not a valid seal type" % type)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = type
+            ref.cover = type
+        else:
+            return
         self.instructions.append(Seal(ref, type))
 
     def unseal(self, ref):
@@ -3922,6 +3948,11 @@ class Protocol(object):
             Container to be unsealed
 
         """
+        if ref.is_sealed():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Unseal(ref))
 
     def cover(self, ref, lid='standard'):
@@ -3959,6 +3990,13 @@ class Protocol(object):
             Type of lid to cover container with
 
         """
+        if lid not in COVER_TYPES:
+            raise RuntimeError("%s is not a valid lid type" % lid)
+        if not (ref.is_covered() or ref.is_sealed()):
+            self.refs[ref.name].opts["cover"] = lid
+            ref.cover = lid
+        else:
+            return
         self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
@@ -4001,6 +4039,11 @@ class Protocol(object):
             Container to remove lid from
 
         """
+        if ref.is_covered():
+            self.refs[ref.name].opts["cover"] = None
+            ref.cover = None
+        else:
+            return
         self.instructions.append(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
@@ -4242,6 +4285,8 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
+        self._remove_cover(source.container, "spread")
+        self._remove_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
         if dest.volume:
             dest.volume += volume
@@ -4293,6 +4338,9 @@ class Protocol(object):
         pick["min_abort"] = min_abort
 
         group = [pick]
+
+        [self._remove_cover(s.container, "autopick") for s in pick["from"]]
+        [self._remove_cover(d.container, "autopick") for d in pick["to"]]
 
         if (not newpick and self.instructions and
                 self.instructions[-1].op == "autopick" and
@@ -4949,6 +4997,19 @@ class Protocol(object):
             self.instructions[-1].groups += groups
         else:
             self.instructions.append(Pipette(groups))
+
+    def _remove_cover(self, container, action):
+        if not (container.is_covered() or container.is_sealed()):
+            return
+        elif container.cover in COVER_TYPES:
+            self.uncover(container)
+        elif container.cover in SEAL_TYPES:
+            self.unseal(container)
+        else:
+            raise RuntimeError("The operation {} requires an uncovered "
+                               "container, however, {} is not a "
+                               "recognized cover or seal type."
+                               "".format(action, container.cover))
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """

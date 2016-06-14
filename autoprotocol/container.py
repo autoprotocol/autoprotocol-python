@@ -14,6 +14,9 @@ if sys.version_info[0] >= 3:
 
 '''
 
+SEAL_TYPES = ["ultra-clear", "foil"]
+COVER_TYPES = ["standard", "low_evaporation", "universal"]
+
 
 class Well(object):
 
@@ -303,13 +306,16 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None):
+    def __init__(self, id, container_type, name=None, storage=None, cover=None):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
+        self.cover = cover
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
+        if self.cover and not (self.is_covered() or self.is_sealed()):
+            raise AttributeError("%s is not a valid seal or cover type." % cover)
 
     def well(self, i):
         """
@@ -479,6 +485,18 @@ class Container(object):
             start = col * num_rows + row
         return WellGroup(self.all_wells(columnwise).wells[start:start + num])
 
+    def is_sealed(self):
+        """
+        Check if Container is sealed.
+        """
+        return self.cover in SEAL_TYPES
+
+    def is_covered(self):
+        """
+        Check if Container is covered.
+        """
+        return self.cover in COVER_TYPES
+
     def quadrant(self, quad):
         """
         Return a WellGroup of Wells corresponding to the selected quadrant of
@@ -583,4 +601,4 @@ class Container(object):
         (ex. Container('my_plate'))
 
         """
-        return "Container(%s)" % (str(self.name))
+        return "Container(%s%s)" % (str(self.name), ", cover=" + self.cover if self.cover else "")

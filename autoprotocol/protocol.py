@@ -2571,7 +2571,7 @@ class Protocol(object):
 
         if not isinstance(wells, list):
             raise ValueError("Unknown input. SangerSeq wells accepts either a Well, a "
-                             "WellGroup, or well indices")
+                             "WellGroup, or a list of well indices")
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
@@ -3383,7 +3383,7 @@ class Protocol(object):
 
         if not isinstance(wells, list):
             raise ValueError("Unknown input. Absorbance wells accepts either a Well, "
-                             "a WellGroup, or well indices")
+                             "a WellGroup, or a list of well indices")
 
         if incubate_before:
             check_valid_incubate_params(incubate_before)
@@ -3488,7 +3488,7 @@ class Protocol(object):
 
         if not isinstance(wells, list):
             raise ValueError("Unknown input. Fluorescence wells accepts either a Well, "
-                             "a WellGroup, or well indices")
+                             "a WellGroup, or a list of well indices")
 
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError("fluoresence gain set to %s must be between "
@@ -3581,7 +3581,7 @@ class Protocol(object):
 
         if not isinstance(wells, list):
             raise ValueError("Unknown input. Luminescence wells accepts either a Well, "
-                             "a WellGroup or well indices")
+                             "a WellGroup, or a list of well indices")
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 

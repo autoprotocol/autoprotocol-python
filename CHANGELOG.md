@@ -24,6 +24,8 @@ Removed
 - string input types for source, destination wells for Instructions Consolidate, Autopick, Mix
 Fixed
 
+=======
+>>>>>>> increment for release
 ## v3.7.0 - 2016-06-14
 ---
 Added

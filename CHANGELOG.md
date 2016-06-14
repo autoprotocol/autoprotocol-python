@@ -25,7 +25,7 @@ Removed
 Fixed
 
 =======
->>>>>>> increment for release
+
 ## v3.7.0 - 2016-06-14
 ---
 Added

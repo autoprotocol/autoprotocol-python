@@ -3425,7 +3425,6 @@ class Protocol(object):
         if not isinstance(wells, list):
             raise ValueError("Unknown input. Absorbance wells accepts either a Well, "
                              "a WellGroup, or a list of well indices")
-
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 
@@ -3530,7 +3529,6 @@ class Protocol(object):
         if not isinstance(wells, list):
             raise ValueError("Unknown input. Fluorescence wells accepts either a Well, "
                              "a WellGroup, or a list of well indices")
-
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError("fluoresence gain set to %s must be between "
                              "0 and 1, inclusive" % gain)
@@ -5431,7 +5429,6 @@ class Protocol(object):
             raise TypeError("Wells must be of type Well, list of Wells, or "
                             "WellGroup.")
         wells = WellGroup(wells)
-
         self.instructions.append(MeasureConcentration(wells, volume, dataref,
                                                       measurement))
 
@@ -5544,5 +5541,4 @@ class Protocol(object):
             raise TypeError("Wells must be of type Well, list of Wells, or "
                             "WellGroup.")
         wells = WellGroup(wells)
-
         self.instructions.append(MeasureVolume(wells, dataref))

@@ -1,0 +1,15 @@
+<snippet>
+	<content><![CDATA[
+{
+  "temperature": "${2:98}:celsius",
+  "duration": "${3:30}:second"
+},
+${4:"call another_stepthermo for more steps"}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>another_stepthermo</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+</snippet>
+
+

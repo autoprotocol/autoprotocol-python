@@ -1,0 +1,20 @@
+<snippet>
+	<content><![CDATA[
+{
+  "type": "choice",
+  "label": "${1:...}",
+  "description": "${2:...}",
+  "default": "${3:these two must match}",
+  "options": [
+    {"value": "${3:these two must match}", "name": "${4:...}"},
+    {"value": "${5:...}", "name": "${6:...}"}
+  ]
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>choice</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+</snippet>
+
+

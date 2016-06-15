@@ -1,18 +1,14 @@
 <snippet>
 	<content><![CDATA[
-{
+"${1:name}": {
   "type": "group",
-  "description": "${1:...}",
-  "label": "${2:...}",
+  "description": "${2:...}",
+  "label": "${3:...}",
   "inputs": {
-    "${3:input1_name}":
-      ${4:"input1_type",
-      },
-    "${5:input2_name}":
-      ${6: "new_input_type",
-    }
-  }
-}
+    ${4:"input1_snippet"} 
+    ${5:"input2_snippet"}
+  },
+},
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>group</tabTrigger>

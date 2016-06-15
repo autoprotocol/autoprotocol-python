@@ -1,16 +1,17 @@
 <snippet>
 	<content><![CDATA[
-{
+"${1:name}": {
   "type": "boolean",
-  "default": ${1:false},
-  "label": "${2:your_label}",
-  "description": "${3:Is false until assigned true}"
-}
+  "default": ${2:false},
+  "label": "${3:your_label}",
+  "description": "${4:Is false until assigned true}"
+},
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>boolean</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>source.json</scope>
+	<description>boolean input</description>
 </snippet>
 
 

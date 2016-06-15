@@ -1,18 +1,22 @@
 <snippet>
 	<content><![CDATA[
-{
+"${1:name}": {
   "type": "group-choice",
-  "description": "${1:...}",
-  "label": "${2:...}",
-  "default": "${3:...}",
+  "description": "${2:...}",
+  "label": "${3:...}",
+  "default": "${4:...}",
   "options": [
     {
-    ${4:"call another_group_choice"}
+    ${5:"call another_group_choice"}
+    },
+    {
+    ${6:"call another_group_choice"}
+    },
+    {
+    ${7:"call again, or delete the comma and brackets above this to end group-choice."}
     }
   ]
-}
-
-
+},
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
 	<tabTrigger>group-choice</tabTrigger>

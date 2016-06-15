@@ -10,6 +10,7 @@ ${4:"call another_stepthermo for more steps"}
 	<tabTrigger>another_stepthermo</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>source.json</scope>
+  <description>adds step w/temp + time</description>
 </snippet>
 
 

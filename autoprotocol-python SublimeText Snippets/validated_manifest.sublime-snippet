@@ -13,13 +13,15 @@
       "categories": "[${6:...}]",
       "description": "${7:This is a sample description.}",
       "command_string": "python ${8:sample5.py}",
-      "dependencies": "[${9:}]",
+      "image_url": "${9:...}",
+      "validation_url": "${10:...}",
+      "dependencies": "[${11:}]",
       "inputs": {
-        "${7:input_name}":
-          ${8:input_type,
+        "${12:input_name}":
+          ${13:input_type,
         },
-        "${9:input2_name}":
-          ${10: input2_type,
+        "${14:input2_name}":
+          ${15: input2_type,
         }
       },
       "preview": {
@@ -31,10 +33,10 @@
 }
 ]]></content>
 	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
-	<tabTrigger>manifest</tabTrigger>
+	<tabTrigger>validated_manifest</tabTrigger>
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>source.json</scope>
-  <description>empty manifest</description>
+  <description>validated framework</description>
 </snippet>
 
 

@@ -1,0 +1,17 @@
+<snippet>
+	<content><![CDATA[
+"${1:name}": {
+  "type": "${2:volume}",
+  "label": "${3:...}",
+  "default": "${4:10:microliter}",
+  "description": "${5:...}"
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>value</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+	<description>value inpuut type</description>
+</snippet>
+
+

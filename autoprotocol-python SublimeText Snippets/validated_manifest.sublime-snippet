@@ -1,0 +1,41 @@
+<snippet>
+	<content><![CDATA[
+{
+  "format": "python",
+  "license": "MIT",
+  "protocols": [
+    {
+      "name": "${1:NAME}",
+      "display_name": "${2:DISPLAY NAME}", 
+      "author": "${3:...}",
+      "version": "${4:1.0.0}",
+      "last_edited": "${5:...}",
+      "categories": "[${6:...}]",
+      "description": "${7:This is a sample description.}",
+      "command_string": "python ${8:sample5.py}",
+      "image_url": "${9:...}",
+      "validation_url": "${10:...}",
+      "inputs": {
+        ${11:"add input snippet"}
+        },
+      "preview": {
+        "refs":{
+         ${12: "input refs"}
+        },
+        "parameters": {
+          ${13: "input refs"}
+        }
+      },
+      "dependencies": "[${14:}]",
+    }
+  ]
+}
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>validated_manifest</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+  <description>validated manifest framework</description>
+</snippet>
+
+

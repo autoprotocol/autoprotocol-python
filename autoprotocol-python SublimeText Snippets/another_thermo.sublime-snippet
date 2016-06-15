@@ -1,0 +1,21 @@
+<snippet>
+	<content><![CDATA[
+"${1:name}": {
+  "cycles": ${2:0},
+  "steps": [
+    {
+      "temperature": "${3:98}:celsius",
+      "duration": "${4:30}:second"
+    },
+    ${5:"call another_stepthermo for step"}
+  ]
+},
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>another_thermo</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+  <description>adds another cycle group</description>
+</snippet>
+
+

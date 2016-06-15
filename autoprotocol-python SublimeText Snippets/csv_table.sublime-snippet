@@ -1,0 +1,23 @@
+<snippet>
+	<content><![CDATA[
+"${1:name}": {
+  "type": "csv-table",
+  "label": "${2:...}",
+  "template": {
+    "header": ["${3:header1}", "${4:header2}", "${5:header3}"],
+    "keys": ["${6:key1}", "${7:key2}", "${8:key3}"],
+    "col_type": ["${9:col1}", "${10:col2}", "${11:col3}"],
+    "rows": [["${12:0}", "${13:1}", "${14:2}"],
+             ["${15:0}", "${16:1}", "${17:2}"]],
+    "label": "${18:...}"
+  }
+},
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>csv_table</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+  <description>csv table input</description>
+</snippet>
+
+

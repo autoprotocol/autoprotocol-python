@@ -1,0 +1,16 @@
+<snippet>
+	<content><![CDATA[
+  "name": "${3:your_name}",
+  "value": "${4:...}",
+  "inputs": {
+    ${5:"input1_name"}
+  },
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>another_group_choice</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+	<description>adds group within choice option</description>
+</snippet>
+
+

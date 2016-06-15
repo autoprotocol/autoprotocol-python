@@ -1,0 +1,16 @@
+<snippet>
+	<content><![CDATA[
+"${1:name}": {
+  "type": "container+",
+  "label": "${2: Destination(s) from Your Inventory}",
+  "description": "${3: Select destination(s) from your inventory.}"
+},
+]]></content>
+	<!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+	<tabTrigger>container+</tabTrigger>
+	<!-- Optional: Set a scope to limit where the snippet will trigger -->
+	<scope>source.json</scope>
+	<description>extendable group of container selector</description>
+</snippet>
+
+

@@ -15,17 +15,17 @@
       "command_string": "python ${8:sample5.py}",
       "dependencies": "[${9:}]",
       "inputs": {
-        "${10:input_name}":
-          ${11:input_type,
+        ${10:"add input snippet"}
         },
-        "${12:input2_name}":
-          ${13: input2_type,
+      "preview": {
+        "refs":{
+          ${12: "input refs"}
+        },
+        "parameters": {
+          ${13: "input parameters"}
         }
       },
-      "preview": {
-        "refs":{},
-        "parameters": {}
-      }
+      "dependencies": "[${14:}]",
     }
   ]
 }

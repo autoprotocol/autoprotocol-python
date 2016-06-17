@@ -4386,9 +4386,9 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : Well, Wellgroup, list of Wells
+        sources : Well, WellGroup, list of Wells
             Reference wells containing agar and colonies to pick
-        dests : Well, Wellgroup, list of Wells
+        dests : Well, WellGroup, list of Wells
             List of destination(s) for picked colonies
         criteria : dict
             Dictionary of autopicking criteria.
@@ -4406,12 +4406,12 @@ class Protocol(object):
                             "list of Wells, or WellGroup.")
         pick = {}
 
-        sources = Wellgroup(sources)
+        sources = WellGroup(sources)
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
             raise RuntimeError("All source wells for autopick must exist "
                                "on the same container")
-        dests = Wellgroup(dests)
+        dests = WellGroup(dests)
         pick["to"] = dests
         pick["min_abort"] = min_abort
 

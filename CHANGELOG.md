@@ -5,11 +5,11 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
-
+- validations of input types before cover check
 Changed
 
 Removed
-
+- string input types for source, destination wells for Instructions Consolidate, Autopick, Mix
 Fixed
 
 ## v3.7.0 - 2016-06-14

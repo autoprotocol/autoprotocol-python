@@ -1,6 +1,7 @@
 from .unit import Unit
 from textwrap import dedent
 
+
 '''
     :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
         for more details.
@@ -449,4 +450,35 @@ def check_valid_incubate_params(idict):
                                "{} must not be None for shaking to be set"
                                .format(shaking.get("amplitude"), shaking.get("orbital")))
 
+    return True
+
+
+def is_valid_well(param):
+    """Checks if an input is of type Well, Wellgroup or list of type Well.
+
+    Example Usage:
+
+    .. code-block:: python
+
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+
+    Parameters
+    ----------
+    param :
+        Parameter to validate is type Well, WellGroup, list of Wells.
+
+    Returns
+    -------
+    bool :
+        Returns True if param is of type Well, WellGroup or list of type Well.
+    """
+
+    from autoprotocol.container import Well, WellGroup
+    if not isinstance(param, (Well, WellGroup, list)):
+        return False
+    if isinstance(param, list):
+        if not all(isinstance(well, Well) for well in param):
+            return False
     return True

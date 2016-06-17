@@ -3,13 +3,9 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *  # flake8: noqa
 from .pipette_tools import assign
-from .util import check_valid_origin
-from .util import check_stamp_append
-from .util import check_valid_mag
-from .util import check_valid_mag_params
-from .util import check_valid_incubate_params
-from .util import check_valid_gel_purify_extract
-from .util import is_valid_well
+from .util import check_valid_origin, check_stamp_append, check_valid_mag, \
+    check_valid_mag_params, check_valid_gel_purify_extract, is_valid_well, \
+    check_valid_incubate_params
 
 import sys
 if sys.version_info[0] >= 3:

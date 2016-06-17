@@ -9,6 +9,7 @@ from .util import check_valid_mag
 from .util import check_valid_mag_params
 from .util import check_valid_incubate_params
 from .util import check_valid_gel_purify_extract
+from .util import is_valid_well
 
 import sys
 if sys.version_info[0] >= 3:
@@ -785,19 +786,13 @@ class Protocol(object):
             Wells or WellGroups.
 
         """
-        # Check validity of inputs
-        if not isinstance(source, (Well, WellGroup, list)):
-            raise TypeError("Source must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(source, list):
-            if not all(isinstance(well, Well) for well in source):
-                raise TypeError("All elements in source list must be wells")
-        if not isinstance(dest, (Well, WellGroup, list)):
-            raise TypeError("Destination, (dest), must be of type Well, list, "
-                            "or WellGroup.")
-        if isinstance(dest, list):
-            if not all(isinstance(well, Well) for well in dest):
-                raise TypeError("All elements in dest list must be wells")
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
 
         opts = {}
         try:
@@ -977,19 +972,13 @@ class Protocol(object):
             number of wells and one_source is not True.
 
         """
-        # Check validity of inputs
-        if not isinstance(source, (Well, WellGroup, list)):
-            raise TypeError("Source must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(source, list):
-            if not all(isinstance(well, Well) for well in source):
-                raise TypeError("All elements in source list must be wells")
-        if not isinstance(dest, (Well, WellGroup, list)):
-            raise TypeError("Destination, (dest), must be of type Well, list, "
-                            "or WellGroup.")
-        if isinstance(dest, list):
-            if not all(isinstance(well, Well) for well in dest):
-                raise TypeError("All elements in dest list must be wells")
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
 
         opts = []
         source = WellGroup(source)
@@ -1290,13 +1279,10 @@ class Protocol(object):
             If a volume list is supplied and the length does not match the
             number of source wells.
         """
-        # Check validity of inputs
-        if not isinstance(sources, (Well, WellGroup, list)):
-            raise TypeError("Sources must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(sources):
+            raise TypeError("Source must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(sources, list):
-            if not all(isinstance(well, Well) for well in sources):
-                raise TypeError("All elements in sources list must be wells")
         if not isinstance(dest, Well):
             raise TypeError("You can only consolidate liquid into one "
                             "destination well which must be of type Well.")
@@ -1441,21 +1427,13 @@ class Protocol(object):
             }]
 
         """
-
-        # Check validity of inputs
-        if not isinstance(source, (Well, WellGroup, list)):
-            raise TypeError("Source must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(source, list):
-            if not all(isinstance(well, Well) for well in source):
-                raise TypeError("All elements in source list must be wells")
-        if not isinstance(dest, (Well, WellGroup, list)):
-            raise TypeError("Destination, (dest), must be of type Well, list, "
-                            "or WellGroup.")
-        if isinstance(dest, list):
-            if not all(isinstance(well, Well) for well in dest):
-                raise TypeError("All elements in dest list must be wells")
-
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
         transfers = []
         source = WellGroup(source)
         dest = WellGroup(dest)
@@ -1654,12 +1632,12 @@ class Protocol(object):
 
         Parameters
         ----------
-        source_origin : Container, Well, WellGroup
+        source_origin : Container, Well, WellGroup, List of Wells
             Top-left well or wells where the rows/columns will be defined with
             respect to the source transfer.
             If a container is specified, stamp will be applied to all
             quadrants of the container.
-        dest_origin : Container, Well, WellGroup
+        dest_origin : Container, Well, WellGroup, List of Wells
             Top-left well or wells where the rows/columns will be defined with
             respect to the destination transfer.
             If a container is specified, stamp will be applied to all
@@ -1812,10 +1790,13 @@ class Protocol(object):
                                 "dest_origin is a container, it must be a "
                                 "container with 96 or 384 wells.")
 
-        # Test that stamp only takes Container, Well, or WellGroup
-        if not (isinstance(source_origin, (Well, WellGroup)) or not (isinstance(dest_origin, (Well, WellGroup)))):
-            raise TypeError("Invalid input type given. Source and destination "
-                            "must be of type Container, Well, or WellGroup.")
+        # Check valid well inputs
+        if not is_valid_well(source_origin):
+            raise TypeError("Source (source_origin) must be of type Well, "
+                            "list of Wells, or WellGroup.")
+        if not is_valid_well(dest_origin):
+            raise TypeError("Destination (dest_origin) must be of type Well, "
+                            "list of Wells, or WellGroup.")
 
         # Initialize input parameters
         source = WellGroup(source_origin)
@@ -2680,12 +2661,10 @@ class Protocol(object):
             mix all wells with a single tip
 
         """
-        if not isinstance(well, (Well, WellGroup, list)):
-            raise TypeError("Mix well must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(well):
+            raise TypeError("Mix well must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(well, list):
-            if not all(isinstance(w, Well) for w in well):
-                raise TypeError("All elements in mix source list must be wells")
         well = WellGroup(well)
         if one_tip:
             group = []
@@ -2820,7 +2799,6 @@ class Protocol(object):
             dispenser.
 
         """
-
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         self._remove_cover(ref, "dispense to")
@@ -3705,13 +3683,10 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
-        # Check validity of inputs
-        if not isinstance(wells, (Well, WellGroup, list)):
-            raise TypeError("Source must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(wells):
+            raise TypeError("Wells must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(source, list):
-            if not all(isinstance(well, Well) for well in source):
-                raise TypeError("All elements in source list must be wells")
         if isinstance(wells, Well):
             wells = WellGroup(wells)
         for w in wells:
@@ -4378,7 +4353,7 @@ class Protocol(object):
             Volume of source material to spread on agar
 
         """
-        # Check validity of inputs
+        # Check validity of Well inputs
         if not isinstance(source, Well):
             raise TypeError("Source must be of type Well.")
         if not isinstance(dest, Well):
@@ -4422,30 +4397,21 @@ class Protocol(object):
             list of `from` wells to avoid aborting the entire run.
 
         """
-
-        # Check validity of inputs
-        if not isinstance(sources, (Well, WellGroup, list)):
-            raise TypeError("Sources must be of type Well, list, or "
+        # Check valid well inputs
+        if not is_valid_well(sources):
+            raise TypeError("Source must be of type Well, list of Wells, or "
                             "WellGroup.")
-        if isinstance(sources, list):
-            if not all(isinstance(well, Well) for well in sources):
-                raise TypeError("All elements in source list must be wells")
-        if not isinstance(dests, (Well, WellGroup, list)):
-            raise TypeError("Destinations, (dests), must be of type Well, list, "
-                            "or WellGroup.")
-        if isinstance(dests, list):
-            if not all(isinstance(well, Well) for well in dests):
-                raise TypeError("All elements in dest list must be wells")
+        if not is_valid_well(dests):
+            raise TypeError("Destinations (dests) must be of type Well, "
+                            "list of Wells, or WellGroup.")
         pick = {}
 
-        if isinstance(sources, Well):
-            sources = [sources]
+        sources = Wellgroup(sources)
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
             raise RuntimeError("All source wells for autopick must exist "
                                "on the same container")
-        if isinstance(dests, Well):
-            dests = [dests]
+        dests = Wellgroup(dests)
         pick["to"] = dests
         pick["min_abort"] = min_abort
 
@@ -4911,7 +4877,7 @@ class Protocol(object):
         ----------
         resource_id : str
           Resource ID from catalog.
-        dests : Well, WellGroup
+        dests : Well, WellGroup, list of Wells
           Destination(s) for specified resource.
         volumes : str, Unit, list of str, list of Unit
           Volume(s) to transfer of the resource to each destination well.  If
@@ -4931,6 +4897,10 @@ class Protocol(object):
           If volume is not specified as a string or Unit (or a list of either)
 
         """
+        # Check valid well inputs
+        if not is_valid_well(dests):
+            raise TypeError("Destinations (dests) must be of type Well, "
+                            "list of Wells, or WellGroup.")
         dests = WellGroup(dests)
         if not isinstance(resource_id, basestring):
             raise TypeError("Resource ID must be a string.")

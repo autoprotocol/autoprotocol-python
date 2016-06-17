@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v3.7.1 - 2016-06-17
+---
+Added
 - validations of input types before cover check
 Changed
 

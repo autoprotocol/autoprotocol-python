@@ -17,6 +17,8 @@ def make_dummy_type(**kwargs):
         "well_coating": None,
         "sterile": False,
         "is_tube": False,
+        "cover_types": [],
+        "seal_types": None,
         "capabilities": [],
         "shortname": "dummy",
         "col_count": 5,

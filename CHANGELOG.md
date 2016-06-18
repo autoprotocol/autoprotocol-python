@@ -16,6 +16,7 @@ Fixed
 ---
 Added
 - validations of input types before cover check
+- cover_types and seal_types to _CONTAINER_TYPES
 Changed
 
 Removed

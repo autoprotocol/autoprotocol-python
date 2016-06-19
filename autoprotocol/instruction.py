@@ -295,8 +295,9 @@ class Thermocycle(Instruction):
     CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
     CHANNEL4_DYES = ["CY5", "QUASAR670"]
     CHANNEL5_DYES = ["QUASAR705"]
+    CHANNEL6_DYES = ["FRET"]
     CHANNEL_DYES = [CHANNEL1_DYES, CHANNEL2_DYES,
-                    CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES]
+                    CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES, CHANNEL6_DYES]
     AVAILABLE_DYES = [
         dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 

@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+wells(${1:*args})
+]]></content>
+    <tabTrigger>wells</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns a WellGroup object</description>
+</snippet>

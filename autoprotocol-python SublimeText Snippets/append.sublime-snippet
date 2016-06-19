@@ -1,0 +1,6 @@
+<snippet>
+	<content><![CDATA[append(${1:Object})]]></content>
+	<tabTrigger>append</tabTrigger>
+	<scope>source.python</scope>
+	<description>Appends objects</description> 
+</snippet>

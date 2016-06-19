@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+discard()
+]]></content>
+    <tabTrigger>discard</tabTrigger>
+    <scope>source.python</scope>
+    <description>Discards the container</description>
+</snippet>

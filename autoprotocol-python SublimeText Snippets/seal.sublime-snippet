@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-seal(${1:ref})
+seal(ref=${1:Container ref})
 ]]></content>
     <tabTrigger>seal</tabTrigger>
     <scope>source.python</scope>
+    <description>Seals indicated plate</description>
 </snippet>

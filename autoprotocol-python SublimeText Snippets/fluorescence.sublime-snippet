@@ -1,9 +1,8 @@
 <snippet>
     <content><![CDATA[
-fluorescence(${1:ref}, [${2:wells}], ${3:excitation}, ${4:emission}, ${5:dataref})
+fluorescence(ref=${1:Container ref}, wells=${2:WellGroup wells}, excitation="${3:Str excitation}", emission="${4:Str emission}", dataref="${5:Str dataref}")
 ]]></content>
-    <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
     <tabTrigger>fluorescence</tabTrigger>
-    <!-- Optional: Set a scope to limit where the snippet will trigger -->
     <scope>source.python</scope>
+    <description>Read the fluoresence of well</description>
 </snippet>

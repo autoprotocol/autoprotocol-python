@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+decompose(idx=${1:well_ref})
+]]></content>
+    <tabTrigger>decompose</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns a tuple</description>
+</snippet>

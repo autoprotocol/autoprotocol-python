@@ -12,7 +12,41 @@ Removed
 
 Fixed
 
-## v3.5.3 - 2015-05-16
+## v3.7.1 - 2016-06-17
+---
+Added
+- validations of input types before cover check
+Changed
+
+Removed
+- string input types for source, destination wells for Instructions Consolidate, Autopick, Mix
+Fixed
+
+## v3.7.0 - 2016-06-14
+---
+Added
+- track plate cover status - Container objects now have a `cover` attribute, implicit plate unsealing or uncovering prior to steps that require the plate to be uncovered.
+
+Changed
+
+Removed
+
+Fixed
+- Stamp separates row stamps with more than 2 containers
+
+## v3.6.0 - 2016-06-07
+---
+Added
+- Time constraints
+
+Changed
+- illuminaseq allows cycle specification
+
+Removed
+
+Fixed
+
+## v3.5.3 - 2016-05-16
 ---
 Added
 
@@ -23,7 +57,7 @@ Removed
 
 Fixed
 
-## v3.5.2 - 2015-05-13
+## v3.5.2 - 2016-05-13
 ---
 Added
 - Unit specific error handling
@@ -35,7 +69,7 @@ Removed
 Fixed
 - thermocycle gradient steps in harness.py
 
-## v3.5.1 - 2015-05-12
+## v3.5.1 - 2016-05-12
 ---
 Added
 - mix allows one_tip=True
@@ -53,6 +87,7 @@ Added
 - measure_mass instruction
 - measure_volume instruction
 - illumina_sequence instruction
+
 
 Changed
 - gel purify parameters have changed

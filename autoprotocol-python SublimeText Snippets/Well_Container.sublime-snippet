@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+Well(${1:Container container}, ${2:Int index})
+]]></content>
+    <tabTrigger>Well</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns a well object</description>
+</snippet>

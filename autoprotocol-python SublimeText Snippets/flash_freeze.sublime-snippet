@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+flash_freeze(container=${1:Container container}, duration="${2:Str duration}")
+]]></content>
+    <tabTrigger>flash_freeze</tabTrigger>
+    <scope>source.python</scope>
+    <description>Flash freeze contents</description>
+</snippet>

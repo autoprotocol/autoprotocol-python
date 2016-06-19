@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+inner_wells()
+]]></content>
+    <tabTrigger>inner_wells</tabTrigger>
+    <scope>source.python</scope>
+    <description>Returns WellGroup</description>
+</snippet>

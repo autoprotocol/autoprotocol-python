@@ -1,9 +1,8 @@
 <snippet>
     <content><![CDATA[
-dispense_full_plate(${1:ref}, "${2:reagent}", ${3:volume})
+dispense_full_plate(ref=${1:Container ref}, reagent="${2:Str reagent}", volume="${3:Str volume}")
 ]]></content>
-    <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
     <tabTrigger>dispense_full_plate</tabTrigger>
-    <!-- Optional: Set a scope to limit where the snippet will trigger -->
     <scope>source.python</scope>
+    <description>Dispense to every well</description>
 </snippet>

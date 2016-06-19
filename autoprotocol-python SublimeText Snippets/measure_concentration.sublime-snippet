@@ -1,0 +1,8 @@
+<snippet>
+	<content><![CDATA[
+measure_concentration(wells=${1:WellGroup wells}, dataref="${2:Str dataref}", measurement="${3:Str measurement}")
+]]></content>
+	<tabTrigger>measure_concentration</tabTrigger>
+	<scope>source.python</scope>
+	<description>Measure concentration</description>
+</snippet>

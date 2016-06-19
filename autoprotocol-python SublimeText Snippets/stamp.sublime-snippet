@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-stamp(${1:source}, ${2:dest}, ${3:volume}, shape=${4:dict(rows=8, columns=12))}
+stamp(source_origin=${1:WellGroup source}, dest_origin=${2:WellGroup dest}, volume="${3:Str volume}")
 ]]></content>
     <tabTrigger>stamp</tabTrigger>
     <scope>source.python</scope>
+    <description>List of transfers</description>
 </snippet>

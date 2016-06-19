@@ -1,13 +1,8 @@
 <snippet>
     <content><![CDATA[
-thermocycle(${1:ref}, [${2:{
-	"cycles": 1,
-	"steps": [{}}]
-	}],
-	volume=${3:volume},
-	dataref=${4:None},
-	dyes=${5:None})
+thermocycle(ref=${1:Container ref}, groups=${2:[groups]})
 ]]></content>
     <tabTrigger>thermocycle</tabTrigger>
     <scope>source.python</scope>
+    <description>Thermocycle instruction</description>
 </snippet>

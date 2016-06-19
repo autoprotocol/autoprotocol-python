@@ -192,6 +192,21 @@ class DistributeTestCase(unittest.TestCase):
         self.assertTrue(Unit(5, 'microliter'), c.well(1).volume)
         self.assertTrue(Unit(15, 'microliter'), c.well(0).volume)
 
+    def test_uncover_before_distribute(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.distribute(c.well(0).set_volume("20:microliter"),
+                     c.well(1),
+                     "5:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual("distribute",
+                         list(p.as_dict()["instructions"][-1]["groups"][0].keys())[0])
+        self.assertTrue(5, c.well(1).volume)
+        self.assertTrue(15, c.well(0).volume)
+        self.assertEqual(p.instructions[-2].op, "uncover")
+        self.assertFalse(c.cover)
+
     def test_distribute_multiple_wells(self):
         p = Protocol()
         c = p.ref("test", None, "96-flat", discard=True)
@@ -250,6 +265,18 @@ class TransferTestCase(unittest.TestCase):
         self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
         self.assertEqual(None, c.well(0).volume)
         self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+
+    def test_uncover_before_transfer(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.cover(c)
+        p.transfer(c.well(0), c.well(1), "20:microliter")
+        self.assertEqual(3, len(p.instructions))
+        self.assertEqual(Unit(20, "microliter"), c.well(1).volume)
+        self.assertEqual(None, c.well(0).volume)
+        self.assertTrue("transfer" in p.instructions[-1].groups[-1])
+        self.assertTrue(p.instructions[-2].op == "uncover")
+        self.assertFalse(c.cover)
 
     def test_gt_900uL_transfer(self):
         p = Protocol()
@@ -729,6 +756,33 @@ class StampTestCase(unittest.TestCase):
                 "31:microliter")
         self.assertEqual(len(p.instructions), 3)
 
+        # Test: Check on max transfer limit - Row-wise
+        p = Protocol()
+        plateList = [p.ref("plate_%s_96" % str(x+1), None, "96-flat",
+                           discard=True) for x in range(3)]
+        # Mixture of columns
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=3, columns=12))
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=4, columns=12))
+        self.assertEqual(len(p.instructions), 1)
+        # Maximum number of row transfers
+        for i in range(8):
+            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                    "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 2)
+        self.assertEqual(len(p.instructions[0].groups), 3)
+        self.assertEqual(len(p.instructions[1].groups), 8)
+
+        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 3)
+        p.stamp(plateList[0].well("A1"), plateList[2].well("A1"),
+                "10:microliter", dict(rows=1, columns=12))
+        self.assertEqual(len(p.instructions), 4)
+
     def test_one_tip(self):
 
         p = Protocol()
@@ -797,6 +851,20 @@ class StampTestCase(unittest.TestCase):
             list(range(12))), "5:microliter", shape={"rows": 8, "columns": 1}, one_source=True)
         self.assertEqual(len(p.instructions[0].groups), 12)
 
+    def test_implicit_uncover(self):
+        p = Protocol()
+        plateCount = 2
+        plateList = [p.ref("plate_%s_384" % str(x+1), None, "384-flat",
+                           discard=True, cover="universal")
+                     for x in range(plateCount)]
+        for x in plateList:
+            self.assertTrue(x.cover)
+        p.stamp(plateList[0], plateList[1], "5:microliter")
+        for x in plateList:
+            self.assertFalse(x.cover)
+        self.assertTrue(len(p.instructions) == 3)
+        self.assertTrue(p.instructions[0].op == "uncover")
+
 
 class RefifyTestCase(unittest.TestCase):
 
@@ -815,6 +883,17 @@ class RefifyTestCase(unittest.TestCase):
         # refify WellGroup
         wellgroup = refs["plate"].wells_from("A2", 3)
         self.assertEqual(p._refify(wellgroup), ["test/1", "test/2", "test/3"])
+
+        # refify Unit
+        a_unit = Unit("30:microliter")
+        self.assertEqual(p._refify(a_unit), "30.0:microliter")
+
+        # refify Instruction
+        p.cover(refs["plate"])
+        self.assertEqual(p._refify(p.instructions[0]), p._refify(p.instructions[0].data))
+
+        # refify Ref
+        self.assertEqual(p._refify(p.refs["test"]), p.refs["test"].opts)
 
         # refify other
         s = "randomstring"
@@ -841,6 +920,87 @@ class OutsTestCase(unittest.TestCase):
             list(p.as_dict()['outs'].values())[0]['0']['properties']['test'] == 'foo')
 
 
+class InstructionIndexTestCase(unittest.TestCase):
+
+    def test_instruction_index(self):
+        p = Protocol()
+        plate = p.ref("plate", None, "96-flat", discard=True)
+
+        with self.assertRaises(ValueError):
+            p.get_instruction_index()
+        p.cover(plate)
+        self.assertEqual(p.get_instruction_index(), 0)
+        p.uncover(plate)
+        self.assertEqual(p.get_instruction_index(), 1)
+
+
+class TimeConstrainstTestCase(unittest.TestCase):
+
+    def test_time_constraint(self):
+        p = Protocol()
+
+        plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+        plate_2 = p.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+
+        p.cover(plate_1)
+        time_point_1 = p.get_instruction_index()
+        p.cover(plate_2)
+        time_point_2 = p.get_instruction_index()
+
+        with self.assertRaises(AttributeError):
+            p.time_constraints
+
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": time_point_1, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": time_point_2, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_2, "state": "start"}, {"mark": time_point_1, "state": "end"},
+                              "10:minute")
+        p.add_time_constraint({"mark": time_point_1, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_1, "state": "end"}, "10:minute")
+        p.add_time_constraint({"mark": plate_2, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        self.assertEqual(len(p.time_constraints), 6)
+
+        p.add_time_constraint({"mark": time_point_1, "state": "end"}, {"mark": time_point_2, "state": "end"},
+                              "10:minute", True)
+
+        self.assertEqual(len(p.time_constraints), 8)
+
+    def test_time_constraint_checker(self):
+        p = Protocol()
+
+        plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+        plate_2 = p.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+
+        p.cover(plate_1)
+        p.cover(plate_2)
+
+        with self.assertRaises(ValueError):
+            p.add_time_constraint({"mark": -1, "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(TypeError):
+            p.add_time_constraint({"mark": "foo", "state": "start"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(TypeError):
+            p.add_time_constraint({"mark": plate_1, "state": "foo"}, {"mark": plate_2, "state": "end"}, "10:minute")
+
+        with self.assertRaises(ValueError):
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_2, "state": "end"}, "-10:minute")
+
+        with self.assertRaises(RuntimeError):
+            p.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(RuntimeError):
+            p.add_time_constraint({"mark": plate_1, "state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(KeyError):
+            p.add_time_constraint({"mark": plate_1}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+        with self.assertRaises(KeyError):
+            p.add_time_constraint({"state": "end"}, {"mark": plate_1, "state": "start"}, "10:minute")
+
+
 class AbsorbanceTestCase(unittest.TestCase):
 
     def test_single_well(self):
@@ -849,6 +1009,12 @@ class AbsorbanceTestCase(unittest.TestCase):
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading")
         self.assertTrue(isinstance(p.instructions[0].wells, list))
+
+    def test_bad_well(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        with self.assertRaises(ValueError):
+            p.absorbance(test_plate, "bad_well_ref",  wavelength="450:nanometer", dataref="bad_wells")
 
     def test_temperature(self):
         p = Protocol()
@@ -1697,9 +1863,22 @@ class IlluminaSeqTestCase(unittest.TestCase):
                           {"object": sample_wells[6], "library_concentration": 21},
                           {"object": sample_wells[7], "library_concentration": 62}
                       ],
-                      "hiseq", "rapid", 'none', 250, "dataref")
+                      "hiseq", "rapid", 'none', 250, "dataref",
+                      {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 4})
         self.assertEqual(len(p.instructions), 2)
         self.assertEqual(len(p.instructions[1].lanes), 8)
+
+    def test_illumina_seq_default(self):
+        p = Protocol()
+        sample_wells = p.ref(
+            "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+        p.illuminaseq("PE", [{"object": sample_wells[0], "library_concentration": 1.0},
+                      {"object": sample_wells[1], "library_concentration": 2}],
+                      "nextseq", "mid", 'none', 34, "dataref", {"read_1": 100})
+
+        self.assertEqual(len(p.instructions), 1)
+        self.assertTrue("index_1" in p.instructions[0].cycles)
+        self.assertEqual(0, p.instructions[0].cycles["index_2"])
 
     def test_illumina_bad_params(self):
         p = Protocol()
@@ -1718,3 +1897,57 @@ class IlluminaSeqTestCase(unittest.TestCase):
                               {"object": sample_wells[1], "library_concentration": 2}
                           ],
                           "miseq", "high", 'none', 250, "not_enough_lanes")
+        with self.assertRaises(RuntimeError):
+            p.illuminaseq("SR",
+                          [
+                              {"object": sample_wells[0], "library_concentration": 1.0},
+                              {"object": sample_wells[1], "library_concentration": 2}
+                          ],
+                          "nextseq", "high", "none", 250, "wrong_seq", {"read_2": 500, "read_1": 2})
+        with self.assertRaises(ValueError):
+            p.illuminaseq("PE",
+                          [
+                              {"object": sample_wells[0], "library_concentration": 1.0},
+                              {"object": sample_wells[1], "library_concentration": 2}
+                          ],
+                          "nextseq", "high", "none", 250, "index_too_high",
+                          {"read_2": 300, "read_1": 100, "index_1": 4, "index_2": 9})
+            p.gel_purify(sample_wells[:4], extracts[:4], "5:microliter",
+                         "select_size(8,0.8%)", "ladder1", "gel_purify_test")
+
+
+class CoverStatusTestCase(unittest.TestCase):
+    def test_ref_cover_status(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "ultra-clear")
+        self.assertTrue(p.refs[cont.name].opts['cover'])
+
+    def test_ref_invalid_seal(self):
+        p = Protocol()
+        with self.assertRaises(AttributeError):
+            cont = p.ref("cont", None, "96-pcr", discard=True, cover="clear")
+            self.assertFalse(cont.cover)
+            self.assertFalse(cont.cover == "clear")
+            self.assertFalse(p.refs[cont.name].opts['cover'])
+
+    def test_implicit_unseal(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-pcr", discard=True)
+        self.assertFalse(cont.cover)
+        p.seal(cont)
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "ultra-clear")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)
+
+    def test_implicit_uncover(self):
+        p = Protocol()
+        cont = p.ref("cont", None, "96-flat", discard=True)
+        self.assertFalse(cont.cover)
+        p.cover(cont, "universal")
+        self.assertTrue(cont.cover)
+        self.assertTrue(cont.cover == "universal")
+        p.mix(cont.well(0))
+        self.assertFalse(cont.cover)

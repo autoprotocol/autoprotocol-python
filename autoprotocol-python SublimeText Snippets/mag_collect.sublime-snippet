@@ -1,0 +1,8 @@
+<snippet>
+    <content><![CDATA[
+mag_collect(head="${1:Str head}", container=${2:Container container}, cycles=${3:Int cycles}, pause_duration="${4:Str pause_duration}")
+]]></content>
+    <tabTrigger>mag_collect</tabTrigger>
+    <scope>source.python</scope>
+    <description>Collect beads from container</description>
+</snippet>

@@ -1,7 +1,8 @@
 <snippet>
     <content><![CDATA[
-unseal(${1:ref})
+unseal(ref=${1:Container ref})
 ]]></content>
     <tabTrigger>unseal</tabTrigger>
     <scope>source.python</scope>
+    <description>Removes seal from plate </description>
 </snippet>

@@ -3004,6 +3004,7 @@ class Protocol(object):
         except (ValueError) as e:
             raise ValueError("Duration must be a unit. %s" % e)
 
+        self._add_cover(ref, "spin")
         self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
     def thermocycle(self, ref, groups,
@@ -3278,6 +3279,9 @@ class Protocol(object):
                 "groups for thermocycling must be a list of cycles in the "
                 "form of [{'cycles':___, 'steps': [{'temperature':___,"
                 "'duration':___, }]}, { ... }, ...]")
+        if not isinstance(ref, Container):
+            raise TypeError("Ref must be of type Container.")
+        self._add_seal(ref, "thermocycle")
         self.instructions.append(
             Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
                         melting_end, melting_increment, melting_rate))
@@ -3965,12 +3969,13 @@ class Protocol(object):
         """
         if type not in SEAL_TYPES:
             raise RuntimeError("%s is not a valid seal type" % type)
-        if not (ref.is_covered() or ref.is_sealed()):
-            self.refs[ref.name].opts["cover"] = type
+        if not isinstance(ref, Container):
+            raise TypeError("Container to seal must be of type Container.")
+        if ref.is_covered():
+            raise RuntimeError("A container cannot be sealed over a lid.")
+        if not ref.is_sealed():
             ref.cover = type
-        else:
-            return
-        self.instructions.append(Seal(ref, type))
+            self.instructions.append(Seal(ref, type))
 
     def unseal(self, ref):
         """
@@ -4012,12 +4017,13 @@ class Protocol(object):
             Container to be unsealed
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Container to unseal must be of type Container.")
+        if ref.is_covered():
+            raise RuntimeError("A container cannot be unsealed with a cover.")
         if ref.is_sealed():
-            self.refs[ref.name].opts["cover"] = None
             ref.cover = None
-        else:
-            return
-        self.instructions.append(Unseal(ref))
+            self.instructions.append(Unseal(ref))
 
     def cover(self, ref, lid='standard'):
         """
@@ -4054,14 +4060,15 @@ class Protocol(object):
             Type of lid to cover container with
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Container to cover must be of type Container.")
         if lid not in COVER_TYPES:
             raise RuntimeError("%s is not a valid lid type" % lid)
-        if not (ref.is_covered() or ref.is_sealed()):
-            self.refs[ref.name].opts["cover"] = lid
+        if ref.is_sealed():
+            raise RuntimeError("A container cannot be covered over a seal.")
+        if not ref.is_covered():
             ref.cover = lid
-        else:
-            return
-        self.instructions.append(Cover(ref, lid))
+            self.instructions.append(Cover(ref, lid))
 
     def uncover(self, ref):
         """
@@ -4103,12 +4110,13 @@ class Protocol(object):
             Container to remove lid from
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Container to uncover must be of type Container.")
+        if ref.is_sealed():
+            raise RuntimeError("A container cannot be uncovered with a seal.")
         if ref.is_covered():
-            self.refs[ref.name].opts["cover"] = None
             ref.cover = None
-        else:
-            return
-        self.instructions.append(Uncover(ref))
+            self.instructions.append(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
@@ -5089,6 +5097,32 @@ class Protocol(object):
                                "recognized cover or seal type."
                                "".format(action, container.cover))
 
+    def _add_cover(self, container, action):
+        if (container.is_covered() or container.is_sealed()):
+            return
+        elif "cover" in container.container_type.capabilities:
+                self.cover(container, container.container_type.cover_types[0])
+        elif "seal" in container.container_type.capabilities:
+            self.seal(container, container.container_type.seal_types[0])
+        else:
+            raise RuntimeError("The operation {} requires a covered "
+                               "container, however, {} does not have a "
+                               "recognized cover or seal type."
+                               "".format(action, container.container_type.name))
+
+    def _add_seal(self, container, action):
+        if container.is_sealed():
+            return
+        if container.is_covered():
+            self.uncover(container)
+        if "seal" in container.container_type.capabilities:
+            self.seal(container, container.container_type.seal_types[0])
+        else:
+            raise RuntimeError("The operation {} requires a sealed "
+                               "container, however, {} does not have a "
+                               "recognized seal type."
+                               "".format(action, container.container_type.name))
+
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """
         Append given magnetic_transfer groups to protocol
@@ -5330,16 +5364,10 @@ class Protocol(object):
             "protein"].
 
         """
-        if isinstance(wells, Well):
-          wells = WellGroup(wells)
-
-        if not isinstance(wells, (WellGroup, list)):
-          raise TypeError("Only Well, WellGroup, or list of Well allowed")
-
-        if isinstance(wells, list):
-          for well in wells:
-            if not isinstance(well, Well):
-              raise TypeError("Only list of Well allowed")
+        if not is_valid_well(wells):
+            raise TypeError("Wells must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        wells = WellGroup(wells)
 
         self.instructions.append(MeasureConcentration(wells, volume, dataref,
                                                       measurement))
@@ -5449,15 +5477,9 @@ class Protocol(object):
             Name of this specific dataset of measurements
 
         """
-        if isinstance(wells, Well):
-          wells = WellGroup(wells)
-
-        if not isinstance(wells, (WellGroup, list)):
-          raise TypeError("Only Well, WellGroup, or list of Well allowed")
-
-        if isinstance(wells, list):
-          for well in wells:
-            if not isinstance(well, Well):
-              raise TypeError("Only list of Well allowed")
+        if not is_valid_well(wells):
+            raise TypeError("Wells must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        wells = WellGroup(wells)
 
         self.instructions.append(MeasureVolume(wells, dataref))

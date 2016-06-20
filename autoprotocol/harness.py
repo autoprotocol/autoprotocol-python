@@ -520,10 +520,10 @@ def seal_on_store(protocol):
                         action = "cover"
             if cover:
                 cov = getattr(protocol, action)
-                cov(ref.container)
+                cov(ref.container, cover)
             elif "seal" in ref.container.container_type.capabilities:
-                protocol.seal(ref.container)
+                protocol.seal(ref.container, ref.container.container_type.seal_types[0])
             elif "cover" in ref.container.container_type.capabilities:
-                protocol.cover(ref.container)
+                protocol.cover(ref.container, ref.container.container_type.cover_types[0])
             else:
                 continue

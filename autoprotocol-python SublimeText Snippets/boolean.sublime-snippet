@@ -1,7 +1,7 @@
 <snippet>
 	<content><![CDATA[
 "${1:name}": {
-  "type": "boolean",
+  "type": "bool",
   "default": ${2:false},
   "label": "${3:your_label}",
   "description": "${4:Is false until assigned true}"

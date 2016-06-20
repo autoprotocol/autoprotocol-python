@@ -509,7 +509,7 @@ def seal_on_store(protocol):
     for name, ref in protocol.refs.items():
         cover = None
         action = None
-        if not ref.opts.get("cover") and "store" in ref.opts.keys():
+        if "store" in ref.opts.keys():
             for i in protocol.instructions:
                 if i.data.get("object") == ref.container:
                     if i.op == "seal":

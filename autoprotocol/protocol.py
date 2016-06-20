@@ -3,12 +3,9 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit
 from .instruction import *  # flake8: noqa
 from .pipette_tools import assign
-from .util import check_valid_origin
-from .util import check_stamp_append
-from .util import check_valid_mag
-from .util import check_valid_mag_params
-from .util import check_valid_incubate_params
-from .util import check_valid_gel_purify_extract
+from .util import check_valid_origin, check_stamp_append, check_valid_mag, \
+    check_valid_mag_params, check_valid_gel_purify_extract, is_valid_well, \
+    check_valid_incubate_params
 
 import sys
 if sys.version_info[0] >= 3:
@@ -592,7 +589,6 @@ class Protocol(object):
 
         return {attr: self._refify(getattr(self, attr)) for attr in prop_list if attr in explicit_props}
 
-
     def store(self, container, condition):
         """
         Manually adjust the storage destiny for a container used within
@@ -786,6 +782,14 @@ class Protocol(object):
             Wells or WellGroups.
 
         """
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
+
         opts = {}
         try:
             dists = self.fill_wells(dest, source, volume, distribute_target)
@@ -964,6 +968,14 @@ class Protocol(object):
             number of wells and one_source is not True.
 
         """
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
+
         opts = []
         source = WellGroup(source)
         dest = WellGroup(dest)
@@ -1213,7 +1225,7 @@ class Protocol(object):
         ----------
         sources : Well, WellGroup
             Well or wells to transfer liquid from.
-        dest : Well, str
+        dest : Well
             Well to which to transfer consolidated liquid.
         volumes : str, Unit, list
             The volume(s) of liquid to be transferred from source well(s) to
@@ -1263,10 +1275,14 @@ class Protocol(object):
             If a volume list is supplied and the length does not match the
             number of source wells.
         """
-        # Check validity of inputs
-        if not isinstance(dest, (Well, str)):
+        # Check valid well inputs
+        if not is_valid_well(sources):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if not isinstance(dest, Well):
             raise TypeError("You can only consolidate liquid into one "
-                            "destination well.")
+                            "destination well which must be of type Well.")
+
         self._remove_cover(dest.container, "consolidate into")
         if isinstance(sources, (Well, basestring)):
             sources = [sources]
@@ -1407,6 +1423,13 @@ class Protocol(object):
             }]
 
         """
+        # Check valid well inputs
+        if not is_valid_well(source):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if not is_valid_well(dest):
+            raise TypeError("Destination (dest) must be of type Well, list of "
+                            "Wells, or WellGroup.")
         transfers = []
         source = WellGroup(source)
         dest = WellGroup(dest)
@@ -1605,12 +1628,12 @@ class Protocol(object):
 
         Parameters
         ----------
-        source_origin : Container, Well, WellGroup
+        source_origin : Container, Well, WellGroup, List of Wells
             Top-left well or wells where the rows/columns will be defined with
             respect to the source transfer.
             If a container is specified, stamp will be applied to all
             quadrants of the container.
-        dest_origin : Container, Well, WellGroup
+        dest_origin : Container, Well, WellGroup, List of Wells
             Top-left well or wells where the rows/columns will be defined with
             respect to the destination transfer.
             If a container is specified, stamp will be applied to all
@@ -1763,10 +1786,13 @@ class Protocol(object):
                                 "dest_origin is a container, it must be a "
                                 "container with 96 or 384 wells.")
 
-        # Test that stamp only takes Container, Well, or WellGroup
-        if not (isinstance(source_origin, Well) or isinstance(source_origin, WellGroup)) or not (isinstance(dest_origin, Well) or isinstance(dest_origin, WellGroup)):
-            raise TypeError("Invalid input type given. Source and destination "
-                            "must be of type Container, Well, or WellGroup.")
+        # Check valid well inputs
+        if not is_valid_well(source_origin):
+            raise TypeError("Source (source_origin) must be of type Well, "
+                            "list of Wells, or WellGroup.")
+        if not is_valid_well(dest_origin):
+            raise TypeError("Destination (dest_origin) must be of type Well, "
+                            "list of Wells, or WellGroup.")
 
         # Initialize input parameters
         source = WellGroup(source_origin)
@@ -2618,7 +2644,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        well : str, Well, WellGroup, list of Wells
+        well : Well, WellGroup, list of Wells
             Well(s) to be mixed. If a WellGroup is passed, each well in the
             group will be mixed using the specified parameters.
         volume : str, Unit, optional
@@ -2631,13 +2657,11 @@ class Protocol(object):
             mix all wells with a single tip
 
         """
-        if not isinstance(well, (Well, basestring, WellGroup, list)):
-            raise TypeError("Well given is not of type 'str', 'Well', "
-                            "'WellGroup' or 'list'.")
-        if isinstance(well, (Well, basestring)):
-            well = WellGroup([well])
-        if isinstance(well, list):
-            well = WellGroup(well)
+        # Check valid well inputs
+        if not is_valid_well(well):
+            raise TypeError("Mix well must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        well = WellGroup(well)
         if one_tip:
             group = []
             for w in well.wells:
@@ -2756,7 +2780,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : Container, str
+        ref : Container
             Container for reagent to be dispensed to.
         reagent : str
             Reagent to be dispensed to columns in container.
@@ -2771,7 +2795,8 @@ class Protocol(object):
             dispenser.
 
         """
-
+        if not isinstance(ref, Container):
+            raise TypeError("Ref must be of type Container.")
         self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
@@ -2887,6 +2912,8 @@ class Protocol(object):
             dispenser.
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Ref must be of type Container.")
         self._remove_cover(ref, "dispense to")
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
@@ -3637,8 +3664,8 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : list, WellGroup
-            List of string well references or WellGroup containing wells to be
+        wells : list, WellGroup, Well
+            List of wella or WellGroup containing wells to be
             separated on gel.
         volume : str, Unit
             Volume of liquid to be transferred from each well specified to a
@@ -3652,6 +3679,12 @@ class Protocol(object):
         dataref : str
             Name of this set of gel separation results.
         """
+        # Check valid well inputs
+        if not is_valid_well(wells):
+            raise TypeError("Wells must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
         for w in wells:
             self._remove_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
@@ -4308,14 +4341,19 @@ class Protocol(object):
 
         Parameters
         ----------
-        source : str, Well
+        source : Well
             Source of material to spread on agar
-        dest : str, Well
+        dest : Well
             Reference to destination location (plate containing agar)
         volume : str, Unit
             Volume of source material to spread on agar
 
         """
+        # Check validity of Well inputs
+        if not isinstance(source, Well):
+            raise TypeError("Source must be of type Well.")
+        if not isinstance(dest, Well):
+            raise TypeError("Destination, (dest), must be of type Well.")
         self._remove_cover(source.container, "spread")
         self._remove_cover(dest.container, "spread")
         volume = Unit.fromstring(volume)
@@ -4344,27 +4382,32 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : list of str, list of Wells
-          Reference to plate containing agar and colonies to pick
-        dests : list of str, list of Wells
-          List of destination(s) for picked colonies
+        sources : Well, WellGroup, list of Wells
+            Reference wells containing agar and colonies to pick
+        dests : Well, WellGroup, list of Wells
+            List of destination(s) for picked colonies
         criteria : dict
-          Dictionary of autopicking criteria.
+            Dictionary of autopicking criteria.
         min_abort : int, optional
-          Total number of colonies that must be detected in the aggregate
-          list of `from` wells to avoid aborting the entire run.
+            Total number of colonies that must be detected in the aggregate
+            list of `from` wells to avoid aborting the entire run.
 
         """
+        # Check valid well inputs
+        if not is_valid_well(sources):
+            raise TypeError("Source must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if not is_valid_well(dests):
+            raise TypeError("Destinations (dests) must be of type Well, "
+                            "list of Wells, or WellGroup.")
         pick = {}
 
-        if isinstance(sources, Well) or isinstance(sources, str):
-            sources = [sources]
+        sources = WellGroup(sources)
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
             raise RuntimeError("All source wells for autopick must exist "
                                "on the same container")
-        if isinstance(dests, Well) or isinstance(dests, str):
-            dests = [dests]
+        dests = WellGroup(dests)
         pick["to"] = dests
         pick["min_abort"] = min_abort
 
@@ -4830,7 +4873,7 @@ class Protocol(object):
         ----------
         resource_id : str
           Resource ID from catalog.
-        dests : Well, WellGroup
+        dests : Well, WellGroup, list of Wells
           Destination(s) for specified resource.
         volumes : str, Unit, list of str, list of Unit
           Volume(s) to transfer of the resource to each destination well.  If
@@ -4850,6 +4893,10 @@ class Protocol(object):
           If volume is not specified as a string or Unit (or a list of either)
 
         """
+        # Check valid well inputs
+        if not is_valid_well(dests):
+            raise TypeError("Destinations (dests) must be of type Well, "
+                            "list of Wells, or WellGroup.")
         dests = WellGroup(dests)
         if not isinstance(resource_id, basestring):
             raise TypeError("Resource ID must be a string.")

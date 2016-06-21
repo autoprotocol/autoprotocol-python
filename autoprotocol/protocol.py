@@ -3943,7 +3943,7 @@ class Protocol(object):
 
             self.instructions.append(GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
 
-    def seal(self, ref, type="ultra-clear"):
+    def seal(self, ref, type=None):
         """
         Seal indicated container using the automated plate sealer.
 
@@ -3979,10 +3979,12 @@ class Protocol(object):
           Seal type to be used, such as "ultra-clear" or "foil".
 
         """
-        if type not in SEAL_TYPES:
-            raise RuntimeError("%s is not a valid seal type" % type)
         if not isinstance(ref, Container):
             raise TypeError("Container to seal must be of type Container.")
+        if type is None:
+            type = ref.container_type.seal_types[0]
+        if type not in SEAL_TYPES:
+            raise RuntimeError("%s is not a valid seal type" % type)
         if ref.is_covered():
             raise RuntimeError("A container cannot be sealed over a lid.")
         if not ref.is_sealed():
@@ -4037,7 +4039,7 @@ class Protocol(object):
             ref.cover = None
             self.instructions.append(Unseal(ref))
 
-    def cover(self, ref, lid='standard'):
+    def cover(self, ref, lid=None):
         """
         Place specified lid type on specified container
 
@@ -4074,6 +4076,8 @@ class Protocol(object):
         """
         if not isinstance(ref, Container):
             raise TypeError("Container to cover must be of type Container.")
+        if lid is None:
+            lid = ref.container_type.cover_types[0]
         if lid not in COVER_TYPES:
             raise RuntimeError("%s is not a valid lid type" % lid)
         if ref.is_sealed():

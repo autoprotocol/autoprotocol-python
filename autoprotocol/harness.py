@@ -434,8 +434,7 @@ def _thermocycle_error_text():
 def seal_on_store(protocol):
     '''
     Implicitly adds seal/cover instructions to the end of a run for containers
-    that do not have a cover.   If no cover or seal instructions involving a
-    given container were present in a protocol, cover type applied defaults first to
+    that do not have a cover.   Cover type applied defaults first to
     "seal" if its within the capabilities of the container type, otherwise
     to "cover".
 
@@ -458,7 +457,6 @@ def seal_on_store(protocol):
               "refs": {
                 "plate": {
                   "new": "96-pcr",
-                  "cover": "standard",
                   "store": {
                     "where": "ambient"
                   }
@@ -489,7 +487,7 @@ def seal_on_store(protocol):
                   "op": "unseal"
                 },
                 {
-                  "lid": "standard",
+                  "lid": "universal",
                   "object": "plate",
                   "op": "cover"
                 },
@@ -498,23 +496,20 @@ def seal_on_store(protocol):
                   "op": "uncover"
                 },
                 {
-                  "lid": "standard",
+                  "type": "ultra-clear",
                   "object": "plate",
-                  "op": "cover"
+                  "op": "seal"
                 }
               ]
             }
 
     '''
     for name, ref in protocol.refs.items():
-        cover = None
-        action = None
         if "store" in ref.opts.keys():
-            if (ref.container.is_covered() or ref.container.is_sealed()):
-                continue
-            if "seal" in ref.container.container_type.capabilities:
-                protocol.seal(ref.container, ref.container.container_type.seal_types[0])
-            elif "cover" in ref.container.container_type.capabilities:
-                protocol.cover(ref.container, ref.container.container_type.cover_types[0])
-            else:
-                continue
+            if not (ref.container.is_covered() or ref.container.is_sealed()):
+                if "seal" in ref.container.container_type.capabilities:
+                    protocol.seal(ref.container, ref.container.container_type.seal_types[0])
+                elif "cover" in ref.container.container_type.capabilities:
+                    protocol.cover(ref.container, ref.container.container_type.cover_types[0])
+                else:
+                    continue

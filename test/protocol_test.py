@@ -1923,7 +1923,6 @@ class CoverStatusTestCase(unittest.TestCase):
         cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")
         self.assertTrue(cont.cover)
         self.assertTrue(cont.cover == "ultra-clear")
-        self.assertTrue(p.refs[cont.name].opts['cover'])
 
     def test_ref_invalid_seal(self):
         p = Protocol()

@@ -506,7 +506,6 @@ def seal_on_store(protocol):
     '''
     for name, ref in protocol.refs.items():
         if "store" in ref.opts.keys():
-<<<<<<< ccbd760b2f1be7192f8635661756caf1eb1b582c
             if not (ref.container.is_covered() or ref.container.is_sealed()):
                 if "seal" in ref.container.container_type.capabilities:
                     protocol.seal(ref.container, ref.container.container_type.seal_types[0])
@@ -514,13 +513,3 @@ def seal_on_store(protocol):
                     protocol.cover(ref.container, ref.container.container_type.cover_types[0])
                 else:
                     continue
-=======
-            if (ref.container.is_covered() or ref.container.is_sealed()):
-                continue
-            if "seal" in ref.container.container_type.capabilities:
-                protocol.seal(ref.container, ref.container.container_type.seal_types[0])
-            elif "cover" in ref.container.container_type.capabilities:
-                protocol.cover(ref.container, ref.container.container_type.cover_types[0])
-            else:
-                continue
->>>>>>> assign desired ordering of seal and cover for Spin, Thermocycle, Store

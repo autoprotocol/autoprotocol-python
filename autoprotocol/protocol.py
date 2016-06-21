@@ -244,9 +244,6 @@ class Protocol(object):
         except ValueError:
             raise RuntimeError("You must specify a ref's container type.")
 
-        if cover and (cover in SEAL_TYPES or cover in COVER_TYPES):
-            opts["cover"] = cover
-
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
@@ -2959,9 +2956,9 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Ref
+        ref : Container
             The container to be centrifuged.
-        acceleration: str,
+        acceleration: str
             Acceleration to be applied to the plate, in units of `g` or
             `meter/second^2`.
         duration: str, Unit
@@ -2978,6 +2975,11 @@ class Protocol(object):
             "flow_direction" is "outward", then "spin_direction" defaults to
             ["cw", "ccw"]. If "flow_direction" is "inward", then
             "spin_direction" defaults to ["cw"].
+
+        Raises
+        ------
+        TypeError:
+            If ref to thermocycle is not of type Container.
 
         """
         if flow_direction is not None and flow_direction not in ["inward", "outward"]:
@@ -3003,6 +3005,12 @@ class Protocol(object):
             duration = Unit(duration)
         except (ValueError) as e:
             raise ValueError("Duration must be a unit. %s" % e)
+
+        if not isinstance(ref, Container):
+            raise TypeError("Ref must be of type Container.")
+
+        if ref.container_type.is_tube:
+            raise TypeError("Tubes are not compatible with Spin instructions.")
 
         self._add_cover(ref, "spin")
         self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
@@ -3247,8 +3255,8 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Ref
-            Container to be thermocycled
+        ref : Container
+            Container to be thermocycled.
         groups : list of dicts
             List of thermocycling instructions formatted as above
         volume : str, Unit, optional
@@ -3270,9 +3278,10 @@ class Protocol(object):
 
         Raises
         ------
-        AttributeError
-            if groups are not properly formatted
-
+        AttributeError:
+            If groups are not properly formatted
+        TypeError:
+            If ref to thermocycle is not of type Container.
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -3281,6 +3290,9 @@ class Protocol(object):
                 "'duration':___, }]}, { ... }, ...]")
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
+        if ref.container_type.is_tube:
+            raise TypeError("Tubes are not compatible with Spin instructions.")
+
         self._add_seal(ref, "thermocycle")
         self.instructions.append(
             Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
@@ -5113,8 +5125,11 @@ class Protocol(object):
     def _add_seal(self, container, action):
         if container.is_sealed():
             return
-        if container.is_covered():
-            self.uncover(container)
+        elif container.is_covered():
+            raise RuntimeError("The operation {} requires a sealed "
+                               "container, however, {} currently has"
+                               "a lid which needs to be first removed."
+                               "".format(action, container.name))
         if "seal" in container.container_type.capabilities:
             self.seal(container, container.container_type.seal_types[0])
         else:

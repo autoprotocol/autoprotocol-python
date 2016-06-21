@@ -158,6 +158,7 @@ class WellGroup(object):
             raise TypeError("Wells must be Well, list of wells, WellGroup.")
 
         self.wells = wells
+        self.name = None
 
     def set_properties(self, properties):
         """
@@ -235,6 +236,64 @@ class WellGroup(object):
             raise TypeError("Input given is not of type 'WellGroup'.")
         else:
             return self.wells.extend(other.wells)
+
+    #Josh Nowak code edit 6/20/16
+    def set_group_name(self, name):
+        """
+        Name a WellGroup. Note the wells may have their own unique name which will be overwritten
+
+        Parameters
+        ----------
+        name: str
+            WellGroup name
+        """
+        self.name = name
+        return self
+
+    def get_well_list(self):
+        """
+        Return a numerical list (robot indices) of what wells have liquid in them.
+
+        """
+        well_list = []
+        for x in self.wells:
+            well_list.append(x.index)
+        return well_list
+
+    def get_wg_volumes(self):
+        """
+        Returns a dictionary that reports well volumes
+        {'well index': 'well volume'}
+
+        """
+        dict_vols = {}
+        for x in range(0,len(self)):
+            dict_vols[self.get_well_list()[x]] = self[x].volume
+        return dict_vols
+
+    def wells_with(self, property, value):
+        """
+        Returns a wellgroup of wells with the specified property and value
+
+        Parameters
+        ----------
+        property: str
+            the property you are searching for
+        value: str
+            the value assigned to the property
+        """
+        assert type(property) is str, "property is not a string: %r" % property
+        assert type(value) is str, "value is not a string: %r" % value
+        my_property = WellGroup([])
+        for x in self.wells:
+            if property in x.properties:
+                if x.properties[property] == value:
+                    my_property.append(x)
+        return my_property
+
+    #End of Josh Nowak code
+
+
 
     def __getitem__(self, key):
         """

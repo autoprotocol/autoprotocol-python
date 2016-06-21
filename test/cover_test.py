@@ -44,8 +44,8 @@ class CoverSealTestCase(unittest.TestCase):
         self.assertEqual(cont2.cover, "universal")
         p.unseal(cont1)
         p.transfer(cont4.well(0), cont3.well(0), "1:microliter")
-        with self.assertRaises(TypeError):
-            p.spin(cont4, acceleration="1000:g", duration="2:minute")
+        p.spin(cont4, acceleration="1000:g", duration="2:minute")
+        self.assertEqual(cont4.cover, None)
         with self.assertRaises(TypeError):
             p.thermocycle(cont4, groups=therm_groups)
         seal_on_store(p)

@@ -3009,10 +3009,9 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
 
-        if ref.container_type.is_tube:
-            raise TypeError("Tubes are not compatible with Spin instructions.")
+        if not ref.container_type.is_tube:
+            self._add_cover(ref, "spin")
 
-        self._add_cover(ref, "spin")
         self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
     def thermocycle(self, ref, groups,
@@ -3291,7 +3290,7 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         if ref.container_type.is_tube:
-            raise TypeError("Tubes are not compatible with Spin instructions.")
+            raise TypeError("Tubes are not compatible with Thermocycle instructions.")
 
         self._add_seal(ref, "thermocycle")
         self.instructions.append(

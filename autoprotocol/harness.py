@@ -510,18 +510,9 @@ def seal_on_store(protocol):
         cover = None
         action = None
         if "store" in ref.opts.keys():
-            for i in protocol.instructions:
-                if i.data.get("object") == ref.container:
-                    if i.op == "seal":
-                        cover = i.data['type']
-                        action = "seal"
-                    elif i.op == "cover":
-                        cover = i.data['lid']
-                        action = "cover"
-            if cover:
-                cov = getattr(protocol, action)
-                cov(ref.container, cover)
-            elif "seal" in ref.container.container_type.capabilities:
+            if (ref.container.is_covered() or ref.container.is_sealed()):
+                continue
+            if "seal" in ref.container.container_type.capabilities:
                 protocol.seal(ref.container, ref.container.container_type.seal_types[0])
             elif "cover" in ref.container.container_type.capabilities:
                 protocol.cover(ref.container, ref.container.container_type.cover_types[0])

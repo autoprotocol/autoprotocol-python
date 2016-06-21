@@ -256,7 +256,7 @@ _CONTAINER_TYPES = {
                              seal_types=["ultra-clear", "foil"],
                              capabilities=["pipette", "spin", "thermocycle",
                                            "incubate", "gel_separate", "gel_purify",
-                                           "seal", "stamp", "dispense"],
+                                           "seal", "stamp", "dispense", "cover"],
                              shortname="384-pcr",
                              col_count=24,
                              dead_volume_ul=Unit(2, "microliter"),

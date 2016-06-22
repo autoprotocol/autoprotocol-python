@@ -3289,9 +3289,9 @@ class Protocol(object):
                 "'duration':___, }]}, { ... }, ...]")
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
-        if ref.container_type.is_tube:
-            raise TypeError("Tubes are not compatible with Thermocycle instructions.")
-
+        if "thermocycle" not in ref.container_type.capabilities:
+            raise RuntimeError("Container '{}' type '{}', cannot be thermocycled."
+                               "".format(ref.name, ref.container_type.shortname))
         self._add_seal(ref, "thermocycle")
         self.instructions.append(
             Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
@@ -3980,6 +3980,9 @@ class Protocol(object):
         """
         if not isinstance(ref, Container):
             raise TypeError("Container to seal must be of type Container.")
+        if "seal" not in ref.container_type.capabilities:
+            raise RuntimeError("Container '{}' type '{}', cannot be sealed."
+                               "".format(ref.name, ref.container_type.shortname))
         if type is None:
             type = ref.container_type.seal_types[0]
         if type not in SEAL_TYPES:
@@ -4033,7 +4036,8 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Container to unseal must be of type Container.")
         if ref.is_covered():
-            raise RuntimeError("A container cannot be unsealed with a cover.")
+            raise RuntimeError("A container with a cover cannot be unsealed, "
+                               "use the instruction uncover.")
         if ref.is_sealed():
             ref.cover = None
             self.instructions.append(Unseal(ref))
@@ -4075,6 +4079,9 @@ class Protocol(object):
         """
         if not isinstance(ref, Container):
             raise TypeError("Container to cover must be of type Container.")
+        if "cover" not in ref.container_type.capabilities:
+            raise RuntimeError("Container '{}' type '{}', cannot be covered."
+                               "".format(ref.name, ref.container_type.shortname))
         if lid is None:
             lid = ref.container_type.cover_types[0]
         if lid not in COVER_TYPES:
@@ -4128,7 +4135,8 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Container to uncover must be of type Container.")
         if ref.is_sealed():
-            raise RuntimeError("A container cannot be uncovered with a seal.")
+            raise RuntimeError("A container with a seal cannot be uncovered, "
+                               "use the instruction unseal.")
         if ref.is_covered():
             ref.cover = None
             self.instructions.append(Uncover(ref))

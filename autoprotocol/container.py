@@ -237,10 +237,9 @@ class WellGroup(object):
         else:
             return self.wells.extend(other.wells)
 
-    #Josh Nowak code edit 6/20/16
     def set_group_name(self, name):
         """
-        Name a WellGroup. Note the wells may have their own unique name which will be overwritten
+        Assigns a name to a WellGroup. 
 
         Parameters
         ----------
@@ -255,44 +254,55 @@ class WellGroup(object):
         Return a numerical list (robot indices) of what wells have liquid in them.
 
         """
-        well_list = []
-        for x in self.wells:
-            well_list.append(x.index)
-        return well_list
+        return [x.index for x in self.wells]
 
-    def get_wg_volumes(self):
-        """
-        Returns a dictionary that reports well volumes
-        {'well index': 'well volume'}
-
-        """
-        dict_vols = {}
-        for x in range(0,len(self)):
-            dict_vols[self.get_well_list()[x]] = self[x].volume
-        return dict_vols
-
-    def wells_with(self, property, value):
+    def wells_with(self, prop, val=None):
         """
         Returns a wellgroup of wells with the specified property and value
 
         Parameters
         ----------
-        property: str
+        prop: str
             the property you are searching for
-        value: str
+        val: str
             the value assigned to the property
         """
-        assert type(property) is str, "property is not a string: %r" % property
-        assert type(value) is str, "value is not a string: %r" % value
-        my_property = WellGroup([])
-        for x in self.wells:
-            if property in x.properties:
-                if x.properties[property] == value:
-                    my_property.append(x)
-        return my_property
+        assert type(prop) is str, "property is not a string: %r" % prop
+        assert type(val) is str, "value is not a string: %r" % val
+        if val:
+            return WellGroup([w for w in self.wells if prop in w.properties and w.properties[pop] is val])
+        else:
+            return WellGroup([w for w in self.wells if prop in w.properties])
 
-    #End of Josh Nowak code
+    def pop(self, index= -1):
+        """
+        Removes and returns the last well in the wellgroup, unless an index is specified.
+        If index is specified, the well at that index is removed from the wellgroup and returned.
 
+        Parameters
+        ----------
+        index: int
+            the index of the well you want to remove and return
+        """
+        return self.wells.pop(index)
+
+    def insert(self, i, well):
+        """
+        Insert a well at a given position.
+
+        Parameters
+        ----------
+        i : int
+            index to insert the well at
+        well : Well
+            insert this well at the index
+        """
+        assert type(i) is int, "Input given is not of type 'Int'"
+        assert type(well) is Well, "Input given is not of type 'Well'"
+        if i >= len(self.wells):
+            return self.wells.append(well)
+        else:
+            self.wells = self.wells[:i] + [well] + self.wells[i:]
 
 
     def __getitem__(self, key):

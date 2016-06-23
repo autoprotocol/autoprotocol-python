@@ -3011,7 +3011,6 @@ class Protocol(object):
 
         if not ref.container_type.is_tube:
             self._add_cover(ref, "spin")
-
         self.instructions.append(Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
     def thermocycle(self, ref, groups,

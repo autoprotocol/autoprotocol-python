@@ -3953,7 +3953,7 @@ class Protocol(object):
             p = Protocol()
             sample_plate = p.ref("sample_plate",
                                  None,
-                                 "96-flat",
+                                 "96-pcr",
                                  storage="warm_37")
 
             p.seal(sample_plate)
@@ -3972,10 +3972,21 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : Ref, str
+        ref : Container
           Container to be sealed
         type : str
           Seal type to be used, such as "ultra-clear" or "foil".
+
+        Raises
+        ------
+        TypeError
+          If ref is not of type Container.
+        RuntimeError
+          If container type does not have `seal` capability.
+        RuntimeError
+          If seal is not a valid seal type.
+        RuntimeError
+          If container is already covered with a lid.
 
         """
         if not isinstance(ref, Container):
@@ -4005,7 +4016,7 @@ class Protocol(object):
             p = Protocol()
             sample_plate = p.ref("sample_plate",
                                  None,
-                                 "96-flat",
+                                 "96-pcr",
                                  storage="warm_37")
             # a plate must be sealed to be unsealed
             p.seal(sample_plate)
@@ -4019,7 +4030,8 @@ class Protocol(object):
             "instructions": [
                 {
                   "object": "sample_plate",
-                  "op": "seal"
+                  "op": "seal",
+                  "type": "ultra-clear"
                 },
                 {
                   "object": "sample_plate",
@@ -4029,8 +4041,15 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : Ref, str
-            Container to be unsealed
+        ref : Container
+            Container to be unsealed.
+
+        Raises
+        ------
+        TypeError
+          If ref is not of type Container.
+        RuntimeError
+          If container is covered with a lid not a seal.
 
         """
         if not isinstance(ref, Container):
@@ -4071,10 +4090,22 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str
-            Container to be convered
-        lid : {"standard", "universal", "low_evaporation"}, optional
-            Type of lid to cover container with
+        ref : Container
+            Container to be convered.
+        lid : str, optional
+            Type of lid to cover the container. Must be a valid lid type for
+            the container type.
+
+        Raises
+        ------
+        TypeError
+          If ref is not of type Container.
+        RuntimeError
+          If container type does not have `cover` capability.
+        RuntimeError
+          If lid is not a valid lid type.
+        RuntimeError
+          If container is already sealed with a seal.
 
         """
         if not isinstance(ref, Container):
@@ -4128,8 +4159,15 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str
-            Container to remove lid from
+        ref : Container
+            Container to remove lid.
+
+        Raises
+        ------
+        TypeError
+          If ref is not of type Container.
+        RuntimeError
+          If container is sealed with a seal not covered with a lid.
 
         """
         if not isinstance(ref, Container):

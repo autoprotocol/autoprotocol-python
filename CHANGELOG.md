@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- validations before implicit cover or seal
 
 Changed
 

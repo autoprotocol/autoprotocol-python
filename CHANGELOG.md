@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+- validations before implicit cover or seal
 
 Changed
 
@@ -17,10 +18,12 @@ Fixed
 Added
 - validations of input types before cover check
 - cover_types and seal_types to _CONTAINER_TYPES
+
 Changed
 
 Removed
 - string input types for source, destination wells for Instructions Consolidate, Autopick, Mix
+
 Fixed
 
 ## v3.7.0 - 2016-06-14

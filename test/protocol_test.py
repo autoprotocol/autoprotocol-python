@@ -12,7 +12,7 @@ class ProtocolMultipleExistTestCase(unittest.TestCase):
         p1 = Protocol()
         p2 = Protocol()
 
-        p1.spin("dummy_ref", "2000:rpm", "560:second")
+        p1.incubate("dummy_ref", "warm_37", "560:second")
         self.assertEqual(len(p2.instructions), 0,
                          "incorrect number of instructions in empty protocol")
 
@@ -379,7 +379,7 @@ class TransferTestCase(unittest.TestCase):
         p.transfer(c.wells_from(0, 2).set_volume("100:microliter"),
                    c.wells_from(2, 4),
                    ["20:microliter", "40:microliter",
-                   "60:microliter", "80:microliter"], one_source=True)
+                    "60:microliter", "80:microliter"], one_source=True)
         self.assertEqual(12, len(p.instructions[0].groups))
         self.assertTrue(p.instructions[0].groups[7]["transfer"][0][
                         "from"] == p.instructions[0].groups[9]["transfer"][
@@ -1033,9 +1033,8 @@ class AbsorbanceTestCase(unittest.TestCase):
                      incubate_before=incubate_params(
                                                      "10:second",
                                                      "3:millimeter",
-                                                     True
-        )
-        )
+                                                     True)
+                     )
 
         self.assertEqual(
             p.instructions[0].incubate_before["shaking"]["orbital"], True)
@@ -1301,6 +1300,7 @@ class AcousticTransferTestCase(unittest.TestCase):
             p.acoustic_transfer(echo.wells(0, 1).set_volume("2:microliter"),
                                 dest.wells(0, 1), "1.31:microliter")
 
+
 class MixTestCase(unittest.TestCase):
 
     def test_mix(self):
@@ -1317,6 +1317,7 @@ class MixTestCase(unittest.TestCase):
         self.assertEqual(len(p.instructions[-1].groups), 3)
         p.mix(c.wells(0, 1, 2, 4), "5:microliter", one_tip=True)
         self.assertEqual(len(p.instructions[-1].groups), 4)
+
 
 class MagneticTransferTestCase(unittest.TestCase):
 
@@ -1676,18 +1677,18 @@ class SpinTestCase(unittest.TestCase):
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="outward")
         p.spin(test_plate, "1000:g", "20:minute", spin_direction=["ccw", "cw", "ccw"])
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
-        self.assertEqual(len(p.instructions), 4)
+        self.assertEqual(len(p.instructions), 5)
         with self.assertRaises(AttributeError):
-            p.instructions[0].flow_direction
+            p.instructions[1].flow_direction
         with self.assertRaises(AttributeError):
-            p.instructions[0].spin_direction
-        self.assertEqual(p.instructions[1].flow_direction, "outward")
-        self.assertEqual(p.instructions[1].spin_direction, ["cw", "ccw"])
+            p.instructions[1].spin_direction
+        self.assertEqual(p.instructions[2].flow_direction, "outward")
+        self.assertEqual(p.instructions[2].spin_direction, ["cw", "ccw"])
         with self.assertRaises(AttributeError):
-            p.instructions[2].flow_direction
-        self.assertEqual(p.instructions[2].spin_direction, ["ccw", "cw", "ccw"])
-        self.assertEqual(p.instructions[3].flow_direction, "inward")
-        self.assertEqual(p.instructions[3].spin_direction, ["cw"])
+            p.instructions[3].flow_direction
+        self.assertEqual(p.instructions[3].spin_direction, ["ccw", "cw", "ccw"])
+        self.assertEqual(p.instructions[4].flow_direction, "inward")
+        self.assertEqual(p.instructions[4].spin_direction, ["cw"])
 
     def test_spin_bad_values(self):
         p = Protocol()
@@ -1922,7 +1923,6 @@ class CoverStatusTestCase(unittest.TestCase):
         cont = p.ref("cont", None, "96-pcr", discard=True, cover="ultra-clear")
         self.assertTrue(cont.cover)
         self.assertTrue(cont.cover == "ultra-clear")
-        self.assertTrue(p.refs[cont.name].opts['cover'])
 
     def test_ref_invalid_seal(self):
         p = Protocol()

@@ -5,7 +5,18 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+
+Changed
+
+Removed
+
+Fixed
+
+## v3.7.2 - 2016-06-24
+---
+Added
 - validations before implicit cover or seal
+- new plate types 384-clear-clear, 384-flat-white-white-lv, 384-flat-white-white-tc
 
 Changed
 

@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 
 Changed
+- removed capability 'cover' from 96-pcr and 384-pcr plates
 
 Removed
 

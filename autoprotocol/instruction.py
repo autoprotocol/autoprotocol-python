@@ -132,20 +132,26 @@ class Dispense(Instruction):
         the column number and the volume to be dispensed to that column.
         Columns are indexed from 0.
         [{"column": <column num>, "volume": <volume>}, ...]
+    speed_percentage : int, optional
+            Integer between 1 and 100 that represents the percentage of the
+            maximum speed at which liquid is dispensed from the reagent
+            dispenser.
+    is_resource_id : bool, optional
+            If true, interprets reagent as a resource ID
 
     """
 
-    def __init__(self, ref, reagent, columns, speed, resource_id):
+    def __init__(self, ref, reagent, columns, speed_percentage, is_resource_id):
         disp = {
             "op": "dispense",
             "object": ref,
             "columns": columns
         }
-        if resource_id:
+        if is_resource_id:
             disp["resource_id"] = reagent
         else:
             disp["reagent"] = reagent
-        assign(disp, "x_speed_percentage", speed)
+        assign(disp, "x_speed_percentage", speed_percentage)
 
         super(Dispense, self).__init__(disp)
 

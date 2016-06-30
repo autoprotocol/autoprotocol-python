@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 ## Unreleased
 ---
 Added
+-is_resource_id added to dispense and dispense_full_plate instructions
+-dispense instruction tests
+
+Changed
+-dispense instruction json outputs
+
+Removed
+
+Fixed
+
+## Unreleased
+---
+Added
 
 Changed
 - removed capability 'cover' from 96-pcr and 384-pcr plates

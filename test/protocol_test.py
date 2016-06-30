@@ -1986,3 +1986,26 @@ class CoverStatusTestCase(unittest.TestCase):
         self.assertTrue(cont.cover == "universal")
         p.mix(cont.well(0))
         self.assertFalse(cont.cover)
+
+
+class DispenseTestCase(unittest.TestCase):
+
+    def test_resource_id(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense(container, "rs17gmh5wafm5p", [{"column": 0, "volume": "10:ul"}], is_resource_id=True)
+        self.assertEqual(Unit(10, "microliter"), container.well("B1").volume)
+        self.assertEqual(None, container.well(3).volume)
+        self.assertTrue(hasattr(p.instructions[0], "resource_id"))
+        with self.assertRaises(AttributeError):
+            _ = p.instructions[0].reagent
+
+    def test_reagent(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:ul", is_resource_id=False)
+        self.assertEqual(Unit(10, "microliter"), container.well("E1").volume)
+        self.assertFalse(None, container.well(3).volume)
+        self.assertTrue(hasattr(p.instructions[0], "reagent"))
+        with self.assertRaises(AttributeError):
+            _ = p.instructions[0].resource_id

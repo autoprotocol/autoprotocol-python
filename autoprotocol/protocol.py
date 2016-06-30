@@ -2700,7 +2700,7 @@ class Protocol(object):
                 }
                 self._pipette([{"mix": [opts]}])
 
-    def dispense(self, ref, reagent, columns, speed_percentage=None):
+    def dispense(self, ref, reagent, columns, speed_percentage=None, is_resource_id=False):
         """
         Dispense specified reagent to specified columns.
 
@@ -2808,6 +2808,8 @@ class Protocol(object):
             Integer between 1 and 100 that represents the percentage of the
             maximum speed at which liquid is dispensed from the reagent
             dispenser.
+        is_resource_id : bool, optional
+            If true, interprets reagent as a resource ID
 
         """
         if not isinstance(ref, Container):
@@ -2828,9 +2830,9 @@ class Protocol(object):
                     w.set_volume(c["volume"])
 
         self.instructions.append(
-            Dispense(ref, reagent, columns, speed_percentage))
+            Dispense(ref, reagent, columns, speed_percentage, is_resource_id))
 
-    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None):
+    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None, is_resource_id=False):
         """
         Dispense the specified amount of the specified reagent to every well
         of a container using a reagent dispenser.
@@ -2925,6 +2927,8 @@ class Protocol(object):
             Integer between 1 and 100 that represents the percentage of the
             maximum speed at which liquid is dispensed from the reagent
             dispenser.
+        is_resource_id : bool, optional
+            If true, interprets reagent as a resource ID
 
         """
         if not isinstance(ref, Container):
@@ -2936,7 +2940,7 @@ class Protocol(object):
         columns = []
         for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
-        self.dispense(ref, reagent, columns, speed_percentage)
+        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id)
 
     def spin(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
         """

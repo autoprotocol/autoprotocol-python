@@ -141,7 +141,7 @@ class Dispense(Instruction):
 
     """
 
-    def __init__(self, ref, reagent, columns, speed_percentage, is_resource_id):
+    def __init__(self, ref, reagent, columns, speed, is_resource_id):
         disp = {
             "op": "dispense",
             "object": ref,
@@ -151,7 +151,7 @@ class Dispense(Instruction):
             disp["resource_id"] = reagent
         else:
             disp["reagent"] = reagent
-        assign(disp, "x_speed_percentage", speed_percentage)
+        assign(disp, "x_speed_percentage", speed)
 
         super(Dispense, self).__init__(disp)
 

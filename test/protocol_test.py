@@ -1998,7 +1998,7 @@ class DispenseTestCase(unittest.TestCase):
         self.assertEqual(None, container.well(3).volume)
         self.assertTrue(hasattr(p.instructions[0], "resource_id"))
         with self.assertRaises(AttributeError):
-            _ = p.instructions[0].reagent
+            p.instructions[0].reagent
 
     def test_reagent(self):
         p = Protocol()
@@ -2008,4 +2008,4 @@ class DispenseTestCase(unittest.TestCase):
         self.assertFalse(None, container.well(3).volume)
         self.assertTrue(hasattr(p.instructions[0], "reagent"))
         with self.assertRaises(AttributeError):
-            _ = p.instructions[0].resource_id
+            p.instructions[0].resource_id

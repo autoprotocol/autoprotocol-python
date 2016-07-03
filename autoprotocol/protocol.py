@@ -3359,6 +3359,7 @@ class Protocol(object):
               ]
 
         """
+        self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,

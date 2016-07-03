@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 -is_resource_id added to dispense and dispense_full_plate instructions
 -dispense instruction tests
+-autocover before incubate
 
 Changed
 -dispense instruction json outputs

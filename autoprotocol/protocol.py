@@ -3032,8 +3032,10 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
 
-        if not ref.container_type.is_tube:
-            self._add_cover(ref, "spin")
+        if not flow_direction or flow_direction == "inward":
+            self._add_cover(ref, "inward spin")
+        elif flow_direction == "outward":
+            self._remove_cover(ref, "outward spin")
         self.instructions.append(
             Spin(ref, acceleration, duration, flow_direction, spin_direction))
 

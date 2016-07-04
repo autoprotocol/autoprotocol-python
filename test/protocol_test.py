@@ -1694,19 +1694,19 @@ class SpinTestCase(unittest.TestCase):
         p.spin(test_plate, "1000:g", "20:minute",
                spin_direction=["ccw", "cw", "ccw"])
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
-        self.assertEqual(len(p.instructions), 5)
+        self.assertEqual(len(p.instructions), 7)
         with self.assertRaises(AttributeError):
             p.instructions[1].flow_direction
         with self.assertRaises(AttributeError):
             p.instructions[1].spin_direction
-        self.assertEqual(p.instructions[2].flow_direction, "outward")
-        self.assertEqual(p.instructions[2].spin_direction, ["cw", "ccw"])
+        self.assertEqual(p.instructions[3].flow_direction, "outward")
+        self.assertEqual(p.instructions[3].spin_direction, ["cw", "ccw"])
         with self.assertRaises(AttributeError):
-            p.instructions[3].flow_direction
-        self.assertEqual(p.instructions[3].spin_direction, [
+            p.instructions[5].flow_direction
+        self.assertEqual(p.instructions[5].spin_direction, [
                          "ccw", "cw", "ccw"])
-        self.assertEqual(p.instructions[4].flow_direction, "inward")
-        self.assertEqual(p.instructions[4].spin_direction, ["cw"])
+        self.assertEqual(p.instructions[6].flow_direction, "inward")
+        self.assertEqual(p.instructions[6].spin_direction, ["cw"])
 
     def test_spin_bad_values(self):
         p = Protocol()

@@ -2011,3 +2011,92 @@ class DispenseTestCase(unittest.TestCase):
         self.assertTrue(hasattr(p.instructions[0], "reagent"))
         with self.assertRaises(AttributeError):
             p.instructions[0].resource_id
+
+class FlowAnalyzeTestCase(unittest.TestCase):
+
+    def test_default(self):
+        p = Protocol()
+        container = p.ref("Test_Container1", cont_type="96-pcr", discard=True)
+        container2 = p.ref("Test_Container2", cont_type="96-flat", discard=True)
+        p.cover(container2, lid="standard")
+        self.assertTrue(container2.cover)
+        p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        self.assertFalse(container2.cover)
+        self.assertEqual(p.instructions[1].op, "uncover")
+        self.assertTrue(hasattr(p.instructions[2], "channels"))
+
+    def test_flow_bad_params(self):
+        p = Protocol()
+        container = p.ref("Test_Container1", cont_type="96-pcr", discard=True)
+        container2 = p.ref("Test_Container2", cont_type="96-flat", discard=True)
+        with self.assertRaises(TypeError):
+            p.flow_analyze(dataref="Test",
+                       FSC=[{"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}}],
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(AssertionError):
+            p.flow_analyze(dataref="Test",
+                       FSC={},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(TypeError):
+            p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container,
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(AssertionError):
+            p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])

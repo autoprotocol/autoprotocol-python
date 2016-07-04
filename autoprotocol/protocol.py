@@ -3797,7 +3797,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        extracts: List of dicts       
+        extracts: List of dicts
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
@@ -4239,7 +4239,7 @@ class Protocol(object):
         .. code-block:: python
 
             p = Protocol()
-            dataref = "test_ref" 
+            dataref = "test_ref"
             FSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
                    "area": True, "height": True, "weight": False}
             SSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
@@ -4321,7 +4321,7 @@ class Protocol(object):
                 {
                   "voltage_range": {
                     "low": <voltage>,
-                    "high": <voltage>"       
+                    "high": <voltage>"
                     },
                   "area": true,             //default: true
                   "height": true,           //default: false
@@ -4388,6 +4388,68 @@ class Protocol(object):
                 ]
 
       """
+        sources = []
+        if not isinstance(samples, list):
+            raise TypeError("Samples must be of type list.")
+        else:
+            for s in samples:
+                if not isinstance(s.get("well"), Well):
+                    raise TypeError("The well for each sample must be of type"
+                                    " Well.")
+                else:
+                    sources.append(s["well"])
+                if not s.get("volume"):
+                    raise AssertionError("Each sample must indicate a volume "
+                                         "to flow_analyze.")
+                if s.get("captured_events") and not \
+                    isinstance(s.get("captured_events"), int):
+                    raise TypeError("captured_events is optional, if given it"
+                                    " must be of type integer.")
+        if not isinstance(neg_controls, list):
+            raise TypeError("Neg_controls must be of type list.")
+        else:
+            for n in neg_controls:
+                if not isinstance(n.get("well"), Well):
+                    raise TypeError("The well for each neg_control must be of"
+                                    " type Well.")
+                else:
+                    sources.append(n["well"])
+                if not n.get("volume"):
+                    raise AssertionError("Each neg_control must indicate a "
+                                         "volume to flow_analyze.")
+                if not isinstance(n.get("channel"), list):
+                    raise TypeError("Channel must be a list of strings "
+                                    "indicating the colors/channels that this"
+                                    " neg_control is to be used for.")
+                if n.get("captured_events") and not \
+                    isinstance(n.get("captured_events"), int):
+                    raise TypeError("captured_events is optional, if given it"
+                                    " must be of type integer.")
+        if pos_controls and not isinstance(pos_controls, list):
+            raise TypeError("Pos_controls must be of type list.")
+        elif pos_controls:
+            for p in pos_controls:
+                if not isinstance(p.get("well"), Well):
+                    raise TypeError("The well for each pos_control must be of"
+                                    " type Well.")
+                else:
+                    sources.append(p["well"])
+                if not p.get("volume"):
+                    raise AssertionError("Each pos_control must indicate a "
+                                         "volume to flow_analyze.")
+                if not isinstance(p.get("channel"), list):
+                    raise TypeError("Channel must be a list of strings "
+                                    "indicating the colors/channels that this"
+                                    " pos_control is to be used for.")
+                if p.get("minimize_bleed") and not \
+                    isinstance(p.get("minimize_bleed"), list):
+                    raise TypeError("Minimize_bleed must be of type list.")
+                if p.get("captured_events") and not \
+                    isinstance(p.get("captured_events"), int):
+                    raise TypeError("captured_events is optional, if given it"
+                                    " must be of type integer.")
+
+        [self._remove_cover(s.container, "flow_analyze") for s in sources]
         self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
                                              samples, colors, pos_controls))
 

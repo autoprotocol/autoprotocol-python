@@ -1,5 +1,6 @@
 import json
 from .pipette_tools import assign
+import future.utils
 
 
 '''
@@ -955,13 +956,25 @@ class FlowAnalyze(Instruction):
             "dataref": dataref,
             "channels": {}
         }
-        assert FSC and SSC, "You must include parameters for FSC and SSC channels."
+        assert FSC and SSC, ("You must include parameters for FSC and SSC "
+                             "channels.")
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
         flow_instr["negative_controls"] = neg_controls
         flow_instr["samples"] = samples
         if colors:
             flow_instr["channels"]["colors"] = colors
+        for c in flow_instr["channels"].itervalues():
+            if not isinstance(c, dict):
+                raise TypeError("Each channel must be of type dict.")
+            assert c["voltage_range"], ("You must include a voltage_range for"
+                                        " each channel.")
+            assert c["voltage_range"]["high"], ("You must include an upper "
+                                                "limit for the volage range"
+                                                "in each channel.")
+            assert c["voltage_range"]["low"], ("You must include a lower "
+                                               "limit for the volage range "
+                                               "in each channel.")
         if pos_controls:
             flow_instr["positive_controls"] = pos_controls
 

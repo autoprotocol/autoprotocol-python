@@ -4393,6 +4393,15 @@ class Protocol(object):
                     }, ...
                 ]
 
+        Raises
+        ------
+        TypeError
+            If inputs are not of the correct type.
+        AssertionError
+            If required parameters are missing.
+        ValueError
+            If volumes are not correctly formatted or present.
+
       """
         sources = []
         if not isinstance(samples, list):

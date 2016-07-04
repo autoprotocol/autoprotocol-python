@@ -3001,7 +3001,11 @@ class Protocol(object):
         Raises
         ------
         TypeError:
-            If ref to thermocycle is not of type Container.
+            If ref to spin is not of type Container.
+        TypeError:
+            If spin_direction or flow_direction are not properly formatted.
+        ValueError:
+            If spint_direction or flow_direction do not have appropriate values.
 
         """
         if flow_direction is not None and flow_direction not in ["inward", "outward"]:

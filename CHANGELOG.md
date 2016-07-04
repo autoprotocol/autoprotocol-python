@@ -16,6 +16,7 @@ Changed
 Removed
 
 Fixed
+-spin auto-cover
 
 ## Unreleased
 ---

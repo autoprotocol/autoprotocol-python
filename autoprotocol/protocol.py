@@ -3359,6 +3359,8 @@ class Protocol(object):
               ]
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Ref needs to be of type Conainer")
         self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 

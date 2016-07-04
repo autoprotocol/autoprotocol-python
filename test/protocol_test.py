@@ -12,7 +12,8 @@ class ProtocolMultipleExistTestCase(unittest.TestCase):
         p1 = Protocol()
         p2 = Protocol()
 
-        p1.incubate("dummy_ref", "warm_37", "560:second")
+        dummy_ref = p1.ref(name="dummy", cont_type="96-flat", discard=True)
+        p1.incubate(dummy_ref, "warm_37", "560:second")
         self.assertEqual(len(p2.instructions), 0,
                          "incorrect number of instructions in empty protocol")
 
@@ -43,9 +44,10 @@ class ProtocolBasicTestCase(unittest.TestCase):
 
         protocol.incubate(bacteria, "warm_37", "30:minute")
 
-        self.assertEqual(len(protocol.instructions), 2)
-        self.assertEqual(protocol.instructions[1].op, "incubate")
-        self.assertEqual(protocol.instructions[1].duration, "30:minute")
+        self.assertEqual(len(protocol.instructions), 3)
+        self.assertEqual(protocol.instructions[1].op, "cover")
+        self.assertEqual(protocol.instructions[2].op, "incubate")
+        self.assertEqual(protocol.instructions[2].duration, "30:minute")
 
 
 class ProtocolAppendTestCase(unittest.TestCase):

@@ -2086,7 +2086,7 @@ class FlowAnalyzeTestCase(unittest.TestCase):
                                  "volume": "200:microliter"},
                                 {"well": container2.well(2),
                                  "volume": "200:microliter"}])
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             p.flow_analyze(dataref="Test",
                        FSC={"voltage_range": {"low": "230:volt",
                                               "high": "280:volt"}},

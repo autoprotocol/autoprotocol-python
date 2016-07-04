@@ -4413,9 +4413,11 @@ class Protocol(object):
                                     " Well.")
                 else:
                     sources.append(s["well"])
-                if not s.get("volume"):
-                    raise AssertionError("Each sample must indicate a volume "
-                                         "to flow_analyze.")
+                try:
+                    Unit(s.get("volume"))
+                except (ValueError, TypeError) as e:
+                    raise ValueError("Each sample must indicate a volume of "
+                                     "type unit. %s" % e)
                 if s.get("captured_events") and not \
                     isinstance(s.get("captured_events"), int):
                     raise TypeError("captured_events is optional, if given it"
@@ -4429,9 +4431,11 @@ class Protocol(object):
                                     " type Well.")
                 else:
                     sources.append(n["well"])
-                if not n.get("volume"):
-                    raise AssertionError("Each neg_control must indicate a "
-                                         "volume to flow_analyze.")
+                try:
+                    Unit(n.get("volume"))
+                except (ValueError, TypeError) as e:
+                    raise ValueError("Each neg_control must indicate a volume of "
+                                     "type unit. %s" % e)
                 if not isinstance(n.get("channel"), list):
                     raise TypeError("Channel must be a list of strings "
                                     "indicating the colors/channels that this"
@@ -4449,9 +4453,11 @@ class Protocol(object):
                                     " type Well.")
                 else:
                     sources.append(p["well"])
-                if not p.get("volume"):
-                    raise AssertionError("Each pos_control must indicate a "
-                                         "volume to flow_analyze.")
+                try:
+                    Unit(p.get("volume"))
+                except (ValueError, TypeError) as e:
+                    raise ValueError("Each pos_control must indicate a volume of "
+                                     "type unit. %s" % e)
                 if not isinstance(p.get("channel"), list):
                     raise TypeError("Channel must be a list of strings "
                                     "indicating the colors/channels that this"

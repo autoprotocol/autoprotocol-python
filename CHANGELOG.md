@@ -8,6 +8,7 @@ Added
 -is_resource_id added to dispense and dispense_full_plate instructions
 -dispense instruction tests
 -autocover before incubate
+-assertions and tests for flow_analyze
 
 Changed
 -dispense instruction json outputs

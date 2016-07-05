@@ -5355,46 +5355,51 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def _remove_cover(self, container, action):
-        if not (container.is_covered() or container.is_sealed()):
-            return
-        elif container.cover in COVER_TYPES:
-            self.uncover(container)
-        elif container.cover in SEAL_TYPES:
-            self.unseal(container)
-        else:
-            raise RuntimeError("The operation {} requires an uncovered "
-                               "container, however, {} is not a "
-                               "recognized cover or seal type."
-                               "".format(action, container.cover))
+        if not container.container_type.is_tube:
+            if not (container.is_covered() or container.is_sealed()):
+                return
+            elif container.cover in COVER_TYPES:
+                self.uncover(container)
+            elif container.cover in SEAL_TYPES:
+                self.unseal(container)
+            else:
+                raise RuntimeError("The operation {} requires an uncovered "
+                                   "container, however, {} is not a "
+                                   "recognized cover or seal type."
+                                   "".format(action, container.cover))
 
     def _add_cover(self, container, action):
-        if (container.is_covered() or container.is_sealed()):
-            return
-        elif "cover" in container.container_type.capabilities:
-            self.cover(container, container.container_type.cover_types[0])
-        elif "seal" in container.container_type.capabilities:
-            self.seal(container, container.container_type.seal_types[0])
-        else:
-            raise RuntimeError("The operation {} requires a covered "
-                               "container, however, {} does not have a "
-                               "recognized cover or seal type."
-                               "".format(action, container.container_type.name))
+        if not container.container_type.is_tube:
+            if (container.is_covered() or container.is_sealed()):
+                return
+            elif "cover" in container.container_type.capabilities:
+                self.cover(container, container.container_type.cover_types[0])
+            elif "seal" in container.container_type.capabilities:
+                self.seal(container, container.container_type.seal_types[0])
+            else:
+                raise RuntimeError("The operation {} requires a covered "
+                                   "container, however, {} does not have a "
+                                   "recognized cover or seal type."
+                                   "".format(action,
+                                             container.container_type.name))
 
     def _add_seal(self, container, action):
-        if container.is_sealed():
-            return
-        elif container.is_covered():
-            raise RuntimeError("The operation {} requires a sealed "
-                               "container, however, {} currently has"
-                               "a lid which needs to be first removed."
-                               "".format(action, container.name))
-        if "seal" in container.container_type.capabilities:
-            self.seal(container, container.container_type.seal_types[0])
-        else:
-            raise RuntimeError("The operation {} requires a sealed "
-                               "container, however, {} does not have a "
-                               "recognized seal type."
-                               "".format(action, container.container_type.name))
+        if not container.container_type.is_tube:
+            if container.is_sealed():
+                return
+            elif container.is_covered():
+                raise RuntimeError("The operation {} requires a sealed "
+                                   "container, however, {} currently has"
+                                   "a lid which needs to be first removed."
+                                   "".format(action, container.name))
+            if "seal" in container.container_type.capabilities:
+                self.seal(container, container.container_type.seal_types[0])
+            else:
+                raise RuntimeError("The operation {} requires a sealed "
+                                   "container, however, {} does not have a "
+                                   "recognized seal type."
+                                   "".format(action,
+                                             container.container_type.name))
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """

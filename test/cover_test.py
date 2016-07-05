@@ -23,8 +23,9 @@ class CoverSealTestCase(unittest.TestCase):
             }
         ]
         p.incubate(cont1, "ambient", duration="1:minute")
-        self.assertEqual(p.instructions[0].op, "incubate")
-        self.assertEqual(cont1.cover, None)
+        self.assertEqual(p.instructions[0].op, "seal")
+        self.assertEqual(p.instructions[1].op, "incubate")
+        self.assertEqual(cont1.cover, 'ultra-clear')
         p.spin(cont1, acceleration="1000:g", duration="2:minute")
         self.assertEqual(cont1.cover, "ultra-clear")
         self.assertEqual(cont2.cover, None)

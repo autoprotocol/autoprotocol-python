@@ -4,17 +4,15 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 ---
-Added - WellGroup methods
-
-- Set group name
+Added 
+- WellGroup methods:
+- set group name
 - Construct dictionary of wells with property and associated value
 - Pop(index)
 - Insert well
 
 Changed
-
-- .extend(wells)
-    - Can now take in a list of wells
+- extend(wells) takes list of wells
 
 Removed
 
@@ -73,7 +71,6 @@ Removed
 
 Fixed
 
-Fixed
 
 ## v3.7.0 - 2016-06-14
 ---

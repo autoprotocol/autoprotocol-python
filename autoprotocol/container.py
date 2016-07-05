@@ -232,20 +232,16 @@ class WellGroup(object):
             WellGroup to extend this WellGroup.
 
         """
-        if not isinstance(other, (WellGroup,list)):
-            raise TypeError("Input given is not of type 'WellGroup'.")
+        if not isinstance(other, (WellGroup, list)):
+            raise TypeError("Input given is not of type 'WellGroup' or 'list'.")
         else:
-            if isinstance(other, list):
-                for x in other:
-                    if type(x) != Well:
-                        raise TypeError("Input given is not of type 'Well'.")
-                return self.wells.extend(WellGroup(other).wells)
-            else:
-                return self.wells.extend(other.wells)
+            if not all(isinstance(well, Well) for well in other):
+                raise TypeError("Input given is not of type 'Well'.")
+            return self.wells.extend(WellGroup(other).wells)
 
     def set_group_name(self, name):
         """
-        Assigns a name to a WellGroup. 
+        Assigns a name to a WellGroup.
 
         Parameters
         ----------
@@ -273,7 +269,7 @@ class WellGroup(object):
         else:
             return WellGroup([w for w in self.wells if prop in w.properties])
 
-    def pop(self, index= -1):
+    def pop(self, index=-1):
         """
         Removes and returns the last well in the wellgroup, unless an index is specified.
         If index is specified, the well at that index is removed from the wellgroup and returned.
@@ -310,10 +306,11 @@ class WellGroup(object):
         Parameters
         ----------
         key : int
-            Well reference in robotized form.
+            Position in a WellGroup in robotized form.
         item: Well
             Well or WellGroup to be added
         """
+        assert type(item) is Well, "Input given is not of type 'Well'."
         self.wells[key] = item
 
     def __getitem__(self, key):
@@ -323,7 +320,7 @@ class WellGroup(object):
         Parameters
         ----------
         key : int
-            Well reference in robotized form.
+            Position in a WellGroup in robotized form.
 
         """
         return self.wells[key]

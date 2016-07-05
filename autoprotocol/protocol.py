@@ -3005,7 +3005,7 @@ class Protocol(object):
         TypeError:
             If spin_direction or flow_direction are not properly formatted.
         ValueError:
-            If spint_direction or flow_direction do not have appropriate values.
+            If spin_direction or flow_direction do not have appropriate values.
 
         """
         if flow_direction is not None and flow_direction not in ["inward", "outward"]:

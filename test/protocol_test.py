@@ -12,7 +12,8 @@ class ProtocolMultipleExistTestCase(unittest.TestCase):
         p1 = Protocol()
         p2 = Protocol()
 
-        p1.incubate("dummy_ref", "warm_37", "560:second")
+        dummy_ref = p1.ref(name="dummy", cont_type="96-flat", discard=True)
+        p1.incubate(dummy_ref, "warm_37", "560:second")
         self.assertEqual(len(p2.instructions), 0,
                          "incorrect number of instructions in empty protocol")
 
@@ -43,9 +44,10 @@ class ProtocolBasicTestCase(unittest.TestCase):
 
         protocol.incubate(bacteria, "warm_37", "30:minute")
 
-        self.assertEqual(len(protocol.instructions), 2)
-        self.assertEqual(protocol.instructions[1].op, "incubate")
-        self.assertEqual(protocol.instructions[1].duration, "30:minute")
+        self.assertEqual(len(protocol.instructions), 3)
+        self.assertEqual(protocol.instructions[1].op, "cover")
+        self.assertEqual(protocol.instructions[2].op, "incubate")
+        self.assertEqual(protocol.instructions[2].duration, "30:minute")
 
 
 class ProtocolAppendTestCase(unittest.TestCase):
@@ -1692,19 +1694,19 @@ class SpinTestCase(unittest.TestCase):
         p.spin(test_plate, "1000:g", "20:minute",
                spin_direction=["ccw", "cw", "ccw"])
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
-        self.assertEqual(len(p.instructions), 5)
+        self.assertEqual(len(p.instructions), 7)
         with self.assertRaises(AttributeError):
             p.instructions[1].flow_direction
         with self.assertRaises(AttributeError):
             p.instructions[1].spin_direction
-        self.assertEqual(p.instructions[2].flow_direction, "outward")
-        self.assertEqual(p.instructions[2].spin_direction, ["cw", "ccw"])
+        self.assertEqual(p.instructions[3].flow_direction, "outward")
+        self.assertEqual(p.instructions[3].spin_direction, ["cw", "ccw"])
         with self.assertRaises(AttributeError):
-            p.instructions[3].flow_direction
-        self.assertEqual(p.instructions[3].spin_direction, [
+            p.instructions[5].flow_direction
+        self.assertEqual(p.instructions[5].spin_direction, [
                          "ccw", "cw", "ccw"])
-        self.assertEqual(p.instructions[4].flow_direction, "inward")
-        self.assertEqual(p.instructions[4].spin_direction, ["cw"])
+        self.assertEqual(p.instructions[6].flow_direction, "inward")
+        self.assertEqual(p.instructions[6].spin_direction, ["cw"])
 
     def test_spin_bad_values(self):
         p = Protocol()
@@ -2009,3 +2011,92 @@ class DispenseTestCase(unittest.TestCase):
         self.assertTrue(hasattr(p.instructions[0], "reagent"))
         with self.assertRaises(AttributeError):
             p.instructions[0].resource_id
+
+class FlowAnalyzeTestCase(unittest.TestCase):
+
+    def test_default(self):
+        p = Protocol()
+        container = p.ref("Test_Container1", cont_type="96-pcr", discard=True)
+        container2 = p.ref("Test_Container2", cont_type="96-flat", discard=True)
+        p.cover(container2, lid="standard")
+        self.assertTrue(container2.cover)
+        p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        self.assertFalse(container2.cover)
+        self.assertEqual(p.instructions[1].op, "uncover")
+        self.assertTrue(hasattr(p.instructions[2], "channels"))
+
+    def test_flow_bad_params(self):
+        p = Protocol()
+        container = p.ref("Test_Container1", cont_type="96-pcr", discard=True)
+        container2 = p.ref("Test_Container2", cont_type="96-flat", discard=True)
+        with self.assertRaises(TypeError):
+            p.flow_analyze(dataref="Test",
+                       FSC=[{"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}}],
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(AssertionError):
+            p.flow_analyze(dataref="Test",
+                       FSC={},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(TypeError):
+            p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container,
+                                      "volume": "200:microliter",
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])
+        with self.assertRaises(ValueError):
+            p.flow_analyze(dataref="Test",
+                       FSC={"voltage_range": {"low": "230:volt",
+                                              "high": "280:volt"}},
+                       SSC={"voltage_range": {"low": "230:volt",
+                                              "high": "380:volt"}},
+                       neg_controls=[{"well": container.well(0),
+                                      "channel": ["FSC", "SSC"]}],
+                       samples=[{"well": container2.well(0),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(1),
+                                 "volume": "200:microliter"},
+                                {"well": container2.well(2),
+                                 "volume": "200:microliter"}])

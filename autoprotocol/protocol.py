@@ -3001,7 +3001,11 @@ class Protocol(object):
         Raises
         ------
         TypeError:
-            If ref to thermocycle is not of type Container.
+            If ref to spin is not of type Container.
+        TypeError:
+            If spin_direction or flow_direction are not properly formatted.
+        ValueError:
+            If spin_direction or flow_direction do not have appropriate values.
 
         """
         if flow_direction is not None and flow_direction not in ["inward", "outward"]:
@@ -3032,8 +3036,10 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
 
-        if not ref.container_type.is_tube:
-            self._add_cover(ref, "spin")
+        if not flow_direction or flow_direction == "inward":
+            self._add_cover(ref, "inward spin")
+        elif flow_direction == "outward":
+            self._remove_cover(ref, "outward spin")
         self.instructions.append(
             Spin(ref, acceleration, duration, flow_direction, spin_direction))
 
@@ -3359,6 +3365,9 @@ class Protocol(object):
               ]
 
         """
+        if not isinstance(ref, Container):
+            raise TypeError("Ref needs to be of type Conainer")
+        self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,
@@ -3794,7 +3803,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        extracts: List of dicts       
+        extracts: List of dicts
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
@@ -4236,7 +4245,7 @@ class Protocol(object):
         .. code-block:: python
 
             p = Protocol()
-            dataref = "test_ref" 
+            dataref = "test_ref"
             FSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
                    "area": True, "height": True, "weight": False}
             SSC = {"voltage_range": {"low": "230:volt", "high": "280:volt"},
@@ -4318,7 +4327,7 @@ class Protocol(object):
                 {
                   "voltage_range": {
                     "low": <voltage>,
-                    "high": <voltage>"       
+                    "high": <voltage>"
                     },
                   "area": true,             //default: true
                   "height": true,           //default: false
@@ -4384,7 +4393,123 @@ class Protocol(object):
                     }, ...
                 ]
 
+        Raises
+        ------
+        TypeError
+            If inputs are not of the correct type.
+        AssertionError
+            If required parameters are missing.
+        ValueError
+            If volumes are not correctly formatted or present.
+
       """
+        sources = []
+        controls = []
+        if not isinstance(samples, list):
+            raise TypeError("Samples must be of type list.")
+        else:
+            sources.extend(samples)
+        if not isinstance(neg_controls, list):
+            raise TypeError("Neg_controls must be of type list.")
+        else:
+            sources.extend(neg_controls)
+            controls.extend(neg_controls)
+        if pos_controls and not isinstance(pos_controls, list):
+            raise TypeError("Pos_controls must be of type list.")
+        elif pos_controls:
+            sources.extend(pos_controls)
+            controls.extend(neg_controls)
+
+        for s in sources:
+            if not isinstance(s.get("well"), Well):
+                    raise TypeError("The well for each sample or control must "
+                                    "be of type Well.")
+            try:
+                Unit(s.get("volume"))
+            except (ValueError, TypeError) as e:
+                raise ValueError("Each sample or control must indicate a "
+                                 "volume of type unit. %s" % e)
+            if s.get("captured_events") and not \
+                isinstance(s.get("captured_events"), int):
+                raise TypeError("captured_events is optional, if given it"
+                                " must be of type integer.")
+        for c in controls:
+            if not isinstance(c.get("channel"), list):
+                raise TypeError("Channel must be a list of strings "
+                                "indicating the colors/channels that this"
+                                " control is to be used for.")
+            if c.get("minimize_bleed") and not \
+                isinstance(p.get("minimize_bleed"), list):
+                raise TypeError("Minimize_bleed must be of type list.")
+            elif c.get("minimize_bleed"):
+                for b in c["minimize_bleed"]:
+                    if not isinstance(b, dict):
+                        raise TypeError("Minimize_bleed must be a list of "
+                                        "dictonaries. Dictonary was not found")
+                    else:
+                        if not b.get("from"):
+                            raise ValueError("Minimize_bleed dictonaries must"
+                                             " have a key `from`")
+                        else:
+                            if not isinstance(b["from"], str):
+                                raise TypeError("Minimize_bleed `from` must "
+                                                "have a string as value")
+                        if not b.get("to"):
+                            raise ValueError("Minimize_bleed dictonaries must"
+                                             " have a key `to`")
+                        else:
+                            if not isinstance(b["to"], list):
+                                raise ValueError("Minimize_bleed `to` must "
+                                                 "have a list as value")
+                            else:
+                                for t in b["to"]:
+                                    if not isinstance(t, str):
+                                        raise TypeError("Minimize_bleed `to` "
+                                                        "list must contain "
+                                                        "strings.")
+        assert FSC and SSC, ("You must include parameters for FSC and SSC "
+                             "channels.")
+        channels = {}
+        channels["FSC"] = FSC
+        channels["SSC"] = SSC
+        if colors:
+            if not isinstance(colors, list):
+                raise TypeError("Colors must be of type list.")
+            else:
+                for c in colors:
+                    if not isinstance(c, dict):
+                        raise TypeError("Colors must contain elements of "
+                                        "type dict.")
+                    else:
+                        if not c.get("name") or not \
+                            isinstance(c.get("name"), str):
+                            raise TypeError("Each color must have a `name` "
+                                            "that is of type string.")
+                        if not c.get("emission_wavelength") or not \
+                            isinstance(c.get("emission_wavelength"), Unit):
+                            raise TypeError("Each color must have an "
+                                            "`emission_wavelength` "
+                                            "that is of type Unit.")
+                        if not c.get("excitation_wavelength") or not \
+                            isinstance(c.get("excitation_wavelength"), Unit):
+                            raise TypeError("Each color must have an "
+                                            "`excitation_wavelength` "
+                                            "that is of type Unit.")
+                        channels["colors"] = colors
+
+        for c in channels.itervalues():
+            if not isinstance(c, dict):
+                raise TypeError("Each channel must be of type dict.")
+            assert c["voltage_range"], ("You must include a voltage_range for"
+                                        " each channel.")
+            assert c["voltage_range"]["high"], ("You must include an upper "
+                                                "limit for the volage range"
+                                                "in each channel.")
+            assert c["voltage_range"]["low"], ("You must include a lower "
+                                               "limit for the volage range "
+                                               "in each channel.")
+
+        [self._remove_cover(s["well"].container, "flow_analyze") for s in sources]
         self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
                                              samples, colors, pos_controls))
 
@@ -5230,46 +5355,51 @@ class Protocol(object):
             self.instructions.append(Pipette(groups))
 
     def _remove_cover(self, container, action):
-        if not (container.is_covered() or container.is_sealed()):
-            return
-        elif container.cover in COVER_TYPES:
-            self.uncover(container)
-        elif container.cover in SEAL_TYPES:
-            self.unseal(container)
-        else:
-            raise RuntimeError("The operation {} requires an uncovered "
-                               "container, however, {} is not a "
-                               "recognized cover or seal type."
-                               "".format(action, container.cover))
+        if not container.container_type.is_tube:
+            if not (container.is_covered() or container.is_sealed()):
+                return
+            elif container.cover in COVER_TYPES:
+                self.uncover(container)
+            elif container.cover in SEAL_TYPES:
+                self.unseal(container)
+            else:
+                raise RuntimeError("The operation {} requires an uncovered "
+                                   "container, however, {} is not a "
+                                   "recognized cover or seal type."
+                                   "".format(action, container.cover))
 
     def _add_cover(self, container, action):
-        if (container.is_covered() or container.is_sealed()):
-            return
-        elif "cover" in container.container_type.capabilities:
-            self.cover(container, container.container_type.cover_types[0])
-        elif "seal" in container.container_type.capabilities:
-            self.seal(container, container.container_type.seal_types[0])
-        else:
-            raise RuntimeError("The operation {} requires a covered "
-                               "container, however, {} does not have a "
-                               "recognized cover or seal type."
-                               "".format(action, container.container_type.name))
+        if not container.container_type.is_tube:
+            if (container.is_covered() or container.is_sealed()):
+                return
+            elif "cover" in container.container_type.capabilities:
+                self.cover(container, container.container_type.cover_types[0])
+            elif "seal" in container.container_type.capabilities:
+                self.seal(container, container.container_type.seal_types[0])
+            else:
+                raise RuntimeError("The operation {} requires a covered "
+                                   "container, however, {} does not have a "
+                                   "recognized cover or seal type."
+                                   "".format(action,
+                                             container.container_type.name))
 
     def _add_seal(self, container, action):
-        if container.is_sealed():
-            return
-        elif container.is_covered():
-            raise RuntimeError("The operation {} requires a sealed "
-                               "container, however, {} currently has"
-                               "a lid which needs to be first removed."
-                               "".format(action, container.name))
-        if "seal" in container.container_type.capabilities:
-            self.seal(container, container.container_type.seal_types[0])
-        else:
-            raise RuntimeError("The operation {} requires a sealed "
-                               "container, however, {} does not have a "
-                               "recognized seal type."
-                               "".format(action, container.container_type.name))
+        if not container.container_type.is_tube:
+            if container.is_sealed():
+                return
+            elif container.is_covered():
+                raise RuntimeError("The operation {} requires a sealed "
+                                   "container, however, {} currently has"
+                                   "a lid which needs to be first removed."
+                                   "".format(action, container.name))
+            if "seal" in container.container_type.capabilities:
+                self.seal(container, container.container_type.seal_types[0])
+            else:
+                raise RuntimeError("The operation {} requires a sealed "
+                                   "container, however, {} does not have a "
+                                   "recognized seal type."
+                                   "".format(action,
+                                             container.container_type.name))
 
     def _add_mag(self, mag, head, new_tip, new_instruction, name):
         """

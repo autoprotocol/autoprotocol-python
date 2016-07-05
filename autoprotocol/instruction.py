@@ -1,5 +1,6 @@
 import json
 from .pipette_tools import assign
+import future.utils
 
 
 '''
@@ -955,7 +956,6 @@ class FlowAnalyze(Instruction):
             "dataref": dataref,
             "channels": {}
         }
-        assert FSC and SSC, "You must include parameters for FSC and SSC channels."
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
         flow_instr["negative_controls"] = neg_controls

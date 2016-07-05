@@ -4,6 +4,25 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 
 ## Unreleased
 ---
+Added - WellGroup methods
+
+- Set group name
+- Construct dictionary of wells with property and associated value
+- Pop(index)
+- Insert well
+
+Changed
+
+- .extend(wells)
+    - Can now take in a list of wells
+
+Removed
+
+Fixed
+
+
+## Unreleased
+---
 Added
 -is_resource_id added to dispense and dispense_full_plate instructions
 -dispense instruction tests

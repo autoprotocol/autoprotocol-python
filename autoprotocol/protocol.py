@@ -4404,73 +4404,112 @@ class Protocol(object):
 
       """
         sources = []
+        controls = []
         if not isinstance(samples, list):
             raise TypeError("Samples must be of type list.")
         else:
-            for s in samples:
-                if not isinstance(s.get("well"), Well):
-                    raise TypeError("The well for each sample must be of type"
-                                    " Well.")
-                else:
-                    sources.append(s["well"])
-                try:
-                    Unit(s.get("volume"))
-                except (ValueError, TypeError) as e:
-                    raise ValueError("Each sample must indicate a volume of "
-                                     "type unit. %s" % e)
-                if s.get("captured_events") and not \
-                    isinstance(s.get("captured_events"), int):
-                    raise TypeError("captured_events is optional, if given it"
-                                    " must be of type integer.")
+            sources.extend(samples)
         if not isinstance(neg_controls, list):
             raise TypeError("Neg_controls must be of type list.")
         else:
-            for n in neg_controls:
-                if not isinstance(n.get("well"), Well):
-                    raise TypeError("The well for each neg_control must be of"
-                                    " type Well.")
-                else:
-                    sources.append(n["well"])
-                try:
-                    Unit(n.get("volume"))
-                except (ValueError, TypeError) as e:
-                    raise ValueError("Each neg_control must indicate a volume of "
-                                     "type unit. %s" % e)
-                if not isinstance(n.get("channel"), list):
-                    raise TypeError("Channel must be a list of strings "
-                                    "indicating the colors/channels that this"
-                                    " neg_control is to be used for.")
-                if n.get("captured_events") and not \
-                    isinstance(n.get("captured_events"), int):
-                    raise TypeError("captured_events is optional, if given it"
-                                    " must be of type integer.")
+            sources.extend(neg_controls)
+            controls.extend(neg_controls)
         if pos_controls and not isinstance(pos_controls, list):
             raise TypeError("Pos_controls must be of type list.")
         elif pos_controls:
-            for p in pos_controls:
-                if not isinstance(p.get("well"), Well):
-                    raise TypeError("The well for each pos_control must be of"
-                                    " type Well.")
-                else:
-                    sources.append(p["well"])
-                try:
-                    Unit(p.get("volume"))
-                except (ValueError, TypeError) as e:
-                    raise ValueError("Each pos_control must indicate a volume of "
-                                     "type unit. %s" % e)
-                if not isinstance(p.get("channel"), list):
-                    raise TypeError("Channel must be a list of strings "
-                                    "indicating the colors/channels that this"
-                                    " pos_control is to be used for.")
-                if p.get("minimize_bleed") and not \
-                    isinstance(p.get("minimize_bleed"), list):
-                    raise TypeError("Minimize_bleed must be of type list.")
-                if p.get("captured_events") and not \
-                    isinstance(p.get("captured_events"), int):
-                    raise TypeError("captured_events is optional, if given it"
-                                    " must be of type integer.")
+            sources.extend(pos_controls)
+            controls.extend(neg_controls)
 
-        [self._remove_cover(s.container, "flow_analyze") for s in sources]
+        for s in sources:
+            if not isinstance(s.get("well"), Well):
+                    raise TypeError("The well for each sample or control must "
+                                    "be of type Well.")
+            try:
+                Unit(s.get("volume"))
+            except (ValueError, TypeError) as e:
+                raise ValueError("Each sample or control must indicate a "
+                                 "volume of type unit. %s" % e)
+            if s.get("captured_events") and not \
+                isinstance(s.get("captured_events"), int):
+                raise TypeError("captured_events is optional, if given it"
+                                " must be of type integer.")
+        for c in controls:
+            if not isinstance(c.get("channel"), list):
+                raise TypeError("Channel must be a list of strings "
+                                "indicating the colors/channels that this"
+                                " control is to be used for.")
+            if c.get("minimize_bleed") and not \
+                isinstance(p.get("minimize_bleed"), list):
+                raise TypeError("Minimize_bleed must be of type list.")
+            elif c.get("minimize_bleed"):
+                for b in c["minimize_bleed"]:
+                    if not isinstance(b, dict):
+                        raise TypeError("Minimize_bleed must be a list of "
+                                        "dictonaries. Dictonary was not found")
+                    else:
+                        if not b.get("from"):
+                            raise ValueError("Minimize_bleed dictonaries must"
+                                             " have a key `from`")
+                        else:
+                            if not isinstance(b["from"], str):
+                                raise TypeError("Minimize_bleed `from` must "
+                                                "have a string as value")
+                        if not b.get("to"):
+                            raise ValueError("Minimize_bleed dictonaries must"
+                                             " have a key `to`")
+                        else:
+                            if not isinstance(b["to"], list):
+                                raise ValueError("Minimize_bleed `to` must "
+                                                 "have a list as value")
+                            else:
+                                for t in b["to"]:
+                                    if not isinstance(t, str):
+                                        raise TypeError("Minimize_bleed `to` "
+                                                        "list must contain "
+                                                        "strings.")
+        assert FSC and SSC, ("You must include parameters for FSC and SSC "
+                             "channels.")
+        channels = {}
+        channels["FSC"] = FSC
+        channels["SSC"] = SSC
+        if colors:
+            if not isinstance(colors, list):
+                raise TypeError("Colors must be of type list.")
+            else:
+                for c in colors:
+                    if not isinstance(c, dict):
+                        raise TypeError("Colors must contain elements of "
+                                        "type dict.")
+                    else:
+                        if not c.get("name") or not \
+                            isinstance(c.get("name"), str):
+                            raise TypeError("Each color must have a `name` "
+                                            "that is of type string.")
+                        if not c.get("emission_wavelength") or not \
+                            isinstance(c.get("emission_wavelength"), Unit):
+                            raise TypeError("Each color must have an "
+                                            "`emission_wavelength` "
+                                            "that is of type Unit.")
+                        if not c.get("excitation_wavelength") or not \
+                            isinstance(c.get("excitation_wavelength"), Unit):
+                            raise TypeError("Each color must have an "
+                                            "`excitation_wavelength` "
+                                            "that is of type Unit.")
+                        channels["colors"] = colors
+
+        for c in channels.itervalues():
+            if not isinstance(c, dict):
+                raise TypeError("Each channel must be of type dict.")
+            assert c["voltage_range"], ("You must include a voltage_range for"
+                                        " each channel.")
+            assert c["voltage_range"]["high"], ("You must include an upper "
+                                                "limit for the volage range"
+                                                "in each channel.")
+            assert c["voltage_range"]["low"], ("You must include a lower "
+                                               "limit for the volage range "
+                                               "in each channel.")
+
+        [self._remove_cover(s["well"].container, "flow_analyze") for s in sources]
         self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
                                              samples, colors, pos_controls))
 

@@ -158,6 +158,7 @@ class WellGroup(object):
             raise TypeError("Wells must be Well, list of wells, WellGroup.")
 
         self.wells = wells
+        self.name = None
 
     def set_properties(self, properties):
         """
@@ -227,14 +228,90 @@ class WellGroup(object):
 
         Parameters
         ----------
-        other : WellGroup
+        other : WellGroup or list of Wells
             WellGroup to extend this WellGroup.
 
         """
-        if not isinstance(other, WellGroup):
-            raise TypeError("Input given is not of type 'WellGroup'.")
+        if not isinstance(other, (WellGroup, list)):
+            raise TypeError("Input given is not of type 'WellGroup' or 'list'.")
         else:
-            return self.wells.extend(other.wells)
+            if not all(isinstance(well, Well) for well in other):
+                raise TypeError("Input given is not of type 'Well'.")
+            return self.wells.extend(WellGroup(other).wells)
+
+    def set_group_name(self, name):
+        """
+        Assigns a name to a WellGroup.
+
+        Parameters
+        ----------
+        name: str
+            WellGroup name
+        """
+        self.name = name
+        return self
+
+    def wells_with(self, prop, val=None):
+        """
+        Returns a wellgroup of wells with the specified property and value
+
+        Parameters
+        ----------
+        prop: str
+            the property you are searching for
+        val: str
+            the value assigned to the property
+        """
+        assert type(prop) is str, "property is not a string: %r" % prop
+        assert type(val) is None or str, "value is not a string: %r" % val
+        if val:
+            return WellGroup([w for w in self.wells if prop in w.properties and w.properties[prop] is val])
+        else:
+            return WellGroup([w for w in self.wells if prop in w.properties])
+
+    def pop(self, index=-1):
+        """
+        Removes and returns the last well in the wellgroup, unless an index is specified.
+        If index is specified, the well at that index is removed from the wellgroup and returned.
+
+        Parameters
+        ----------
+        index: int
+            the index of the well you want to remove and return
+        """
+        return self.wells.pop(index)
+
+    def insert(self, i, well):
+        """
+        Insert a well at a given position.
+
+        Parameters
+        ----------
+        i : int
+            index to insert the well at
+        well : Well
+            insert this well at the index
+        """
+        assert type(i) is int, "Input given is not of type 'Int'"
+        assert type(well) is Well, "Input given is not of type 'Well'"
+        if i >= len(self.wells):
+            return self.wells.append(well)
+        else:
+            self.wells = self.wells[:i] + [well] + self.wells[i:]
+
+    def __setitem__(self, key, item):
+        """
+        Set a specific Well in a WellGroup.
+
+        Parameters
+        ----------
+        key : int
+            Position in a WellGroup in robotized form.
+        item: Well
+            Well or WellGroup to be added
+        """
+        assert type(item) is Well, "Input given is not of type 'Well'."
+        self.wells[key] = item
 
     def __getitem__(self, key):
         """
@@ -243,7 +320,7 @@ class WellGroup(object):
         Parameters
         ----------
         key : int
-            Well reference in robotized form.
+            Position in a WellGroup in robotized form.
 
         """
         return self.wells[key]

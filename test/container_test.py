@@ -268,3 +268,61 @@ class WellNameTestCase(unittest.TestCase):
         c = Container(None, dummy_type)
         c.well(0).set_name("sample")
         self.assertEqual(c.well(0).name, "sample")
+
+
+class WellGroupNameTestCase(unittest.TestCase):
+    def setUp(self):
+        self.c = Container(None, dummy_type)
+
+    def test_set_group_name(self):
+        ws = self.c.all_wells()
+        ws.set_group_name("test_name")
+        self.assertEqual(ws.name, "test_name")
+
+class WellGroupListTestCase(unittest.TestCase):
+    def setUp(self):
+        self.c = Container(None, dummy_type)
+
+    def test_wells_with(self):
+        ws = self.c.wells_from('A1', 2)
+        ws.set_properties({'property1': 'value1'})
+        prop = ws.wells_with('property1')
+        self.assertTrue("property1" in prop[0].properties)
+        self.assertTrue("property1" in prop[1].properties)
+        ws2 = self.c.wells_from('B1', 2)
+        ws2.set_properties({'property2':'value2'})
+        ws.extend(ws2)
+        self.assertTrue("property1" not in ws[2].properties)
+        self.assertTrue("property1" not in ws[3].properties)
+        self.assertTrue("property2" in ws[2].properties)
+        self.assertTrue("property2" in ws[3].properties)
+        ws[2].set_properties({'property1': 'value2'})
+        ws[3].set_properties({'property1': 'value2'})
+        prop = ws.wells_with('property1')
+        self.assertTrue(len(prop) == 4)
+        prop_and_val = ws.wells_with('property1', 'value2')
+        self.assertTrue(prop_and_val[0] == ws[2])
+        self.assertTrue(prop_and_val[1] == ws[3])
+
+    def test_pop(self):
+        ws = self.c.wells_from('A1', 3)
+        self.assertTrue(ws[0] == ws.pop(0))
+        self.assertEqual(ws[-1], ws.pop())
+        self.assertEqual(len(ws), 1)
+        self.assertEqual(ws[-1], ws.pop())
+        self.assertEqual(len(ws), 0)
+
+
+    def test_insert(self):
+        ws = self.c.wells('A1', 2)
+        insert_wells = self.c.wells_from('C1',3)
+        ws.insert(1, insert_wells[0])
+        self.assertEqual(ws[1], insert_wells[0])
+        ws.insert(0, insert_wells[1])
+        self.assertEqual(ws[0], insert_wells[1])
+        ws.insert(100, insert_wells[2])
+        self.assertTrue(ws[-1] == insert_wells[2])
+        self.assertTrue(len(ws) == 5)
+
+
+

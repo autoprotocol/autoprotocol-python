@@ -2,22 +2,16 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
+
 ## Unreleased
 ---
-Added 
-- WellGroup methods:
-- set group name
-- Construct dictionary of wells with property and associated value
-- Pop(index)
-- Insert well
+Added
 
 Changed
-- extend(wells) takes list of wells
 
 Removed
 
 Fixed
-
 
 ## Unreleased
 ---
@@ -27,24 +21,20 @@ Added
 -autocover before incubate
 -assertions and tests for flow_analyze
 
+-WellGroup methods
+- Set group name
+- Find wells with property,value
+- Pop and insert
+
 Changed
+- .extend(wells) can now take in a list of wells
 -dispense instruction json outputs
+-removed capability 'cover' from 96-pcr and 384-pcr plates
 
 Removed
 
 Fixed
 -spin auto-cover
-
-## Unreleased
----
-Added
-
-Changed
-- removed capability 'cover' from 96-pcr and 384-pcr plates
-
-Removed
-
-Fixed
 
 ## v3.7.2 - 2016-06-24
 ---
@@ -70,7 +60,6 @@ Removed
 - string input types for source, destination wells for Instructions Consolidate, Autopick, Mix
 
 Fixed
-
 
 ## v3.7.0 - 2016-06-14
 ---

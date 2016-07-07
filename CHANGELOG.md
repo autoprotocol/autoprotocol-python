@@ -2,7 +2,6 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
-
 ## Unreleased
 ---
 Added
@@ -12,6 +11,18 @@ Changed
 Removed
 
 Fixed
+
+
+## v3.7.4 - 2016-07-07
+---
+Added
+
+Changed
+
+Removed
+
+Fixed
+- auto-uncover before provision instructions
 
 ## v3.7.3 - 2016-07-06
 ---

@@ -5213,6 +5213,7 @@ class Protocol(object):
             if not isinstance(v, (basestring, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
+            self._remove_cover(d.container, "provision")
             dest_group = []
             if v > Unit(900, "microliter"):
                 diff = v - Unit(900, "microliter")

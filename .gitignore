@@ -31,7 +31,6 @@ coverage.xml
 .tox/
 docs/_build/
 docs/_build/html
-_static/
 _template/
 html/
 doctrees/

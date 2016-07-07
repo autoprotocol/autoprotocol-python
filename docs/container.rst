@@ -78,6 +78,18 @@ WellGroup.set_properties()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.container.WellGroup.set_properties
 
+WellGroup.set_volume()
+~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.set_volume
+
+WellGroup.set_group_name()
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.set_group_name
+
+WellGroup.wells_with()
+~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.wells_with
+
 WellGroup.indices()
 ~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.container.WellGroup.indices
@@ -85,6 +97,18 @@ WellGroup.indices()
 WellGroup.append()
 ~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.container.WellGroup.append
+
+WellGroup.extend()
+~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.extend
+
+WellGroup.pop()
+~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.pop
+
+WellGroup.insert()
+~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.WellGroup.insert
 
 WellGroup.__getitem__()
 ~~~~~~~~~~~~~~~~~~~~~~~

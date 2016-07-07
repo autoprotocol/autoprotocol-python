@@ -13,28 +13,27 @@ Removed
 
 Fixed
 
-## Unreleased
+## v3.7.3 - 2016-07-06
 ---
 Added
--is_resource_id added to dispense and dispense_full_plate instructions
--dispense instruction tests
--autocover before incubate
--assertions and tests for flow_analyze
-
--WellGroup methods
-- Set group name
-- Find wells with property,value
-- Pop and insert
+- is_resource_id added to dispense and dispense_full_plate instructions
+- dispense instruction tests
+- autocover before incubate
+- assertions and tests for flow_analyze
+- WellGroup methods: set_group_name, pop, insert, wells_with
+- documentation
 
 Changed
-- .extend(wells) can now take in a list of wells
--dispense instruction json outputs
--removed capability 'cover' from 96-pcr and 384-pcr plates
+- WellGroup.extend(wells) can now take in a list of wells
+- dispense instruction json outputs
+- removed capability 'cover' from 96-pcr and 384-pcr plates
 
 Removed
 
 Fixed
--spin auto-cover
+- spin auto-cover
+- compatibility with py3 in flow_analyze
+
 
 ## v3.7.2 - 2016-06-24
 ---

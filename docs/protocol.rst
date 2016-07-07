@@ -13,7 +13,7 @@ Protocol.container_type()
 .. automethod:: autoprotocol.protocol.Protocol.container_type
 
 Protocol.add_time_constraint()
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.add_time_constraint
 
 Protocol.ref()

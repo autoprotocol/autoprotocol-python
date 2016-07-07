@@ -1,6 +1,5 @@
 import json
 from .pipette_tools import assign
-import future.utils
 
 
 '''

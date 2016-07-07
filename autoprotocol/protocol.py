@@ -258,22 +258,28 @@ class Protocol(object):
 
     def add_time_constraint(self, from_dict, to_dict, time_between, mirror=False):
         """
-        Add time constraints from from_dict to to_dict. Time constraints ensure that the time from the from_dict
-        to the to_dict does not exceed the time_between given. Care should be taken when applying time constraints as
-        constraints may make some protocols impossible to schedule or run.
+        Add time constraints from from_dict to to_dict. Time constraints
+        ensure that the time from the from_dict to the to_dict does not exceed
+        the time_between given. Care should be taken when applying time
+        constraints as constraints may make some protocols impossible to
+        schedule or run.
 
-        Though autoprotocol orders instructions in a list, instructions do not need to be run in the order they are
-        listed and instead depend on the preceding dependencies. Time constraints should be added with such limitations
-        in mind.
+        Though autoprotocol orders instructions in a list, instructions do
+        not need to be run in the order they are listed and instead depend on
+        the preceding dependencies. Time constraints should be added with such
+        limitations in mind.
 
-        Constraints are directional; use mirror=True if the time constraint should be added in both directions.
+        Constraints are directional; use mirror=True if the time constraint
+        should be added in both directions.
 
         Example Usage:
 
         .. code-block:: python
 
-            plate_1 = protocol.ref("plate_1", id=None, cont_type="96-flat", discard=True)
-            plate_2 = protocol.ref("plate_2", id=None, cont_type="96-flat", discard=True)
+            plate_1 = protocol.ref("plate_1", id=None, cont_type="96-flat",
+                                   discard=True)
+            plate_2 = protocol.ref("plate_2", id=None, cont_type="96-flat",
+                                   discard=True)
 
             protocol.cover(plate_1)
             time_point_1 = protocol.get_instruction_index()
@@ -281,11 +287,17 @@ class Protocol(object):
             protocol.cover(plate_2)
             time_point_2 = protocol.get_instruction_index()
 
-            protocol.add_time_constraint({"mark": plate_1, "state": "start"}, {"mark": time_point_1, "state": "end"}, "1:minute")
-            protocol.add_time_constraint({"mark": time_point_2, "state": "start"}, {"mark": time_point_1, "state": "start"}, "1:minute", True)
+            protocol.add_time_constraint(
+                {"mark": plate_1, "state": "start"},
+                {"mark": time_point_1, "state": "end"},
+                "1:minute")
+            protocol.add_time_constraint(
+                {"mark": time_point_2, "state": "start"},
+                {"mark": time_point_1, "state": "start"},
+                "1:minute", True)
 
 
-        returns:
+        Autoprotocol Output:
 
         .. code-block:: json
 
@@ -349,17 +361,20 @@ class Protocol(object):
         from_dict: dict
             Dictionary defining the initial time constraint condition.
             Composed of keys: "mark" and "state"
-            "mark": int or Container
+
+            mark: int or Container
                 instruction index of container
-            "state": "start" or "end"
+            state: "start" or "end"
                 specifies either the start or end of the "mark" point
+
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
         time_between : str, Unit
             max time between from_dict and to_dict
         mirror: bool, optional
-            choice to mirror the from and to positions when time constraints should be added in both directions
+            choice to mirror the from and to positions when time constraints
+            should be added in both directions
 
         Raises
         ------
@@ -378,7 +393,9 @@ class Protocol(object):
         RuntimeError
             If from_dict and to_dict are equal
         RuntimeError
-            If from_dict["marker"] and to_dict["marker"] are equal and from_dict["state"] = "end"
+            If from_dict["marker"] and to_dict["marker"] are equal and
+            from_dict["state"] = "end"
+
         """
 
         inst_string = 'instruction_'
@@ -2344,52 +2361,51 @@ class Protocol(object):
 
         .. code-block:: json
 
-          "instructions": [
-            {
-              "dataref": "my_illumina",
-              "index": "none",
-              "lanes": [
+            "instructions": [
                 {
-                  "object": "test_plate/0",
-                  "library_concentration": 1.0
-                },
-                {
-                  "object": "test_plate/1",
-                  "library_concentration": 5.32
-                },
-                {
-                  "object": "test_plate/2",
-                  "library_concentration": 54
-                },
-                {
-                  "object": "test_plate/3",
-                  "library_concentration": 20
-                },
-                {
-                  "object": "test_plate/4",
-                  "library_concentration": 23
-                },
-                {
-                  "object": "test_plate/5",
-                  "library_concentration": 23
-                },
-                {
-                  "object": "test_plate/6",
-                  "library_concentration": 21
-                },
-                {
-                  "object": "test_plate/7",
-                  "library_concentration": 62
+                  "dataref": "my_illumina",
+                  "index": "none",
+                  "lanes": [
+                    {
+                      "object": "test_plate/0",
+                      "library_concentration": 1.0
+                    },
+                    {
+                      "object": "test_plate/1",
+                      "library_concentration": 5.32
+                    },
+                    {
+                      "object": "test_plate/2",
+                      "library_concentration": 54
+                    },
+                    {
+                      "object": "test_plate/3",
+                      "library_concentration": 20
+                    },
+                    {
+                      "object": "test_plate/4",
+                      "library_concentration": 23
+                    },
+                    {
+                      "object": "test_plate/5",
+                      "library_concentration": 23
+                    },
+                    {
+                      "object": "test_plate/6",
+                      "library_concentration": 21
+                    },
+                    {
+                      "object": "test_plate/7",
+                      "library_concentration": 62
+                    }
+                  ],
+                  "flowcell": "PE",
+                  "mode": "mid",
+                  "sequencer": "hiseq",
+                  "library_size": 250,
+                  "op": "illumina_sequence"
                 }
-              ],
-              "flowcell": "PE",
-              "mode": "mid",
-              "sequencer": "hiseq",
-              "library_size": 250,
-              "op": "illumina_sequence"
-            }
-          ]
-        }
+              ]
 
 
         Parameters
@@ -3758,48 +3774,53 @@ class Protocol(object):
 
         Example Usage:
 
-            .. code-block:: python
+        .. code-block:: python
 
-                p = Protocol()
-                sample_wells = p.ref("test_plate", None, "96-pcr",
-                                     discard=True).wells_from(0, 8)
-                extract_wells = [p.ref("extract_" + str(i.index), None,
-                                       "micro-1.5", storage="cold_4").well(0)
-                                 for i in sample_wells]
+            p = Protocol()
+            sample_wells = p.ref("test_plate", None, "96-pcr",
+                                 discard=True).wells_from(0, 8)
+            extract_wells = [p.ref("extract_" + str(i.index), None,
+                                   "micro-1.5", storage="cold_4").well(0)
+                             for i in sample_wells]
 
 
-                extracts = [make_gel_extract_params(
-                                w,
-                                make_band_param(
-                                    "TE",
-                                    "5:microliter",
-                                    80,
-                                    79,
-                                    extract_wells[i]))
-                                for i, w in enumerate(sample_wells)]
+            extracts = [make_gel_extract_params(
+                            w,
+                            make_band_param(
+                                "TE",
+                                "5:microliter",
+                                80,
+                                79,
+                                extract_wells[i]))
+                            for i, w in enumerate(sample_wells)]
 
-                extracts[0] >>
+            p.gel_purify(extracts, "10:microliter",
+                         "size_select(8,0.8%)", "ladder1",
+                         "gel_purify_example")
 
+        Autoprotocol Output:
+
+        For extracts[0]
+
+        .. code-block:: json
+
+            {
+              "band_list": [
                 {
-                  "band_list": [
-                    {
-                      "band_size_range": {
-                        "max_bp": 80,
-                        "min_bp": 79
-                      },
-                      "destination": Well(Container(extract_0), 0, None),
-                      "elution_buffer": "TE",
-                      "elution_volume": "Unit(5.0, 'microliter')"
-                    }
-                  ],
-                  "gel": None,
-                  "lane": None,
-                  "source": Well(Container(test_plate), 0, None)
+                  "band_size_range": {
+                    "max_bp": 80,
+                    "min_bp": 79
+                  },
+                  "destination": Well(Container(extract_0), 0, None),
+                  "elution_buffer": "TE",
+                  "elution_volume": "Unit(5.0, 'microliter')"
                 }
+              ],
+              "gel": None,
+              "lane": None,
+              "source": Well(Container(test_plate), 0, None)
+            }
 
-                p.gel_purify(extracts, "10:microliter",
-                             "size_select(8,0.8%)", "ladder1",
-                             "gel_purify_example")
 
         Parameters
         ----------
@@ -3807,7 +3828,7 @@ class Protocol(object):
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
-            ..code-block:: python
+            .. code-block:: python
 
                 [
                   {
@@ -4260,6 +4281,7 @@ class Protocol(object):
 
 
         Autoprotocol Output:
+
         .. code-block:: json
 
             {
@@ -4497,7 +4519,7 @@ class Protocol(object):
                                             "that is of type Unit.")
                         channels["colors"] = colors
 
-        for c in channels.itervalues():
+        for c in channels.values():
             if not isinstance(c, dict):
                 raise TypeError("Each channel must be of type dict.")
             assert c["voltage_range"], ("You must include a voltage_range for"

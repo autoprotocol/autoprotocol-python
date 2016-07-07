@@ -91,7 +91,8 @@ class Well(object):
 
         """
         if not isinstance(vol, basestring) and not isinstance(vol, Unit):
-            raise TypeError("Volume given is not of type str or Unit. %s" % type(vol))
+            raise TypeError("Volume given is not of type str or "
+                            "Unit. %s" % type(vol))
         v = Unit.fromstring(vol)
         if v > self.container.container_type.well_volume_ul:
             raise ValueError("Theoretical volume you are trying to set "
@@ -101,7 +102,8 @@ class Well(object):
 
     def set_name(self, name):
         """
-        Set a name for this well for it to be included in a protocol's "outs" section
+        Set a name for this well for it to be included in a protocol's
+        "outs" section
 
         Parameters
         ----------
@@ -118,7 +120,7 @@ class Well(object):
         given based on the ContainerType of the Well.
 
         Uses the humanize function from the ContainerType class. Refer to
-        `ContainerType.humanize()`_ for more information.
+        `ContainerType.humanize()` for more information.
 
         """
         return self.container.humanize(self.index)
@@ -200,9 +202,9 @@ class WellGroup(object):
         """
         indices = []
         for w in self.wells:
-            assert w.container == self.wells[0].container, "All wells in \
-                WellGroup must belong to the same container to get their \
-                indices"
+            assert w.container == self.wells[0].container, (
+                "All wells in WellGroup must belong to the same container to "
+                "get their indices.")
             indices.append(w.humanize())
 
         return indices
@@ -349,8 +351,8 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (Well, WellGroup)):
-            raise TypeError("You can only add a Well or WellGroups \
-                                together.")
+            raise TypeError("You can only add a Well or WellGroups "
+                            "together.")
         if isinstance(other, Well):
             return WellGroup(self.wells + [other])
         else:
@@ -383,7 +385,8 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None, cover=None):
+    def __init__(self, id, container_type, name=None, storage=None,
+                 cover=None):
         self.name = name
         self.id = id
         self.container_type = container_type
@@ -392,7 +395,8 @@ class Container(object):
         self._wells = [Well(self, idx)
                        for idx in xrange(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
-            raise AttributeError("%s is not a valid seal or cover type." % cover)
+            raise AttributeError("%s is not a valid seal or cover "
+                                 "type." % cover)
 
     def well(self, i):
         """
@@ -445,12 +449,12 @@ class Container(object):
         the ContainerType of the Container.
 
         Uses the robotize function from the ContainerType class. Refer to
-        `ContainerType.robotize()`_ for more information.
+        `ContainerType.robotize()` for more information.
 
         """
         if not isinstance(well_ref, (basestring, int, Well, list)):
-            raise TypeError("Well reference given is not of type 'str' \
-                            'int', 'Well' or 'list'.")
+            raise TypeError("Well reference given is not of type 'str' "
+                            "'int', 'Well' or 'list'.")
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
@@ -459,7 +463,7 @@ class Container(object):
         given based on the ContainerType of the Container.
 
         Uses the humanize function from the ContainerType class. Refer to
-        `ContainerType.humanize()`_ for more information.
+        `ContainerType.humanize()` for more information.
 
         """
         if not isinstance(well_ref, (int, basestring, list)):
@@ -473,12 +477,12 @@ class Container(object):
         index given based on the ContainerType of the Container.
 
         Uses the decompose function from the ContainerType class. Refer to
-        `ContainerType.decompose()`_ for more information.
+        `ContainerType.decompose()` for more information.
 
         """
         if not isinstance(well_ref, (int, basestring, Well)):
-            raise TypeError("Well reference given is not of type 'int', \
-                            'str' or Well.")
+            raise TypeError("Well reference given is not of type 'int', "
+                            "'str' or Well.")
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):

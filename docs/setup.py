@@ -5,6 +5,6 @@ setup(
     url='http://github.com/autoprotocol/autoprotocol-python',
     author='Vanessa Biggers',
     author_email="vanessa@transcriptic.com",
-    version='3.7.2',
+    version='3.7.3',
     packages=['autoprotocol']
 )

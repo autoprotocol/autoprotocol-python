@@ -235,7 +235,8 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (WellGroup, list)):
-            raise TypeError("Input given is not of type 'WellGroup' or 'list'.")
+            raise TypeError("Input given is not of type 'WellGroup' or "
+                            "'list'.")
         else:
             if not all(isinstance(well, Well) for well in other):
                 raise TypeError("Input given is not of type 'Well'.")
@@ -267,14 +268,17 @@ class WellGroup(object):
         assert type(prop) is str, "property is not a string: %r" % prop
         assert type(val) is None or str, "value is not a string: %r" % val
         if val:
-            return WellGroup([w for w in self.wells if prop in w.properties and w.properties[prop] is val])
+            return WellGroup([w for w in self.wells if prop in w.properties and
+                             w.properties[prop] is val])
         else:
             return WellGroup([w for w in self.wells if prop in w.properties])
 
     def pop(self, index=-1):
         """
-        Removes and returns the last well in the wellgroup, unless an index is specified.
-        If index is specified, the well at that index is removed from the wellgroup and returned.
+        Removes and returns the last well in the wellgroup, unless an index is
+        specified.
+        If index is specified, the well at that index is removed from the
+        wellgroup and returned.
 
         Parameters
         ----------
@@ -608,11 +612,12 @@ class Container(object):
                 return WellGroup(self._wells)
             else:
                 raise ValueError(
-                    "0 or 'A1' is the only valid quadrant for a 96-well plate.")
+                    "0 or 'A1' is the only valid quadrant for a 96-well "
+                    "plate.")
 
         if quad not in [0, 1, 2, 3]:
-            raise ValueError(
-                "Invalid quadrant {} for plate type {}".format(quad, str(self.name)))
+            raise ValueError("Invalid quadrant {} for plate type {}".format(
+                quad, str(self.name)))
 
         start_well = [0, 1, 24, 25]
         wells = []
@@ -640,8 +645,8 @@ class Container(object):
 
         """
         if not isinstance(storage, basestring):
-            raise TypeError("Storage condition given ({0}) is not of type str. {1}."
-                            .format(storage, type(storage)))
+            raise TypeError("Storage condition given ({0}) is not of type "
+                            "str. {1}.".format(storage, type(storage)))
 
         self.storage = storage
         return self
@@ -657,7 +662,8 @@ class Container(object):
             .. code-block:: python
 
                 p = Protocol()
-                container = p.ref("new_container", cont_type="96-pcr", storage="cold_20")
+                container = p.ref("new_container", cont_type="96-pcr",
+                                  storage="cold_20")
                 p.incubate(c, "warm_37", "30:minute")
                 container.discard()
 
@@ -682,4 +688,5 @@ class Container(object):
         (ex. Container('my_plate'))
 
         """
-        return "Container(%s%s)" % (str(self.name), ", cover=" + self.cover if self.cover else "")
+        return "Container(%s%s)" % (str(self.name), ", cover=" +
+                                    self.cover if self.cover else "")

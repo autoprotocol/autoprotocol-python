@@ -3,7 +3,7 @@ import json
 import io
 from .protocol import Protocol
 from .unit import Unit, UnitError
-from .container import WellGroup, SEAL_TYPES, COVER_TYPES
+from .container import WellGroup, SEAL_TYPES, COVER_TYPES  # NOQA
 from . import UserError
 import argparse
 import sys
@@ -508,8 +508,10 @@ def seal_on_store(protocol):
         if "store" in ref.opts.keys():
             if not (ref.container.is_covered() or ref.container.is_sealed()):
                 if "seal" in ref.container.container_type.capabilities:
-                    protocol.seal(ref.container, ref.container.container_type.seal_types[0])
+                    protocol.seal(ref.container,
+                                  ref.container.container_type.seal_types[0])
                 elif "cover" in ref.container.container_type.capabilities:
-                    protocol.cover(ref.container, ref.container.container_type.cover_types[0])
+                    protocol.cover(ref.container,
+                                   ref.container.container_type.cover_types[0])
                 else:
                     continue

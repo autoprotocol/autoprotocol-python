@@ -4726,7 +4726,8 @@ class Protocol(object):
         else:
             self.instructions.append(Autopick(group, criteria, dataref))
 
-    def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
+    def mag_dry(self, head, container, duration, new_tip=False,
+                new_instruction=False):
         """
 
         Dry beads with magnetized tips above and outside a container for a set
@@ -4790,7 +4791,9 @@ class Protocol(object):
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
-    def mag_incubate(self, head, container, duration, magnetize=False, tip_position=1.5, temperature=None, new_tip=False, new_instruction=False):
+    def mag_incubate(self, head, container, duration, magnetize=False,
+                     tip_position=1.5, temperature=None, new_tip=False,
+                     new_instruction=False):
         """
 
         Incubate the container for a set time with tips set at `tip_position`.
@@ -4862,7 +4865,9 @@ class Protocol(object):
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
-    def mag_collect(self, head, container, cycles, pause_duration, bottom_position=0.0, temperature=None, new_tip=False, new_instruction=False):
+    def mag_collect(self, head, container, cycles, pause_duration,
+                    bottom_position=0.0, temperature=None, new_tip=False,
+                    new_instruction=False):
         """
 
         Collect beads from a container by cycling magnetized tips in and out
@@ -4936,7 +4941,9 @@ class Protocol(object):
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
-    def mag_release(self, head, container, duration, frequency, center=0.5, amplitude=0.5, temperature=None, new_tip=False, new_instruction=False):
+    def mag_release(self, head, container, duration, frequency, center=0.5,
+                    amplitude=0.5, temperature=None, new_tip=False,
+                    new_instruction=False):
         """
 
         Release beads into a container by cycling tips in and out of the
@@ -5013,7 +5020,9 @@ class Protocol(object):
         check_valid_mag_params(mag)
         self._add_mag(mag, head, new_tip, new_instruction, "release")
 
-    def mag_mix(self, head, container, duration, frequency, center=0.5, amplitude=0.5, magnetize=False, temperature=None, new_tip=False, new_instruction=False):
+    def mag_mix(self, head, container, duration, frequency, center=0.5,
+                amplitude=0.5, magnetize=False, temperature=None,
+                new_tip=False, new_instruction=False):
         """
 
         Mix beads in a container by cycling tips in and out of the
@@ -5084,7 +5093,8 @@ class Protocol(object):
         check_valid_mag(container, head)
         mag = {}
         mag["object"] = container
-        for kw in ("duration", "frequency", "center", "amplitude", "magnetize", "temperature"):
+        for kw in ("duration", "frequency", "center", "amplitude",
+                   "magnetize", "temperature"):
             val = locals()[kw]
             if isinstance(val, str) and ":" in val:
                 val = Unit(val)

@@ -1,7 +1,7 @@
-from .container import Container, Well, WellGroup
-from .protocol import Protocol
-from .container_type import ContainerType
-from .unit import Unit
+from .container import Container, Well, WellGroup  # NOQA
+from .protocol import Protocol  # NOQA
+from .container_type import ContainerType  # NOQA
+from .unit import Unit  # NOQA
 
 
 class UserError(Exception):

@@ -1,3 +1,4 @@
 {
-  "phabricator.uri" : "https://work.r23s.net/"
+  "phabricator.uri" : "https://work.r23s.net/",
+  "unit.engine": "PytestTestEngine"
 }

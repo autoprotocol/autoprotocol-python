@@ -32,6 +32,7 @@ dummy_type = make_dummy_type()
 
 
 class ContainerWellRefTestCase(unittest.TestCase):
+
     def setUp(self):
         self.c = Container(None, dummy_type)
 
@@ -76,6 +77,7 @@ class ContainerWellRefTestCase(unittest.TestCase):
 
 
 class ContainerWellGroupConstructionTestCase(unittest.TestCase):
+
     def setUp(self):
         self.c = Container(None, dummy_type)
 
@@ -177,10 +179,14 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
         def create_container(container_type):
             return Container(None, container_type)
 
-        plate_96 = create_container(make_dummy_type(well_count=96, col_count=12))
-        plate_384 = create_container(make_dummy_type(well_count=384, col_count=24))
-        plate_1536 = create_container(make_dummy_type(well_count=1536, col_count=48))
-        pathological_plate = create_container(make_dummy_type(well_count=384, col_count=96))
+        plate_96 = create_container(
+            make_dummy_type(well_count=96, col_count=12))
+        plate_384 = create_container(
+            make_dummy_type(well_count=384, col_count=24))
+        plate_1536 = create_container(
+            make_dummy_type(well_count=1536, col_count=48))
+        pathological_plate = create_container(
+            make_dummy_type(well_count=384, col_count=96))
 
         for plate in plate_96, plate_384:
             ws = plate.quadrant(0)
@@ -206,6 +212,7 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
 
 
 class WellVolumeTestCase(unittest.TestCase):
+
     def test_set_volume(self):
         c = Container(None, dummy_type)
         c.well(0).set_volume("20:microliter")
@@ -230,6 +237,7 @@ class WellVolumeTestCase(unittest.TestCase):
 
 
 class WellPropertyTestCase(unittest.TestCase):
+
     def test_set_properties(self):
         c = Container(None, dummy_type)
         c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
@@ -264,6 +272,7 @@ class WellPropertyTestCase(unittest.TestCase):
 
 
 class WellNameTestCase(unittest.TestCase):
+
     def test_set_name(self):
         c = Container(None, dummy_type)
         c.well(0).set_name("sample")
@@ -271,6 +280,7 @@ class WellNameTestCase(unittest.TestCase):
 
 
 class WellGroupNameTestCase(unittest.TestCase):
+
     def setUp(self):
         self.c = Container(None, dummy_type)
 
@@ -279,7 +289,9 @@ class WellGroupNameTestCase(unittest.TestCase):
         ws.set_group_name("test_name")
         self.assertEqual(ws.name, "test_name")
 
+
 class WellGroupListTestCase(unittest.TestCase):
+
     def setUp(self):
         self.c = Container(None, dummy_type)
 
@@ -290,7 +302,7 @@ class WellGroupListTestCase(unittest.TestCase):
         self.assertTrue("property1" in prop[0].properties)
         self.assertTrue("property1" in prop[1].properties)
         ws2 = self.c.wells_from('B1', 2)
-        ws2.set_properties({'property2':'value2'})
+        ws2.set_properties({'property2': 'value2'})
         ws.extend(ws2)
         self.assertTrue("property1" not in ws[2].properties)
         self.assertTrue("property1" not in ws[3].properties)
@@ -312,10 +324,9 @@ class WellGroupListTestCase(unittest.TestCase):
         self.assertEqual(ws[-1], ws.pop())
         self.assertEqual(len(ws), 0)
 
-
     def test_insert(self):
         ws = self.c.wells('A1', 2)
-        insert_wells = self.c.wells_from('C1',3)
+        insert_wells = self.c.wells_from('C1', 3)
         ws.insert(1, insert_wells[0])
         self.assertEqual(ws[1], insert_wells[0])
         ws.insert(0, insert_wells[1])
@@ -323,6 +334,3 @@ class WellGroupListTestCase(unittest.TestCase):
         ws.insert(100, insert_wells[2])
         self.assertTrue(ws[-1] == insert_wells[2])
         self.assertTrue(len(ws) == 5)
-
-
-

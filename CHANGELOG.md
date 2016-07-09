@@ -14,6 +14,18 @@ Removed
 Fixed
 
 
+## v3.7.5 - 2016-07-08
+---
+Added
+- plate type 6-flat-tc to ContainerType
+
+Changed
+
+Removed
+
+Fixed
+
+
 ## v3.7.4 - 2016-07-07
 ---
 Added

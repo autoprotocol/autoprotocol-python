@@ -12,10 +12,6 @@ Protocol.container_type()
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.container_type
 
-Protocol.add_time_constraint()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automethod:: autoprotocol.protocol.Protocol.add_time_constraint
-
 Protocol.ref()
 ~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.ref
@@ -27,6 +23,14 @@ Protocol.append()
 Protocol.as_dict()
 ~~~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.protocol.Protocol.as_dict
+
+Protocol.get_instruction_index()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.get_instruction_index
+
+Protocol.add_time_constraint()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.protocol.Protocol.add_time_constraint
 
 Protocol.distribute()
 ~~~~~~~~~~~~~~~~~~~~~

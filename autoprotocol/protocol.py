@@ -257,11 +257,12 @@ class Protocol(object):
         return container
 
     def add_time_constraint(self, from_dict, to_dict, time_between, mirror=False):
-        """
-        Add time constraints from from_dict to to_dict. Time constraints
-        ensure that the time from the from_dict to the to_dict does not exceed
-        the time_between given. Care should be taken when applying time
-        constraints as constraints may make some protocols impossible to
+        """Constraint the time between two instructions
+
+        Add time constraints from `from_dict` to `to_dict`. Time constraints
+        ensure that the time from the `from_dict` to the `to_dict` does not
+        exceed the `time_between` given. Care should be taken when applying
+        time constraints as constraints may make some protocols impossible to
         schedule or run.
 
         Though autoprotocol orders instructions in a list, instructions do
@@ -269,7 +270,7 @@ class Protocol(object):
         the preceding dependencies. Time constraints should be added with such
         limitations in mind.
 
-        Constraints are directional; use mirror=True if the time constraint
+        Constraints are directional; use `mirror=True` if the time constraint
         should be added in both directions.
 
         Example Usage:
@@ -370,7 +371,7 @@ class Protocol(object):
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
-        time_between : str, Unit
+        time_between: str, Unit
             max time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
@@ -417,7 +418,8 @@ class Protocol(object):
                     k = inst_string
                     if m["mark"] < 0:
                         raise ValueError(
-                            "The instruction 'mark' in %s must be greater than and equal to 0" % m)
+                            "The instruction 'mark' in %s must be greater "
+                            "than and equal to 0" % m)
                 else:
                     raise TypeError(
                         "The 'mark' in %s must be Container or Integer" % m)
@@ -437,15 +439,18 @@ class Protocol(object):
 
         if time_between < Unit(0, 'second'):
             raise ValueError(
-                "The 'time_between': %s cannot be less than '0:second'" % time_between)
+                "The 'time_between': %s cannot be less than "
+                "'0:second'" % time_between)
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
                 raise RuntimeError(
-                    "The from_dict: %s and to_dict: %s are the same" % (from_dict, to_dict))
+                    "The from_dict: %s and to_dict: %s are the "
+                    "same" % (from_dict, to_dict))
             if from_dict["state"] == "end":
                 raise RuntimeError(
-                    "The from_dict: %s cannot come before the to_dict %s" % (from_dict, to_dict))
+                    "The from_dict: %s cannot come before the "
+                    "to_dict %s" % (from_dict, to_dict))
 
         time_const["from"] = {keys[0]: from_dict["mark"]}
         time_const["to"] = {keys[1]: to_dict["mark"]}
@@ -459,15 +464,15 @@ class Protocol(object):
                 to_dict, from_dict, time_between, mirror=False)
 
     def get_instruction_index(self):
-        """
-        Get index of the last appended instruction
+        """Get index of the last appended instruction
 
         Example Usage:
 
         .. code-block:: python
 
             p = Protocol()
-            plate_1 = p.ref("plate_1", id=None, cont_type="96-flat", discard=True)
+            plate_1 = p.ref("plate_1", id=None, cont_type="96-flat",
+                            discard=True)
 
             p.cover(plate_1)
             time_point_1 = p.get_instruction_index()  # time_point_1 = 0
@@ -476,6 +481,7 @@ class Protocol(object):
         ------
         ValueError
             If an instruction index is less than 0
+
         Returns
         -------
         int
@@ -576,8 +582,9 @@ class Protocol(object):
         Returns
         -------
         dict
-            dict with keys "refs" and "instructions" and optionally "time_constraints" and "outs",
-            each of which contain the "refified" contents of their corresponding Protocol attribute.
+            dict with keys "refs" and "instructions" and optionally
+            "time_constraints" and "outs", each of which contain the
+            "refified" contents of their corresponding Protocol attribute.
 
         """
         outs = {}
@@ -610,7 +617,8 @@ class Protocol(object):
 
         explicit_props = ["outs", "refs", "instructions", "time_constraints"]
 
-        return {attr: self._refify(getattr(self, attr)) for attr in prop_list if attr in explicit_props}
+        return {attr: self._refify(getattr(self, attr)) for attr in prop_list
+            if attr in explicit_props}
 
     def store(self, container, condition):
         """

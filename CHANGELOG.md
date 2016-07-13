@@ -12,7 +12,7 @@ Changed
 Removed
 
 Fixed
-
+- cover_types on 96-deep-kf and 96-deep
 
 ## v3.7.5 - 2016-07-08
 ---

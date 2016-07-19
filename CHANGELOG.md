@@ -2,9 +2,10 @@
 
 This project adheres to [Semantic Versioning](http://semver.org/)
 
-## Unreleased
+## v3.7.6 - 2016-07-19
 ---
 Added
+- bluewash protocol support
 
 Changed
 - documentation

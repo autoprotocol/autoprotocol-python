@@ -1209,7 +1209,8 @@ class MeasureMass(Instruction):
     """
     Measure the mass of containers
 
-    Parameters ----------
+    Parameters
+    ----------
     refs : list of containers
         list of containers
     dataref: str

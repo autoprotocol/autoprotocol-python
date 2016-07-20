@@ -1241,21 +1241,3 @@ class MeasureVolume(Instruction):
                      "object": wells,
                      "dataref": dataref}
         super(MeasureVolume, self).__init__(json_dict)
-
-class BlueWash(Instruction):
-    """
-    Runs a wash program on the Bluecat plate washer
-
-    Parameters
-    ----------
-    container: container
-        The container to wash
-    kind: str
-        The name of the program to execute
-    """
-
-    def __init__(self, container, kind):
-        json_dict = {"op": "x_blue_wash",
-                     "object": container,
-                     "kind": kind}
-        super(BlueWash, self).__init__(json_dict)

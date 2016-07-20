@@ -1682,20 +1682,6 @@ class MeasureVolumeTestCase(unittest.TestCase):
         p.measure_volume(test_plate.wells_from(0, 12), "test_ref")
         self.assertEqual(len(p.instructions), 1)
 
-class BlueWashTestCase(unittest.TestCase):
-
-    def test_measure_mass_single_container(self):
-        p = Protocol()
-        test_plate = p.ref(
-            "test_plate", id=None, cont_type="96-flat", storage=None, discard=True)
-        p.blue_wash(test_plate, "Single96")
-        self.assertEqual(len(p.instructions), 1)
-
-    def test_measure_mass_bad_input(self):
-        p = Protocol()
-        with self.assertRaises(TypeError):
-            p.blue_wash("foo", "test_ref")
-
 
 class SpinTestCase(unittest.TestCase):
 

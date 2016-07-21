@@ -1324,9 +1324,9 @@ class Protocol(object):
                                  "volumes as a list, its length "
                                  "must match the number of "
                                  "source wells specified.")
-            volumes = [Unit.fromstring(v) for v in volumes]
+            volumes = [Unit.fromstring(v).to("ul") for v in volumes]
         else:
-            volumes = [Unit.fromstring(volumes)] * len(sources)
+            volumes = [Unit.fromstring(volumes).to("ul")] * len(sources)
 
         # Initialize instructions
         cons = {"consolidate": {}}
@@ -1859,11 +1859,11 @@ class Protocol(object):
         # matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume)] * len_source
+                volume = [Unit.fromstring(volume).to("ul")] * len_source
             else:
-                volume = [Unit.fromstring(volume)] * len_dest
+                volume = [Unit.fromstring(volume).to("ul")] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: Unit.fromstring(x), volume))
+            volume = list(map(lambda x: Unit.fromstring(x).to("ul"), volume))
         else:
             raise RuntimeError("Unless the same volume of liquid is being "
                                "transferred to each destination well, each "
@@ -2849,9 +2849,9 @@ class Protocol(object):
                                              columnwise=True))
             for w in wells:
                 if w.volume:
-                    w.volume += Unit.fromstring(c["volume"])
+                    w.volume += Unit.fromstring(c["volume"].to("ul"))
                 else:
-                    w.set_volume(c["volume"])
+                    w.set_volume(Unit(c["volume"]).to("ul"))
 
         self.instructions.append(
             Dispense(ref, reagent, columns, speed_percentage, is_resource_id))

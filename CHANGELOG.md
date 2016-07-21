@@ -8,6 +8,7 @@ Added
 
 Changed
 - documentation
+- convert pipette operations to microliters
 
 Removed
 

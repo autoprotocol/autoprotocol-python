@@ -449,7 +449,7 @@ _CONTAINER_TYPES = {
         well_volume_ul=Unit(1000.0, "microliter"),
         well_coating=None,
         sterile=False,
-        cover_types=["standard"],
+        cover_types=["universal"],
         seal_types=None,
         capabilities=["pipette", "incubate",
                       "gel_separate", "mag_dry",

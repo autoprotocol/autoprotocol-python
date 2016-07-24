@@ -246,7 +246,8 @@ _CONTAINER_TYPES = {
         shortname="384-flat",
         col_count=24,
         dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")),
+        safe_min_volume_ul=Unit(15, "microliter")
+    ),
     "384-pcr": ContainerType(
         name="384-well PCR plate",
         well_count=384,
@@ -264,7 +265,8 @@ _CONTAINER_TYPES = {
         shortname="384-pcr",
         col_count=24,
         dead_volume_ul=Unit(2, "microliter"),
-        safe_min_volume_ul=Unit(3, "microliter")),
+        safe_min_volume_ul=Unit(3, "microliter")
+    ),
     "384-echo": ContainerType(
         name="384-well Echo plate",
         well_count=384,
@@ -281,7 +283,8 @@ _CONTAINER_TYPES = {
         shortname="384-echo",
         col_count=24,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")),
+        safe_min_volume_ul=Unit(15, "microliter")
+    ),
     "384-flat-white-white-lv": ContainerType(
         name="384-well flat-bottom low volume plate",
         well_count=384,
@@ -300,7 +303,8 @@ _CONTAINER_TYPES = {
         shortname="384-flat-white-white-lv",
         col_count=24,
         dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")),
+        safe_min_volume_ul=Unit(15, "microliter")
+    ),
     "384-flat-white-white-tc": ContainerType(
         name="384-well flat-bottom low flange plate",
         well_count=384,
@@ -319,7 +323,8 @@ _CONTAINER_TYPES = {
         shortname="384-flat-white-white-tc",
         col_count=24,
         dead_volume_ul=Unit(20, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter")),
+        safe_min_volume_ul=Unit(30, "microliter")
+    ),
     "384-flat-clear-clear": ContainerType(
         name="384-well fully clear high binding plate",
         well_count=384,
@@ -338,8 +343,8 @@ _CONTAINER_TYPES = {
         shortname="384-flat-clear-clear",
         col_count=24,
         dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")),
-
+        safe_min_volume_ul=Unit(20, "microliter")
+    ),
     "96-flat": ContainerType(
         name="96-well flat-bottom plate",
         well_count=96,
@@ -358,7 +363,8 @@ _CONTAINER_TYPES = {
         shortname="96-flat",
         col_count=12,
         dead_volume_ul=Unit(25, "microliter"),
-        safe_min_volume_ul=Unit(65, "microliter")),
+        safe_min_volume_ul=Unit(65, "microliter")
+    ),
     "96-flat-uv": ContainerType(
         name="96-well flat-bottom UV transparent plate",
         well_count=96,
@@ -377,7 +383,8 @@ _CONTAINER_TYPES = {
         shortname="96-flat-uv",
         col_count=12,
         dead_volume_ul=Unit(25, "microliter"),
-        safe_min_volume_ul=Unit(65, "microliter")),
+        safe_min_volume_ul=Unit(65, "microliter")
+    ),
     "96-pcr": ContainerType(
         name="96-well PCR plate",
         well_count=96,
@@ -395,7 +402,8 @@ _CONTAINER_TYPES = {
         shortname="96-pcr",
         col_count=12,
         dead_volume_ul=Unit(3, "microliter"),
-        safe_min_volume_ul=Unit(5, "microliter")),
+        safe_min_volume_ul=Unit(5, "microliter")
+    ),
     "96-deep": ContainerType(
         name="96-well extended capacity plate",
         well_count=96,
@@ -412,7 +420,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=12,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter")),
+        safe_min_volume_ul=Unit(30, "microliter")
+    ),
     "96-v-kf": ContainerType(
         name="96-well v-bottom King Fisher plate",
         well_count=96,
@@ -431,7 +440,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=12,
         dead_volume_ul=Unit(20, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")),
+        safe_min_volume_ul=Unit(20, "microliter")
+    ),
     "96-deep-kf": ContainerType(
         name="96-well extended capacity King Fisher plate",
         well_count=96,
@@ -450,7 +460,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=12,
         dead_volume_ul=Unit(50, "microliter"),
-        safe_min_volume_ul=Unit(50, "microliter")),
+        safe_min_volume_ul=Unit(50, "microliter")
+    ),
     "24-deep": ContainerType(
         name="24-well extended capacity plate",
         well_count=24,
@@ -467,7 +478,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=6,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(60, "microliter")),
+        safe_min_volume_ul=Unit(60, "microliter")
+    ),
     "micro-2.0": ContainerType(
         name="2mL Microcentrifuge tube",
         well_count=1,
@@ -483,7 +495,8 @@ _CONTAINER_TYPES = {
         is_tube=True,
         col_count=1,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(40, "microliter")),
+        safe_min_volume_ul=Unit(40, "microliter")
+    ),
     "micro-1.5": ContainerType(
         name="1.5mL Microcentrifuge tube",
         well_count=1,
@@ -499,7 +512,8 @@ _CONTAINER_TYPES = {
         is_tube=True,
         col_count=1,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")),
+        safe_min_volume_ul=Unit(20, "microliter")
+    ),
     "6-flat": ContainerType(
         name="6-well cell culture plate",
         well_count=6,
@@ -514,7 +528,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=3,
         dead_volume_ul=Unit(400, "microliter"),
-        safe_min_volume_ul=Unit(600, "microliter")),
+        safe_min_volume_ul=Unit(600, "microliter")
+    ),
     "1-flat": ContainerType(
         name="1-well flat-bottom plate",
         well_count=1,
@@ -529,7 +544,8 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=1,
         dead_volume_ul=Unit(36000, "microliter"),
-        safe_min_volume_ul=Unit(40000, "microliter")),
+        safe_min_volume_ul=Unit(40000, "microliter")
+    ),
     "6-flat-tc": ContainerType(
         name="6-well TC treated plate",
         well_count=6,

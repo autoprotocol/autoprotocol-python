@@ -16,7 +16,7 @@ or, alternatively:
 
     $ pip install autoprotocol
 
-**check the releases tab or the [changelog](http://autoprotocol-python.readthedocs.io/en/latest/autoprotocol.html) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
+**check the releases tab or the [changelog](http://autoprotocol-python.readthedocs.io/en/latest/changelog.html) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
 
 ## Building a Protocol
 A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are used to append Instructions and Refs to the Protocol object such as in the simple protocol below:

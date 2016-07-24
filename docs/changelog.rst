@@ -6,7 +6,7 @@ Changelog
 * :support:`-` using release for changelog and integration into readthedocs documentation
 
 * :release:`3.7.5 <2016-07-08>`
-* :feature:`- backported` plate type 6-flat-tc to ContainerType
+* :feature:`- backported` plate type :ref:`container-type-6-flat-tc to ContainerType
 
 * :release:`3.7.4 <2016-07-07>`
 * :bug:`-` auto-uncover before :ref:`protocol-provision` instructions
@@ -20,13 +20,13 @@ Changelog
 * :support:`- backported` documentation
 * :feature:`- backported` WellGroup.extend(wells) can now take in a list of wells
 * :bug:`-` :ref:`protocol-dispense` instruction json outputs
-* :bug:`-` removed capability 'cover' from 96-pcr and 384-pcr plates
+* :bug:`-` removed capability 'cover' from :ref:`container-type-96-pcr` and :ref:`container-type-384-pcr` plates
 * :bug:`-` :ref:`protocol-spin` auto-cover
 * :bug:`-` compatibility with py3 in :ref:`protocol-flow-analyze`
 
 * :release:`3.7.2 <2016-06-24>`
 * :feature:`- backported` validations before implicit cover or seal
-* :feature:`- backported` new plate types 384-clear-clear, 384-flat-white-white-lv, 384-flat-white-white-tc
+* :feature:`- backported` new plate types :ref:`container-type-384-flat-clear-clear`, :ref:`container-type-384-flat-white-white-lv`, :ref:`container-type-384-flat-white-white-tc`
 
 * :release:`3.7.1 <2016-06-17>`
 * :feature:`- backported` validations of input types before cover check
@@ -118,7 +118,7 @@ Changelog
 * :feature:`-` :ref:`protocol-stamp` has been reformatted to take groups of transfers. This allows for one_tip=True, one_source=True, and WellGroup source and destinations
 
 * :release:`2.4.1 <2015-10-12>`
-* :bug:`-` volume tracking for stamping to/from 384-well plates
+* :bug:`-` volume tracking for :ref:`protocol-stamp` ing to/from 384-well plates
 * :bug:`-` one_tip = True transfers > 750:microliter are transferred with single tip
 
 * :release:`2.4.0 <2015-09-28>`
@@ -177,7 +177,7 @@ Changelog
 * :feature:`- backported` `ImagePlate()` class and :ref:`protocol-image-plate` Protocol method for taking images of containers
 * :feature:`- backported` add :ref:`protocol-consolidate` Protocol method and accompanying tests
 * :feature:`- backported` support for container names with slashes in them in `harness.py`
-* :feature:`- backported` `1-flat` plate type to `_CONTAINER_TYPES`
+* :feature:`- backported` :ref:`container-type-1-flat` plate type to `_CONTAINER_TYPES`
 * :feature:`- backported` brought back recursively transferring volumes over 900 microliters
 * :feature:`- backported` allow transfer from multiple sources to one destination
 * :feature:`- backported` support for `choice` input type in `harness.py`

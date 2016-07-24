@@ -177,11 +177,15 @@ Changelog
 * :feature:`- backported` `ImagePlate()` class and :ref:`protocol-image-plate` Protocol method for taking images of containers
 * :feature:`- backported` add :ref:`protocol-consolidate` Protocol method and accompanying tests
 * :feature:`- backported` support for container names with slashes in them in `harness.py`
+<<<<<<< b5134e83d7910a63d6e52cfcfc978421587f5e91
 <<<<<<< 72dc5333949f063d77fc3e38888501d878957e0d
 * :feature:`- backported` :ref:`container-type-1-flat` plate type to `_CONTAINER_TYPES`
 =======
 * :feature:`- backported` `1-flat` plate type to `_CONTAINER_TYPES`
 >>>>>>> new changelog and adjust documentation
+=======
+* :feature:`- backported` :ref:`container-type-1-flat` plate type to `_CONTAINER_TYPES`
+>>>>>>> container documentation
 * :feature:`- backported` brought back recursively transferring volumes over 900 microliters
 * :feature:`- backported` allow transfer from multiple sources to one destination
 * :feature:`- backported` support for `choice` input type in `harness.py`

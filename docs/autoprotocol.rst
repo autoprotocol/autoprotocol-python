@@ -4,9 +4,14 @@ autoprotocol support
 
 autoprotocol.unit
 -----------------
+
+.. _unit-unit:
+
 unit.Unit
 ~~~~~~~~~
 .. autoclass:: autoprotocol.unit.Unit
+
+.. _unit-fromstring:
 
 Unit.fromstring()
 ^^^^^^^^^^^^^^^^^

@@ -8,6 +8,7 @@
   AP Container <container>
   AP Container Type <container_type>
   AP Other <autoprotocol>
+  Changelog <changelog>
   AUTHORS
   LICENSE
 
@@ -16,7 +17,6 @@ Use the sidebar to navigate specific module documentation.
 `Autoprotocol <http://autoprotocol.org>`_ is a standard way to express
 experiments in life science. The `autoprotocol-python <https://github.com/autoprotocol/autoprotocol-python>`_ repository contains a python library for
 generating Autoprotocol.
-
 
 
 Installation

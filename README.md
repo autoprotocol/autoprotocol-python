@@ -1,5 +1,5 @@
 # Autoprotocol Python Library
-
+[![Build Status](https://travis-ci.org/autoprotocol/autoprotocol-python.svg?branch=master)](https://travis-ci.org/autoprotocol/autoprotocol-python)
 ### **[View Library Documentation on readthedocs.org](http://autoprotocol-python.readthedocs.org/en/latest/)**
 
 [Autoprotocol](http://www.autoprotocol.org) is a standard way to express
@@ -16,7 +16,7 @@ or, alternatively:
 
     $ pip install autoprotocol
 
-**check the releases tab or the [changelog](https://github.com/autoprotocol/autoprotocol-python/blob/master/CHANGELOG.md) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
+**check the releases tab or the [changelog](http://autoprotocol-python.readthedocs.io/en/latest/autoprotocol.html) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
 
 ## Building a Protocol
 A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are used to append Instructions and Refs to the Protocol object such as in the simple protocol below:

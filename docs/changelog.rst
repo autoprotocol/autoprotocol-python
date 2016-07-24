@@ -6,14 +6,14 @@ Changelog
 * :support:`-` using release for changelog and integration into readthedocs documentation
 
 * :release:`3.7.5 <2016-07-08>`
-* :feature:`- backported` plate type :ref:`container-type-6-flat-tc to ContainerType
+* :feature:`- backported` plate type :ref:`container-type-6-flat-tc` to ContainerType
 
 * :release:`3.7.4 <2016-07-07>`
 * :bug:`-` auto-uncover before :ref:`protocol-provision` instructions
 
 * :release:`3.7.3 <2016-07-06>`
 * :feature:`- backported` `is_resource_id` added to :ref:`protocol-dispense` and :ref:`protocol-dispense-full-plate` instructions
-* :support:`-` dispense instruction tests
+* :support:`-` :ref:`protocol-dispense` instruction tests
 * :feature:`- backported` autocover before :ref:`protocol-incubate`
 * :feature:`- backported` assertions and tests for :ref:`protocol-flow-analyze`
 * :feature:`- backported` WellGroup methods: :ref:`wellgroup-group-name`, :ref:`wellgroup-pop`, :ref:`wellgroup-insert`, :ref:`wellgroup-wells-with`
@@ -93,9 +93,9 @@ Changelog
 * :release:`3.0.0 <2016-03-17>`
 * :feature:`-` `container+` input type to harness.py
 * :feature:`-` `magnetic_transfer` instruction to instruction.py and protocol.py
-* :feature:`-` kf container types in container_type.py
+* :feature:`-` kf container types :ref:`container-type-96-v-kf` and :ref:`container-type-96-deep-kf` in container_type.py
 * :feature:`-` release versioning has been removed in favor of protocol versioniong in harness.py
-* :feature:`-` update 6-flat well volumes
+* :feature:`-` update :ref:`container-type-6-flat` well volumes
 * :feature:`-` :ref:`unit-unit` now uses Pint's Quantity as a base class
 * :bug:`- major` default versioning in manifest_test.json
 * :bug:`- major` Update container_test.py and container_type_test.py to include safe_min_volume_ul

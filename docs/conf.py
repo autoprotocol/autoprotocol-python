@@ -31,8 +31,14 @@ sys.path.insert(0, os.path.abspath('../autoprotocol'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinxcontrib.napoleon'
+    'sphinxcontrib.napoleon',
+    'releases'
 ]
+
+# 'releases' (changelog) settings
+releases_github_path = 'autoprotocol/autoprotocol-python'
+# releases_unstable_prehistory = True
+# releases_debug = True
 
 autodoc_member_order = 'bysource'
 

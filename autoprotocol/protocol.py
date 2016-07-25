@@ -967,7 +967,7 @@ class Protocol(object):
         flowrate : str, Unit, optional
             Speed at which to mix liquid in well before and/or after each
             transfer step.
-        aspirate speed : str, Unit, optional
+        aspirate_speed : str, Unit, optional
             Speed at which to aspirate liquid from source well.  May not be
             specified if aspirate_source is also specified. By default this is
             the maximum aspiration speed, with the start speed being half of
@@ -5319,7 +5319,7 @@ class Protocol(object):
                 return k
 
     @staticmethod
-    def fill_wells(dst_group, src_group, volume, distribute_target, dispense_speed):
+    def fill_wells(dst_group, src_group, volume, distribute_target=None, dispense_speed=None):
         """
         Distribute liquid to a WellGroup, sourcing the liquid from a group
         of wells all containing the same substance.

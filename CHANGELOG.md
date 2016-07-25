@@ -7,6 +7,17 @@ This project adheres to [Semantic Versioning](http://semver.org/)
 Added
 
 Changed
+
+Removed
+
+Fixed
+
+
+## v3.7.6 - 2016-07-25
+---
+Added
+
+Changed
 - documentation
 - convert pipette operations to microliters
 

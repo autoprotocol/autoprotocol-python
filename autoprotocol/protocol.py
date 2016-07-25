@@ -827,7 +827,7 @@ class Protocol(object):
 
         opts = {}
         try:
-            dists = self.fill_wells(dest, source, volume, distribute_target)
+            dists = self.fill_wells(dest, source, volume, distribute_target, dispense_speed)
         except ValueError:
             raise RuntimeError("When distributing liquid, source well(s) "
                                "must have an associated volume (aliquot).")
@@ -852,7 +852,7 @@ class Protocol(object):
             opts["to"] = d["to"]
 
             # Append transfer options
-            opt_list = ["aspirate_speed", "allow_carryover", "dispense_speed"]
+            opt_list = ["aspirate_speed", "allow_carryover"]
             for option in opt_list:
                 assign(opts, option, eval(option))
             x_opt_list = ["x_aspirate_source", "x_pre_buffer",
@@ -5319,7 +5319,7 @@ class Protocol(object):
                 return k
 
     @staticmethod
-    def fill_wells(dst_group, src_group, volume, distribute_target):
+    def fill_wells(dst_group, src_group, volume, distribute_target, dispense_speed):
         """
         Distribute liquid to a WellGroup, sourcing the liquid from a group
         of wells all containing the same substance.
@@ -5381,6 +5381,8 @@ class Protocol(object):
             }
             if distribute_target:
                 opts["x_dispense_target"] = distribute_target
+            if dispense_speed:
+                opts["dispense_speed"] = dispense_speed
             distributes[-1]["to"].append(opts)
             src.volume -= v
             if d.volume:

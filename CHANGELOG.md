@@ -14,6 +14,7 @@ Removed
 
 Fixed
 - cover_types on 96-deep-kf and 96-deep
+- dispense_speed and distribute_target in Distribute instruction
 
 ## v3.7.5 - 2016-07-08
 ---

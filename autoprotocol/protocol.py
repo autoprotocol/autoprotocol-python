@@ -661,9 +661,10 @@ class Protocol(object):
     def distribute(self, source, dest, volume, allow_carryover=False,
                    mix_before=False, mix_vol=None, repetitions=10,
                    flowrate="100:microliter/second", aspirate_speed=None,
-                   aspirate_source=None, distribute_target=None,
-                   pre_buffer=None, disposal_vol=None, transit_vol=None,
-                   blowout_buffer=None, tip_type=None, new_group=False):
+                   aspirate_source=None, dispense_speed=None,
+                   distribute_target=None, pre_buffer=None, disposal_vol=None,
+                   transit_vol=None, blowout_buffer=None, tip_type=None,
+                   new_group=False):
         """
         Distribute liquid from source well(s) to destination wells(s).
 
@@ -777,20 +778,23 @@ class Protocol(object):
             liquid in a well before liquid is distributed.
         flowrate : str, Unit, optional
             Speed at which to mix liquid in well before liquid is distributed.
-        aspirate speed : str, Unit, optional
+        aspirate_speed : str, Unit, optional
             Speed at which to aspirate liquid from source well.  May not be
             specified if aspirate_source is also specified. By default this is
             the maximum aspiration speed, with the start speed being half of
             the speed specified.
         aspirate_source : fn, optional
             Can't be specified if aspirate_speed is also specified.
+        dispense_speed : str, Unit, optional
+            Speed at which to dispense liquid into the destination well.  May
+            not be specified if dispense_target is also specified.
         distribute_target : fn, optional
             A function that contains additional parameters for distributing to
             target wells including depth, dispense_speed, and calibrated
             volume.
             If this parameter is specified, the same parameters will be
             applied to every destination well.
-            Can't be specified if dispense_speed is also specified.
+            Will supersede dispense_speed parameters if also specified.
         pre_buffer : str, Unit, optional
             Volume of air aspirated before aspirating liquid.
         disposal_vol : str, Unit, optional
@@ -848,7 +852,7 @@ class Protocol(object):
             opts["to"] = d["to"]
 
             # Append transfer options
-            opt_list = ["aspirate_speed", "allow_carryover"]
+            opt_list = ["aspirate_speed", "allow_carryover", "dispense_speed"]
             for option in opt_list:
                 assign(opts, option, eval(option))
             x_opt_list = ["x_aspirate_source", "x_pre_buffer",
@@ -5376,7 +5380,7 @@ class Protocol(object):
                 "volume": v
             }
             if distribute_target:
-                opts["distribute_target"] = distribute_target
+                opts["x_dispense_target"] = distribute_target
             distributes[-1]["to"].append(opts)
             src.volume -= v
             if d.volume:

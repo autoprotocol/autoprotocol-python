@@ -2853,7 +2853,7 @@ class Protocol(object):
                                              columnwise=True))
             for w in wells:
                 if w.volume:
-                    w.volume += Unit.fromstring(c["volume"].to("ul"))
+                    w.volume += Unit.fromstring(c["volume"]).to("ul")
                 else:
                     w.set_volume(Unit(c["volume"]).to("ul"))
 

@@ -1,2 +1,4 @@
+Sphinx==1.3
 sphinxcontrib-napoleon
+releases
 -e git://github.com/autoprotocol/autoprotocol-python.git@master#egg=autoprotocol

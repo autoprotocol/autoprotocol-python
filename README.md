@@ -1,5 +1,8 @@
 # Autoprotocol Python Library
 
+[![Build Status](https://travis-ci.org/autoprotocol/autoprotocol-python.svg?branch=master)](https://travis-ci.org/autoprotocol/autoprotocol-python)
+[![PyPI version](https://img.shields.io/pypi/v/autoprotocol.svg?maxAge=2592000)](https://pypi.python.org/pypi/autoprotocol)
+
 ### **[View Library Documentation on readthedocs.org](http://autoprotocol-python.readthedocs.org/en/latest/)**
 
 [Autoprotocol](http://www.autoprotocol.org) is a standard way to express
@@ -16,7 +19,7 @@ or, alternatively:
 
     $ pip install autoprotocol
 
-**check the releases tab or the [changelog](https://github.com/autoprotocol/autoprotocol-python/blob/master/CHANGELOG.md) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
+**check the releases tab or the [changelog](http://autoprotocol-python.readthedocs.io/en/latest/changelog.html) in this repository to see the latest release that will be downloaded.  To be completely up to date it's safest to clone and install this repository as above**
 
 ## Building a Protocol
 A basic protocol object has empty "refs" and "instructions" stanzas.  Various helper methods in the Protocol class are used to append Instructions and Refs to the Protocol object such as in the simple protocol below:
@@ -188,6 +191,6 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also submit an issue or write an email to us at
 support@transcriptic.com if you want to discuss ideas or bugs.
 
-autoprotocol-python is BSD licensed (see [LICENSE](https://github.com/autoprotocol/autoprotocol-python/blob/master/LICENSE.rst)).
+autoprotocol-python is BSD licensed (see [LICENSE](http://autoprotocol-python.readthedocs.io/en/latest/LICENSE.html)).
 Before we can accept your pull request, we require that you sign a CLA (Contributor License Agreement)
-allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](https://github.com/autoprotocol/autoprotocol-python/blob/master/AUTHORS.rst) for more details.
+allowing us to distribute your work under the BSD license. Email one of the [AUTHORS](http://autoprotocol-python.readthedocs.io/en/latest/AUTHORS.html) for more details.

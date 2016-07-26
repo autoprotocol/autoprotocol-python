@@ -2,7 +2,6 @@
 Changelog
 =========
 
-* :release:`3.8.0 <2016-07-23>`
 * :support:`-` using release for changelog and integration into readthedocs documentation
 * :bug:`- major` cover_types on :ref:`container-type-96-deep-kf` and :ref:`container-type-96-deep`
 * :bug:`- major` convert pipette operations to microliters

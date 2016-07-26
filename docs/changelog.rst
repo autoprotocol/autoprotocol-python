@@ -2,8 +2,8 @@
 Changelog
 =========
 
+* :bug: `- major` unit conversion to microliters in :ref:`protocol-dispense` instruction
 * :support:`-` using release for changelog and integration into readthedocs documentation
-
 * :bug: `- major` dispense_speed and distribute_target in :ref:`protocol-distribute` instruction
 * :bug: `127 major` convert pipette operations to microliters
 * :bug:`128 major` cover_types on :ref:`container-type-96-deep-kf` and :ref:`container-type-96-deep`

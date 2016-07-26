@@ -1,5 +1,9 @@
 # Autoprotocol Python Library
+
 [![Build Status](https://travis-ci.org/autoprotocol/autoprotocol-python.svg?branch=master)](https://travis-ci.org/autoprotocol/autoprotocol-python)
+
+[![PyPI version](https://img.shields.io/pypi/v/autoprotocol.svg?maxAge=2592000)](https://pypi.python.org/pypi/autoprotocol)
+
 ### **[View Library Documentation on readthedocs.org](http://autoprotocol-python.readthedocs.org/en/latest/)**
 
 [Autoprotocol](http://www.autoprotocol.org) is a standard way to express

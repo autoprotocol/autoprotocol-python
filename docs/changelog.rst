@@ -3,7 +3,10 @@ Changelog
 =========
 
 * :support:`-` using release for changelog and integration into readthedocs documentation
-* :bug:`- major` cover_types on :ref:`container-type-96-deep-kf` and :ref:`container-type-96-deep`
+
+* :bug: `- major` dispense_speed and distribute_target in :ref:`protocol-distribute` instruction
+* :bug: `127 major` convert pipette operations to microliters
+* :bug:`128 major` cover_types on :ref:`container-type-96-deep-kf` and :ref:`container-type-96-deep`
 * :bug:`- major` convert pipette operations to microliters
 
 * :release:`3.7.5 <2016-07-08>`

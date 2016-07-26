@@ -257,6 +257,18 @@ class DistributeTestCase(unittest.TestCase):
             p.instructions[-1].groups[0]["distribute"]["to"][
                 0]["volume"]) == "100.0:microliter")
 
+    def test_dispense_speed(self):
+        p = Protocol()
+        c = p.ref("test", None, "96-flat", discard=True)
+        p.distribute(
+            c.well(0).set_volume("100:microliter"), c.well(1), "2:microliter",
+            dispense_speed="150:microliter/second")
+        self.assertTrue("dispense_speed" in p.instructions[-1].groups[-1]["distribute"]["to"][0])
+        p.distribute(
+            c.well(0), c.well(1), "2:microliter",
+            distribute_target={"dispense_speed": "100:microliter/second"})
+        self.assertTrue("x_dispense_target" in p.instructions[-1].groups[-1]["distribute"]["to"][0])
+
 
 class TransferTestCase(unittest.TestCase):
 

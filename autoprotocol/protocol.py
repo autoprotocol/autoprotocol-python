@@ -4431,6 +4431,8 @@ class Protocol(object):
         ------
         TypeError
             If inputs are not of the correct type.
+        UnitError
+            If unit inputs are not properly formatted.
         AssertionError
             If required parameters are missing.
         ValueError

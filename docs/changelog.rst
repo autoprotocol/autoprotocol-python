@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` Unit validations from str in :ref:`protocol-flow_analyze` instruction
+
 * :release:`3.8.0 <2016-07-26>`
 * :bug:`- major` unit conversion to microliters in :ref:`protocol-dispense` instruction
 * :support:`-` using release for changelog and integration into readthedocs documentation

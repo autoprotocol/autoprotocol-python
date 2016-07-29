@@ -1,6 +1,6 @@
 from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
-from .unit import Unit
+from .unit import Unit, UnitError
 from .instruction import *  # flake8: noqa
 from .pipette_tools import assign
 from .util import check_valid_origin, check_stamp_append, check_valid_mag, \
@@ -4506,31 +4506,6 @@ class Protocol(object):
         channels = {}
         channels["FSC"] = FSC
         channels["SSC"] = SSC
-        if colors:
-            if not isinstance(colors, list):
-                raise TypeError("Colors must be of type list.")
-            else:
-                for c in colors:
-                    if not isinstance(c, dict):
-                        raise TypeError("Colors must contain elements of "
-                                        "type dict.")
-                    else:
-                        if not c.get("name") or not \
-                            isinstance(c.get("name"), str):
-                            raise TypeError("Each color must have a `name` "
-                                            "that is of type string.")
-                        if not c.get("emission_wavelength") or not \
-                            isinstance(c.get("emission_wavelength"), Unit):
-                            raise TypeError("Each color must have an "
-                                            "`emission_wavelength` "
-                                            "that is of type Unit.")
-                        if not c.get("excitation_wavelength") or not \
-                            isinstance(c.get("excitation_wavelength"), Unit):
-                            raise TypeError("Each color must have an "
-                                            "`excitation_wavelength` "
-                                            "that is of type Unit.")
-                        channels["colors"] = colors
-
         for c in channels.values():
             if not isinstance(c, dict):
                 raise TypeError("Each channel must be of type dict.")
@@ -4542,6 +4517,37 @@ class Protocol(object):
             assert c["voltage_range"]["low"], ("You must include a lower "
                                                "limit for the volage range "
                                                "in each channel.")
+        if colors:
+            if not isinstance(colors, list):
+                raise TypeError("Colors must be of type list.")
+            else:
+                for c in colors:
+                    if not isinstance(c, dict):
+                        raise TypeError("Colors must contain elements of "
+                                        "type dict.")
+                    else:
+                        if not c.get("name") or not \
+                          isinstance(c.get("name"), str):
+                            raise TypeError("Each color must have a `name` "
+                                            "that is of type string.")
+                        if c.get("emission_wavelength"):
+                            try:
+                                Unit.fromstring(c.get("emission_wavelength"))
+                            except (UnitError):
+                                raise UnitError("Each `emission_wavelength` "
+                                                "must be of type unit.")
+                        else:
+                            raise ValueError("Each color must have an "
+                                             "`emission_wavelength`.")
+                        if c.get("excitation_wavelength"):
+                            try:
+                                Unit.fromstring(c.get("excitation_wavelength"))
+                            except (UnitError):
+                                raise UnitError("Each `excitation_wavelength` "
+                                                "must be of type unit.")
+                        else:
+                            raise ValueError("Each color must have an "
+                                             "`excitation_wavelength`.")
 
         [self._remove_cover(s["well"].container, "flow_analyze") for s in sources]
         self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,

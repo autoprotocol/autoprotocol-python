@@ -41,13 +41,19 @@ util.make_gel_extract_params()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: autoprotocol.util.make_gel_extract_params
 
+.. _harness-harness:
 
 autoprotocol.harness
 --------------------
-
 harness.run()
 ~~~~~~~~~~~~~
 .. autofunction:: autoprotocol.harness.run
+
+.. _harness-seal-on-store:
+
+harness.seal_on_store()
+~~~~~~~~~~~~~
+.. autofunction:: autoprotocol.harness.seal_on_store
 
 harness.Manifest
 ~~~~~~~~~~~~~~~~

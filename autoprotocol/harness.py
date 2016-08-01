@@ -450,9 +450,10 @@ def seal_on_store(protocol):
             p.cover(cont)
             p.uncover(cont)
 
-    Autoprotocol output
+    Autoprotocol Output:
 
         .. code-block:: json
+
             {
               "refs": {
                 "plate": {

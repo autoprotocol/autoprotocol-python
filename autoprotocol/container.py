@@ -419,6 +419,27 @@ class Container(object):
                             "'str'.")
         return self._wells[self.robotize(i)]
 
+
+    def tube(self):
+        """
+        Checks if container is tube and returns a Well respresenting the zeroth well
+
+        Returns
+        -------
+        Well
+
+        Raises
+        -------
+        AttributeError :
+            If container is not tube
+
+        """
+
+        if self.container_type.is_tube:
+            return self.well(0)
+        else:
+            raise AttributeError("%s is a %s and is not a tube" %(self, self.container_type.shortname))
+
     def wells(self, *args):
         """
         Return a WellGroup containing references to wells corresponding to the

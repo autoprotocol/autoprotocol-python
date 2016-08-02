@@ -12,6 +12,12 @@ Container.well()
 ~~~~~~~~~~~~~~~~
 .. automethod:: autoprotocol.container.Container.well
 
+.. _container-tube:
+
+Container.tube()
+~~~~~~~~~~~~~~~~
+.. automethod:: autoprotocol.container.Container.tube
+
 .. _container-wells:
 
 Container.wells()

@@ -81,6 +81,17 @@ class ContainerWellGroupConstructionTestCase(unittest.TestCase):
     def setUp(self):
         self.c = Container(None, dummy_type)
 
+    def test_tube_error(self):
+        # tube() should raise AttributeError if container is not tube
+        with self.assertRaises(AttributeError):
+            self.c.tube()
+
+    def test_tube(self):
+        # tube() should return well 0
+        c = Container(None, make_dummy_type(is_tube=True))
+        w = c.tube()
+        self.assertEqual(0, w.index)
+
     def test_all_wells(self):
         # all_wells() should return wells in row-dominant order
         ws = self.c.all_wells()

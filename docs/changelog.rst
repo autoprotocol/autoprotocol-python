@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`-` Container method: :ref:`container-tube`
 * :support:`-` update documention for :ref:`harness.seal-on-store`
 * :bug:`-` Unit validations from str in :ref:`protocol-flow-analyze` instruction
 

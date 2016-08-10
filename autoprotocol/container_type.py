@@ -561,5 +561,25 @@ _CONTAINER_TYPES = {
         col_count=3,
         dead_volume_ul=Unit(400, "microliter"),
         safe_min_volume_ul=Unit(600, "microliter")
-    )
+    ),
+    "96-flat-clear-clear-tc": ContainerType(
+        name="96-well flat-bottom TC treated plate",
+        well_count=96,
+        well_depth_mm=None,
+        well_volume_ul=Unit(340.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal",
+                     "standard"],
+        seal_types=None,
+        capabilities=["pipette", "spin", "absorbance",
+                      "fluorescence", "luminescence",
+                      "incubate", "gel_separate",
+                      "gel_purify", "cover", "stamp",
+                      "dispense"],
+        shortname="96-flat-clear-clear-tc",
+        col_count=12,
+        dead_volume_ul=Unit(25, "microliter"),
+        safe_min_volume_ul=Unit(65, "microliter")),
 }

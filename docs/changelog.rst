@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :release:`3.9.0 <2016-08-10>`
+* :feature:`-` new plate type :ref:`container-type-96-flat-clear-clear-tc`
 * :feature:`-` Container method: :ref:`container-tube`
 * :support:`-` update documention for :ref:`harness.seal-on-store`
 * :bug:`-` Unit validations from str in :ref:`protocol-flow-analyze` instruction

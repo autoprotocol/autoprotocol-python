@@ -2,7 +2,7 @@
 Credits
 =======
 
-Autoprotocol-python is currently maintained by: 
+Autoprotocol-python is currently maintained by:
 
 - Vanessa Biggers - `polarpine <https://github.com/polarpine>`_ - vanessa@transcriptic.com
 - Yang Choo - `yangchoo <https://github.com/yangchoo>`_ - yangchoo@transcriptic.com

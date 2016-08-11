@@ -6,7 +6,7 @@ Changelog
 * :feature:`-` new plate type :ref:`container-type-96-flat-clear-clear-tc`
 * :feature:`-` Container method: :ref:`container-tube`
 * :support:`-` update documention for :ref:`harness.seal-on-store`
-* :bug:`-` Unit validations from str in :ref:`protocol-flow-analyze` instruction
+* :bug:`- major` Unit validations from str in :ref:`protocol-flow-analyze` instruction
 
 * :release:`3.8.0 <2016-07-26>`
 * :bug:`- major` unit conversion to microliters in :ref:`protocol-dispense` instruction

@@ -19,7 +19,6 @@ COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
 class Well(object):
-
     """
     A Well object describes a single location within a container.
 
@@ -135,7 +134,6 @@ class Well(object):
 
 
 class WellGroup(object):
-
     """
     A logical grouping of Wells.
 
@@ -364,7 +362,6 @@ class WellGroup(object):
 
 
 class Container(object):
-
     """
     A reference to a specific physical container (e.g. a tube or 96-well
     microplate).
@@ -419,10 +416,10 @@ class Container(object):
                             "'str'.")
         return self._wells[self.robotize(i)]
 
-
     def tube(self):
         """
-        Checks if container is tube and returns a Well respresenting the zeroth well
+        Checks if container is tube and returns a Well respresenting the zeroth
+        well.
 
         Returns
         -------
@@ -434,11 +431,11 @@ class Container(object):
             If container is not tube
 
         """
-
         if self.container_type.is_tube:
             return self.well(0)
         else:
-            raise AttributeError("%s is a %s and is not a tube" %(self, self.container_type.shortname))
+            raise AttributeError("%s is a %s and is not a tube" %
+                                 (self, self.container_type.shortname))
 
     def wells(self, *args):
         """

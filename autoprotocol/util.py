@@ -85,8 +85,10 @@ def quad_num_to_ind(q, human=False):
 
 
 def check_valid_origin(origin, stamp_type, columns, rows):
-    # Checks if selected well is a valid origin destination for the given plate
-    # Assumption: SBS formatted plates and 96-tip layout
+    """
+    Check if selected well is a valid origin destination for the given plate
+    Assumption: SBS formatted plates and 96-tip layout
+    """
     robotized_origin = origin.index
     well_count = origin.container.container_type.well_count
     col_count = origin.container.container_type.col_count
@@ -190,6 +192,7 @@ def check_stamp_append(current_xfer, prev_xfer_list, maxTransfers=3,
 
 
 def check_valid_mag(container, head):
+    """Check container is compatible with magnetic head"""
     shortname = container.container_type.shortname
 
     if head == "96-deep":
@@ -203,6 +206,7 @@ def check_valid_mag(container, head):
 
 
 def check_valid_mag_params(mag_dict):
+    """Check magnetic parameters are of valid types."""
     if "frequency" in mag_dict:
         if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:hertz"):
             raise ValueError("Frequency set at {}, must not be less than "
@@ -242,6 +246,7 @@ def check_valid_mag_params(mag_dict):
 
 
 def check_valid_gel_purify_band(band):
+    """Check gel purify bands parameters are of valid type and proper form."""
     from .container import Well
 
     if not isinstance(band, dict):
@@ -283,7 +288,7 @@ def check_valid_gel_purify_band(band):
 
 
 def check_valid_gel_purify_extract(extract):
-
+    """Check gel purify extract parameters are of valid type and proper form."""
     from .container import Well
 
     if not isinstance(extract, dict):
@@ -321,7 +326,6 @@ def make_gel_extract_params(source, band_list, lane=None, gel=None):
         auto-generated
 
     """
-
     if isinstance(band_list, dict):
         band_list = [band_list]
 
@@ -360,7 +364,6 @@ def make_band_param(elution_buffer, elution_volume, max_bp, min_bp,
         Well to place extracted band into
 
     """
-
     band = {
         "band_size_range": {
             "min_bp": min_bp, "max_bp": max_bp
@@ -376,7 +379,7 @@ def make_band_param(elution_buffer, elution_volume, max_bp, min_bp,
 
 
 class make_dottable_dict(dict):
-    '''Enable dictionaries to be accessed using dot notation instead of bracket
+    """Enable dictionaries to be accessed using dot notation instead of bracket
     notation.  This class should probably never be used.
 
     Example
@@ -403,7 +406,7 @@ class make_dottable_dict(dict):
     dict : dict
         Dictionary to be made dottable.
 
-    '''
+    """
 
     def __getattr__(self, attr):
         if type(self[attr]) == dict:
@@ -452,7 +455,6 @@ def incubate_params(duration, shake_amplitude=None, shake_orbital=None):
     duration: str, Unit
         time for shaking
     """
-
     incubate_dict = {}
     incubate_dict["duration"] = duration
     if (shake_amplitude is not None) and (shake_orbital is not None):
@@ -488,7 +490,6 @@ def check_valid_incubate_params(idict):
     are both required if shaking is specified.
 
     """
-
     if 'duration' not in idict:
         raise RuntimeError("For the incubation dictionary: %s, `duration` "
                            "must be specified" % idict)
@@ -537,7 +538,6 @@ def is_valid_well(param):
     bool :
         Returns True if param is of type Well, WellGroup or list of type Well.
     """
-
     from autoprotocol.container import Well, WellGroup
     if not isinstance(param, (Well, WellGroup, list)):
         return False

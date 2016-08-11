@@ -108,6 +108,15 @@ Container Types
    :dedent: 8
    :lines: 369-386
 
+.. _container-type-96-flat-uv:
+
+96-flat-clear-clear-tc
+~~~~~~~~~~
+.. literalinclude:: ../autoprotocol/container_type.py
+   :language: python
+   :dedent: 8
+   :lines: 565-584
+
 .. _container-type-96-pcr:
 
 96-pcr

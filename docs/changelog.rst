@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` allow incubation of containers at ambient without covers
+
 * :release:`3.9.0 <2016-08-10>`
 * :feature:`-` new plate type :ref:`container-type-96-flat-clear-clear-tc`
 * :feature:`-` Container method: :ref:`container-tube`

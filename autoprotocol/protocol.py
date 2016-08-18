@@ -3397,10 +3397,10 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref needs to be of type Conainer")
         allowed_uncovered = ["ambient"]
-        if uncovered and where not in allowed_uncovered:
+        if uncovered and (where not in allowed_uncovered or shaking):
             raise RuntimeError("If incubating uncovered, "
-                               "location must be in {}."
-                               "".format(', '.join(allowed_uncovered)))
+                               "location must be in {} and not "
+                               "shaking.".format(', '.join(allowed_uncovered)))
         else:
             self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))

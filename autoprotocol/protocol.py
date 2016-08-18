@@ -3354,7 +3354,8 @@ class Protocol(object):
             Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
                         melting_end, melting_increment, melting_rate))
 
-    def incubate(self, ref, where, duration, shaking=False, co2=0):
+    def incubate(self, ref, where, duration, shaking=False, co2=0,
+                 uncovered=False):
         """
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
@@ -3395,7 +3396,13 @@ class Protocol(object):
         """
         if not isinstance(ref, Container):
             raise TypeError("Ref needs to be of type Conainer")
-        self._add_cover(ref, "incubate")
+        allowed_uncovered = ["ambient"]
+        if uncovered and (where not in allowed_uncovered or shaking):
+            raise RuntimeError("If incubating uncovered, "
+                               "location must be in {} and not "
+                               "shaking.".format(', '.join(allowed_uncovered)))
+        else:
+            self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,

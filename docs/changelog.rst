@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`-` prevent invalid incubate parameters in :ref:`protocol-absorbance`
 * :bug:`-` allow incubation of containers at ambient without covers
 
 * :release:`3.9.0 <2016-08-10>`

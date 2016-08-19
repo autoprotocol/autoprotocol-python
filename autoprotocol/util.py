@@ -490,6 +490,10 @@ def check_valid_incubate_params(idict):
     are both required if shaking is specified.
 
     """
+    if not all(k in ["duration", "shaking"] for k in idict.keys()):
+        raise KeyError("Incubate parameter keys can only be 'duration', "
+                       "'shaking'.")
+
     if 'duration' not in idict:
         raise RuntimeError("For the incubation dictionary: %s, `duration` "
                            "must be specified" % idict)

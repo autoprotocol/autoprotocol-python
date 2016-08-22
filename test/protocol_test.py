@@ -1113,6 +1113,9 @@ class AbsorbanceTestCase(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={
                          'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
+        with self.assertRaises(KeyError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer", "test_reading", incubate_before={
+                         'duration': '10:minute', 'shake': {'amplitude': '3:mm', 'orbital': True}})
 
 
 class FluorescenceTestCase(unittest.TestCase):

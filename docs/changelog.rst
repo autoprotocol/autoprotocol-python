@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`-` respect incubate conditions where uncovered=True
 * :bug:`-` prevent invalid incubate parameters in :ref:`protocol-absorbance`
 * :bug:`-` allow incubation of containers at ambient without covers
 

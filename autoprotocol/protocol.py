@@ -3401,7 +3401,7 @@ class Protocol(object):
             raise RuntimeError("If incubating uncovered, "
                                "location must be in {} and not "
                                "shaking.".format(', '.join(allowed_uncovered)))
-        else:
+        if not uncovered:
             self._add_cover(ref, "incubate")
         self.instructions.append(Incubate(ref, where, duration, shaking, co2))
 

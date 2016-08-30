@@ -60,12 +60,13 @@ class CoverSealTestCase(unittest.TestCase):
         self.assertEqual(cont4.cover, None)
         self.assertEqual(cont5.cover, None)
 
-    def test_sequence_cover_instructions(self):
+    def test_sequence_cover_instructions2(self):
         p = Protocol()
         cont1 = p.ref("c1", None, "96-pcr", storage="cold_4")
         p.incubate(cont1, "ambient", duration="1:minute")
         self.assertEqual(p.instructions[0].op, "seal")
-        p.incubate(cont1, "ambient", duration="1:minute", uncovered=True)
-        self.assertEqual(p.instructions[-1].op, "incubate")
+        cont2 = p.ref("c2", None, "96-pcr", storage="cold_4")
+        p.incubate(cont2, "ambient", duration="1:minute", uncovered=True)
+        self.assertEqual(p.instructions[-2].op, "incubate")
         with self.assertRaises(RuntimeError):
             p.incubate(cont1, "cold_4", duration="1:minute", uncovered=True)

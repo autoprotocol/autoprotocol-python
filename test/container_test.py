@@ -257,6 +257,11 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.keys()))
         self.assertEqual(["40:nanogram/microliter"],
                          list(c.well(0).properties.values()))
+        c.well(0).set_properties({"Dilution": "1"})
+        self.assertEqual(["Dilution"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["1"],
+                         list(c.well(0).properties.values()))
         self.assertRaises(TypeError, c.well(0).set_properties,
                           ["property", "value"])
 
@@ -264,12 +269,32 @@ class WellPropertyTestCase(unittest.TestCase):
         c = Container(None, dummy_type)
         c.well(0).add_properties({"nickname": "dummy"})
         self.assertEqual(len(c.well(0).properties.keys()), 1)
-        c.well(0).set_properties({"concentration": "12:nanogram/microliter"})
+        c.well(0).add_properties({"nickname": "dummy2"})
+        self.assertEqual(len(c.well(0).properties.keys()), 1)
+        self.assertEqual(["dummy2"],
+                         list(c.well(0).properties.values()))
+        c.well(0).add_properties({"concentration": "12:nanogram/microliter"})
         self.assertEqual(len(c.well(0).properties.keys()), 2)
         c.well(0).add_properties({"property1": "2", "ratio": "1:10"})
         self.assertEqual(len(c.well(0).properties.keys()), 4)
         self.assertRaises(TypeError, c.well(0).add_properties,
                           ["property", "value"])
+
+    def test_properties_copy(self):
+        c = Container(None, dummy_type)
+        c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
+        c2 = Container(None, dummy_type)
+        c2.well(0).set_properties(c.well(0).properties)
+        c2.well(0).add_properties({"nickname": "dummy"})
+        self.assertEqual(["Concentration"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["40:nanogram/microliter"],
+                         list(c.well(0).properties.values()))
+        c2.well(0).set_properties({"nickname": "dummy"})
+        self.assertEqual(["Concentration"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["40:nanogram/microliter"],
+                         list(c.well(0).properties.values()))
 
     def test_add_properties_wellgroup(self):
         c = Container(None, dummy_type)

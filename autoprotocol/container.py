@@ -47,7 +47,8 @@ class Well(object):
 
     def set_properties(self, properties):
         """
-        Set properties for a Well.
+        Set properties for a Well. Existing property dictionary
+        will be completely overwritten with the new dictionary.
 
         Parameters
         ----------
@@ -57,15 +58,15 @@ class Well(object):
         """
         if not isinstance(properties, dict):
             raise TypeError("Properties is not of type 'dict'.")
-        if len(self.properties.keys()) > 0:
-            self.add_properties(properties)
-        else:
-            self.properties = properties
+        self.properties = {key: value for key, value in properties.items()}
         return self
 
     def add_properties(self, properties):
         """
-        Add a property to the properties attribute of a Well.
+        Add properties to the properties attribute of a Well.
+        If any key/value pairs are present in both the old and
+        new dictionaries, they will be overwritten by the pairs
+        in the new dictionary.
 
         Parameters
         ----------

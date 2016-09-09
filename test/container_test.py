@@ -269,6 +269,10 @@ class WellPropertyTestCase(unittest.TestCase):
         c = Container(None, dummy_type)
         c.well(0).add_properties({"nickname": "dummy"})
         self.assertEqual(len(c.well(0).properties.keys()), 1)
+        c.well(0).add_properties({"nickname": "dummy2"})
+        self.assertEqual(len(c.well(0).properties.keys()), 1)
+        self.assertEqual(["dummy2"],
+                         list(c.well(0).properties.values()))
         c.well(0).set_properties({"concentration": "12:nanogram/microliter"})
         self.assertEqual(len(c.well(0).properties.keys()), 2)
         c.well(0).add_properties({"property1": "2", "ratio": "1:10"})

@@ -257,6 +257,11 @@ class WellPropertyTestCase(unittest.TestCase):
                          list(c.well(0).properties.keys()))
         self.assertEqual(["40:nanogram/microliter"],
                          list(c.well(0).properties.values()))
+        c.well(0).set_properties({"Dilution": "1"})
+        self.assertEqual(["Dilution"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["1"],
+                         list(c.well(0).properties.values()))
         self.assertRaises(TypeError, c.well(0).set_properties,
                           ["property", "value"])
 

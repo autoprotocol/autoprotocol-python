@@ -280,6 +280,22 @@ class WellPropertyTestCase(unittest.TestCase):
         self.assertRaises(TypeError, c.well(0).add_properties,
                           ["property", "value"])
 
+    def test_properties_copy(self):
+        c = Container(None, dummy_type)
+        c.well(0).set_properties({"Concentration": "40:nanogram/microliter"})
+        c2 = Container(None, dummy_type)
+        c2.well(0).set_properties(c.properties)
+        c2.well(0).add_properties({"nickname": "dummy"})
+        self.assertEqual(["Concentration"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["40:nanogram/microliter"],
+                         list(c.well(0).properties.values()))
+        c2.well(0).set_properties({"nickname": "dummy"})
+        self.assertEqual(["Concentration"],
+                         list(c.well(0).properties.keys()))
+        self.assertEqual(["40:nanogram/microliter"],
+                         list(c.well(0).properties.values()))
+
     def test_add_properties_wellgroup(self):
         c = Container(None, dummy_type)
         group = c.wells_from(0, 3).set_properties({"property1": "value1",

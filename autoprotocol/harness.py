@@ -375,6 +375,10 @@ def run(fn, protocol_name=None, seal_after_run=True):
     parser.add_argument(
         'config',
         help='JSON-formatted protocol configuration file')
+    parser.add_argument(
+        '--dyetest',
+        help='Execute protocol by pre-filling preview aliquots with OrangeG dye, and provisioning water only.',
+        action="store_true")
     args = parser.parse_args()
 
     source = json.loads(io.open(args.config, encoding='utf-8').read())

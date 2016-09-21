@@ -22,8 +22,8 @@ else:
 
 
 _DYE_TEST_RS = {
-    "dye": "",
-    "water": ""
+    "dye": "rs18qmhr7t9jwq",
+    "water": "rs17gmh5wafm5p"
 }
 
 

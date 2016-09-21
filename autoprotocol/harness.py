@@ -395,17 +395,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
         params = manifest.protocol_info(protocol_name).parse(protocol, source)
         # Add dye to preview aliquots if --dyetest included as an optional argument
         if args.dyetest:
-            # For each ref already added to protocol via preview
-            for ref_name, ref_obj in protocol.refs.items():
-                ref_cont = ref_obj.container
-                # Raise RuntimeError if any refs have an id, to avoid adding dye to real samples
-                if ref_cont.id:
-                    raise RuntimeError("Cannot run a dye test when any ref has a defined container id. Please resubmit using only new containers.")
-                for well in ref_cont.all_wells():
-                    current_vol = well.volume
-                    if current_vol and current_vol > Unit(0, "microliter"):
-                        protocol.provision(_DYE_TEST_RS["dye"], well, current_vol)
-                        well.set_volume(current_vol)
+            num_dye_steps = _add_dye_to_preview_refs(protocol)
     else:
         params = protocol._ref_containers_and_wells(source["parameters"])
 
@@ -425,6 +415,29 @@ def run(fn, protocol_name=None, seal_after_run=True):
         return
 
     print(json.dumps(protocol.as_dict(), indent=2))
+
+
+def _add_dye_to_preview_refs(protocol):
+    # Store starting number of instructions
+    starting_num = len(protocol.instructions)
+
+    # For each ref in protocol
+    for ref_name, ref_obj in protocol.refs.items():
+
+        ref_cont = ref_obj.container
+        # Raise RuntimeError if any refs have an id, to avoid adding dye to real samples
+        if ref_cont.id:
+            raise RuntimeError("Cannot run a dye test when any ref has a defined container id. Please resubmit using only new containers.")
+
+        # Add dye to each well
+        for well in ref_cont.all_wells():
+            current_vol = well.volume
+            if current_vol and current_vol > Unit(0, "microliter"):
+                protocol.provision(_DYE_TEST_RS["dye"], well, current_vol)
+                well.set_volume(current_vol)
+
+    # Return number of instructions added
+    return len(protocol.instructions) - starting_num
 
 
 def _thermocycle_error_text():

@@ -21,6 +21,12 @@ else:
 '''
 
 
+_DYE_TEST_RS = {
+    "dye": "",
+    "water": ""
+}
+
+
 def param_default(typeDesc):
     if isinstance(typeDesc, string_type):
         typeDesc = {'type': typeDesc}
@@ -387,6 +393,19 @@ def run(fn, protocol_name=None, seal_after_run=True):
         manifest_json = io.open('manifest.json', encoding='utf-8').read()
         manifest = Manifest(json.loads(manifest_json))
         params = manifest.protocol_info(protocol_name).parse(protocol, source)
+        # Add dye to preview aliquots if --dyetest included as an optional argument
+        if args.dyetest:
+            # For each ref already added to protocol via preview
+            for ref_name, ref_obj in protocol.refs.items():
+                ref_cont = ref_obj.container
+                # Raise RuntimeError if any refs have an id, to avoid adding dye to real samples
+                if ref_cont.id:
+                    raise RuntimeError("Cannot run a dye test when any ref has a defined container id. Please resubmit using only new containers.")
+                for well in ref_cont.all_wells():
+                    current_vol = well.volume
+                    if current_vol and current_vol > Unit(0, "microliter"):
+                        protocol.provision(_DYE_TEST_RS["dye"], well, current_vol)
+                        well.set_volume(current_vol)
     else:
         params = protocol._ref_containers_and_wells(source["parameters"])
 

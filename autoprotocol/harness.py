@@ -403,6 +403,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
         fn(protocol, params)
         if seal_after_run:
             seal_on_store(protocol)
+        # Convert all provisions to water if --dyetest is included as an optional argument
         if args.dyetest:
             _convert_provision_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
     except UserError as e:

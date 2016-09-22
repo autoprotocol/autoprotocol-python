@@ -403,6 +403,8 @@ def run(fn, protocol_name=None, seal_after_run=True):
         fn(protocol, params)
         if seal_after_run:
             seal_on_store(protocol)
+        if args.dyetest:
+            _convert_provision_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -438,6 +440,26 @@ def _add_dye_to_preview_refs(protocol):
 
     # Return number of instructions added
     return len(protocol.instructions) - starting_num
+
+
+def _convert_provision_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+    # Make sure inputs are valid
+    if not isinstance(first_index, int):
+        raise ValueError("first_index must be a non-negative integer")
+    if not isinstance(last_index, int):
+        raise ValueError("last_index must be a non-negative integer")
+    if first_index < 0:
+        raise ValueError("Indices out of range. first_index must be 0 or greater")
+    if first_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+    if last_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+    if last_index < first_index:
+        raise ValueError("last_index must be greater than or equal to first_index")
+
+    for instruction in protocol.instructions[first_instruction_index:last_instruction_index+1]:
+        if instruction.data["op"] == "provision":
+            instruction.data["resource_id"] = rs
 
 
 def _thermocycle_error_text():

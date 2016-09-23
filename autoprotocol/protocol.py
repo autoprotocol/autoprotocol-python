@@ -6,7 +6,6 @@ from .pipette_tools import assign
 from .util import check_valid_origin, check_stamp_append, check_valid_mag, \
     check_valid_mag_params, check_valid_gel_purify_extract, is_valid_well, \
     check_valid_incubate_params
-from difflib import SequenceMatcher
 
 import sys
 if sys.version_info[0] >= 3:
@@ -231,9 +230,6 @@ class Protocol(object):
 
         """
 
-        def similar(a, b):
-            return SequenceMatcher(None, a, b).ratio()
-
         if name in self.refs.keys():
             raise RuntimeError("Two containers within the same protocol "
                                "cannot have the same name.")
@@ -247,14 +243,8 @@ class Protocol(object):
             elif cont_type:
                 opts["new"] = cont_type.shortname
         except ValueError:
-            similar_items = []
-            for temp in _CONTAINER_TYPES:
-                if similar(temp, cont_type) >= 0.75:
-                    similar_items.append(temp)
-            if len(similar_items) == 0:
-                similar_items.append("None Found")
-            raise RuntimeError("%s is not a recognized container type. Did you mean %s"
-                               % (cont_type, similar_items))
+            raise RuntimeError("%s is not a recognized container type."
+                               % (cont_type))
 
         if storage:
             opts["store"] = {"where": storage}

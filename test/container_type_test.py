@@ -62,3 +62,14 @@ class ContainerRobotizeTestCase(unittest.TestCase):
             dummy_type.humanize(15)
         with self.assertRaises(TypeError):
             dummy_type.humanize("A1")
+
+
+class ContainerTypeTestAllTypes(unittest.TestCase):
+    def test_all_container_types(self):
+        from autoprotocol.container_type import _CONTAINER_TYPES
+        from autoprotocol.protocol import Protocol
+        p = Protocol()
+
+        for k, v in _CONTAINER_TYPES.items():
+            p.ref(k, None, v.shortname, discard=True)
+        self.assertEqual(len(p.refs), len(_CONTAINER_TYPES))

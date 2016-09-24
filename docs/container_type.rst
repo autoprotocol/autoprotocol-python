@@ -90,6 +90,33 @@ Container Types
    :dedent: 8
    :lines: 329-346
 
+.. _container-type-384-v-clear-clear:
+
+384-v-clear-clear
+~~~~~~~~~~~~~~~~~~~~
+.. literalinclude:: ../autoprotocol/container_type.py
+   :language: python
+   :dedent: 8
+   :lines: 586-603
+
+.. _container-type-384-round-round-clear:
+
+384-round-round-clear
+~~~~~~~~~~~~~~~~~~~~
+.. literalinclude:: ../autoprotocol/container_type.py
+   :language: python
+   :dedent: 8
+   :lines: 606-623
+
+.. _container-type-384-flat-white-white-lowflange:
+
+384-flat-white-white-lowflange
+~~~~~~~~~~~~~~~~~~~~
+.. literalinclude:: ../autoprotocol/container_type.py
+   :language: python
+   :dedent: 8
+   :lines: 626-643
+
 .. _container-type-96-flat:
 
 96-flat
@@ -115,7 +142,7 @@ Container Types
 .. literalinclude:: ../autoprotocol/container_type.py
    :language: python
    :dedent: 8
-   :lines: 565-584
+   :lines: 566-584
 
 .. _container-type-96-pcr:
 

@@ -110,7 +110,7 @@ Container Types
 
 .. _container-type-384-flat-white-white-lowflange:
 
-384-flat-white-white-lowflange
+384-flat-white-white-nbs
 ~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../autoprotocol/container_type.py
    :language: python

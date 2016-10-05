@@ -582,7 +582,7 @@ _CONTAINER_TYPES = {
         dead_volume_ul=Unit(25, "microliter"),
         safe_min_volume_ul=Unit(65, "microliter")),
     "384-v-clear-clear": ContainerType(
-        name="384-well polypropylene v-bottom clear clear",
+        name="384-well v-bottom polypropylene plate",
         well_count=384,
         well_depth_mm=None,
         well_volume_ul=Unit(120.0, "microliter"),
@@ -602,7 +602,7 @@ _CONTAINER_TYPES = {
         dead_volume_ul=Unit(13, "microliter"),
         safe_min_volume_ul=Unit(18, "microliter")),
     "384-round-round-clear": ContainerType(
-        name="384-round-clear-clear-corning3657",
+        name="384-well round-bottom plate",
         well_count=384,
         well_depth_mm=None,
         well_volume_ul=Unit(70.0, "microliter"),
@@ -621,8 +621,8 @@ _CONTAINER_TYPES = {
         col_count=24,
         dead_volume_ul=Unit(15, "microliter"),
         safe_min_volume_ul=Unit(20, "microliter")),
-    "384-flat-white-white-lowflange": ContainerType(
-        name="384-flat-white-white-lowflange-corning3574",
+    "384-flat-white-white-nbs": ContainerType(
+        name="384-well flat-bottom low flange polystyrene NBS plate",
         well_count=384,
         well_depth_mm=None,
         well_volume_ul=Unit(80.0, "microliter"),
@@ -637,7 +637,7 @@ _CONTAINER_TYPES = {
                       "mag_release", "mag_mix", "absorbance",
                       "fluorescence", "luminescence", "cover",
                       "thermocycle"],
-        shortname="384-flat-white-white-lowflange",
+        shortname="384-flat-white-white-nbs",
         col_count=24,
         dead_volume_ul=Unit(20, "microliter"),
         safe_min_volume_ul=Unit(25, "microliter"))

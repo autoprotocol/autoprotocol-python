@@ -601,7 +601,7 @@ _CONTAINER_TYPES = {
         col_count=24,
         dead_volume_ul=Unit(13, "microliter"),
         safe_min_volume_ul=Unit(18, "microliter")),
-    "384-round-round-clear": ContainerType(
+    "384-round-clear-clear": ContainerType(
         name="384-well round-bottom plate",
         well_count=384,
         well_depth_mm=None,
@@ -617,7 +617,7 @@ _CONTAINER_TYPES = {
                       "mag_release", "mag_mix", "absorbance",
                       "fluorescence", "luminescence", "cover",
                       "thermocycle"],
-        shortname="384-round-round-clear",
+        shortname="384-round-clear-clear",
         col_count=24,
         dead_volume_ul=Unit(15, "microliter"),
         safe_min_volume_ul=Unit(20, "microliter")),

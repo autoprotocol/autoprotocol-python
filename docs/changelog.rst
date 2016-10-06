@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`-` fix name of :ref:`384-round-clear-clear`
 * :feature:`-` new plate types :ref:`384-v-clear-clear`, `384-round-round-clear`,`384-flat-white-white-nbs`
 * :bug:`-` fix Well.set_properties() so that it completely overwrites the existing properties dict
 * :bug:`-` respect incubate conditions where uncovered=True

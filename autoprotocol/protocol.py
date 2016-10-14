@@ -229,6 +229,7 @@ class Protocol(object):
             If no valid storage or discard condition is specified.
 
         """
+
         if name in self.refs.keys():
             raise RuntimeError("Two containers within the same protocol "
                                "cannot have the same name.")
@@ -242,7 +243,8 @@ class Protocol(object):
             elif cont_type:
                 opts["new"] = cont_type.shortname
         except ValueError:
-            raise RuntimeError("You must specify a ref's container type.")
+            raise RuntimeError("%s is not a recognized container type."
+                               % (cont_type))
 
         if storage:
             opts["store"] = {"where": storage}

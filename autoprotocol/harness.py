@@ -420,7 +420,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
     print(json.dumps(protocol.as_dict(), indent=2))
 
 
-def _add_dye_to_preview_refs(protocol):
+def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye"]):
     # Store starting number of instructions
     starting_num = len(protocol.instructions)
 
@@ -436,7 +436,7 @@ def _add_dye_to_preview_refs(protocol):
         for well in ref_cont.all_wells():
             current_vol = well.volume
             if current_vol and current_vol > Unit(0, "microliter"):
-                protocol.provision(_DYE_TEST_RS["dye"], well, current_vol)
+                protocol.provision(rs, well, current_vol)
                 well.set_volume(current_vol)
 
     # Return number of instructions added

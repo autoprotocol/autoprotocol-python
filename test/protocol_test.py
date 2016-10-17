@@ -2173,8 +2173,48 @@ class DyeTestTestCase(unittest.TestCase):
             _convert_provision_instructions(p1, 3, 2)
 
 
+    def test_convert_dispense(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.dispense(c1, "rs18s8x4qbsvjz", [{"column": 0, "volume": "10:microliter"}], is_resource_id=True)
+        p1.dispense(c1, "pbs", [{"column": 1, "volume": "10:microliter"}])
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.dispense(c1, "rs18s8x4qbsvjz", [{"column": 2, "volume": "10:microliter"}], is_resource_id=True)
+        p1.dispense(c1, "pbs", [{"column": 3, "volume": "10:microliter"}])
+        _convert_dispense_instructions(p1, 3, 5)
 
+        self.assertTrue("resource_id" in p1.instructions[1].data)
+        self.assertTrue("reagent" not in p1.instructions[1].data)
 
+        self.assertTrue("resource_id" not in p1.instructions[2].data)
+        self.assertTrue("reagent" in p1.instructions[2].data)
 
+        self.assertTrue("resource_id" in p1.instructions[4].data)
+        self.assertTrue("reagent" not in p1.instructions[4].data)
 
+        self.assertTrue("resource_id" in p1.instructions[5].data)
+        self.assertTrue("reagent" not in p1.instructions[5].data)
 
+        self.assertEqual(p1.instructions[1].data["resource_id"], "rs18s8x4qbsvjz")
+        self.assertEqual(p1.instructions[2].data["reagent"], "pbs")
+        self.assertEqual(p1.instructions[4].data["resource_id"], "rs17gmh5wafm5p")
+        self.assertEqual(p1.instructions[5].data["resource_id"], "rs17gmh5wafm5p")
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, "3", 5)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 3, "5")
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, -1, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 6, 7)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 3, 7)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 5, 3)

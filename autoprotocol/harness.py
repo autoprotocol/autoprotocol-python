@@ -481,7 +481,7 @@ def _convert_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TE
 
     for instruction in protocol.instructions[first_index:last_index+1]:
         if instruction.data["op"] == "dispense":
-            old_reagent = instruction.data.pop("reagent", None)
+            instruction.data.pop("reagent", None)
             instruction.data["resource_id"] = rs
 
 

@@ -2142,6 +2142,27 @@ class FlowAnalyzeTestCase(unittest.TestCase):
 
 class DyeTestTestCase(unittest.TestCase):
 
+    def test_add_dye_to_preview_refs(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        c1.well(0).set_volume("10:microliter")
+        _add_dye_to_preview_refs(p1)
+
+        self.assertEqual(len(p1.instructions), 1)
+        self.assertEqual(p1.instructions[0].data["op"], "provision")
+        self.assertEqual(p1.instructions[0].data["resource_id"], "rs18qmhr7t9jwq")
+        self.assertEqual(len(p1.instructions[0].data["to"]), 1)
+        self.assertEqual(p1.instructions[0].data["to"][0]["volume"], Unit(10, "microliter"))
+        self.assertEqual(p1.instructions[0].data["to"][0]["well"], c1.well(0))
+        self.assertEqual(c1.well(0).volume, Unit(10, "microliter"))
+
+        p2 = Protocol()
+        c2 = p2.ref("c2", id="ctXXXXX", cont_type="96-pcr", discard=True)
+        c2.well(0).set_volume("10:microliter")
+
+        with self.assertRaises(RuntimeError):
+            _add_dye_to_preview_refs(p2)
+
     def test_convert_provision(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
@@ -2171,7 +2192,6 @@ class DyeTestTestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _convert_provision_instructions(p1, 3, 2)
-
 
     def test_convert_dispense(self):
         p1 = Protocol()

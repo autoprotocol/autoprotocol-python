@@ -405,7 +405,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
             seal_on_store(protocol)
         # Convert all provisions to water if --dye_test is included as an optional argument
         if args.dye_test:
-            _convert_provision_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
+            _convert_provision_and_dispense_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -443,7 +443,7 @@ def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye"]):
     return len(protocol.instructions) - starting_num
 
 
-def _convert_provision_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+def _convert_provision_and_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
     # Make sure inputs are valid
     if not isinstance(first_index, int):
         raise ValueError("first_index must be a non-negative integer")

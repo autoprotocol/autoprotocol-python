@@ -453,9 +453,9 @@ def _convert_provision_instructions(protocol, first_index, last_index, rs=_DYE_T
     if first_index < 0:
         raise ValueError("Indices out of range. first_index must be 0 or greater")
     if first_index > len(protocol.instructions) - 1:
-        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
     if last_index > len(protocol.instructions) - 1:
-        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
     if last_index < first_index:
         raise ValueError("last_index must be greater than or equal to first_index")
 
@@ -473,9 +473,9 @@ def _convert_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TE
     if first_index < 0:
         raise ValueError("Indices out of range. first_index must be 0 or greater")
     if first_index > len(protocol.instructions) - 1:
-        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
     if last_index > len(protocol.instructions) - 1:
-        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
     if last_index < first_index:
         raise ValueError("last_index must be greater than or equal to first_index")
 

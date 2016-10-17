@@ -405,7 +405,8 @@ def run(fn, protocol_name=None, seal_after_run=True):
             seal_on_store(protocol)
         # Convert all provisions to water if --dye_test is included as an optional argument
         if args.dye_test:
-            _convert_provision_and_dispense_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
+            _convert_provision_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
+            _convert_dispense_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -443,7 +444,7 @@ def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye"]):
     return len(protocol.instructions) - starting_num
 
 
-def _convert_provision_and_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+def _convert_provision_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
     # Make sure inputs are valid
     if not isinstance(first_index, int):
         raise ValueError("first_index must be a non-negative integer")
@@ -461,7 +462,25 @@ def _convert_provision_and_dispense_instructions(protocol, first_index, last_ind
     for instruction in protocol.instructions[first_index:last_index+1]:
         if instruction.data["op"] == "provision":
             instruction.data["resource_id"] = rs
-        elif instruction.data["op"] == "dispense":
+
+
+def _convert_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+    # Make sure inputs are valid
+    if not isinstance(first_index, int):
+        raise ValueError("first_index must be a non-negative integer")
+    if not isinstance(last_index, int):
+        raise ValueError("last_index must be a non-negative integer")
+    if first_index < 0:
+        raise ValueError("Indices out of range. first_index must be 0 or greater")
+    if first_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+    if last_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % len(protocol.instructions) - 1)
+    if last_index < first_index:
+        raise ValueError("last_index must be greater than or equal to first_index")
+
+    for instruction in protocol.instructions[first_index:last_index+1]:
+        if instruction.data["op"] == "dispense":
             old_reagent = instruction.data.pop("reagent", None)
             instruction.data["resource_id"] = rs
 

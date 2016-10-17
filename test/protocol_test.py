@@ -4,6 +4,7 @@ from autoprotocol.instruction import Thermocycle, Incubate, Spin
 from autoprotocol.pipette_tools import *  # flake8: noqa
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
+from autoprotocol.harness import _add_dye_to_preview_refs, _convert_provision_instructions, _convert_dispense_instructions
 
 
 class ProtocolMultipleExistTestCase(unittest.TestCase):
@@ -2137,3 +2138,43 @@ class FlowAnalyzeTestCase(unittest.TestCase):
                                     {"well": container2.well(2),
                                      "volume": "200:microliter"}],
                            colors=colors)
+
+
+class DyeTestTestCase(unittest.TestCase):
+
+    def test_convert_provision(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        _convert_provision_instructions(p1, 3, 3)
+
+        self.assertEqual(p1.instructions[1].data["resource_id"], "rs18s8x4qbsvjz")
+        self.assertEqual(p1.instructions[3].data["resource_id"], "rs17gmh5wafm5p")
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, "2", 3)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 2, "3")
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, -1, 3)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 4, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 2, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 3, 2)
+
+
+
+
+
+
+

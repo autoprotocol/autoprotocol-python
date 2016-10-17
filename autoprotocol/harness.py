@@ -461,6 +461,9 @@ def _convert_provision_and_dispense_instructions(protocol, first_index, last_ind
     for instruction in protocol.instructions[first_index:last_index+1]:
         if instruction.data["op"] == "provision":
             instruction.data["resource_id"] = rs
+        elif instruction.data["op"] == "dispense":
+            old_reagent = instruction.data.pop("reagent", None)
+            instruction.data["resource_id"] = rs
 
 
 def _thermocycle_error_text():

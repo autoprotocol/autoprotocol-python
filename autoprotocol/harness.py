@@ -22,7 +22,7 @@ else:
 
 
 _DYE_TEST_RS = {
-    "dye": "rs18qmhr7t9jwq",
+    "dye4000": "rs18qmhr7t9jwq",
     "water": "rs17gmh5wafm5p"
 }
 
@@ -421,7 +421,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
     print(json.dumps(protocol.as_dict(), indent=2))
 
 
-def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye"]):
+def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye4000"]):
     # Store starting number of instructions
     starting_num = len(protocol.instructions)
 

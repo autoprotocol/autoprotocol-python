@@ -5,12 +5,12 @@ Changelog
 * :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag
 * :support:`-` more descriptive error message in ref protocol
-* :bug:`-` fix name of :ref:`384-round-clear-clear`
+* :bug:`- major` fix name of :ref:`384-round-clear-clear`
 * :feature:`-` new plate types :ref:`384-v-clear-clear`, `384-round-round-clear`,`384-flat-white-white-nbs`
-* :bug:`-` fix Well.set_properties() so that it completely overwrites the existing properties dict
-* :bug:`-` respect incubate conditions where uncovered=True
-* :bug:`-` prevent invalid incubate parameters in :ref:`protocol-absorbance`
-* :bug:`-` allow incubation of containers at ambient without covers
+* :bug:`- major` fix Well.set_properties() so that it completely overwrites the existing properties dict
+* :bug:`- major` respect incubate conditions where uncovered=True
+* :bug:`- major` prevent invalid incubate parameters in :ref:`protocol-absorbance`
+* :bug:`- major` allow incubation of containers at ambient without covers
 
 * :release:`3.9.0 <2016-08-10>`
 * :feature:`-` new plate type :ref:`container-type-96-flat-clear-clear-tc`

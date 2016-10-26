@@ -21,6 +21,12 @@ else:
 '''
 
 
+_DYE_TEST_RS = {
+    "dye4000": "rs18qmhr7t9jwq",
+    "water": "rs17gmh5wafm5p"
+}
+
+
 def param_default(typeDesc):
     if isinstance(typeDesc, string_type):
         typeDesc = {'type': typeDesc}
@@ -375,6 +381,10 @@ def run(fn, protocol_name=None, seal_after_run=True):
     parser.add_argument(
         'config',
         help='JSON-formatted protocol configuration file')
+    parser.add_argument(
+        '--dye_test',
+        help='Execute protocol by pre-filling preview aliquots with OrangeG dye, and provisioning water only.',
+        action="store_true")
     args = parser.parse_args()
 
     source = json.loads(io.open(args.config, encoding='utf-8').read())
@@ -383,6 +393,9 @@ def run(fn, protocol_name=None, seal_after_run=True):
         manifest_json = io.open('manifest.json', encoding='utf-8').read()
         manifest = Manifest(json.loads(manifest_json))
         params = manifest.protocol_info(protocol_name).parse(protocol, source)
+        # Add dye to preview aliquots if --dye_test included as an optional argument
+        if args.dye_test:
+            num_dye_steps = _add_dye_to_preview_refs(protocol)
     else:
         params = protocol._ref_containers_and_wells(source["parameters"])
 
@@ -390,6 +403,10 @@ def run(fn, protocol_name=None, seal_after_run=True):
         fn(protocol, params)
         if seal_after_run:
             seal_on_store(protocol)
+        # Convert all provisions to water if --dye_test is included as an optional argument
+        if args.dye_test:
+            _convert_provision_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
+            _convert_dispense_instructions(protocol, num_dye_steps, len(protocol.instructions) - 1)
     except UserError as e:
         print(json.dumps({
             'errors': [
@@ -402,6 +419,70 @@ def run(fn, protocol_name=None, seal_after_run=True):
         return
 
     print(json.dumps(protocol.as_dict(), indent=2))
+
+
+def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye4000"]):
+    # Store starting number of instructions
+    starting_num = len(protocol.instructions)
+
+    # For each ref in protocol
+    for ref_name, ref_obj in protocol.refs.items():
+
+        ref_cont = ref_obj.container
+        # Raise RuntimeError if any refs have an id, to avoid adding dye to real samples
+        if ref_cont.id:
+            raise RuntimeError("Cannot run a dye test when any ref has a defined container id. Please resubmit using only new containers.")
+
+        # Add dye to each well
+        for well in ref_cont.all_wells():
+            current_vol = well.volume
+            if current_vol and current_vol > Unit(0, "microliter"):
+                protocol.provision(rs, well, current_vol)
+                well.set_volume(current_vol)
+
+    # Return number of instructions added
+    return len(protocol.instructions) - starting_num
+
+
+def _convert_provision_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+    # Make sure inputs are valid
+    if not isinstance(first_index, int):
+        raise ValueError("first_index must be a non-negative integer")
+    if not isinstance(last_index, int):
+        raise ValueError("last_index must be a non-negative integer")
+    if first_index < 0:
+        raise ValueError("Indices out of range. first_index must be 0 or greater")
+    if first_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
+    if last_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
+    if last_index < first_index:
+        raise ValueError("last_index must be greater than or equal to first_index")
+
+    for instruction in protocol.instructions[first_index:last_index+1]:
+        if instruction.data["op"] == "provision":
+            instruction.data["resource_id"] = rs
+
+
+def _convert_dispense_instructions(protocol, first_index, last_index, rs=_DYE_TEST_RS["water"]):
+    # Make sure inputs are valid
+    if not isinstance(first_index, int):
+        raise ValueError("first_index must be a non-negative integer")
+    if not isinstance(last_index, int):
+        raise ValueError("last_index must be a non-negative integer")
+    if first_index < 0:
+        raise ValueError("Indices out of range. first_index must be 0 or greater")
+    if first_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
+    if last_index > len(protocol.instructions) - 1:
+        raise ValueError("Indices out of range. The last instruction index in the protocol is %d" % (len(protocol.instructions) - 1))
+    if last_index < first_index:
+        raise ValueError("last_index must be greater than or equal to first_index")
+
+    for instruction in protocol.instructions[first_index:last_index+1]:
+        if instruction.data["op"] == "dispense":
+            instruction.data.pop("reagent", None)
+            instruction.data["resource_id"] = rs
 
 
 def _thermocycle_error_text():

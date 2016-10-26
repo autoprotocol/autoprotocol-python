@@ -34,5 +34,6 @@ docs/_build/html
 _template/
 html/
 doctrees/
+.cache
 
 docs/make.bat

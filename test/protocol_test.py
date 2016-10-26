@@ -4,6 +4,7 @@ from autoprotocol.instruction import Thermocycle, Incubate, Spin
 from autoprotocol.pipette_tools import *  # flake8: noqa
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
+from autoprotocol.harness import _add_dye_to_preview_refs, _convert_provision_instructions, _convert_dispense_instructions
 
 
 class ProtocolMultipleExistTestCase(unittest.TestCase):
@@ -2137,3 +2138,103 @@ class FlowAnalyzeTestCase(unittest.TestCase):
                                     {"well": container2.well(2),
                                      "volume": "200:microliter"}],
                            colors=colors)
+
+
+class DyeTestTestCase(unittest.TestCase):
+
+    def test_add_dye_to_preview_refs(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        c1.well(0).set_volume("10:microliter")
+        _add_dye_to_preview_refs(p1)
+
+        self.assertEqual(len(p1.instructions), 1)
+        self.assertEqual(p1.instructions[0].data["op"], "provision")
+        self.assertEqual(p1.instructions[0].data["resource_id"], "rs18qmhr7t9jwq")
+        self.assertEqual(len(p1.instructions[0].data["to"]), 1)
+        self.assertEqual(p1.instructions[0].data["to"][0]["volume"], Unit(10, "microliter"))
+        self.assertEqual(p1.instructions[0].data["to"][0]["well"], c1.well(0))
+        self.assertEqual(c1.well(0).volume, Unit(10, "microliter"))
+
+        p2 = Protocol()
+        c2 = p2.ref("c2", id="ctXXXXX", cont_type="96-pcr", discard=True)
+        c2.well(0).set_volume("10:microliter")
+
+        with self.assertRaises(RuntimeError):
+            _add_dye_to_preview_refs(p2)
+
+    def test_convert_provision(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        _convert_provision_instructions(p1, 3, 3)
+
+        self.assertEqual(p1.instructions[1].data["resource_id"], "rs18s8x4qbsvjz")
+        self.assertEqual(p1.instructions[3].data["resource_id"], "rs17gmh5wafm5p")
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, "2", 3)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 2, "3")
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, -1, 3)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 4, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 2, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_provision_instructions(p1, 3, 2)
+
+    def test_convert_dispense(self):
+        p1 = Protocol()
+        c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.dispense(c1, "rs18s8x4qbsvjz", [{"column": 0, "volume": "10:microliter"}], is_resource_id=True)
+        p1.dispense(c1, "pbs", [{"column": 1, "volume": "10:microliter"}])
+        p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
+        p1.dispense(c1, "rs18s8x4qbsvjz", [{"column": 2, "volume": "10:microliter"}], is_resource_id=True)
+        p1.dispense(c1, "pbs", [{"column": 3, "volume": "10:microliter"}])
+        _convert_dispense_instructions(p1, 3, 5)
+
+        self.assertTrue("resource_id" in p1.instructions[1].data)
+        self.assertTrue("reagent" not in p1.instructions[1].data)
+
+        self.assertTrue("resource_id" not in p1.instructions[2].data)
+        self.assertTrue("reagent" in p1.instructions[2].data)
+
+        self.assertTrue("resource_id" in p1.instructions[4].data)
+        self.assertTrue("reagent" not in p1.instructions[4].data)
+
+        self.assertTrue("resource_id" in p1.instructions[5].data)
+        self.assertTrue("reagent" not in p1.instructions[5].data)
+
+        self.assertEqual(p1.instructions[1].data["resource_id"], "rs18s8x4qbsvjz")
+        self.assertEqual(p1.instructions[2].data["reagent"], "pbs")
+        self.assertEqual(p1.instructions[4].data["resource_id"], "rs17gmh5wafm5p")
+        self.assertEqual(p1.instructions[5].data["resource_id"], "rs17gmh5wafm5p")
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, "3", 5)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 3, "5")
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, -1, 5)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 6, 7)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 3, 7)
+
+        with self.assertRaises(ValueError):
+            _convert_dispense_instructions(p1, 5, 3)

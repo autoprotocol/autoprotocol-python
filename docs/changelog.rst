@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag
 * :support:`-` more descriptive error message in ref protocol
 * :bug:`-` fix name of :ref:`384-round-clear-clear`

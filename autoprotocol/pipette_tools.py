@@ -47,7 +47,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
         .. code-block:: json
 
           {
-            "start": "50:microliver/second",
+            "start": "50:microliter/second",
             "max": "150:microliter/second"
           }
 
@@ -149,7 +149,7 @@ def distribute_target(dst_loc, volume, dispense_speed=None,
         .. code-block:: json
 
           {
-            "start": "50:microliver/second",
+            "start": "50:microliter/second",
             "max": "150:microliter/second"
           }
 

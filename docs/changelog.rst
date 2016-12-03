@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug: update default lid types for :ref: `384-echo` :ref: `96-flat` :ref: `96-flat-uv` and :ref: `96-flat-clear-clear-tc`
+
 * :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag
 * :support:`-` more descriptive error message in ref protocol

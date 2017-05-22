@@ -2,7 +2,9 @@
 Changelog
 =========
 
-* :bug: update default lid types for :ref: `384-echo` :ref: `96-flat` :ref: `96-flat-uv` and :ref: `96-flat-clear-clear-tc`
+* :release:`3.10.1 <2017-05-22>`
+* :support:`-` fix documentation typos
+* :bug:`-` update default lid types for :ref:`container-type-384-echo` :ref:`container-type-96-flat` :ref:`container-type-96-flat-uv` and :ref:`container-type-96-flat-clear-clear-tc`
 
 * :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag

@@ -55,6 +55,11 @@ class UnitValueError(UnitError):
                     "value argument, value must be numeric.")
 
 
+class UnitAttributeError(UnitError):
+    message_text = ("Invalid or undefined unit of measure %s: is not "
+                    "defined in the unit registry.")
+
+
 class Unit(_Quantity):
     """
     A representation of a measure of physical quantities such as length,
@@ -108,6 +113,8 @@ class Unit(_Quantity):
             return super(Unit, cls).__new__(cls, float(value), units)
         except ValueError:
             raise UnitValueError(value)
+        except AttributeError:
+            raise UnitAttributeError(value)
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()

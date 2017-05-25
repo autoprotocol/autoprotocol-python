@@ -2,16 +2,17 @@
 Changelog
 =========
 
-* :release:`3.10.1 <2017-05-22>`
-* :support:`-` fix documentation typos
-* :bug:`-` update default lid types for :ref:`container-type-384-echo` :ref:`container-type-96-flat` :ref:`container-type-96-flat-uv` and :ref:`container-type-96-flat-clear-clear-tc`
+* :release:`3.10.1 <2017-05-25>`
+* :bug:`-` update pint requirements, update error handling on UnitError
+* :support:`- backported` fix documentation typos
+* :bug:`-` update default lid types for :ref:`container-type-384-echo`, :ref:`container-type-96-flat`, :ref:`container-type-96-flat-uv`, and :ref:`container-type-96-flat-clear-clear-tc`
 
 * :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag
-* :support:`-` more descriptive error message in ref protocol
-* :bug:`- major` fix name of :ref:`384-round-clear-clear`
-* :feature:`-` new plate types :ref:`384-v-clear-clear`, `384-round-round-clear`,`384-flat-white-white-nbs`
-* :bug:`- major` fix Well.set_properties() so that it completely overwrites the existing properties dict
+* :support:`-` more descriptive error message in :ref:`protocol-ref`
+* :bug:`- major` fix name of :ref:`container-type-384-round-clear-clear`
+* :feature:`-` new plate types :ref:`container-type-384-v-clear-clear`, :ref:`container-type-384-round-clear-clear`, :ref:`container-type-384-flat-white-white-nbs`
+* :bug:`- major` fix :ref:`well-set-properties` so that it completely overwrites the existing properties dict
 * :bug:`- major` respect incubate conditions where uncovered=True
 * :bug:`- major` prevent invalid incubate parameters in :ref:`protocol-absorbance`
 * :bug:`- major` allow incubation of containers at ambient without covers
@@ -19,7 +20,7 @@ Changelog
 * :release:`3.9.0 <2016-08-10>`
 * :feature:`-` new plate type :ref:`container-type-96-flat-clear-clear-tc`
 * :feature:`-` Container method: :ref:`container-tube`
-* :support:`-` update documention for :ref:`harness.seal-on-store`
+* :support:`-` update documention for :ref:`harness-seal-on-store`
 * :bug:`- major` Unit validations from str in :ref:`protocol-flow-analyze` instruction
 
 * :release:`3.8.0 <2016-07-26>`
@@ -45,7 +46,7 @@ Changelog
 * :feature:`- backported` assertions and tests for :ref:`protocol-flow-analyze`
 * :feature:`- backported` WellGroup methods: :ref:`wellgroup-group-name`, :ref:`wellgroup-pop`, :ref:`wellgroup-insert`, :ref:`wellgroup-wells-with`
 * :support:`- backported` documentation
-* :feature:`- backported` WellGroup.extend(wells) can now take in a list of wells
+* :feature:`- backported` :ref:`wellgroup-extend` can now take in a list of wells
 * :bug:`-` :ref:`protocol-dispense` instruction json outputs
 * :bug:`-` removed capability 'cover' from :ref:`container-type-96-pcr` and :ref:`container-type-384-pcr` plates
 * :bug:`-` :ref:`protocol-spin` auto-cover

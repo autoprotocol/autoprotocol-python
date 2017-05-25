@@ -99,9 +99,9 @@ Container Types
    :dedent: 8
    :lines: 586-603
 
-.. _container-type-384-round-round-clear:
+.. _container-type-384-round-clear-clear:
 
-384-round-round-clear
+384-round-clear-clear
 ~~~~~~~~~~~~~~~~~~~~
 .. literalinclude:: ../autoprotocol/container_type.py
    :language: python
@@ -135,7 +135,7 @@ Container Types
    :dedent: 8
    :lines: 369-386
 
-.. _container-type-96-flat-uv:
+.. _container-type-96-clear-clear-tc:
 
 96-flat-clear-clear-tc
 ~~~~~~~~~~

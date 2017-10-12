@@ -2,6 +2,12 @@
 Changelog
 =========
 
+* :release:`4.0.0 <2017-10-06>`
+* :support:`-` docstring cleanup, linting
+* :bug:`-` remove cover prior to mag steps where applicable
+* :support:`-` convert test suite to py.test
+* :feature:`-` add new containers, true_max_vol_ul in _CONTAINER_TYPES
+
 * :release:`3.10.1 <2017-05-25>`
 * :bug:`-` update pint requirements, update error handling on UnitError
 * :support:`- backported` fix documentation typos

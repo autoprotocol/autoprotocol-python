@@ -13,12 +13,12 @@ if sys.version_info[0] >= 3:
     basestring = str
 
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 
 class Ref(object):
@@ -258,13 +258,13 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
-    def add_time_constraint(self, from_dict, to_dict, time_between, mirror=False):
+    def add_time_constraint(self, from_dict, to_dict, less_than=None, more_than=None, mirror=False):
         """Constraint the time between two instructions
 
         Add time constraints from `from_dict` to `to_dict`. Time constraints
-        ensure that the time from the `from_dict` to the `to_dict` does not
-        exceed the `time_between` given. Care should be taken when applying
-        time constraints as constraints may make some protocols impossible to
+        guarantee that the time from the `from_dict` to the `to_dict` is less
+        than or greater than some specified duration. Care should be taken when
+        applying time constraints as constraints may make some protocols impossible to
         schedule or run.
 
         Though autoprotocol orders instructions in a list, instructions do
@@ -273,7 +273,10 @@ class Protocol(object):
         limitations in mind.
 
         Constraints are directional; use `mirror=True` if the time constraint
-        should be added in both directions.
+        should be added in both directions. Note that mirroring is only applied
+        to the less_than constraint, as the more_than constraint implies both a
+        minimum delay betweeen two timing points and also an explicit ordering
+        between the two timing points.
 
         Example Usage:
 
@@ -293,11 +296,11 @@ class Protocol(object):
             protocol.add_time_constraint(
                 {"mark": plate_1, "state": "start"},
                 {"mark": time_point_1, "state": "end"},
-                "1:minute")
+                less_than = "1:minute")
             protocol.add_time_constraint(
                 {"mark": time_point_2, "state": "start"},
                 {"mark": time_point_1, "state": "start"},
-                "1:minute", True)
+                less_than = "1:minute", True)
 
 
         Autoprotocol Output:
@@ -373,11 +376,13 @@ class Protocol(object):
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
-        time_between: str, Unit
+        less_than: str, Unit
             max time between from_dict and to_dict
+        more_than: str, Unit
+            min time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
-            should be added in both directions
+            should be added in both directions (only applies to the less_than constraint)
 
         Raises
         ------
@@ -396,6 +401,8 @@ class Protocol(object):
         RuntimeError
             If from_dict and to_dict are equal
         RuntimeError
+            If more_than is greater than less_than
+        RuntimeError
             If from_dict["marker"] and to_dict["marker"] are equal and
             from_dict["state"] = "end"
 
@@ -406,11 +413,27 @@ class Protocol(object):
 
         state_strings = ['start', 'end']
 
-        time_const = {}
+        def add_time_constraint_internal(time_const):
+            setattr(self, "time_constraints", (getattr(
+                self, "time_constraints", []) + [time_const]))
 
         keys = []
 
-        time_between = Unit(time_between)
+        # If the caller used the syntax add_time_constraint(a, b, 1:minute, True),
+        # move the 4th param to mirror
+        if type(more_than) == bool:
+            mirror = more_than
+            more_than = None
+
+        if more_than:
+            more_than = Unit(more_than)
+        if less_than:
+            less_than = Unit(less_than)
+
+        if more_than and less_than and more_than > less_than:
+            raise ValueError(
+                "'more_than': %s cannot be greater than 'less_than': %s" % more_than, less_than
+            )
 
         for m in [from_dict, to_dict]:
             if "mark" in m:
@@ -439,10 +462,15 @@ class Protocol(object):
 
             keys.append(k)
 
-        if time_between < Unit(0, 'second'):
+        if less_than and less_than < Unit(0, 'second'):
             raise ValueError(
-                "The 'time_between': %s cannot be less than "
-                "'0:second'" % time_between)
+                "The 'less_than': %s cannot be less than "
+                "'0:second'" % less_than)
+
+        if more_than and more_than < Unit(0, 'second'):
+            raise ValueError(
+                "The 'more_than': %s cannot be less than "
+                "'0:second'" % less_than)
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
@@ -454,16 +482,25 @@ class Protocol(object):
                     "The from_dict: %s cannot come before the "
                     "to_dict %s" % (from_dict, to_dict))
 
-        time_const["from"] = {keys[0]: from_dict["mark"]}
-        time_const["to"] = {keys[1]: to_dict["mark"]}
-        time_const["less_than"] = time_between
+        from_time_point = {keys[0]: from_dict["mark"]}
+        to_time_point = {keys[1]: to_dict["mark"]}
 
-        setattr(self, "time_constraints", (getattr(
-            self, "time_constraints", []) + [time_const]))
+        if less_than:
+            add_time_constraint_internal({
+                "from": from_time_point,
+                "to": to_time_point,
+                "less_than": less_than,
+            })
 
-        if mirror:
-            self.add_time_constraint(
-                to_dict, from_dict, time_between, mirror=False)
+            if mirror:
+                self.add_time_constraint(to_dict, from_dict, less_than, mirror=False)
+
+        if more_than:
+            add_time_constraint_internal({
+                "from": from_time_point,
+                "to": to_time_point,
+                "more_than": more_than
+            })
 
     def get_instruction_index(self):
         """Get index of the last appended instruction
@@ -620,7 +657,7 @@ class Protocol(object):
         explicit_props = ["outs", "refs", "instructions", "time_constraints"]
 
         return {attr: self._refify(getattr(self, attr)) for attr in prop_list
-            if attr in explicit_props}
+                if attr in explicit_props}
 
     def store(self, container, condition):
         """
@@ -1059,7 +1096,8 @@ class Protocol(object):
             try:
                 source_vol = [s.volume for s in source.wells]
                 if sum([a for a in volume]) > sum([a for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                    raise RuntimeError("There is not enough volume in the "
+                                       "source well(s) specified to complete "
                                        "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
@@ -2343,7 +2381,8 @@ class Protocol(object):
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
 
-    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles=None):
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index,
+                    library_size, dataref, cycles=None):
         """
         Load aliquots into specified lanes for Illumina sequencing.
         The specified aliquots should already contain the appropriate mix for
@@ -2485,11 +2524,11 @@ class Protocol(object):
 
         valid_indices = ["single", "dual", "none"]
         valid_cycles = ["index_1", "index_2", "read_1", "read_2"]
-        max_cycles_ind = 8
+        max_cycles_ind = 12
 
         if flowcell not in valid_flowcells:
-            raise ValueError("Illumina sequencing flowcell type must be one of:"
-                             " {}.".format(', '.join(valid_flowcells)))
+            raise ValueError("Illumina sequencing flowcell type must be one "
+                             "of: {}}.".format(', '.join(valid_flowcells)))
         if sequencer not in valid_sequencers.keys():
             raise ValueError("Illumina sequencer must be one of: {}."
                              "".format(', '.join(valid_sequencers.keys())))
@@ -2556,7 +2595,7 @@ class Protocol(object):
                                                    valid_sequencers[sequencer]["max_cycles_read"]))
             for ind in ["index_1", "index_2"]:
                 if cycles.get(ind):
-                    if cycles[ind] > 8:
+                    if cycles[ind] > max_cycles_ind:
                         raise ValueError("The maximum number of cycles for {} is {}."
                                          "".format(ind, max_cycles_ind))
                 # set index 1 and 2 to default 0 if not otherwise specified
@@ -2641,8 +2680,8 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. SangerSeq wells accepts either a Well, a "
-                             "WellGroup, or a list of well indices")
+            raise ValueError("Unknown input. SangerSeq wells accepts either a "
+                             "Well, a WellGroup, or a list of well indices.")
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
@@ -2972,7 +3011,8 @@ class Protocol(object):
             columns.append({"column": col, "volume": volume})
         self.dispense(ref, reagent, columns, speed_percentage, is_resource_id)
 
-    def spin(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
+    def spin(self, ref, acceleration, duration, flow_direction=None,
+             spin_direction=None):
         """
         Apply acceleration to a container.
 
@@ -4474,8 +4514,8 @@ class Protocol(object):
             except (ValueError, TypeError) as e:
                 raise ValueError("Each sample or control must indicate a "
                                  "volume of type unit. %s" % e)
-            if s.get("captured_events") and not \
-                isinstance(s.get("captured_events"), int):
+            if (s.get("captured_events") and not
+                    isinstance(s.get("captured_events"), int)):
                 raise TypeError("captured_events is optional, if given it"
                                 " must be of type integer.")
         for c in controls:
@@ -4483,8 +4523,8 @@ class Protocol(object):
                 raise TypeError("Channel must be a list of strings "
                                 "indicating the colors/channels that this"
                                 " control is to be used for.")
-            if c.get("minimize_bleed") and not \
-                isinstance(p.get("minimize_bleed"), list):
+            if (c.get("minimize_bleed") and not
+                    isinstance(p.get("minimize_bleed"), list)):
                 raise TypeError("Minimize_bleed must be of type list.")
             elif c.get("minimize_bleed"):
                 for b in c["minimize_bleed"]:
@@ -4818,6 +4858,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_dry")
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
     def mag_incubate(self, head, container, duration, magnetize=False,
@@ -4892,6 +4933,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_incubate")
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def mag_collect(self, head, container, cycles, pause_duration,
@@ -4968,6 +5010,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_collect")
         self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
     def mag_release(self, head, container, duration, frequency, center=0.5,
@@ -5047,6 +5090,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_release")
         self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(self, head, container, duration, frequency, center=0.5,
@@ -5130,6 +5174,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_mix")
         self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
@@ -5628,7 +5673,7 @@ class Protocol(object):
             elif "/" in str(v):
                 ref_name = v.rsplit("/")[0]
 
-                if not ref_name in self.refs:
+                if ref_name not in self.refs:
                     raise RuntimeError(
                         "Parameters contain well references to "
                         "a container that isn't referenced in this protocol: "

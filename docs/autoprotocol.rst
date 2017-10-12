@@ -52,7 +52,7 @@ harness.run()
 .. _harness-seal-on-store:
 
 harness.seal_on_store()
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 .. autofunction:: autoprotocol.harness.seal_on_store
 
 harness.Manifest

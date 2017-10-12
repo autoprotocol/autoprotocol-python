@@ -2,16 +2,15 @@ import json
 from .pipette_tools import assign
 
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 
 class Instruction(object):
-
     """Base class for an instruction that is to later be encoded as JSON.
 
     """
@@ -29,20 +28,18 @@ class Instruction(object):
 
 
 class Pipette(Instruction):
-
-    '''
+    """
     A pipette instruction is constructed as a list of groups, executed in
     order, where each group is a transfer, distribute or mix group.  One
     disposable tip is used for each group.
 
+    Parameters
+    ----------
     transfer:
-
         For each element in the transfer list, in order, aspirates the specifed
         volume from the source well and dispenses the same volume into the
         target well.
-
     distribute:
-
         Aspirates sufficient volume from the source well, then dispenses into
         each target well the volume requested, in the order specified.
         If the total volume to be dispensed exceeds the maximum tip volume
@@ -53,7 +50,6 @@ class Pipette(Instruction):
         contaminated with material from the target wells, so take care to use it
         only when you're sure that contamination won't be an issue=for example,
         if the target plate is empty.
-
     mix:
         Mixes the specified wells, in order, by repeated aspiration and
         dispensing of the specified volume. The default mixing speed is
@@ -61,7 +57,7 @@ class Pipette(Instruction):
 
     Well positions are given using the format :ref/:index
 
-    '''
+    """
 
     def __init__(self, groups):
         super(Pipette, self).__init__({
@@ -71,37 +67,29 @@ class Pipette(Instruction):
 
 
 class MagneticTransfer(Instruction):
-
-    '''
+    """
     A magnetic_transfer instruction is constructed as a list of lists of
     groups, executed in order, where each group is a collect, release, dry,
     incubate, or mix sub-operation.  These sub-operations control the behavior
     of tips which can be magnetized, and a heating platform. Groups in the same
     list of groups use the same tips.
 
+    Parameters
+    ----------
     collect:
-
         Collects beads from the specified "object" by raising and lowering
         magnetized tips repeatedly with an optional pause at well bottom.
-
     release:
-
         Release beads from unmagnetized tips by oscillating the tips
         vertically into and out of the "object".
-
     dry:
-
         Dry beads on magnetized tips above and outside the "object".
-
     incubate:
-
         Incubate the "object".
-
     mix:
-
         Oscillate the tips into and out of the "object"
 
-    '''
+    """
 
     HEAD_TYPE = ["96-deep", "96-pcr"]
 
@@ -117,7 +105,6 @@ class MagneticTransfer(Instruction):
 
 
 class Dispense(Instruction):
-
     """
     Dispense specified reagent to specified columns.
 
@@ -157,7 +144,6 @@ class Dispense(Instruction):
 
 
 class AcousticTransfer(Instruction):
-
     """
     Specify source and destination wells for transfering liquid via an acoustic
     liquid handler.  Droplet size is usually device-specific.
@@ -194,7 +180,6 @@ class AcousticTransfer(Instruction):
 
 
 class Spin(Instruction):
-
     """
     Apply the specified amount of acceleration to a plate using a centrifuge.
 
@@ -222,7 +207,8 @@ class Spin(Instruction):
 
     """
 
-    def __init__(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
+    def __init__(self, ref, acceleration, duration, flow_direction=None,
+                 spin_direction=None):
         spin_json = {
             "op": "spin",
             "object": ref,
@@ -238,7 +224,6 @@ class Spin(Instruction):
 
 
 class Thermocycle(Instruction):
-
     """
     Append a Thermocycle instruction to the list of instructions, with
     groups being a list of dicts in the form of:
@@ -299,6 +284,7 @@ class Thermocycle(Instruction):
         If invalid dyes are supplied.
 
     """
+
     CHANNEL1_DYES = ["FAM", "SYBR"]
     CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
     CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
@@ -360,7 +346,6 @@ class Thermocycle(Instruction):
 
         dyes - [list or set]
         """
-
         return set(dyes).difference(set(Thermocycle.AVAILABLE_DYES))
 
     @staticmethod
@@ -371,13 +356,12 @@ class Thermocycle(Instruction):
 
         well_map - [{well:str}]
         """
-
         dye_names = reduce(lambda x, y: x.union(y),
                            [set(well_map[k]) for k in well_map])
         if Thermocycle.find_invalid_dyes(dye_names):
             invalid_dyes = ", ".join(Thermocycle.find_invalid_dyes(dye_names))
-            raise ValueError("thermocycle instruction supplied the following invalid dyes: {}"
-                             .format(invalid_dyes))
+            raise ValueError("thermocycle instruction supplied the following "
+                             "invalid dyes: {}".format(invalid_dyes))
 
         dye_map = {dye: [] for dye in dye_names}
         for well in well_map:
@@ -388,7 +372,6 @@ class Thermocycle(Instruction):
 
 
 class Incubate(Instruction):
-
     """
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
@@ -407,12 +390,13 @@ class Incubate(Instruction):
         temperature
 
     """
+
     WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
 
     def __init__(self, ref, where, duration, shaking=False, co2=0):
         if where not in self.WHERE:
-            raise ValueError(
-                "Specified `where` not contained in: %s" % ", ".join(self.WHERE))
+            raise ValueError("Specified `where` not contained in: %s" % ", "
+                             "".join(self.WHERE))
         if where == "ambient" and shaking:
             raise ValueError("Shaking is not possible for ambient incubation")
         super(Incubate, self).__init__({
@@ -426,7 +410,6 @@ class Incubate(Instruction):
 
 
 class IlluminaSeq(Instruction):
-
     """
     Load aliquots into specified lanes for Illumina sequencing.
     The specified aliquots should already contain the appropriate mix for
@@ -460,7 +443,8 @@ class IlluminaSeq(Instruction):
 
     """
 
-    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles):
+    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size,
+                 dataref, cycles):
         seq = {
             "op": "illumina_sequence",
             "flowcell": flowcell,
@@ -477,7 +461,6 @@ class IlluminaSeq(Instruction):
 
 
 class SangerSeq(Instruction):
-
     """
     Send the indicated wells of the container specified for Sanger sequencing.
     The specified wells should already contain the appropriate mix for
@@ -510,7 +493,6 @@ class SangerSeq(Instruction):
 
 
 class GelSeparate(Instruction):
-
     """
     Separate nucleic acids on an agarose gel.
 
@@ -542,7 +524,6 @@ class GelSeparate(Instruction):
 
 
 class GelPurify(Instruction):
-
     """
     Separate nucleic acids on an agarose gel and purify.
 
@@ -591,7 +572,6 @@ class GelPurify(Instruction):
 
 
 class Absorbance(Instruction):
-
     """
     Read the absorbance for the indicated wavelength for the indicated
     wells. Append an Absorbance instruction to the list of instructions for
@@ -640,7 +620,6 @@ class Absorbance(Instruction):
 
 
 class Fluorescence(Instruction):
-
     """
     Read the fluoresence for the indicated wavelength for the indicated
     wells.  Append a Fluorescence instruction to the list of instructions
@@ -697,7 +676,6 @@ class Fluorescence(Instruction):
 
 
 class Luminescence(Instruction):
-
     """
     Read luminesence of indicated wells
 
@@ -722,7 +700,8 @@ class Luminescence(Instruction):
 
     """
 
-    def __init__(self, ref, wells, dataref, incubate_before=None, temperature=None):
+    def __init__(self, ref, wells, dataref, incubate_before=None,
+                 temperature=None):
         json_dict = {
             "op": "luminescence",
             "object": ref,
@@ -738,7 +717,6 @@ class Luminescence(Instruction):
 
 
 class Seal(Instruction):
-
     """
     Seal indicated container using the automated plate sealer.
 
@@ -758,7 +736,6 @@ class Seal(Instruction):
 
 
 class Unseal(Instruction):
-
     """
     Remove seal from indicated container using the automated plate unsealer.
 
@@ -777,7 +754,6 @@ class Unseal(Instruction):
 
 
 class Cover(Instruction):
-
     """
     Place specified lid type on specified container
 
@@ -789,6 +765,7 @@ class Cover(Instruction):
         Type of lid to cover container with
 
     """
+
     LIDS = ["standard", "universal", "low_evaporation"]
 
     def __init__(self, ref, lid="standard"):
@@ -802,7 +779,6 @@ class Cover(Instruction):
 
 
 class Uncover(Instruction):
-
     """
     Remove lid from specified container
 
@@ -821,7 +797,6 @@ class Uncover(Instruction):
 
 
 class FlowAnalyze(Instruction):
-
     """
     Perform flow cytometry.The instruction will be executed within the voltage
     range specified for each channel, optimized for the best sample
@@ -968,7 +943,6 @@ class FlowAnalyze(Instruction):
 
 
 class Oligosynthesize(Instruction):
-
     """
     Parameters
     ----------
@@ -1004,7 +978,6 @@ class Oligosynthesize(Instruction):
 
 
 class Spread(Instruction):
-
     """
     Spread the specified volume of the source aliquot across the surace of the
     agar contained in the object container
@@ -1030,7 +1003,6 @@ class Spread(Instruction):
 
 
 class Autopick(Instruction):
-
     """
     Pick colonies from the agar-containing location(s) specified in `sources`
     to the location(s) specified in `dests` in highest to lowest rank order
@@ -1068,7 +1040,6 @@ class Autopick(Instruction):
 
 
 class ImagePlate(Instruction):
-
     """
     Capture an image of the specified container.
 
@@ -1093,7 +1064,6 @@ class ImagePlate(Instruction):
 
 
 class Provision(Instruction):
-
     """
     Provision a commercial resource from a catalog into the specified
     destination well(s).  A new tip is used for each destination well
@@ -1133,7 +1103,6 @@ class Provision(Instruction):
 
 
 class FlashFreeze(Instruction):
-
     """
     Flash freeze the contents of the specified container by submerging it in
     liquid nitrogen for the specified amount of time.
@@ -1156,7 +1125,6 @@ class FlashFreeze(Instruction):
 
 
 class Stamp(Instruction):
-
     """
     A stamp instruction is constructed as a list of groups, executed in order,
     where each group is a transfer. The same disposable tips, shape and
@@ -1177,7 +1145,6 @@ class Stamp(Instruction):
 
 
 class MeasureConcentration(Instruction):
-
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
     volume of the source aliquots.

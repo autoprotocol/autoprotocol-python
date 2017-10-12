@@ -35,5 +35,5 @@ _template/
 html/
 doctrees/
 .cache
-
+.eggs/
 docs/make.bat

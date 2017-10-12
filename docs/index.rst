@@ -185,7 +185,6 @@ request.  You can also write an email to us if you want to discuss ideas or
 bugs.
 
 - Vanessa Biggers: vanessa@transcriptic.com
-- Jeremy Apthorp: jeremy@transcriptic.com
 - Max Hodak: max@transcriptic.com
 
 autoprotocol-python is BSD licensed (see LICENSE). Before we can accept your

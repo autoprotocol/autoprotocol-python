@@ -1,13 +1,15 @@
-import unittest
-
+import pytest
 from autoprotocol import UserError
 
 
-class TestUserError(unittest.TestCase):
+class TestUserError:
     def test_catch(self):
-        with self.assertRaises(UserError):
+        with pytest.raises(UserError):
             raise UserError("spam")
-        try:
+
+        with pytest.raises(UserError) as e:
             raise UserError("eggs")
-        except UserError as e:
-            self.assertIn("eggs", str(e))
+            assert "eggs" in e.value
+
+        e = UserError("Test")
+        assert e.message == "Test"

@@ -8,17 +8,17 @@ if sys.version_info[0] >= 3:
 else:
     string_type = basestring
 
-'''
+"""
     :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 # Preload UnitRegistry (Use default Pints definition file as a base)
 _UnitRegistry = UnitRegistry()
 
-'''Map string representation of Pint units over to Autoprotocol format'''
+"""Map string representation of Pint units over to Autoprotocol format"""
 # Map Temperature Unit names
 _UnitRegistry._units["degC"]._name = "celsius"
 _UnitRegistry._units["celsius"]._name = "celsius"
@@ -29,7 +29,7 @@ _UnitRegistry._units["rankine"]._name = "rankine"
 # Map Speed Unit names
 _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
-'''Add support for Molarity Unit'''
+"""Add support for Molarity Unit"""
 _UnitRegistry.define('molar = mole/liter = M')
 
 
@@ -95,6 +95,7 @@ class Unit(_Quantity):
             0.036:liter / hour
 
     """
+
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False

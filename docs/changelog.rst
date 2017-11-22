@@ -3,6 +3,9 @@ Changelog
 =========
 
 * :release:`4.0.0 <2017-10-06>`
+* :feature:`-` add `step_size` to dispense and dispense_full_plate methods
+* :feature:`-` add ability to specify a well as reagent source for dispense and dispense_full_plate methods
+* :feature:`-` add ability to specify `x_cassette` for dispense and dispense_full_plate methods
 * :feature:`-` add support for `more_than` in `add_time_constraint`
 * :feature:`-` add PerkinElmer 384-well optiplate to container_type (cat# 6007299), :ref:`container-type-384-flat-white-white-optiplate`
 * :feature:`-` allow breathable seals on 96-deep and 24-deep

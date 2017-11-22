@@ -2146,14 +2146,13 @@ class TestCoverStatus:
         assert (not cont.cover)
 
 
-class DispenseTestCase():
+class TestDispense:
 
     def test_resource_id(self, dummy_protocol):
         p = dummy_protocol
         container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
         p.dispense(container, "rs17gmh5wafm5p",
-                   [{"column": 0, "volume": "10:ul"}],
-                   is_resource_id=True)
+                   [{"column": 0, "volume": "10:ul"}], is_resource_id=True)
         assert (Unit(10, "microliter") == container.well("B1").volume)
         assert (container.well(3).volume is None)
         assert (hasattr(p.instructions[0], "resource_id"))
@@ -2170,6 +2169,318 @@ class DispenseTestCase():
         assert (hasattr(p.instructions[0], "reagent"))
         with pytest.raises(AttributeError):
             p.instructions[0].resource_id
+
+    def test_step_size(self, dummy_protocol):
+        # Initialize protocol and container
+        p = dummy_protocol
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+
+        # Test p.dispense while setting step_size to None
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 0, "volume": "10:microliter"}],
+                   is_resource_id=True, step_size=None)
+        assert ("step_size" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense while using step_size default
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 0, "volume": "10:microliter"}],
+                   is_resource_id=True)
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with step_size of 5 microliter
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 1, "volume": "10:microliter"}],
+                   is_resource_id=True, step_size="5:microliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with step_size of 0.5 microliter
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 2, "volume": "0.5:microliter"}],
+                   is_resource_id=True, step_size="0.5:microliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test p.dispense with step_size of 0.5 microliter,
+        # submitted as a Unit object
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 2, "volume": "0.5:microliter"}],
+                   is_resource_id=True, step_size=Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test p.dispense with step_size in nanoliters
+        p.dispense(container, "rs17gmh5wafm5p",
+                   [{"column": 2, "volume": "0.5:microliter"}],
+                   is_resource_id=True, step_size="500:nanoliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test bad type for step_size
+        with pytest.raises(TypeError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       is_resource_id=True, step_size="5:micrometer")
+        with pytest.raises(TypeError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       is_resource_id=True, step_size="5microliter")
+        with pytest.raises(TypeError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       is_resource_id=True, step_size=5)
+
+        # Test disallowed step_size
+        with pytest.raises(ValueError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       is_resource_id=True, step_size="1:microliter")
+
+        # Test volume that is not an integer multiple of step_size
+        with pytest.raises(RuntimeError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 1, "volume": "11:microliter"}],
+                       is_resource_id=True, step_size="5:microliter")
+        with pytest.raises(RuntimeError):
+            p.dispense(container, "rs17gmh5wafm5p",
+                       [{"column": 2, "volume": "1.6:microliter"}],
+                       is_resource_id=True, step_size="0.5:microliter")
+
+        # Test p.dispense_full_plate while setting step_size to None
+        p.dispense_full_plate(container, "rs17gmh5wafm5p",
+                              "10:microliter", is_resource_id=True,
+                              step_size=None)
+        assert ("step_size" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate while using step_size default
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                              is_resource_id=True)
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate with step_size of 5 microliter
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                              is_resource_id=True, step_size="5:microliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate with step_size of 0.5 microliter
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "0.5:microliter",
+                              is_resource_id=True, step_size="0.5:microliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test p.dispense_full_plate with step_size of 0.5 microliter,
+        # submitted as a Unit object
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "0.5:microliter",
+                              is_resource_id=True,
+                              step_size=Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test p.dispense_full_plate with step_size in nanoliters
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "0.5:microliter",
+                              is_resource_id=True, step_size="500:nanoliter")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test bad type for step_size
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                                  is_resource_id=True, step_size="5:micrometer")
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                                  is_resource_id=True, step_size="5microliter")
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                                  is_resource_id=True, step_size=5)
+
+        # Test disallowed step_size
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                                  is_resource_id=True, step_size="1:microliter")
+
+        # Test volume that is not an integer multiple of step_size
+        with pytest.raises(RuntimeError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "11:microliter",
+                                  is_resource_id=True, step_size="5:microliter")
+        with pytest.raises(RuntimeError):
+            p.dispense_full_plate(container, "rs17gmh5wafm5p", "1.6:microliter",
+                                  is_resource_id=True,
+                                  step_size="0.5:microliter")
+
+    def test_x_cassette(self, dummy_protocol):
+        # Initialize protocol and container
+        p = dummy_protocol
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+
+        # Test p.dispense without setting x_cassette
+        p.dispense(container, "water",
+                   [{"column": 0, "volume": "10:microliter"}])
+        assert ("x_cassette" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with x_cassette specified
+        p.dispense(container, "water",
+                   [{"column": 1, "volume": "10:microliter"}],
+                   step_size="0.5:microliter",
+                   x_cassette="ThermoFisher #24073295")
+        assert (p.instructions[-1].data["x_cassette"] ==
+                "ThermoFisher #24073295")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test bad x_cassette type
+        with pytest.raises(ValueError):
+            p.dispense(container, "water",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       step_size="0.5:microliter",
+                       x_cassette="bad cassette type")
+
+        # Test mismatch between step_size and x_cassette
+        with pytest.raises(ValueError):
+            p.dispense(container, "water",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       step_size="5:microliter",
+                       x_cassette="ThermoFisher #24073295")
+
+        # Test specification of x_cassette without step_size
+        with pytest.raises(ValueError):
+            p.dispense(container, "water",
+                       [{"column": 1, "volume": "10:microliter"}],
+                       x_cassette="ThermoFisher #24073295")
+
+        # Test p.dispense_full_plate without setting x_cassette
+        p.dispense_full_plate(container, "water", "10:microliter")
+        assert ("x_cassette" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate with x_cassette specified
+        p.dispense_full_plate(container, "water", "10:microliter",
+                              step_size="0.5:microliter",
+                              x_cassette="ThermoFisher #24073295")
+        assert (p.instructions[-1].data["x_cassette"] ==
+                "ThermoFisher #24073295")
+        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Test bad x_cassette type
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(container, "water", "10:microliter",
+                                  step_size="0.5:microliter",
+                                  x_cassette="bad cassette type")
+
+        # Test mismatch between step_size and x_cassette
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(container, "water", "10:microliter",
+                                  step_size="5:microliter",
+                                  x_cassette="ThermoFisher #24073295")
+
+        # Test specification of x_cassette without step_size
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(container, "water", "10:microliter",
+                                  x_cassette="ThermoFisher #24073295")
+
+    def test_reagent_source(self, dummy_protocol):
+        # Initialize protocol and containers for testing dispense
+        p = dummy_protocol
+        dest1 = p.ref("destination_plate_1", cont_type="96-pcr", discard=True)
+        src1 = p.ref("source_well_1", None, cont_type="conical-50",
+                     discard=True, cover="screw-cap").well(0)
+        src1.volume = Unit(40, "milliliter")
+
+        dest2 = p.ref("destination_plate_2", cont_type="96-pcr", discard=True)
+        src2 = p.ref("source_well_2", None, cont_type="96-deep", discard=True,
+                     cover="universal").well(0)
+
+        dest3 = p.ref("destination_plate_3", cont_type="96-pcr", discard=True)
+
+        dummy_plate = p.ref("dummy_plate", cont_type="96-pcr", discard=True)
+
+        # Test p.dispense with reagent
+        p.dispense(dest3, "water", [{"column": 0, "volume": "10:microliter"}])
+        assert (p.instructions[-1].data["reagent"] == "water")
+        assert ("resource_id" not in p.instructions[-1].data)
+        assert ("reagent_source" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with resource_id
+        p.dispense(dest3, "rs17gmh5wafm5p",
+                   [{"column": 0, "volume": "10:microliter"}],
+                   is_resource_id=True)
+        assert ("reagent" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["resource_id"] == "rs17gmh5wafm5p")
+        assert ("reagent_source" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with reagent_source
+        assert(src1.container.cover == "screw-cap")
+
+        p.dispense(dest1, src1, [{"column": 0, "volume": "10:microliter"},
+                   {"column": 1, "volume": "30:microliter"}])
+        assert (src1.container.cover is None)
+        assert ("reagent" not in p.instructions[-1].data)
+        assert ("resource_id" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["reagent_source"] == src1)
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Check volumes
+        for well in dest1.wells_from(0, 8, columnwise=True):
+            assert (well.volume == Unit(10, "microliter"))
+        for well in dest1.wells_from(1, 8, columnwise=True):
+            assert (well.volume == Unit(30, "microliter"))
+        assert (src1.volume == Unit(39680, "microliter"))
+
+        # Test improper inputs for reagent
+        with pytest.raises(TypeError):
+            p.dispense(dest1, 1, [{"column": 0, "volume": "10:microliter"},
+                       {"column": 1, "volume": "30:microliter"}])
+        with pytest.raises(TypeError):
+            p.dispense(dest1, dummy_plate.all_wells(),
+                       [{"column": 0, "volume": "10:microliter"},
+                       {"column": 1, "volume": "30:microliter"}])
+
+        # Test p.dispense_full_plate with reagent
+        p.dispense_full_plate(dest3, "water", "10:microliter")
+        assert (p.instructions[-1].data["reagent"] == "water")
+        assert ("resource_id" not in p.instructions[-1].data)
+        assert ("reagent_source" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate with resource_id
+        p.dispense_full_plate(dest3, "rs17gmh5wafm5p", "10:microliter",
+                              is_resource_id=True)
+        assert ("reagent" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["resource_id"] == "rs17gmh5wafm5p")
+        assert ("reagent_source" not in p.instructions[-1].data)
+        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense_full_plate with reagent_source
+        assert(src2.container.cover == "universal")
+
+        p.dispense_full_plate(dest2, src2, "10:microliter")
+        assert (src2.container.cover is None)
+        assert ("reagent" not in p.instructions[-1].data)
+        assert ("resource_id" not in p.instructions[-1].data)
+        assert (p.instructions[-1].data["reagent_source"] == src2)
+        assert (p.instructions[-1].data["x_human"] is True)
+
+        # Check volumes
+        for well in dest2.all_wells():
+            assert (well.volume == Unit(10, "microliter"))
+        assert (src2.volume == Unit(-960, "microliter"))
+
+        # Test improper inputs for reagent
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(dest2, 2, "10:microliter")
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(dest2, dummy_plate.all_wells(),
+                                  "10:microliter")
 
 
 class TestFlowAnalyze:

@@ -2783,7 +2783,9 @@ class Protocol(object):
                 }
                 self._pipette([{"mix": [opts]}])
 
-    def dispense(self, ref, reagent, columns, speed_percentage=None, is_resource_id=False):
+    def dispense(self, ref, reagent, columns, speed_percentage=None,
+                 is_resource_id=False, step_size="5:microliter",
+                 x_cassette=None):
         """
         Dispense specified reagent to specified columns.
 
@@ -2820,72 +2822,75 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "reagent": "water",
-                  "object": "sample_plate",
-                  "columns": [
-                    {
-                      "column": 0,
-                      "volume": "10:microliter"
-                    },
-                    {
-                      "column": 1,
-                      "volume": "20:microliter"
-                    },
-                    {
-                      "column": 2,
-                      "volume": "30:microliter"
-                    },
-                    {
-                      "column": 3,
-                      "volume": "40:microliter"
-                    },
-                    {
-                      "column": 4,
-                      "volume": "50:microliter"
-                    },
-                    {
-                      "column": 5,
-                      "volume": "60:microliter"
-                    },
-                    {
-                      "column": 6,
-                      "volume": "70:microliter"
-                    },
-                    {
-                      "column": 7,
-                      "volume": "80:microliter"
-                    },
-                    {
-                      "column": 8,
-                      "volume": "90:microliter"
-                    },
-                    {
-                      "column": 9,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 10,
-                      "volume": "110:microliter"
-                    },
-                    {
-                      "column": 11,
-                      "volume": "120:microliter"
-                    }
-                  ],
-                  "op": "dispense"
+                    "reagent": "water",
+                    "object": "sample_plate",
+                    "columns": [
+                        {
+                            "column": 0,
+                            "volume": "10:microliter"
+                        },
+                        {
+                            "column": 1,
+                            "volume": "20:microliter"
+                        },
+                        {
+                            "column": 2,
+                            "volume": "30:microliter"
+                        },
+                        {
+                            "column": 3,
+                            "volume": "40:microliter"
+                        },
+                        {
+                            "column": 4,
+                            "volume": "50:microliter"
+                        },
+                        {
+                            "column": 5,
+                            "volume": "60:microliter"
+                        },
+                        {
+                            "column": 6,
+                            "volume": "70:microliter"
+                        },
+                        {
+                            "column": 7,
+                            "volume": "80:microliter"
+                        },
+                        {
+                            "column": 8,
+                            "volume": "90:microliter"
+                        },
+                        {
+                            "column": 9,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 10,
+                            "volume": "110:microliter"
+                        },
+                        {
+                            "column": 11,
+                            "volume": "120:microliter"
+                        }
+                    ],
+                    "op": "dispense"
                 }
-              ]
+            ]
 
         Parameters
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str
-            Reagent to be dispensed to columns in container.
+        reagent : str, well
+            Reagent to be dispensed. Use a string to specify the name or
+            resource_id (see below) of the reagent to be dispensed.
+            Alternatively, use a well to specify that the dispense operation
+            must be executed using a specific aliquot as the dispense source.
         columns : list
-            Columns to be dispensed to, in the form of a list of dicts specifying
-            the column number and the volume to be dispensed to that column.
-            Columns are expressed as integers indexed from 0.
+            Columns to be dispensed to, in the form of a list of dicts
+            specifying the column number and the volume to be dispensed to that
+            column. Columns are expressed as integers indexed from 0.
             [{"column": <column num>, "volume": <volume>}, ...]
         speed_percentage : int, optional
             Integer between 1 and 100 that represents the percentage of the
@@ -2893,29 +2898,142 @@ class Protocol(object):
             dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
+        step_size : str, Unit, optional
+            Specifies that the dispense operation must be executed
+            using a peristaltic pump with the given step size. Note
+            that the volume dispensed in each column must be an integer
+            multiple of the step_size. Currently, step_size must be either
+            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+        x_cassette : str, optional
+            Specifies a specific cassette to be used with this instruction.
+            Cassette will be checked against a list of allowed values. Each
+            cassette has a pre-defined value for step_size, and certain
+            cassettes may require human execution.
 
         """
+        # Initialize parameters to simplify parsing
+        x_human = False
+        step_size_unit = None
+
+        # Parse destination container
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         self._remove_cover(ref, "dispense to")
+
+        # Parse speed_percentage
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
+
+        # Parse columns
         if not isinstance(columns, list):
             raise TypeError("Columns is not of type 'list'.")
         for c in columns:
-            wells = WellGroup(ref.wells_from(c["column"], ref.container_type.row_count(),
-                                             columnwise=True))
+            wells = WellGroup(
+                ref.wells_from(
+                    c["column"],
+                    ref.container_type.row_count(),
+                    columnwise=True
+                )
+            )
             for w in wells:
                 if w.volume:
                     w.volume += Unit.fromstring(c["volume"]).to("ul")
                 else:
                     w.set_volume(Unit(c["volume"]).to("ul"))
 
-        self.instructions.append(
-            Dispense(ref, reagent, columns, speed_percentage, is_resource_id))
+        # Parse reagent
+        if isinstance(reagent, Well):
+            # x_humanize dispense step
+            x_human = True
+            # Uncover reagent source
+            self._remove_cover(reagent.container, "dispense from")
+            # Volume tracking
+            total_vol_dispensed = sum([Unit(c["volume"]) for c in columns]) * ref.container_type.row_count()
+            if reagent.volume:
+                reagent.volume -= total_vol_dispensed
+            else:
+                reagent.volume = -total_vol_dispensed
+        else:
+            if not isinstance(reagent, basestring):
+                raise TypeError("reagent must be a Well or a string.")
 
-    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None, is_resource_id=False):
+        # Parse step_size
+        allowed_step_sizes = {
+            0.5: {"x_human": True},
+            5.0: {"x_human": False}
+        }
+
+        if step_size:
+            # Cast step_size as a volume unit, raising an error if this fails
+            try:
+                step_size_unit = Unit(step_size).to("ul")
+            except:
+                raise TypeError("step_size must be a volume Unit object, or a string representation of a volume Unit")
+
+            # step_size must be in the allowed list of options. If not, raise an error.
+            if step_size_unit._magnitude not in allowed_step_sizes:
+                raise ValueError("step_size (in microliters) must be one of the following values: {}".format(
+                    allowed_step_sizes.keys()
+                    )
+                )
+
+            # Set parameters as required by selected step_size
+            step_size_info = allowed_step_sizes[step_size_unit._magnitude]
+            x_human = step_size_info["x_human"] or x_human
+
+            # Each dispense volume must be an integer multiple of the step_size. If not, raise an error.
+            vol_errors = []
+            for c in columns:
+                if not (Unit(c["volume"]) / step_size_unit)._magnitude.is_integer():
+                    vol_errors.append(str(Unit(c["volume"])))
+            if len(vol_errors) > 0:
+                raise RuntimeError(
+                    "Dispense volume must be a multiple of the step size. "
+                    "This is not true for the "
+                    "following volumes: {} ".format(vol_errors)
+                )
+
+        # Parse x_cassette
+        allowed_x_cassettes = {
+            "ThermoFisher #24073295": {"x_human": True, "step_size": Unit(0.5, "microliter")}
+        }
+
+        if x_cassette:
+            # x_cassette must be in the allowed list of options. If not, raise an error.
+            if x_cassette not in allowed_x_cassettes:
+                raise ValueError("x_cassette must be one of the following values: {}".format(
+                    allowed_x_cassettes.keys()
+                    )
+                )
+
+            # Set parameters as required by selected x_cassette
+            cassette_info = allowed_x_cassettes[x_cassette]
+            x_human = cassette_info["x_human"] or x_human
+            if step_size_unit != cassette_info["step_size"]:
+                raise ValueError("Step size for this cassette must be %s" % str(cassette_info["step_size"]))
+
+        # Append dispense instruction
+        self.instructions.append(
+            Dispense(
+                ref,
+                reagent,
+                columns,
+                speed_percentage,
+                is_resource_id,
+                step_size_unit
+            )
+        )
+
+        # Modify instruction with x_parameters, as necessary
+        if x_human:
+            self.instructions[-1].data["x_human"] = True
+        if x_cassette:
+            self.instructions[-1].data["x_cassette"] = x_cassette
+
+    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None,
+                            is_resource_id=False, step_size="5:microliter",
+                            x_cassette=None):
         """
         Dispense the specified amount of the specified reagent to every well
         of a container using a reagent dispenser.
@@ -3002,8 +3120,11 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str
-            Reagent to be dispensed to columns in container.
+        reagent : str, well
+            Reagent to be dispensed. Use a string to specify the name or
+            resource_id (see below) of the reagent to be dispensed.
+            Alternatively, use a well to specify that the dispense operation
+            must be executed using a specific aliquot as the dispense source.
         volume : Unit, str
             Volume of reagent to be dispensed to each well
         speed_percentage : int, optional
@@ -3012,6 +3133,17 @@ class Protocol(object):
             dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
+        step_size : str, Unit, optional
+            Specifies that the dispense operation must be executed
+            using a peristaltic pump with the given step size. Note
+            that the volume dispensed in each column must be an integer
+            multiple of the step_size. Currently, step_size must be either
+            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+        x_cassette : str, optional
+            Specifies a specific cassette to be used with this instruction.
+            Cassette will be checked against a list of allowed values. Each
+            cassette has a pre-defined value for step_size, and certain
+            cassettes may require human execution.
 
         """
         if not isinstance(ref, Container):
@@ -3023,7 +3155,8 @@ class Protocol(object):
         columns = []
         for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
-        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id)
+        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id,
+                      step_size, x_cassette)
 
     def spin(self, ref, acceleration, duration, flow_direction=None,
              spin_direction=None):

@@ -347,6 +347,11 @@ class TestTransfer():
             len(p.instructions[0].groups[2]['transfer'][0])
         )
 
+    def test_max_transfer(self, dummy_protocol):
+        p = dummy_protocol
+        c = p.ref("test", None, "micro-2.0", storage="cold_4")
+        p.transfer(c.well(0), c.well(0), "3050:microliter")
+
     def test_multiple_transfers(self, dummy_protocol):
         p = dummy_protocol
         c = p.ref("test", None, "96-flat", discard=True)

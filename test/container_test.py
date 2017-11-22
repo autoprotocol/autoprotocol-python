@@ -38,6 +38,7 @@ class TestContainerWellRef:
             self.c.humanize(-1)
         # check input type
         with pytest.raises(TypeError):
+            self.c.humanize("10")
             self.c.humanize(self.c.well(0))
 
     def test_robotize(self):

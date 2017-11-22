@@ -36,7 +36,7 @@ def dummy_tube():
         None,
         ContainerType(
             name="dummy",
-            well_count=15,
+            well_count=1,
             well_depth_mm=None,
             well_volume_ul=Unit(200, "microliter"),
             well_coating=None,
@@ -46,7 +46,7 @@ def dummy_tube():
             seal_types=None,
             capabilities=[],
             shortname="dummy",
-            col_count=5,
+            col_count=1,
             dead_volume_ul=Unit(15, "microliter"),
             safe_min_volume_ul=Unit(30, "microliter")
         )

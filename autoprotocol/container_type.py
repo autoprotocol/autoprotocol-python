@@ -23,7 +23,8 @@ class ContainerType(namedtuple("ContainerType",
                                 "seal_types", "capabilities",
                                 "shortname", "col_count", "dead_volume_ul",
                                 "safe_min_volume_ul", "true_max_vol_ul",
-                                "vendor", "cat_no"])):
+                                "vendor", "cat_no",
+                                "prioritize_seal_or_cover"])):
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
@@ -70,6 +71,9 @@ class ContainerType(namedtuple("ContainerType",
       ContainerType commercial vendor, if available.
     cat_no: str
       ContainerType vendor catalog number, if available.
+    prioritize_seal_or_cover: str, optional
+        "seal" or "cover", determines whether to prioritize sealing or covering
+        defaults to "seal"
     """
 
     def __new__(cls, name, is_tube, well_count,
@@ -78,7 +82,7 @@ class ContainerType(namedtuple("ContainerType",
                 seal_types, capabilities,
                 shortname, col_count, dead_volume_ul,
                 safe_min_volume_ul, true_max_vol_ul=None,
-                vendor=None, cat_no=None):
+                vendor=None, cat_no=None, prioritize_seal_or_cover="seal"):
         true_max_vol_ul = true_max_vol_ul or well_volume_ul
         assert true_max_vol_ul >= well_volume_ul, \
             "{} does not contain valid true_max_vol_ul: {} and " \
@@ -91,7 +95,8 @@ class ContainerType(namedtuple("ContainerType",
                                                  col_count, dead_volume_ul,
                                                  safe_min_volume_ul,
                                                  true_max_vol_ul, vendor,
-                                                 cat_no)
+                                                 cat_no,
+                                                 prioritize_seal_or_cover)
 
     def robotize(self, well_ref):
         """
@@ -460,10 +465,12 @@ _CONTAINER_TYPES = {
         well_coating=None,
         sterile=False,
         cover_types=["standard", "universal"],
-        seal_types=None,
+        seal_types=["breathable"],
+        prioritize_seal_or_cover="cover",
         capabilities=["pipette", "incubate",
                       "gel_separate", "gel_purify",
-                      "cover", "stamp", "dispense"],
+                      "cover", "stamp", "dispense",
+                      "seal"],
         shortname="96-deep",
         is_tube=False,
         col_count=12,
@@ -524,10 +531,11 @@ _CONTAINER_TYPES = {
         well_coating=None,
         sterile=False,
         cover_types=["universal"],
-        seal_types=None,
+        seal_types=["foil", "breathable"],
         capabilities=["pipette", "incubate",
                       "gel_separate", "gel_purify",
-                      "cover", "stamp", "dispense"],
+                      "cover", "stamp", "dispense",
+                      "seal"],
         shortname="24-deep",
         is_tube=False,
         col_count=6,

@@ -3,6 +3,8 @@ Changelog
 =========
 
 * :release:`4.0.0 <2017-10-06>`
+* :feature:`-` allow breathable seals on 96-deep and 24-deep
+* :feature:`-` add prioritize_seal_or_cover allow priority selection
 * :support:`-` docstring cleanup, linting
 * :bug:`-` remove cover prior to mag steps where applicable
 * :support:`-` convert test suite to py.test

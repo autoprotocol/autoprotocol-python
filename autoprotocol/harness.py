@@ -623,10 +623,20 @@ def seal_on_store(protocol):
     for name, ref in protocol.refs.items():
         if "store" in ref.opts.keys():
             if not (ref.container.is_covered() or ref.container.is_sealed()):
-                if "seal" in ref.container.container_type.capabilities:
+                default_method = (
+                    ref.container.container_type.prioritize_seal_or_cover)
+                sealable = "seal" in ref.container.container_type.capabilities
+                coverable = "cover" in ref.container.container_type.capabilities
+                if default_method == "seal" and sealable:
                     protocol.seal(ref.container,
                                   ref.container.container_type.seal_types[0])
-                elif "cover" in ref.container.container_type.capabilities:
+                elif default_method == "cover" and coverable:
+                    protocol.cover(ref.container,
+                                   ref.container.container_type.cover_types[0])
+                elif sealable:
+                    protocol.seal(ref.container,
+                                  ref.container.container_type.seal_types[0])
+                elif coverable:
                     protocol.cover(ref.container,
                                    ref.container.container_type.cover_types[0])
                 else:

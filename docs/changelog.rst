@@ -3,6 +3,7 @@ Changelog
 =========
 
 * :release:`4.0.0 <2017-10-06>`
+* :feature:`-` add PerkinElmer 384-well optiplate to container_type (cat# 6007299), :ref:`container-type-384-flat-white-white-optiplate`
 * :feature:`-` allow breathable seals on 96-deep and 24-deep
 * :feature:`-` add prioritize_seal_or_cover allow priority selection
 * :support:`-` docstring cleanup, linting

@@ -117,6 +117,15 @@ Container Types
    :dedent: 8
    :lines: 626-643
 
+.. _container-type-384-flat-white-white-optiplate:
+
+384-flat-white-white-optiplate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. literalinclude:: ../autoprotocol/container_type.py
+   :language: python
+   :dedent: 8
+   :lines: 782-805
+
 .. _container-type-96-flat:
 
 96-flat

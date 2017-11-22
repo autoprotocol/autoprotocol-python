@@ -75,7 +75,6 @@ class ContainerType(namedtuple("ContainerType",
         "seal" or "cover", determines whether to prioritize sealing or covering
         defaults to "seal"
     """
-
     def __new__(cls, name, is_tube, well_count,
                 well_depth_mm, well_volume_ul,
                 well_coating, sterile, cover_types,
@@ -530,12 +529,11 @@ _CONTAINER_TYPES = {
         well_volume_ul=Unit(10000.0, "microliter"),
         well_coating=None,
         sterile=False,
-        cover_types=["universal"],
+        cover_types=None,
         seal_types=["foil", "breathable"],
         capabilities=["pipette", "incubate",
                       "gel_separate", "gel_purify",
-                      "cover", "stamp", "dispense",
-                      "seal"],
+                      "stamp", "dispense", "seal"],
         shortname="24-deep",
         is_tube=False,
         col_count=6,
@@ -781,6 +779,30 @@ _CONTAINER_TYPES = {
         safe_min_volume_ul=Unit(25, "microliter"),
         vendor="Corning",
         cat_no="3574"
+    ),
+    "384-flat-white-white-optiplate": ContainerType(
+        name="384-well flat-bottom polystyrene optimized plate",
+        well_count=384,
+        well_depth_mm=Unit(10.45, "millimeter"),
+        well_volume_ul=Unit(105.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal"],
+        seal_types=["ultra-clear", "foil"],
+        capabilities=["incubate", "seal", "image_plate",
+                      "miniprep_source", "maxiprep_source",
+                      "maxiprep_destination", "stamp", "dispense",
+                      "spin", "sanger_sequence", "miniprep_destination",
+                      "flash_freeze", "echo_dest", "cover",
+                      "fluorescence", "luminescence", "pipette",
+                      "uncover", "bluewash"],
+        shortname="384-flat-white-white-optiplate",
+        col_count=24,
+        dead_volume_ul=Unit(24, "microliter"),
+        safe_min_volume_ul=Unit(30, "microliter"),
+        vendor="PerkinElmer",
+        cat_no="6007299"
     ),
     "96-10-spot-uplex-MSD": ContainerType(
         name="96-well 10-spot u-plex MSD plate",

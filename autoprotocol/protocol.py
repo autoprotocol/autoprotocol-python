@@ -258,14 +258,16 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
-    def add_time_constraint(self, from_dict, to_dict, less_than=None, more_than=None, mirror=False):
+
+    def add_time_constraint(self, from_dict, to_dict, less_than=None,
+                            more_than=None, mirror=False):
         """Constraint the time between two instructions
 
         Add time constraints from `from_dict` to `to_dict`. Time constraints
         guarantee that the time from the `from_dict` to the `to_dict` is less
         than or greater than some specified duration. Care should be taken when
-        applying time constraints as constraints may make some protocols impossible to
-        schedule or run.
+        applying time constraints as constraints may make some protocols
+        impossible to schedule or run.
 
         Though autoprotocol orders instructions in a list, instructions do
         not need to be run in the order they are listed and instead depend on
@@ -308,57 +310,57 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "refs": {
-                "plate_1": {
-                  "new": "96-flat",
-                  "discard": true
+                "refs": {
+                    "plate_1": {
+                        "new": "96-flat",
+                        "discard": true
+                    },
+                    "plate_2": {
+                        "new": "96-flat",
+                        "discard": true
+                    }
                 },
-                "plate_2": {
-                  "new": "96-flat",
-                  "discard": true
-                }
-              },
-              "time_constraints": [
-                {
-                  "to": {
-                    "instruction_end": 0
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "ref_start": "plate_1"
-                  }
-                },
-                {
-                  "to": {
-                    "instruction_start": 0
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "instruction_start": 1
-                  }
-                },
-                {
-                  "to": {
-                    "instruction_start": 1
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "instruction_start": 0
-                  }
-                }
-              ],
-              "instructions": [
-                {
-                  "lid": "standard",
-                  "object": "plate_1",
-                  "op": "cover"
-                },
-                {
-                  "lid": "standard",
-                  "object": "plate_2",
-                  "op": "cover"
-                }
-              ]
+                "time_constraints": [
+                    {
+                        "to": {
+                            "instruction_end": 0
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "ref_start": "plate_1"
+                        }
+                    },
+                    {
+                        "to": {
+                            "instruction_start": 0
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "instruction_start": 1
+                        }
+                    },
+                    {
+                        "to": {
+                            "instruction_start": 1
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "instruction_start": 0
+                        }
+                    }
+                ],
+                "instructions": [
+                    {
+                        "lid": "standard",
+                        "object": "plate_1",
+                        "op": "cover"
+                    },
+                    {
+                        "lid": "standard",
+                        "object": "plate_2",
+                        "op": "cover"
+                    }
+                ]
             }
 
 
@@ -382,7 +384,8 @@ class Protocol(object):
             min time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
-            should be added in both directions (only applies to the less_than constraint)
+            should be added in both directions
+            (only applies to the less_than constraint)
 
         Raises
         ------
@@ -414,13 +417,14 @@ class Protocol(object):
         state_strings = ['start', 'end']
 
         def add_time_constraint_internal(time_const):
-            setattr(self, "time_constraints", (getattr(
-                self, "time_constraints", []) + [time_const]))
+            setattr(self, "time_constraints", (
+                getattr(self, "time_constraints", []) + [time_const])
+            )
 
         keys = []
 
-        # If the caller used the syntax add_time_constraint(a, b, 1:minute, True),
-        # move the 4th param to mirror
+        # Move the 4th param to mirror if the caller used the syntax
+        # add_time_constraint(a, b, 1:minute, True)
         if type(more_than) == bool:
             mirror = more_than
             more_than = None
@@ -432,7 +436,8 @@ class Protocol(object):
 
         if more_than and less_than and more_than > less_than:
             raise ValueError(
-                "'more_than': %s cannot be greater than 'less_than': %s" % more_than, less_than
+                "'more_than': %s cannot be greater than 'less_than': %s"
+                % more_than, less_than
             )
 
         for m in [from_dict, to_dict]:
@@ -444,10 +449,12 @@ class Protocol(object):
                     if m["mark"] < 0:
                         raise ValueError(
                             "The instruction 'mark' in %s must be greater "
-                            "than and equal to 0" % m)
+                            "than and equal to 0" % m
+                        )
                 else:
                     raise TypeError(
-                        "The 'mark' in %s must be Container or Integer" % m)
+                        "The 'mark' in %s must be Container or Integer" % m
+                    )
             else:
                 raise KeyError("The %s dict must contain `mark`" % m)
 
@@ -455,8 +462,10 @@ class Protocol(object):
                 if m["state"] in state_strings:
                     k += m["state"]
                 else:
-                    raise TypeError("The 'state' in %s must be in %s" %
-                                    (m, ", ".join(state_strings)))
+                    raise TypeError(
+                        "The 'state' in %s must be in %s"
+                        % (m, ", ".join(state_strings))
+                    )
             else:
                 raise KeyError("The %s dict must contain 'state'" % m)
 
@@ -465,22 +474,26 @@ class Protocol(object):
         if less_than and less_than < Unit(0, 'second'):
             raise ValueError(
                 "The 'less_than': %s cannot be less than "
-                "'0:second'" % less_than)
+                "'0:second'" % less_than
+            )
 
         if more_than and more_than < Unit(0, 'second'):
             raise ValueError(
                 "The 'more_than': %s cannot be less than "
-                "'0:second'" % less_than)
+                "'0:second'" % less_than
+            )
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
                 raise RuntimeError(
                     "The from_dict: %s and to_dict: %s are the "
-                    "same" % (from_dict, to_dict))
+                    "same" % (from_dict, to_dict)
+                )
             if from_dict["state"] == "end":
                 raise RuntimeError(
                     "The from_dict: %s cannot come before the "
-                    "to_dict %s" % (from_dict, to_dict))
+                    "to_dict %s" % (from_dict, to_dict)
+                )
 
         from_time_point = {keys[0]: from_dict["mark"]}
         to_time_point = {keys[1]: to_dict["mark"]}
@@ -493,7 +506,8 @@ class Protocol(object):
             })
 
             if mirror:
-                self.add_time_constraint(to_dict, from_dict, less_than, mirror=False)
+                self.add_time_constraint(to_dict, from_dict, less_than,
+                                         mirror=False)
 
         if more_than:
             add_time_constraint_internal({

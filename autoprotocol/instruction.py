@@ -1,6 +1,7 @@
 import json
 from .pipette_tools import assign
 from .container import Well
+from functools import reduce
 
 
 """
@@ -385,6 +386,7 @@ class Thermocycle(Instruction):
 
 
 class Incubate(Instruction):
+
     """
     Store a sample in a specific environment for a given duration. Once the
     duration has elapsed, the sample will be returned to the ambient environment
@@ -401,25 +403,38 @@ class Incubate(Instruction):
     shaking : bool, optional
         Specify whether or not to shake container if available at the specified
         temperature
+    target_tempterature : Unit, str, optional
+        Specify a target temperature for a device (eg. an incubating block)
+        to reach during the specified duration.
+    shaking_params: dict, optional
+        Specifify "path" and "frequency" of shaking parameters to be used
+        with compatible devices (eg. thermoshakes)
 
     """
-
     WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
 
-    def __init__(self, ref, where, duration, shaking=False, co2=0):
+    def __init__(self, ref, where, duration, shaking=False, co2=0,
+                 target_tempterature=None, shaking_params=None):
         if where not in self.WHERE:
             raise ValueError("Specified `where` not contained in: %s" % ", "
                              "".join(self.WHERE))
-        if where == "ambient" and shaking:
-            raise ValueError("Shaking is not possible for ambient incubation")
-        super(Incubate, self).__init__({
+        if where == "ambient" and shaking and not shaking_params:
+            raise ValueError("Shaking is only possible for ambient incubation "
+                             "if 'shaking_params' are specified.")
+
+        incubate_json = {
             "op": "incubate",
             "object": ref,
             "where": where,
             "duration": duration,
             "shaking": shaking,
             "co2_percent": co2
-        })
+        }
+        if target_tempterature:
+            incubate_json["target_temperature"] = target_tempterature
+        if shaking_params:
+            incubate_json["shaking_params"] = shaking_params
+        super(Incubate, self).__init__(incubate_json)
 
 
 class IlluminaSeq(Instruction):

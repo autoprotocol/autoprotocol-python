@@ -3544,7 +3544,8 @@ class Protocol(object):
                         melting_end, melting_increment, melting_rate))
 
     def incubate(self, ref, where, duration, shaking=False, co2=0,
-                 uncovered=False):
+                 uncovered=False, target_temperature=None,
+                 shaking_params=None):
         """
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
@@ -3569,30 +3570,99 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "object": "sample_plate",
-                  "op": "seal"
+                   "object": "sample_plate",
+                   "op": "seal"
                 },
                 {
-                  "duration": "1:hour",
-                  "where": "warm_37",
-                  "object": "sample_plate",
-                  "shaking": true,
-                  "op": "incubate",
-                  "co2_percent": 0
+                    "duration": "1:hour",
+                    "where": "warm_37",
+                    "object": "sample_plate",
+                    "shaking": true,
+                    "op": "incubate",
+                    "co2_percent": 0
                 }
               ]
 
+
+        Parameters
+        ----------
+        ref : Ref, str
+            The container to be incubated
+        where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+            Temperature at which to incubate specified container
+        duration : Unit, str
+            Length of time to incubate container
+        shaking : bool, optional
+            Specify whether or not to shake container if available at the specified
+            temperature
+        target_tempterature : Unit, str, optional
+            Specify a target temperature for a device (eg. an incubating block)
+            to reach during the specified duration.
+        shaking_params: dict, optional
+            Specifify "path" and "frequency" of shaking parameters to be used
+            with compatible devices (eg. thermoshakes)
+
         """
         if not isinstance(ref, Container):
-            raise TypeError("Ref needs to be of type Conainer")
+            raise TypeError("Ref needs to be of type Container")
         allowed_uncovered = ["ambient"]
         if uncovered and (where not in allowed_uncovered or shaking):
-            raise RuntimeError("If incubating uncovered, "
-                               "location must be in {} and not "
-                               "shaking.".format(', '.join(allowed_uncovered)))
+            raise RuntimeError(
+                "If incubating uncovered, location must be in "
+                "{} and not shaking.".format(', '.join(allowed_uncovered))
+            )
+        # thermoshake validations
+        ts_loc = ["ambient"]
+        ts_temp_max = Unit(70, "celsius")
+        ts_temp_min = Unit(4, "celsius")
+        ts_freq_maximums = {
+            "cw_orbital": Unit(1700, "rpm"),
+            "ccw_orbital": Unit(1700, "rpm"),
+            "portrait_linear": Unit(400, "rpm"),
+            "landscape_linear": Unit(600, "rpm"),
+            "cw_diamond": Unit(700, "rpm"),
+            "ccw_diamond": Unit(700, "rpm")
+        }
+        ts_freq_min = Unit(100, "rpm")
+        if target_temperature:
+            if where not in ts_loc:
+                raise AttributeError("If specifying a 'target_temperature', "
+                                     "the 'where' parameter must be 'ambient'.")
+            target_temperature = Unit.fromstring(target_temperature)
+            if not (ts_temp_min <= target_temperature <= ts_temp_max):
+                raise ValueError("The target temperature must be between "
+                                 "{} and {}, inclusive. You entered {}."
+                                 "".format(ts_temp_min, ts_temp_max,
+                                           target_temperature))
+        if shaking_params:
+            if not isinstance(shaking_params, dict):
+                raise TypeError("'shaking_params' must be a dict "
+                                "containing keys 'frequency' and "
+                                "'path'.")
+            if not all(k in shaking_params.keys() for k in ["frequency", "path"]):
+                raise KeyError("'shaking_params' keys must contain 'frequency' "
+                               "and 'path'")
+            ts_path = shaking_params["path"]
+            if ts_path not in ts_freq_maximums.keys():
+                "The valid paths for shaking are: {} . You entered {}"
+                "".format(', '.join(ts_freq_maximums.keys()), ts_path)
+            frequency = Unit.fromstring(shaking_params["frequency"])
+            try:
+                ts_freq_max = ts_freq_maximums[ts_path]
+            except KeyError:
+                raise ValueError("An appropriate maximum frequency was not "
+                                 "determined for path {}. Valid paths are: {}."
+                                 "".format(ts_path,
+                                           ', '.join(ts_freq_maximums.keys())))
+            if not (ts_freq_min <= frequency <= ts_freq_max):
+                raise ValueError("The frequency must be between "
+                                 "{} and {}, inclusive. You entered {}."
+                                 "".format(ts_freq_min, ts_freq_max, frequency))
         if not uncovered:
             self._add_cover(ref, "incubate")
-        self.instructions.append(Incubate(ref, where, duration, shaking, co2))
+        self.instructions.append(Incubate(ref, where, duration, shaking,
+                                          co2, target_temperature,
+                                          shaking_params))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,
                    incubate_before=None, temperature=None):

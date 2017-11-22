@@ -2689,3 +2689,50 @@ class TestDyeTest:
 
         with pytest.raises(ValueError):
             _convert_dispense_instructions(p1, 5, 3)
+
+
+class TestIncubate:
+
+    def test_incubate(self, dummy_protocol):
+        p = dummy_protocol
+        c1 = p.ref("c1", id=None,
+                   cont_type="96-10-spot-vplex-m-pro-inflamm1-MSD",
+                   discard=True)
+
+        p.incubate(c1, "ambient", "10:minute", shaking=True,
+                   target_temperature="50:celsius",
+                   shaking_params={"path": "cw_orbital",
+                                   "frequency": "1700:rpm"})
+        assert (p.instructions[-1].op == "incubate")
+
+    def test_shaking_params(self, dummy_protocol, dummy_96):
+        p = dummy_protocol
+        with pytest.raises(KeyError):
+            p.incubate(dummy_96, "ambient", "1:minute",
+                       shaking_params={"path": "cw_orbital"})
+        with pytest.raises(TypeError):
+            p.incubate(dummy_96, "ambient", "1:minute",
+                       shaking_params="not_dict")
+        with pytest.raises(ValueError):
+            p.incubate(dummy_96, "ambient", "10:minute",
+                       target_temperature="50:celsius",
+                       shaking_params={"path": "cw_orbital",
+                                       "frequency": "2000:rpm"})
+
+    def test_shaking_freq(self, dummy_protocol, dummy_96):
+        p = dummy_protocol
+        with pytest.raises(ValueError):
+            p.incubate(dummy_96, "ambient", "10:minute",
+                       target_temperature="50:celsius",
+                       shaking_params={"path": "landscape_linear",
+                                       "frequency": "601:rpm"})
+        with pytest.raises(ValueError):
+            p.incubate(dummy_96, "ambient", "10:minute",
+                       target_temperature="50:celsius",
+                       shaking_params={"path": "portrait_linear",
+                                       "frequency": "401:rpm"})
+        with pytest.raises(ValueError):
+            p.incubate(dummy_96, "ambient", "10:minute",
+                       target_temperature="50:celsius",
+                       shaking_params={"path": "ccw_diamond",
+                                       "frequency": "701:rpm"})

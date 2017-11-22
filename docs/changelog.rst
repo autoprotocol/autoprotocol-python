@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :release:`4.0.0 <2017-10-06>`
+* :release:`4.0.0 <2017-11-22>`
 * :feature:`-` Add shaking capabilities to :ref:`protocol-incubate`
 * :feature:`-` add `step_size` to dispense and dispense_full_plate methods
 * :feature:`-` add ability to specify a well as reagent source for dispense and dispense_full_plate methods

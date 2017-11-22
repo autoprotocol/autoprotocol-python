@@ -129,7 +129,7 @@ def convert_param(protocol, val, typeDesc):
             raise RuntimeError("The value supplied to input '%s' "
                                "(type container+) is improperly formatted."
                                "" % label)
-    elif type in ['volume', 'time', 'length']:
+    elif type in ['volume', 'time', 'length', 'frequency']:
         try:
             return Unit.fromstring(val)
         except UnitError as e:

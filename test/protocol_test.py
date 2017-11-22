@@ -2390,9 +2390,9 @@ class TestDispense:
         # Initialize protocol and containers for testing dispense
         p = dummy_protocol
         dest1 = p.ref("destination_plate_1", cont_type="96-pcr", discard=True)
-        src1 = p.ref("source_well_1", None, cont_type="conical-50",
-                     discard=True, cover="screw-cap").well(0)
-        src1.volume = Unit(40, "milliliter")
+        src1 = p.ref("source_well_1", None, cont_type="micro-2.0",
+                     discard=True).well(0)
+        src1.volume = Unit(2, "milliliter")
 
         dest2 = p.ref("destination_plate_2", cont_type="96-pcr", discard=True)
         src2 = p.ref("source_well_2", None, cont_type="96-deep", discard=True,
@@ -2418,9 +2418,6 @@ class TestDispense:
         assert ("reagent_source" not in p.instructions[-1].data)
         assert ("x_human" not in p.instructions[-1].data)
 
-        # Test p.dispense with reagent_source
-        assert(src1.container.cover == "screw-cap")
-
         p.dispense(dest1, src1, [{"column": 0, "volume": "10:microliter"},
                    {"column": 1, "volume": "30:microliter"}])
         assert (src1.container.cover is None)
@@ -2434,7 +2431,7 @@ class TestDispense:
             assert (well.volume == Unit(10, "microliter"))
         for well in dest1.wells_from(1, 8, columnwise=True):
             assert (well.volume == Unit(30, "microliter"))
-        assert (src1.volume == Unit(39680, "microliter"))
+        assert (src1.volume == Unit(1680, "microliter"))
 
         # Test improper inputs for reagent
         with pytest.raises(TypeError):

@@ -1,5 +1,6 @@
 import json
 from .pipette_tools import assign
+from .container import Well
 
 
 """
@@ -112,32 +113,44 @@ class Dispense(Instruction):
     ----------
     ref : Ref, str
         Container for reagent to be dispensed to.
-    reagent : str
-        Reagent to be dispensed to columns in container.
+    reagent : str, well
+        Reagent to be dispensed. Use a string to specify the name or
+        resource_id (see below) of the reagent to be dispensed.
+        Alternatively, use a well to specify that the dispense operation
+        must be executed using a specific aliquot as the dispense source.
     columns : list
         Columns to be dispensed to, in the form of a list of dicts specifying
         the column number and the volume to be dispensed to that column.
         Columns are indexed from 0.
         [{"column": <column num>, "volume": <volume>}, ...]
-    speed_percentage : int, optional
-            Integer between 1 and 100 that represents the percentage of the
-            maximum speed at which liquid is dispensed from the reagent
-            dispenser.
+    speed : int, optional
+        Integer between 1 and 100 that represents the percentage of the
+        maximum speed at which liquid is dispensed from the reagent
+        dispenser.
     is_resource_id : bool, optional
-            If true, interprets reagent as a resource ID
+        If true, interprets reagent as a resource ID
+    step_size : str, Unit, optional
+        Specifies that the dispense operation must be executed
+        using a peristaltic pump with the given step size.
 
     """
 
-    def __init__(self, ref, reagent, columns, speed, is_resource_id):
+    def __init__(self, ref, reagent, columns, speed,
+                 is_resource_id, step_size=None):
         disp = {
             "op": "dispense",
             "object": ref,
             "columns": columns
         }
-        if is_resource_id:
-            disp["resource_id"] = reagent
+        if isinstance(reagent, Well):
+            disp["reagent_source"] = reagent
         else:
-            disp["reagent"] = reagent
+            if is_resource_id:
+                disp["resource_id"] = reagent
+            else:
+                disp["reagent"] = reagent
+        if step_size:
+            disp["step_size"] = step_size
         assign(disp, "x_speed_percentage", speed)
 
         super(Dispense, self).__init__(disp)

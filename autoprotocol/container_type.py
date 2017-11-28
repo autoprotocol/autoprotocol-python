@@ -8,12 +8,12 @@ if sys.version_info[0] >= 3:
     xrange = range
     basestring = str
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 
 class ContainerType(namedtuple("ContainerType",
@@ -22,7 +22,9 @@ class ContainerType(namedtuple("ContainerType",
                                 "well_coating", "sterile", "cover_types",
                                 "seal_types", "capabilities",
                                 "shortname", "col_count", "dead_volume_ul",
-                                "safe_min_volume_ul"])):
+                                "safe_min_volume_ul", "true_max_vol_ul",
+                                "vendor", "cat_no",
+                                "prioritize_seal_or_cover"])):
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
@@ -60,8 +62,40 @@ class ContainerType(namedtuple("ContainerType",
     safe_min_volume_ul : int
       Minimum volume of liquid to ensure adequate volume for liquid-handling
       aspiration from any given well of a ContainerType.
-
+    true_max_vol_ul : int
+      Maximum volume of well(s) in microliters, often same value as
+      well_volume_ul (maximum working volume), however, some ContainerType(s)
+      can have a different value corresponding to a true maximum volume
+      of a well (ex. echo compatible containers)
+    vendor: str
+      ContainerType commercial vendor, if available.
+    cat_no: str
+      ContainerType vendor catalog number, if available.
+    prioritize_seal_or_cover: str, optional
+        "seal" or "cover", determines whether to prioritize sealing or covering
+        defaults to "seal"
     """
+    def __new__(cls, name, is_tube, well_count,
+                well_depth_mm, well_volume_ul,
+                well_coating, sterile, cover_types,
+                seal_types, capabilities,
+                shortname, col_count, dead_volume_ul,
+                safe_min_volume_ul, true_max_vol_ul=None,
+                vendor=None, cat_no=None, prioritize_seal_or_cover="seal"):
+        true_max_vol_ul = true_max_vol_ul or well_volume_ul
+        assert true_max_vol_ul >= well_volume_ul, \
+            "{} does not contain valid true_max_vol_ul: {} and " \
+            "well_volume_ul {}".format(name, true_max_vol_ul, well_volume_ul)
+        return super(ContainerType, cls).__new__(cls, name, is_tube, well_count,
+                                                 well_depth_mm, well_volume_ul,
+                                                 well_coating, sterile,
+                                                 cover_types, seal_types,
+                                                 capabilities, shortname,
+                                                 col_count, dead_volume_ul,
+                                                 safe_min_volume_ul,
+                                                 true_max_vol_ul, vendor,
+                                                 cat_no,
+                                                 prioritize_seal_or_cover)
 
     def robotize(self, well_ref):
         """
@@ -244,14 +278,16 @@ _CONTAINER_TYPES = {
                       "dispense"],
         shortname="384-flat",
         col_count=24,
-        dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")
+        dead_volume_ul=Unit(7, "microliter"),
+        safe_min_volume_ul=Unit(15, "microliter"),
+        vendor="Corning",
+        cat_no="3706"
     ),
     "384-pcr": ContainerType(
         name="384-well PCR plate",
         well_count=384,
         well_depth_mm=None,
-        well_volume_ul=Unit(50.0, "microliter"),
+        well_volume_ul=Unit(40.0, "microliter"),
         well_coating=None,
         sterile=None,
         is_tube=False,
@@ -264,7 +300,9 @@ _CONTAINER_TYPES = {
         shortname="384-pcr",
         col_count=24,
         dead_volume_ul=Unit(2, "microliter"),
-        safe_min_volume_ul=Unit(3, "microliter")
+        safe_min_volume_ul=Unit(3, "microliter"),
+        vendor="Eppendorf",
+        cat_no="951020539"
     ),
     "384-echo": ContainerType(
         name="384-well Echo plate",
@@ -282,7 +320,10 @@ _CONTAINER_TYPES = {
         shortname="384-echo",
         col_count=24,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")
+        safe_min_volume_ul=Unit(15, "microliter"),
+        true_max_vol_ul=Unit(135, "microliter"),
+        vendor="Labcyte",
+        cat_no="P-05525"
     ),
     "384-flat-white-white-lv": ContainerType(
         name="384-well flat-bottom low volume plate",
@@ -302,7 +343,9 @@ _CONTAINER_TYPES = {
         shortname="384-flat-white-white-lv",
         col_count=24,
         dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(15, "microliter")
+        safe_min_volume_ul=Unit(15, "microliter"),
+        vendor="Corning",
+        cat_no="3824"
     ),
     "384-flat-white-white-tc": ContainerType(
         name="384-well flat-bottom low flange plate",
@@ -322,7 +365,9 @@ _CONTAINER_TYPES = {
         shortname="384-flat-white-white-tc",
         col_count=24,
         dead_volume_ul=Unit(20, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter")
+        safe_min_volume_ul=Unit(30, "microliter"),
+        vendor="Corning",
+        cat_no="3570"
     ),
     "384-flat-clear-clear": ContainerType(
         name="384-well fully clear high binding plate",
@@ -342,7 +387,9 @@ _CONTAINER_TYPES = {
         shortname="384-flat-clear-clear",
         col_count=24,
         dead_volume_ul=Unit(5, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")
+        safe_min_volume_ul=Unit(20, "microliter"),
+        vendor="Corning",
+        cat_no="3700"
     ),
     "96-flat": ContainerType(
         name="96-well flat-bottom plate",
@@ -362,7 +409,9 @@ _CONTAINER_TYPES = {
         shortname="96-flat",
         col_count=12,
         dead_volume_ul=Unit(25, "microliter"),
-        safe_min_volume_ul=Unit(65, "microliter")
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Corning",
+        cat_no="3632"
     ),
     "96-flat-uv": ContainerType(
         name="96-well flat-bottom UV transparent plate",
@@ -382,7 +431,9 @@ _CONTAINER_TYPES = {
         shortname="96-flat-uv",
         col_count=12,
         dead_volume_ul=Unit(25, "microliter"),
-        safe_min_volume_ul=Unit(65, "microliter")
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Corning",
+        cat_no="3635"
     ),
     "96-pcr": ContainerType(
         name="96-well PCR plate",
@@ -401,7 +452,9 @@ _CONTAINER_TYPES = {
         shortname="96-pcr",
         col_count=12,
         dead_volume_ul=Unit(3, "microliter"),
-        safe_min_volume_ul=Unit(5, "microliter")
+        safe_min_volume_ul=Unit(5, "microliter"),
+        vendor="Eppendorf",
+        cat_no="951020619"
     ),
     "96-deep": ContainerType(
         name="96-well extended capacity plate",
@@ -411,15 +464,19 @@ _CONTAINER_TYPES = {
         well_coating=None,
         sterile=False,
         cover_types=["standard", "universal"],
-        seal_types=None,
+        seal_types=["breathable"],
+        prioritize_seal_or_cover="cover",
         capabilities=["pipette", "incubate",
                       "gel_separate", "gel_purify",
-                      "cover", "stamp", "dispense"],
+                      "cover", "stamp", "dispense",
+                      "seal"],
         shortname="96-deep",
         is_tube=False,
         col_count=12,
-        dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter")
+        dead_volume_ul=Unit(5, "microliter"),
+        safe_min_volume_ul=Unit(30, "microliter"),
+        vendor="Corning",
+        cat_no="3961"
     ),
     "96-v-kf": ContainerType(
         name="96-well v-bottom King Fisher plate",
@@ -439,7 +496,9 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=12,
         dead_volume_ul=Unit(20, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")
+        safe_min_volume_ul=Unit(20, "microliter"),
+        vendor="Fisher",
+        cat_no="22-387-030"
     ),
     "96-deep-kf": ContainerType(
         name="96-well extended capacity King Fisher plate",
@@ -459,7 +518,9 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=12,
         dead_volume_ul=Unit(50, "microliter"),
-        safe_min_volume_ul=Unit(50, "microliter")
+        safe_min_volume_ul=Unit(50, "microliter"),
+        vendor="Fisher",
+        cat_no="22-387-031"
     ),
     "24-deep": ContainerType(
         name="24-well extended capacity plate",
@@ -468,16 +529,18 @@ _CONTAINER_TYPES = {
         well_volume_ul=Unit(10000.0, "microliter"),
         well_coating=None,
         sterile=False,
-        cover_types=["universal"],
-        seal_types=None,
+        cover_types=None,
+        seal_types=["foil", "breathable"],
         capabilities=["pipette", "incubate",
                       "gel_separate", "gel_purify",
-                      "cover", "stamp", "dispense"],
+                      "stamp", "dispense", "seal"],
         shortname="24-deep",
         is_tube=False,
         col_count=6,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(60, "microliter")
+        safe_min_volume_ul=Unit(60, "microliter"),
+        vendor="E&K Scientific",
+        cat_no="EK-2053-S"
     ),
     "micro-2.0": ContainerType(
         name="2mL Microcentrifuge tube",
@@ -493,8 +556,11 @@ _CONTAINER_TYPES = {
         shortname="micro-2.0",
         is_tube=True,
         col_count=1,
-        dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(40, "microliter")
+        dead_volume_ul=Unit(5, "microliter"),
+        safe_min_volume_ul=Unit(40, "microliter"),
+        vendor="E&K Scientific",
+        cat_no="280200"
+
     ),
     "micro-1.5": ContainerType(
         name="1.5mL Microcentrifuge tube",
@@ -510,8 +576,10 @@ _CONTAINER_TYPES = {
         shortname="micro-1.5",
         is_tube=True,
         col_count=1,
-        dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")
+        dead_volume_ul=Unit(20, "microliter"),
+        safe_min_volume_ul=Unit(20, "microliter"),
+        vendor="USA Scientific",
+        cat_no="1615-5500"
     ),
     "6-flat": ContainerType(
         name="6-well cell culture plate",
@@ -527,7 +595,9 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=3,
         dead_volume_ul=Unit(400, "microliter"),
-        safe_min_volume_ul=Unit(600, "microliter")
+        safe_min_volume_ul=Unit(600, "microliter"),
+        vendor="Eppendorf",
+        cat_no="30720016"
     ),
     "1-flat": ContainerType(
         name="1-well flat-bottom plate",
@@ -543,7 +613,9 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=1,
         dead_volume_ul=Unit(36000, "microliter"),
-        safe_min_volume_ul=Unit(40000, "microliter")
+        safe_min_volume_ul=Unit(40000, "microliter"),
+        vendor="Fisher",
+        cat_no="267060"
     ),
     "6-flat-tc": ContainerType(
         name="6-well TC treated plate",
@@ -559,7 +631,63 @@ _CONTAINER_TYPES = {
         is_tube=False,
         col_count=3,
         dead_volume_ul=Unit(400, "microliter"),
-        safe_min_volume_ul=Unit(600, "microliter")
+        safe_min_volume_ul=Unit(600, "microliter"),
+        vendor="Eppendorf",
+        cat_no="30720113"
+    ),
+    "res-sw96-hp": ContainerType(
+        name="96-well singlewell highprofile reservoir",
+        well_count=1,
+        well_depth_mm=None,
+        well_volume_ul=Unit(200.0, "milliliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal"],
+        seal_types=None,
+        capabilities=["pipette", "incubate", "cover",
+                      "stamp", "dispense", "liquid_handle"],
+        shortname="res-sw96-hp",
+        col_count=1,
+        dead_volume_ul=Unit(25, "milliliter"),
+        safe_min_volume_ul=Unit(30, "milliliter"),
+        true_max_vol_ul=Unit(280.0, "milliliter")
+    ),
+    "res-mw8-hp": ContainerType(
+        name="8-row multiwell highprofile reservoir",
+        well_count=8,
+        well_depth_mm=None,
+        well_volume_ul=Unit(25.0, "milliliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal"],
+        seal_types=None,
+        capabilities=["pipette", "incubate", "cover",
+                      "stamp", "dispense", "liquid_handle"],
+        shortname="res-mw8-hp",
+        col_count=1,
+        dead_volume_ul=Unit(2.5, "milliliter"),
+        safe_min_volume_ul=Unit(5, "milliliter"),
+        true_max_vol_ul=Unit(32.0, "milliliter")
+    ),
+    "res-mw12-hp": ContainerType(
+        name="12-column multiwell highprofile reservoir",
+        well_count=12,
+        well_depth_mm=None,
+        well_volume_ul=Unit(15.0, "milliliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal"],
+        seal_types=None,
+        capabilities=["pipette", "incubate", "cover",
+                      "stamp", "dispense", "liquid_handle"],
+        shortname="res-mw12-hp",
+        col_count=12,
+        dead_volume_ul=Unit(1.8, "milliliter"),
+        safe_min_volume_ul=Unit(5, "milliliter"),
+        true_max_vol_ul=Unit(21.0, "milliliter")
     ),
     "96-flat-clear-clear-tc": ContainerType(
         name="96-well flat-bottom TC treated plate",
@@ -579,7 +707,10 @@ _CONTAINER_TYPES = {
         shortname="96-flat-clear-clear-tc",
         col_count=12,
         dead_volume_ul=Unit(25, "microliter"),
-        safe_min_volume_ul=Unit(65, "microliter")),
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Eppendorf",
+        cat_no="0030730119"
+    ),
     "384-v-clear-clear": ContainerType(
         name="384-well v-bottom polypropylene plate",
         well_count=384,
@@ -599,7 +730,10 @@ _CONTAINER_TYPES = {
         shortname="384-v-clear-clear",
         col_count=24,
         dead_volume_ul=Unit(13, "microliter"),
-        safe_min_volume_ul=Unit(18, "microliter")),
+        safe_min_volume_ul=Unit(18, "microliter"),
+        vendor="Greiner",
+        cat_no="781280"
+    ),
     "384-round-clear-clear": ContainerType(
         name="384-well round-bottom plate",
         well_count=384,
@@ -619,7 +753,10 @@ _CONTAINER_TYPES = {
         shortname="384-round-clear-clear",
         col_count=24,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(20, "microliter")),
+        safe_min_volume_ul=Unit(20, "microliter"),
+        vendor="Corning",
+        cat_no="3657"
+    ),
     "384-flat-white-white-nbs": ContainerType(
         name="384-well flat-bottom low flange polystyrene NBS plate",
         well_count=384,
@@ -639,5 +776,114 @@ _CONTAINER_TYPES = {
         shortname="384-flat-white-white-nbs",
         col_count=24,
         dead_volume_ul=Unit(20, "microliter"),
-        safe_min_volume_ul=Unit(25, "microliter"))
+        safe_min_volume_ul=Unit(25, "microliter"),
+        vendor="Corning",
+        cat_no="3574"
+    ),
+    "384-flat-white-white-optiplate": ContainerType(
+        name="384-well flat-bottom polystyrene optimized plate",
+        well_count=384,
+        well_depth_mm=Unit(10.45, "millimeter"),
+        well_volume_ul=Unit(105.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["universal"],
+        seal_types=["ultra-clear", "foil"],
+        capabilities=["incubate", "seal", "image_plate",
+                      "miniprep_source", "maxiprep_source",
+                      "maxiprep_destination", "stamp", "dispense",
+                      "spin", "sanger_sequence", "miniprep_destination",
+                      "flash_freeze", "echo_dest", "cover",
+                      "fluorescence", "luminescence", "pipette",
+                      "uncover", "bluewash"],
+        shortname="384-flat-white-white-optiplate",
+        col_count=24,
+        dead_volume_ul=Unit(24, "microliter"),
+        safe_min_volume_ul=Unit(30, "microliter"),
+        vendor="PerkinElmer",
+        cat_no="6007299"
+    ),
+    "96-10-spot-uplex-MSD": ContainerType(
+        name="96-well 10-spot u-plex MSD plate",
+        well_count=96,
+        well_depth_mm=None,
+        well_volume_ul=Unit(340.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["low_evaporation", "standard", "universal"],
+        seal_types=["ultra-clear"],
+        capabilities=["incubate", "seal", "deseal", "stamp", "dispense",
+                      "spin", "cover", "pipette", "uncover",
+                      "bluewash", "mesoscale_sectors600"],
+        shortname="96-10-spot-uplex-MSD",
+        col_count=12,
+        dead_volume_ul=Unit(25, "microliter"),
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Mesoscale",
+        cat_no="K15069L"
+    ),
+    "96-10-spot-vplex-m-pro-inflamm1-MSD": ContainerType(
+        name="96-well 10-spot v-plex mouse pro-inflammatory panel 1 MSD plate",
+        well_count=96,
+        well_depth_mm=None,
+        well_volume_ul=Unit(340.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["low_evaporation", "standard", "universal"],
+        seal_types=["ultra-clear"],
+        capabilities=["incubate", "seal", "deseal", "stamp", "dispense",
+                      "spin", "cover", "pipette", "uncover",
+                      "bluewash", "mesoscale_sectors600"],
+        shortname="96-10-spot-vplex-m-pro-inflamm1-MSD",
+        col_count=12,
+        dead_volume_ul=Unit(25, "microliter"),
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Mesoscale",
+        cat_no="K15048G"
+    ),
+    "96-4-spot-mMIP3a-MSD": ContainerType(
+        name="96-well 4-spot mouse MIP3a MSD plate",
+        well_count=96,
+        well_depth_mm=None,
+        well_volume_ul=Unit(340.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["low_evaporation", "standard", "universal"],
+        seal_types=["ultra-clear"],
+        capabilities=["incubate", "seal", "deseal", "stamp", "dispense",
+                      "spin", "cover", "pipette", "uncover",
+                      "bluewash", "mesoscale_sectors600"],
+        shortname="96-4-spot-mMIP3a-MSD",
+        col_count=12,
+        dead_volume_ul=Unit(25, "microliter"),
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Mesoscale",
+        cat_no="K152MSD"
+    ),
+    "96-flat-black-black-fluotrac-600": ContainerType(
+        name="96-well flat-bottom fluotrac 600, high binding plate",
+        well_count=96,
+        well_depth_mm=None,
+        well_volume_ul=Unit(340.0, "microliter"),
+        well_coating="fluotrac_600",
+        sterile=True,
+        is_tube=False,
+        cover_types=["low_evaporation", "standard", "universal"],
+        seal_types=["ultra-clear"],
+        capabilities=["pipette", "spin", "absorbance",
+                      "fluorescence", "luminescence",
+                      "incubate", "gel_separate",
+                      "gel_purify", "cover", "stamp",
+                      "dispense", "seal", "deseal"],
+        shortname="96-flat-black-black-fluotrac-600",
+        col_count=12,
+        dead_volume_ul=Unit(25, "microliter"),
+        safe_min_volume_ul=Unit(65, "microliter"),
+        vendor="Greiner",
+        cat_no="655077"
+    ),
 }

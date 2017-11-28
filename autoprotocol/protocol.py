@@ -13,12 +13,12 @@ if sys.version_info[0] >= 3:
     basestring = str
 
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 
 class Ref(object):
@@ -258,14 +258,16 @@ class Protocol(object):
         self.refs[name] = Ref(name, opts, container)
         return container
 
-    def add_time_constraint(self, from_dict, to_dict, time_between, mirror=False):
+
+    def add_time_constraint(self, from_dict, to_dict, less_than=None,
+                            more_than=None, mirror=False):
         """Constraint the time between two instructions
 
         Add time constraints from `from_dict` to `to_dict`. Time constraints
-        ensure that the time from the `from_dict` to the `to_dict` does not
-        exceed the `time_between` given. Care should be taken when applying
-        time constraints as constraints may make some protocols impossible to
-        schedule or run.
+        guarantee that the time from the `from_dict` to the `to_dict` is less
+        than or greater than some specified duration. Care should be taken when
+        applying time constraints as constraints may make some protocols
+        impossible to schedule or run.
 
         Though autoprotocol orders instructions in a list, instructions do
         not need to be run in the order they are listed and instead depend on
@@ -273,7 +275,10 @@ class Protocol(object):
         limitations in mind.
 
         Constraints are directional; use `mirror=True` if the time constraint
-        should be added in both directions.
+        should be added in both directions. Note that mirroring is only applied
+        to the less_than constraint, as the more_than constraint implies both a
+        minimum delay betweeen two timing points and also an explicit ordering
+        between the two timing points.
 
         Example Usage:
 
@@ -293,11 +298,11 @@ class Protocol(object):
             protocol.add_time_constraint(
                 {"mark": plate_1, "state": "start"},
                 {"mark": time_point_1, "state": "end"},
-                "1:minute")
+                less_than = "1:minute")
             protocol.add_time_constraint(
                 {"mark": time_point_2, "state": "start"},
                 {"mark": time_point_1, "state": "start"},
-                "1:minute", True)
+                less_than = "1:minute", True)
 
 
         Autoprotocol Output:
@@ -305,57 +310,57 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "refs": {
-                "plate_1": {
-                  "new": "96-flat",
-                  "discard": true
+                "refs": {
+                    "plate_1": {
+                        "new": "96-flat",
+                        "discard": true
+                    },
+                    "plate_2": {
+                        "new": "96-flat",
+                        "discard": true
+                    }
                 },
-                "plate_2": {
-                  "new": "96-flat",
-                  "discard": true
-                }
-              },
-              "time_constraints": [
-                {
-                  "to": {
-                    "instruction_end": 0
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "ref_start": "plate_1"
-                  }
-                },
-                {
-                  "to": {
-                    "instruction_start": 0
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "instruction_start": 1
-                  }
-                },
-                {
-                  "to": {
-                    "instruction_start": 1
-                  },
-                  "less_than": "1.0:minute",
-                  "from": {
-                    "instruction_start": 0
-                  }
-                }
-              ],
-              "instructions": [
-                {
-                  "lid": "standard",
-                  "object": "plate_1",
-                  "op": "cover"
-                },
-                {
-                  "lid": "standard",
-                  "object": "plate_2",
-                  "op": "cover"
-                }
-              ]
+                "time_constraints": [
+                    {
+                        "to": {
+                            "instruction_end": 0
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "ref_start": "plate_1"
+                        }
+                    },
+                    {
+                        "to": {
+                            "instruction_start": 0
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "instruction_start": 1
+                        }
+                    },
+                    {
+                        "to": {
+                            "instruction_start": 1
+                        },
+                        "less_than": "1.0:minute",
+                        "from": {
+                            "instruction_start": 0
+                        }
+                    }
+                ],
+                "instructions": [
+                    {
+                        "lid": "standard",
+                        "object": "plate_1",
+                        "op": "cover"
+                    },
+                    {
+                        "lid": "standard",
+                        "object": "plate_2",
+                        "op": "cover"
+                    }
+                ]
             }
 
 
@@ -373,11 +378,14 @@ class Protocol(object):
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
-        time_between: str, Unit
+        less_than: str, Unit
             max time between from_dict and to_dict
+        more_than: str, Unit
+            min time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
             should be added in both directions
+            (only applies to the less_than constraint)
 
         Raises
         ------
@@ -396,6 +404,8 @@ class Protocol(object):
         RuntimeError
             If from_dict and to_dict are equal
         RuntimeError
+            If more_than is greater than less_than
+        RuntimeError
             If from_dict["marker"] and to_dict["marker"] are equal and
             from_dict["state"] = "end"
 
@@ -406,11 +416,29 @@ class Protocol(object):
 
         state_strings = ['start', 'end']
 
-        time_const = {}
+        def add_time_constraint_internal(time_const):
+            setattr(self, "time_constraints", (
+                getattr(self, "time_constraints", []) + [time_const])
+            )
 
         keys = []
 
-        time_between = Unit(time_between)
+        # Move the 4th param to mirror if the caller used the syntax
+        # add_time_constraint(a, b, 1:minute, True)
+        if type(more_than) == bool:
+            mirror = more_than
+            more_than = None
+
+        if more_than:
+            more_than = Unit(more_than)
+        if less_than:
+            less_than = Unit(less_than)
+
+        if more_than and less_than and more_than > less_than:
+            raise ValueError(
+                "'more_than': %s cannot be greater than 'less_than': %s"
+                % more_than, less_than
+            )
 
         for m in [from_dict, to_dict]:
             if "mark" in m:
@@ -421,10 +449,12 @@ class Protocol(object):
                     if m["mark"] < 0:
                         raise ValueError(
                             "The instruction 'mark' in %s must be greater "
-                            "than and equal to 0" % m)
+                            "than and equal to 0" % m
+                        )
                 else:
                     raise TypeError(
-                        "The 'mark' in %s must be Container or Integer" % m)
+                        "The 'mark' in %s must be Container or Integer" % m
+                    )
             else:
                 raise KeyError("The %s dict must contain `mark`" % m)
 
@@ -432,38 +462,59 @@ class Protocol(object):
                 if m["state"] in state_strings:
                     k += m["state"]
                 else:
-                    raise TypeError("The 'state' in %s must be in %s" %
-                                    (m, ", ".join(state_strings)))
+                    raise TypeError(
+                        "The 'state' in %s must be in %s"
+                        % (m, ", ".join(state_strings))
+                    )
             else:
                 raise KeyError("The %s dict must contain 'state'" % m)
 
             keys.append(k)
 
-        if time_between < Unit(0, 'second'):
+        if less_than and less_than < Unit(0, 'second'):
             raise ValueError(
-                "The 'time_between': %s cannot be less than "
-                "'0:second'" % time_between)
+                "The 'less_than': %s cannot be less than "
+                "'0:second'" % less_than
+            )
+
+        if more_than and more_than < Unit(0, 'second'):
+            raise ValueError(
+                "The 'more_than': %s cannot be less than "
+                "'0:second'" % less_than
+            )
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
                 raise RuntimeError(
                     "The from_dict: %s and to_dict: %s are the "
-                    "same" % (from_dict, to_dict))
+                    "same" % (from_dict, to_dict)
+                )
             if from_dict["state"] == "end":
                 raise RuntimeError(
                     "The from_dict: %s cannot come before the "
-                    "to_dict %s" % (from_dict, to_dict))
+                    "to_dict %s" % (from_dict, to_dict)
+                )
 
-        time_const["from"] = {keys[0]: from_dict["mark"]}
-        time_const["to"] = {keys[1]: to_dict["mark"]}
-        time_const["less_than"] = time_between
+        from_time_point = {keys[0]: from_dict["mark"]}
+        to_time_point = {keys[1]: to_dict["mark"]}
 
-        setattr(self, "time_constraints", (getattr(
-            self, "time_constraints", []) + [time_const]))
+        if less_than:
+            add_time_constraint_internal({
+                "from": from_time_point,
+                "to": to_time_point,
+                "less_than": less_than,
+            })
 
-        if mirror:
-            self.add_time_constraint(
-                to_dict, from_dict, time_between, mirror=False)
+            if mirror:
+                self.add_time_constraint(to_dict, from_dict, less_than,
+                                         mirror=False)
+
+        if more_than:
+            add_time_constraint_internal({
+                "from": from_time_point,
+                "to": to_time_point,
+                "more_than": more_than
+            })
 
     def get_instruction_index(self):
         """Get index of the last appended instruction
@@ -620,7 +671,7 @@ class Protocol(object):
         explicit_props = ["outs", "refs", "instructions", "time_constraints"]
 
         return {attr: self._refify(getattr(self, attr)) for attr in prop_list
-            if attr in explicit_props}
+                if attr in explicit_props}
 
     def store(self, container, condition):
         """
@@ -1059,7 +1110,8 @@ class Protocol(object):
             try:
                 source_vol = [s.volume for s in source.wells]
                 if sum([a for a in volume]) > sum([a for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
+                    raise RuntimeError("There is not enough volume in the "
+                                       "source well(s) specified to complete "
                                        "the transfers.")
                 if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
@@ -2343,7 +2395,8 @@ class Protocol(object):
                     # Initialize new stamp list/instruction
                     self.instructions.append(Stamp([trans]))
 
-    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles=None):
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index,
+                    library_size, dataref, cycles=None):
         """
         Load aliquots into specified lanes for Illumina sequencing.
         The specified aliquots should already contain the appropriate mix for
@@ -2485,11 +2538,11 @@ class Protocol(object):
 
         valid_indices = ["single", "dual", "none"]
         valid_cycles = ["index_1", "index_2", "read_1", "read_2"]
-        max_cycles_ind = 8
+        max_cycles_ind = 12
 
         if flowcell not in valid_flowcells:
-            raise ValueError("Illumina sequencing flowcell type must be one of:"
-                             " {}.".format(', '.join(valid_flowcells)))
+            raise ValueError("Illumina sequencing flowcell type must be one "
+                             "of: {}}.".format(', '.join(valid_flowcells)))
         if sequencer not in valid_sequencers.keys():
             raise ValueError("Illumina sequencer must be one of: {}."
                              "".format(', '.join(valid_sequencers.keys())))
@@ -2556,7 +2609,7 @@ class Protocol(object):
                                                    valid_sequencers[sequencer]["max_cycles_read"]))
             for ind in ["index_1", "index_2"]:
                 if cycles.get(ind):
-                    if cycles[ind] > 8:
+                    if cycles[ind] > max_cycles_ind:
                         raise ValueError("The maximum number of cycles for {} is {}."
                                          "".format(ind, max_cycles_ind))
                 # set index 1 and 2 to default 0 if not otherwise specified
@@ -2641,8 +2694,8 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. SangerSeq wells accepts either a Well, a "
-                             "WellGroup, or a list of well indices")
+            raise ValueError("Unknown input. SangerSeq wells accepts either a "
+                             "Well, a WellGroup, or a list of well indices.")
         self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
 
     def mix(self, well, volume="50:microliter", speed="100:microliter/second",
@@ -2730,7 +2783,9 @@ class Protocol(object):
                 }
                 self._pipette([{"mix": [opts]}])
 
-    def dispense(self, ref, reagent, columns, speed_percentage=None, is_resource_id=False):
+    def dispense(self, ref, reagent, columns, speed_percentage=None,
+                 is_resource_id=False, step_size="5:microliter",
+                 x_cassette=None):
         """
         Dispense specified reagent to specified columns.
 
@@ -2767,72 +2822,75 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "reagent": "water",
-                  "object": "sample_plate",
-                  "columns": [
-                    {
-                      "column": 0,
-                      "volume": "10:microliter"
-                    },
-                    {
-                      "column": 1,
-                      "volume": "20:microliter"
-                    },
-                    {
-                      "column": 2,
-                      "volume": "30:microliter"
-                    },
-                    {
-                      "column": 3,
-                      "volume": "40:microliter"
-                    },
-                    {
-                      "column": 4,
-                      "volume": "50:microliter"
-                    },
-                    {
-                      "column": 5,
-                      "volume": "60:microliter"
-                    },
-                    {
-                      "column": 6,
-                      "volume": "70:microliter"
-                    },
-                    {
-                      "column": 7,
-                      "volume": "80:microliter"
-                    },
-                    {
-                      "column": 8,
-                      "volume": "90:microliter"
-                    },
-                    {
-                      "column": 9,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 10,
-                      "volume": "110:microliter"
-                    },
-                    {
-                      "column": 11,
-                      "volume": "120:microliter"
-                    }
-                  ],
-                  "op": "dispense"
+                    "reagent": "water",
+                    "object": "sample_plate",
+                    "columns": [
+                        {
+                            "column": 0,
+                            "volume": "10:microliter"
+                        },
+                        {
+                            "column": 1,
+                            "volume": "20:microliter"
+                        },
+                        {
+                            "column": 2,
+                            "volume": "30:microliter"
+                        },
+                        {
+                            "column": 3,
+                            "volume": "40:microliter"
+                        },
+                        {
+                            "column": 4,
+                            "volume": "50:microliter"
+                        },
+                        {
+                            "column": 5,
+                            "volume": "60:microliter"
+                        },
+                        {
+                            "column": 6,
+                            "volume": "70:microliter"
+                        },
+                        {
+                            "column": 7,
+                            "volume": "80:microliter"
+                        },
+                        {
+                            "column": 8,
+                            "volume": "90:microliter"
+                        },
+                        {
+                            "column": 9,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 10,
+                            "volume": "110:microliter"
+                        },
+                        {
+                            "column": 11,
+                            "volume": "120:microliter"
+                        }
+                    ],
+                    "op": "dispense"
                 }
-              ]
+            ]
 
         Parameters
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str
-            Reagent to be dispensed to columns in container.
+        reagent : str, well
+            Reagent to be dispensed. Use a string to specify the name or
+            resource_id (see below) of the reagent to be dispensed.
+            Alternatively, use a well to specify that the dispense operation
+            must be executed using a specific aliquot as the dispense source.
         columns : list
-            Columns to be dispensed to, in the form of a list of dicts specifying
-            the column number and the volume to be dispensed to that column.
-            Columns are expressed as integers indexed from 0.
+            Columns to be dispensed to, in the form of a list of dicts
+            specifying the column number and the volume to be dispensed to that
+            column. Columns are expressed as integers indexed from 0.
             [{"column": <column num>, "volume": <volume>}, ...]
         speed_percentage : int, optional
             Integer between 1 and 100 that represents the percentage of the
@@ -2840,29 +2898,142 @@ class Protocol(object):
             dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
+        step_size : str, Unit, optional
+            Specifies that the dispense operation must be executed
+            using a peristaltic pump with the given step size. Note
+            that the volume dispensed in each column must be an integer
+            multiple of the step_size. Currently, step_size must be either
+            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+        x_cassette : str, optional
+            Specifies a specific cassette to be used with this instruction.
+            Cassette will be checked against a list of allowed values. Each
+            cassette has a pre-defined value for step_size, and certain
+            cassettes may require human execution.
 
         """
+        # Initialize parameters to simplify parsing
+        x_human = False
+        step_size_unit = None
+
+        # Parse destination container
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         self._remove_cover(ref, "dispense to")
+
+        # Parse speed_percentage
         if (speed_percentage is not None and
                 (speed_percentage > 100 or speed_percentage < 1)):
             raise RuntimeError("Invalid speed percentage specified.")
+
+        # Parse columns
         if not isinstance(columns, list):
             raise TypeError("Columns is not of type 'list'.")
         for c in columns:
-            wells = WellGroup(ref.wells_from(c["column"], ref.container_type.row_count(),
-                                             columnwise=True))
+            wells = WellGroup(
+                ref.wells_from(
+                    c["column"],
+                    ref.container_type.row_count(),
+                    columnwise=True
+                )
+            )
             for w in wells:
                 if w.volume:
                     w.volume += Unit.fromstring(c["volume"]).to("ul")
                 else:
                     w.set_volume(Unit(c["volume"]).to("ul"))
 
-        self.instructions.append(
-            Dispense(ref, reagent, columns, speed_percentage, is_resource_id))
+        # Parse reagent
+        if isinstance(reagent, Well):
+            # x_humanize dispense step
+            x_human = True
+            # Uncover reagent source
+            self._remove_cover(reagent.container, "dispense from")
+            # Volume tracking
+            total_vol_dispensed = sum([Unit(c["volume"]) for c in columns]) * ref.container_type.row_count()
+            if reagent.volume:
+                reagent.volume -= total_vol_dispensed
+            else:
+                reagent.volume = -total_vol_dispensed
+        else:
+            if not isinstance(reagent, basestring):
+                raise TypeError("reagent must be a Well or a string.")
 
-    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None, is_resource_id=False):
+        # Parse step_size
+        allowed_step_sizes = {
+            0.5: {"x_human": True},
+            5.0: {"x_human": False}
+        }
+
+        if step_size:
+            # Cast step_size as a volume unit, raising an error if this fails
+            try:
+                step_size_unit = Unit(step_size).to("ul")
+            except:
+                raise TypeError("step_size must be a volume Unit object, or a string representation of a volume Unit")
+
+            # step_size must be in the allowed list of options. If not, raise an error.
+            if step_size_unit._magnitude not in allowed_step_sizes:
+                raise ValueError("step_size (in microliters) must be one of the following values: {}".format(
+                    allowed_step_sizes.keys()
+                    )
+                )
+
+            # Set parameters as required by selected step_size
+            step_size_info = allowed_step_sizes[step_size_unit._magnitude]
+            x_human = step_size_info["x_human"] or x_human
+
+            # Each dispense volume must be an integer multiple of the step_size. If not, raise an error.
+            vol_errors = []
+            for c in columns:
+                if not (Unit(c["volume"]) / step_size_unit)._magnitude.is_integer():
+                    vol_errors.append(str(Unit(c["volume"])))
+            if len(vol_errors) > 0:
+                raise RuntimeError(
+                    "Dispense volume must be a multiple of the step size. "
+                    "This is not true for the "
+                    "following volumes: {} ".format(vol_errors)
+                )
+
+        # Parse x_cassette
+        allowed_x_cassettes = {
+            "ThermoFisher #24073295": {"x_human": True, "step_size": Unit(0.5, "microliter")}
+        }
+
+        if x_cassette:
+            # x_cassette must be in the allowed list of options. If not, raise an error.
+            if x_cassette not in allowed_x_cassettes:
+                raise ValueError("x_cassette must be one of the following values: {}".format(
+                    allowed_x_cassettes.keys()
+                    )
+                )
+
+            # Set parameters as required by selected x_cassette
+            cassette_info = allowed_x_cassettes[x_cassette]
+            x_human = cassette_info["x_human"] or x_human
+            if step_size_unit != cassette_info["step_size"]:
+                raise ValueError("Step size for this cassette must be %s" % str(cassette_info["step_size"]))
+
+        # Append dispense instruction
+        self.instructions.append(
+            Dispense(
+                ref,
+                reagent,
+                columns,
+                speed_percentage,
+                is_resource_id,
+                step_size_unit
+            )
+        )
+
+        # Modify instruction with x_parameters, as necessary
+        if x_human:
+            self.instructions[-1].data["x_human"] = True
+        if x_cassette:
+            self.instructions[-1].data["x_cassette"] = x_cassette
+
+    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None,
+                            is_resource_id=False, step_size="5:microliter",
+                            x_cassette=None):
         """
         Dispense the specified amount of the specified reagent to every well
         of a container using a reagent dispenser.
@@ -2949,8 +3120,11 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str
-            Reagent to be dispensed to columns in container.
+        reagent : str, well
+            Reagent to be dispensed. Use a string to specify the name or
+            resource_id (see below) of the reagent to be dispensed.
+            Alternatively, use a well to specify that the dispense operation
+            must be executed using a specific aliquot as the dispense source.
         volume : Unit, str
             Volume of reagent to be dispensed to each well
         speed_percentage : int, optional
@@ -2959,6 +3133,17 @@ class Protocol(object):
             dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
+        step_size : str, Unit, optional
+            Specifies that the dispense operation must be executed
+            using a peristaltic pump with the given step size. Note
+            that the volume dispensed in each column must be an integer
+            multiple of the step_size. Currently, step_size must be either
+            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+        x_cassette : str, optional
+            Specifies a specific cassette to be used with this instruction.
+            Cassette will be checked against a list of allowed values. Each
+            cassette has a pre-defined value for step_size, and certain
+            cassettes may require human execution.
 
         """
         if not isinstance(ref, Container):
@@ -2970,9 +3155,11 @@ class Protocol(object):
         columns = []
         for col in range(0, ref.container_type.col_count):
             columns.append({"column": col, "volume": volume})
-        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id)
+        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id,
+                      step_size, x_cassette)
 
-    def spin(self, ref, acceleration, duration, flow_direction=None, spin_direction=None):
+    def spin(self, ref, acceleration, duration, flow_direction=None,
+             spin_direction=None):
         """
         Apply acceleration to a container.
 
@@ -3357,7 +3544,8 @@ class Protocol(object):
                         melting_end, melting_increment, melting_rate))
 
     def incubate(self, ref, where, duration, shaking=False, co2=0,
-                 uncovered=False):
+                 uncovered=False, target_temperature=None,
+                 shaking_params=None):
         """
         Move plate to designated thermoisolater or ambient area for incubation
         for specified duration.
@@ -3382,30 +3570,99 @@ class Protocol(object):
 
             "instructions": [
                 {
-                  "object": "sample_plate",
-                  "op": "seal"
+                   "object": "sample_plate",
+                   "op": "seal"
                 },
                 {
-                  "duration": "1:hour",
-                  "where": "warm_37",
-                  "object": "sample_plate",
-                  "shaking": true,
-                  "op": "incubate",
-                  "co2_percent": 0
+                    "duration": "1:hour",
+                    "where": "warm_37",
+                    "object": "sample_plate",
+                    "shaking": true,
+                    "op": "incubate",
+                    "co2_percent": 0
                 }
               ]
 
+
+        Parameters
+        ----------
+        ref : Ref, str
+            The container to be incubated
+        where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+            Temperature at which to incubate specified container
+        duration : Unit, str
+            Length of time to incubate container
+        shaking : bool, optional
+            Specify whether or not to shake container if available at the specified
+            temperature
+        target_tempterature : Unit, str, optional
+            Specify a target temperature for a device (eg. an incubating block)
+            to reach during the specified duration.
+        shaking_params: dict, optional
+            Specifify "path" and "frequency" of shaking parameters to be used
+            with compatible devices (eg. thermoshakes)
+
         """
         if not isinstance(ref, Container):
-            raise TypeError("Ref needs to be of type Conainer")
+            raise TypeError("Ref needs to be of type Container")
         allowed_uncovered = ["ambient"]
         if uncovered and (where not in allowed_uncovered or shaking):
-            raise RuntimeError("If incubating uncovered, "
-                               "location must be in {} and not "
-                               "shaking.".format(', '.join(allowed_uncovered)))
+            raise RuntimeError(
+                "If incubating uncovered, location must be in "
+                "{} and not shaking.".format(', '.join(allowed_uncovered))
+            )
+        # thermoshake validations
+        ts_loc = ["ambient"]
+        ts_temp_max = Unit(70, "celsius")
+        ts_temp_min = Unit(4, "celsius")
+        ts_freq_maximums = {
+            "cw_orbital": Unit(1700, "rpm"),
+            "ccw_orbital": Unit(1700, "rpm"),
+            "portrait_linear": Unit(400, "rpm"),
+            "landscape_linear": Unit(600, "rpm"),
+            "cw_diamond": Unit(700, "rpm"),
+            "ccw_diamond": Unit(700, "rpm")
+        }
+        ts_freq_min = Unit(100, "rpm")
+        if target_temperature:
+            if where not in ts_loc:
+                raise AttributeError("If specifying a 'target_temperature', "
+                                     "the 'where' parameter must be 'ambient'.")
+            target_temperature = Unit.fromstring(target_temperature)
+            if not (ts_temp_min <= target_temperature <= ts_temp_max):
+                raise ValueError("The target temperature must be between "
+                                 "{} and {}, inclusive. You entered {}."
+                                 "".format(ts_temp_min, ts_temp_max,
+                                           target_temperature))
+        if shaking_params:
+            if not isinstance(shaking_params, dict):
+                raise TypeError("'shaking_params' must be a dict "
+                                "containing keys 'frequency' and "
+                                "'path'.")
+            if not all(k in shaking_params.keys() for k in ["frequency", "path"]):
+                raise KeyError("'shaking_params' keys must contain 'frequency' "
+                               "and 'path'")
+            ts_path = shaking_params["path"]
+            if ts_path not in ts_freq_maximums.keys():
+                "The valid paths for shaking are: {} . You entered {}"
+                "".format(', '.join(ts_freq_maximums.keys()), ts_path)
+            frequency = Unit.fromstring(shaking_params["frequency"])
+            try:
+                ts_freq_max = ts_freq_maximums[ts_path]
+            except KeyError:
+                raise ValueError("An appropriate maximum frequency was not "
+                                 "determined for path {}. Valid paths are: {}."
+                                 "".format(ts_path,
+                                           ', '.join(ts_freq_maximums.keys())))
+            if not (ts_freq_min <= frequency <= ts_freq_max):
+                raise ValueError("The frequency must be between "
+                                 "{} and {}, inclusive. You entered {}."
+                                 "".format(ts_freq_min, ts_freq_max, frequency))
         if not uncovered:
             self._add_cover(ref, "incubate")
-        self.instructions.append(Incubate(ref, where, duration, shaking, co2))
+        self.instructions.append(Incubate(ref, where, duration, shaking,
+                                          co2, target_temperature,
+                                          shaking_params))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,
                    incubate_before=None, temperature=None):
@@ -4474,8 +4731,8 @@ class Protocol(object):
             except (ValueError, TypeError) as e:
                 raise ValueError("Each sample or control must indicate a "
                                  "volume of type unit. %s" % e)
-            if s.get("captured_events") and not \
-                isinstance(s.get("captured_events"), int):
+            if (s.get("captured_events") and not
+                    isinstance(s.get("captured_events"), int)):
                 raise TypeError("captured_events is optional, if given it"
                                 " must be of type integer.")
         for c in controls:
@@ -4483,8 +4740,8 @@ class Protocol(object):
                 raise TypeError("Channel must be a list of strings "
                                 "indicating the colors/channels that this"
                                 " control is to be used for.")
-            if c.get("minimize_bleed") and not \
-                isinstance(p.get("minimize_bleed"), list):
+            if (c.get("minimize_bleed") and not
+                    isinstance(p.get("minimize_bleed"), list)):
                 raise TypeError("Minimize_bleed must be of type list.")
             elif c.get("minimize_bleed"):
                 for b in c["minimize_bleed"]:
@@ -4818,6 +5075,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_dry")
         self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
     def mag_incubate(self, head, container, duration, magnetize=False,
@@ -4892,6 +5150,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_incubate")
         self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def mag_collect(self, head, container, cycles, pause_duration,
@@ -4968,6 +5227,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_collect")
         self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
     def mag_release(self, head, container, duration, frequency, center=0.5,
@@ -5047,6 +5307,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_release")
         self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(self, head, container, duration, frequency, center=0.5,
@@ -5130,6 +5391,7 @@ class Protocol(object):
             mag[kw] = val
 
         check_valid_mag_params(mag)
+        self._remove_cover(container, "mag_mix")
         self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
@@ -5628,7 +5890,7 @@ class Protocol(object):
             elif "/" in str(v):
                 ref_name = v.rsplit("/")[0]
 
-                if not ref_name in self.refs:
+                if ref_name not in self.refs:
                     raise RuntimeError(
                         "Parameters contain well references to "
                         "a container that isn't referenced in this protocol: "

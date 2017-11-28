@@ -1,6 +1,7 @@
 from __future__ import division, print_function
 from pint import UnitRegistry
 from pint.quantity import _Quantity
+from math import ceil as math_ceil, floor as math_floor
 import sys
 
 if sys.version_info[0] >= 3:
@@ -8,17 +9,17 @@ if sys.version_info[0] >= 3:
 else:
     string_type = basestring
 
-'''
+"""
     :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 # Preload UnitRegistry (Use default Pints definition file as a base)
 _UnitRegistry = UnitRegistry()
 
-'''Map string representation of Pint units over to Autoprotocol format'''
+"""Map string representation of Pint units over to Autoprotocol format"""
 # Map Temperature Unit names
 _UnitRegistry._units["degC"]._name = "celsius"
 _UnitRegistry._units["celsius"]._name = "celsius"
@@ -29,7 +30,7 @@ _UnitRegistry._units["rankine"]._name = "rankine"
 # Map Speed Unit names
 _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
-'''Add support for Molarity Unit'''
+"""Add support for Molarity Unit"""
 _UnitRegistry.define('molar = mole/liter = M')
 
 
@@ -95,6 +96,7 @@ class Unit(_Quantity):
             0.036:liter / hour
 
     """
+
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False
@@ -150,27 +152,46 @@ class Unit(_Quantity):
             return Unit(s)
 
     def __str__(self):
-        return ":".join([str(self._magnitude), "^".join(self.unit.split("**"))]).replace(" ", "")
+        """Returns string formatted unit"""
+        return ":".join([str(self._magnitude),
+                        "^".join(self.unit.split("**"))]).replace(" ", "")
 
     def __repr__(self):
+        """Returns Unit representation"""
         return "Unit({0}, '{1}')".format(self._magnitude, self._units)
 
     def _mul_div(self, other, magnitude_op, units_op=None):
-        '''
+        """
         Extends Pint's base _Quantity multiplication/division
         implementation by checking for dimensionality
-        '''
+        """
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
                 other = other.to(self.unit)
         return super(Unit, self)._mul_div(other, magnitude_op, units_op)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
-        '''
+        """
         Extends Pint's base _Quantity multiplication/division
         implementation by checking for dimensionality
-        '''
+        """
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
                 other = other.to(self.unit)
         return super(Unit, self)._imul_div(other, magnitude_op, units_op)
+
+    def ceil(self):
+        """
+        Returns:
+        ceil: Unit
+            The unit rounded up to the nearest integer
+        """
+        return Unit(math_ceil(self.magnitude), self.unit)
+
+    def floor(self):
+        """
+        Returns:
+        floor: Unit
+            The unit rounded down to the nearest integer
+        """
+        return Unit(math_floor(self.magnitude), self.unit)

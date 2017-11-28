@@ -3,7 +3,7 @@ import sys
 
 def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
                     primer_vol=None):
-    '''
+    """
     Set parameters for aspirating from a source well before a transfer or
     distribute operation.
 
@@ -27,7 +27,7 @@ def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
         specified and then re-dispensed into the well the tip is aspirating
         from (source well).
 
-    '''
+    """
     source = {}
     assign(source, "depth", depth)
     assign(source, "aspirate_speed", aspirate_speed)
@@ -37,7 +37,7 @@ def aspirate_source(depth=None, aspirate_speed=None, cal_volume=None,
 
 
 def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
-    '''
+    """
     Set parameters for dispensing to a target well during a transfer or
     distribute.
 
@@ -57,7 +57,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
     cal_volume : str, Unit, optional
         Calibrated volume to be dispensed to target well.
 
-    '''
+    """
     target = {}
     assign(target, "depth", depth)
     assign(target, "dispense_speed", dispense_speed)
@@ -67,7 +67,7 @@ def dispense_target(depth=None, dispense_speed=None, cal_volume=None):
 
 def distribute_target(dst_loc, volume, dispense_speed=None,
                       dispense_target=None):
-    '''
+    """
     Set parameters target wells of a distrbute instruction.
 
     Example usage:
@@ -160,7 +160,7 @@ def distribute_target(dst_loc, volume, dispense_speed=None,
         May not be specified if dispense_speed is specified.  Allows further
         configuration of dispense parameters such as depth.
 
-    '''
+    """
     distribute = {
         "well": dst_loc,
         "volume": volume

@@ -2,12 +2,12 @@ from .unit import Unit
 from textwrap import dedent
 
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 
 def quad_ind_to_num(q):

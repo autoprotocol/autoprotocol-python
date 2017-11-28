@@ -1,70 +1,60 @@
-import unittest
-from autoprotocol.container_type import ContainerType
-from autoprotocol.unit import Unit
-
-dummy_type = ContainerType(name="dummy",
-                           well_count=15,
-                           well_depth_mm=None,
-                           well_volume_ul=Unit(200, "microliter"),
-                           well_coating=None,
-                           sterile=False,
-                           is_tube=False,
-                           cover_types=[],
-                           seal_types=None,
-                           capabilities=[],
-                           shortname="dummy",
-                           col_count=5,
-                           dead_volume_ul=Unit(15, "microliter"),
-                           safe_min_volume_ul=Unit(30, "microliter"))
+import pytest
 
 
-class ContainerRobotizeTestCase(unittest.TestCase):
-    def test_robotize_decompose(self):
+class TestContainerRobotize:
+    def test_robotize_decompose(self, dummy_type):
         for ref in ["a1", "A1", "0", 0]:
-            self.assertEqual(0, dummy_type.robotize(ref))
-            self.assertEqual((0, 0), dummy_type.decompose(ref))
+            assert (0 == dummy_type.robotize(ref))
+            assert ((0, 0) == dummy_type.decompose(ref))
+
         for ref in ["a5", "A5", "4", 4]:
-            self.assertEqual(4, dummy_type.robotize(ref))
-            self.assertEqual((0, 4), dummy_type.decompose(ref))
+            assert (4 == dummy_type.robotize(ref))
+            assert ((0, 4) == dummy_type.decompose(ref))
+
         for ref in ["b1", "B1", "5", 5]:
-            self.assertEqual(5, dummy_type.robotize(ref))
-            self.assertEqual((1, 0), dummy_type.decompose(ref))
+            assert (5 == dummy_type.robotize(ref))
+            assert ((1, 0) == dummy_type.decompose(ref))
+
         for ref in ["c5", "C5", "14", 14]:
-            self.assertEqual(14, dummy_type.robotize(ref))
-            self.assertEqual((2, 4), dummy_type.decompose(ref))
-        self.assertEqual([0, 5], dummy_type.robotize(["A1", "B1"]))
+            assert (14 == dummy_type.robotize(ref))
+            assert ((2, 4) == dummy_type.decompose(ref))
 
-    def test_robotize_decompose_checks(self):
+        assert ([0, 5] == dummy_type.robotize(["A1", "B1"]))
+
+    def test_robotize_decompose_checks(self, dummy_type):
         for ref in [1.0, 4.3]:
-            with self.assertRaises(TypeError):
+            with pytest.raises(TypeError):
                 dummy_type.robotize(ref)
-            with self.assertRaises(TypeError):
-                dummy_type.decompose(ref)
-        for ref in [["A1", "B1"]]:
-            with self.assertRaises(TypeError):
-                dummy_type.decompose(ref)
-        for ref in ["D1", "A6", 15, "2A2"]:
-            with self.assertRaises(ValueError):
-                dummy_type.robotize(ref)
-            with self.assertRaises(ValueError):
+            with pytest.raises(TypeError):
                 dummy_type.decompose(ref)
 
-    def test_humanize(self):
-        self.assertEqual("A1", dummy_type.humanize(0))
-        self.assertEqual("A5", dummy_type.humanize(4))
-        self.assertEqual("B2", dummy_type.humanize(6))
-        self.assertEqual("C5", dummy_type.humanize(14))
-        self.assertEqual(["A1", "B2"], dummy_type.humanize([0, 6]))
-        self.assertEqual(["A1", "B2"], dummy_type.humanize(["0", "6"]))
-        with self.assertRaises(TypeError):
+        for ref in [["A1", "B1"]]:
+            with pytest.raises(TypeError):
+                dummy_type.decompose(ref)
+
+        for ref in ["D1", "A6", 15, "2A2"]:
+            with pytest.raises(ValueError):
+                dummy_type.robotize(ref)
+            with pytest.raises(ValueError):
+                dummy_type.decompose(ref)
+
+    def test_humanize(self, dummy_type):
+        assert ("A1" == dummy_type.humanize(0))
+        assert ("A5" == dummy_type.humanize(4))
+        assert ("B2" == dummy_type.humanize(6))
+        assert ("C5" == dummy_type.humanize(14))
+        assert (["A1", "B2"] == dummy_type.humanize([0, 6]))
+        assert (["A1", "B2"] == dummy_type.humanize(["0", "6"]))
+
+        with pytest.raises(TypeError):
             dummy_type.humanize("0.1")
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             dummy_type.humanize(15)
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             dummy_type.humanize("A1")
 
 
-class ContainerTypeTestAllTypes(unittest.TestCase):
+class TestAllContainerTypes:
     def test_all_container_types(self):
         from autoprotocol.container_type import _CONTAINER_TYPES
         from autoprotocol.protocol import Protocol
@@ -72,4 +62,24 @@ class ContainerTypeTestAllTypes(unittest.TestCase):
 
         for k, v in _CONTAINER_TYPES.items():
             p.ref(k, None, v.shortname, discard=True)
-        self.assertEqual(len(p.refs), len(_CONTAINER_TYPES))
+
+        assert (len(p.refs) == len(_CONTAINER_TYPES))
+
+
+class TestContainerTypeVolumes:
+    def test_true_vol_default(self, dummy_type):
+        assert (dummy_type.true_max_vol_ul ==
+                dummy_type.well_volume_ul)
+
+
+class TestContainerTypeAttributes:
+    def test_default_attributes(self, dummy_type):
+        assert dummy_type.vendor is None
+        assert dummy_type.cat_no is None
+        assert dummy_type.true_max_vol_ul == dummy_type.well_volume_ul
+
+    def test_echo_attributes(self, dummy_echo):
+        assert dummy_echo.container_type.vendor == "Labcyte"
+        assert dummy_echo.container_type.cat_no is None
+        assert (dummy_echo.container_type.true_max_vol_ul >
+                dummy_echo.container_type.well_volume_ul)

@@ -7,12 +7,12 @@ if sys.version_info[0] >= 3:
     xrange = range
     basestring = str
 
-'''
-    :copyright: 2016 by The Autoprotocol Development Team, see AUTHORS
+"""
+    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-'''
+"""
 
 SEAL_TYPES = ["ultra-clear", "foil"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
@@ -94,7 +94,7 @@ class Well(object):
             raise TypeError("Volume given is not of type str or "
                             "Unit. %s" % type(vol))
         v = Unit.fromstring(vol)
-        if v > self.container.container_type.well_volume_ul:
+        if v > self.container.container_type.true_max_vol_ul:
             raise ValueError("Theoretical volume you are trying to set "
                              "exceeds the maximum volume of this well.")
         self.volume = v
@@ -124,6 +124,16 @@ class Well(object):
 
         """
         return self.container.humanize(self.index)
+
+    def available_volume(self):
+        """
+        Returns the available volume of a Well.
+        This is calculated as nominal volume - container_type dead volume
+
+        """
+        if self.volume is None:
+            raise RuntimeError("Well {} has no volume".format(self))
+        return self.volume - self.container.container_type.dead_volume_ul
 
     def __repr__(self):
         """

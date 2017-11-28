@@ -2,6 +2,21 @@
 Changelog
 =========
 
+* :release:`4.0.0 <2017-11-22>`
+* :feature:`-` add `ceil` and `floor` methods to `Unit`
+* :feature:`-` add shaking capabilities to :ref:`protocol-incubate`
+* :feature:`-` add `step_size` to dispense and dispense_full_plate methods
+* :feature:`-` add ability to specify a well as reagent source for dispense and dispense_full_plate methods
+* :feature:`-` add ability to specify `x_cassette` for dispense and dispense_full_plate methods
+* :feature:`-` add support for `more_than` in `add_time_constraint`
+* :feature:`-` add PerkinElmer 384-well optiplate to container_type (cat# 6007299), :ref:`container-type-384-flat-white-white-optiplate`
+* :feature:`-` allow breathable seals on 96-deep and 24-deep
+* :feature:`-` add prioritize_seal_or_cover allow priority selection
+* :support:`-` docstring cleanup, linting
+* :bug:`-` remove cover prior to mag steps where applicable
+* :support:`-` convert test suite to py.test
+* :feature:`-` add new containers, true_max_vol_ul in _CONTAINER_TYPES
+
 * :release:`3.10.1 <2017-05-25>`
 * :bug:`-` update pint requirements, update error handling on UnitError
 * :support:`- backported` fix documentation typos

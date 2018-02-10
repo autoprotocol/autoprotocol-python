@@ -1,5 +1,7 @@
 # Autoprotocol Python Library
 
+[![Join the chat at https://gitter.im/autoprotocol/autoprotocol-python](https://badges.gitter.im/autoprotocol/autoprotocol-python.svg)](https://gitter.im/autoprotocol/autoprotocol-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://travis-ci.org/autoprotocol/autoprotocol-python.svg?branch=master)](https://travis-ci.org/autoprotocol/autoprotocol-python)
 [![PyPI version](https://img.shields.io/pypi/v/autoprotocol.svg?maxAge=2592000)](https://pypi.python.org/pypi/autoprotocol)
 

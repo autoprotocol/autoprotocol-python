@@ -10,12 +10,22 @@ setup(
     version='4.0.0',
     test_suite='test',
     install_requires=[
-        'Pint>=0.8.0'
+        'Pint==0.8.1'
     ],
     tests_require=[
-        'pytest>=3.0.0,<4.0',
-        'coverage>=4.0.3',
-        'tox>=2.3.1'
+        'coverage>=4.0.3,<5',
+        'pylint>=1,<2',
+        'pytest>=3,<4',
+        'tox>=2.3.1,<4'
     ],
-    packages=['autoprotocol']
+    extras_require={
+        "docs": [
+            "Sphinx>=1.7,<1.8",
+            "sphinx-rtd-theme",
+            "releases"
+        ]
+    },
+    packages=[
+        'autoprotocol'
+    ]
 )

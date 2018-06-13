@@ -1,3 +1,4 @@
+# pragma pylint: disable=too-few-public-methods
 import json
 from .pipette_tools import assign
 from .container import Well

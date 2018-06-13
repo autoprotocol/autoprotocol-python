@@ -1,11 +1,9 @@
 from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit, UnitError
-from .instruction import *  # flake8: noqa
+from .instruction import *  # pylint: disable=unused-wildcard-import
 from .pipette_tools import assign
-from .util import check_valid_origin, check_stamp_append, check_valid_mag, \
-    check_valid_mag_params, check_valid_gel_purify_extract, is_valid_well, \
-    check_valid_incubate_params
+from .util import *  # pylint: disable=unused-wildcard-import
 
 import sys
 if sys.version_info[0] >= 3:
@@ -3635,6 +3633,7 @@ class Protocol(object):
                                  "".format(ts_temp_min, ts_temp_max,
                                            target_temperature))
         if shaking_params:
+            valid_shake_paths = ts_freq_maximums.keys()
             if not isinstance(shaking_params, dict):
                 raise TypeError("'shaking_params' must be a dict "
                                 "containing keys 'frequency' and "
@@ -3643,17 +3642,18 @@ class Protocol(object):
                 raise KeyError("'shaking_params' keys must contain 'frequency' "
                                "and 'path'")
             ts_path = shaking_params["path"]
-            if ts_path not in ts_freq_maximums.keys():
-                "The valid paths for shaking are: {} . You entered {}"
-                "".format(', '.join(ts_freq_maximums.keys()), ts_path)
+            if ts_path not in valid_shake_paths:
+                raise ValueError(
+                    "The valid paths for shaking are: {} . You entered {} ."
+                    "".format(valid_shake_paths, ts_path)
+                )
             frequency = Unit.fromstring(shaking_params["frequency"])
             try:
                 ts_freq_max = ts_freq_maximums[ts_path]
             except KeyError:
                 raise ValueError("An appropriate maximum frequency was not "
                                  "determined for path {}. Valid paths are: {}."
-                                 "".format(ts_path,
-                                           ', '.join(ts_freq_maximums.keys())))
+                                 "".format(ts_path, valid_shake_paths))
             if not (ts_freq_min <= frequency <= ts_freq_max):
                 raise ValueError("The frequency must be between "
                                  "{} and {}, inclusive. You entered {}."
@@ -4741,7 +4741,7 @@ class Protocol(object):
                                 "indicating the colors/channels that this"
                                 " control is to be used for.")
             if (c.get("minimize_bleed") and not
-                    isinstance(p.get("minimize_bleed"), list)):
+                    isinstance(c.get("minimize_bleed"), list)):
                 raise TypeError("Minimize_bleed must be of type list.")
             elif c.get("minimize_bleed"):
                 for b in c["minimize_bleed"]:

@@ -1,4 +1,5 @@
 from .unit import Unit
+from .unit import Unit, UnitStringError, UnitValueError
 from textwrap import dedent
 
 
@@ -208,13 +209,13 @@ def check_valid_mag(container, head):
 def check_valid_mag_params(mag_dict):
     """Check magnetic parameters are of valid types."""
     if "frequency" in mag_dict:
-        if Unit.fromstring(mag_dict["frequency"]) < Unit.fromstring("0:hertz"):
+        if Unit(mag_dict["frequency"]) < Unit("0:hertz"):
             raise ValueError("Frequency set at {}, must not be less than "
                              "0:hertz".format(mag_dict["frequency"]))
 
     if "temperature" in mag_dict and mag_dict["temperature"]:
-        if Unit.fromstring(mag_dict["temperature"]) < \
-           Unit.fromstring("-273.15:celsius"):
+        if Unit(mag_dict["temperature"]) < \
+           Unit("-273.15:celsius"):
             raise ValueError("Temperature set at {}, must not be less than "
                              "absolute zero'".format(mag_dict["temperature"]))
     elif "temperature" in mag_dict and not mag_dict["temperature"]:
@@ -553,6 +554,7 @@ def is_valid_well(param):
             return False
     return True
 
+
 def parse_unit(unit, accepted_unit=None):
     """
     Parses and checks unit provided and ensures its of valid type and
@@ -676,4 +678,3 @@ def check_unit(value, lb=None, ub=None, label=None):
                 prefix, lb, ub))
 
     return value
-

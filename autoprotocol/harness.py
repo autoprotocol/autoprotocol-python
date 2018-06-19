@@ -489,7 +489,7 @@ def _convert_provision_instructions(protocol, first_index,
         raise ValueError("last_index must be greater than or equal to "
                          "first_index")
     for instruction in protocol.instructions[first_index:last_index + 1]:
-        if instruction.data["op"] == "provision":
+        if instruction.op == "provision":
             instruction.data["resource_id"] = rs
 
 
@@ -515,7 +515,7 @@ def _convert_dispense_instructions(protocol, first_index,
         raise ValueError("last_index must be greater than or equal "
                          "to first_index")
     for instruction in protocol.instructions[first_index:last_index + 1]:
-        if instruction.data["op"] == "dispense":
+        if instruction.op == "dispense":
             instruction.data.pop("reagent", None)
             instruction.data["resource_id"] = rs
 

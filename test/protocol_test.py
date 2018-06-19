@@ -1,11 +1,11 @@
 import pytest
-from autoprotocol.container import Container, WellGroup
-from autoprotocol.instruction import Thermocycle, Incubate, Spin
-from autoprotocol.pipette_tools import *  # NOQA
+from autoprotocol.container import Container
+from autoprotocol.instruction import Thermocycle, Incubate, Spin, Dispense
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
 from autoprotocol.harness import _add_dye_to_preview_refs, \
     _convert_provision_instructions, _convert_dispense_instructions
+import warnings
 
 
 class TestProtocolMultipleExist():
@@ -18,38 +18,6 @@ class TestProtocolMultipleExist():
         p1.incubate(dummy_96, "warm_37", "560:second")
         assert (len(p2.instructions) == 0)
         assert (len(p1.instructions) == 2)
-
-
-class TestProtocolBasic():
-
-    def test_basic_protocol(self, dummy_protocol):
-        protocol = dummy_protocol
-        resource = protocol.ref("resource", None, "96-flat", discard=True)
-        pcr = protocol.ref("pcr", None, "96-flat", discard=True)
-        bacteria = protocol.ref("bacteria", None, "96-flat", discard=True)
-        # Test for correct number of refs
-        assert (len(protocol.as_dict()['refs']) == 3)
-        assert (protocol.as_dict()['refs']['resource'] ==
-                {"new": "96-flat", "discard": True})
-
-        bacteria_wells = WellGroup([bacteria.well("B1"), bacteria.well("C5"),
-                                    bacteria.well("A5"), bacteria.well("A1")])
-
-        protocol.distribute(resource.well("A1").set_volume("40:microliter"),
-                            pcr.wells_from('A1', 5), "5:microliter")
-        protocol.distribute(resource.well("A1").set_volume("40:microliter"),
-                            bacteria_wells, "5:microliter")
-
-        assert (len(protocol.instructions) == 1)
-        assert (protocol.instructions[0].op == "pipette")
-        assert (len(protocol.instructions[0].groups) == 2)
-
-        protocol.incubate(bacteria, "warm_37", "30:minute")
-
-        assert (len(protocol.instructions) == 3)
-        assert (protocol.instructions[1].op == "cover")
-        assert (protocol.instructions[2].op == "incubate")
-        assert (protocol.instructions[2].duration == "30:minute")
 
 
 class TestProtocolAppend:
@@ -176,707 +144,90 @@ class TestThermocycle:
                       melting_increment="1:celsius",
                       melting_rate="2:minute")
 
-
-class TestDistribute():
-
-    def test_distribute_one_well(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.distribute(c.well(0).set_volume("20:microliter"),
-                     c.well(1),
-                     "5:microliter")
-        assert (1 == len(p.instructions))
-        assert (
-            "distribute" ==
-            list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
-        assert (Unit(5, 'microliter') == c.well(1).volume)
-        assert (Unit(15, 'microliter') == c.well(0).volume)
-
-    def test_uncover_before_distribute(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.cover(c)
-        p.distribute(c.well(0).set_volume("20:microliter"),
-                     c.well(1),
-                     "5:microliter")
-        assert (3 == len(p.instructions))
-        assert ("distribute" ==
-                list(p.as_dict()["instructions"][-1]["groups"][0].keys())[0])
-        assert (Unit(5, "microliter") == c.well(1).volume)
-        assert (Unit(15, "microliter") == c.well(0).volume)
-        assert (p.instructions[-2].op == "uncover")
-        assert (not c.cover)
-
-    def test_distribute_multiple_wells(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.distribute(c.well(0).set_volume("20:microliter"),
-                     c.wells_from(1, 3),
-                     "5:microliter")
-        assert (1 == len(p.instructions))
-        assert (
-            "distribute" ==
-            list(p.as_dict()["instructions"][0]["groups"][0].keys())[0])
-        for w in c.wells_from(1, 3):
-            assert (Unit(5, 'microliter') == w.volume)
-        assert (Unit(5, 'microliter') == c.well(0).volume)
-
-    def test_fill_wells(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        srcs = c.wells_from(1, 2).set_volume("100:microliter")
-        dests = c.wells_from(7, 4)
-        p.distribute(srcs, dests, "30:microliter", allow_carryover=True)
-        assert (2 == len(p.instructions[0].groups))
-
-        # track source vols
-        assert (Unit(10, 'microliter') == c.well(1).volume)
-        assert (Unit(70, 'microliter') == c.well(2).volume)
-
-        # track dest vols
-        assert (Unit(30, 'microliter') == c.well(7).volume)
-        assert (c.well(6).volume is None)
-
-        # test distribute from Well to Well
-        p.distribute(c.well("A1").set_volume(
-            "20:microliter"), c.well("A2"), "5:microliter")
-        assert ("distribute" in p.instructions[-1].groups[-1])
-
-    def test_unit_conversion(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.distribute(
-            c.well(0).set_volume("100:microliter"), c.well(1), "200:nanoliter")
-        assert (str(p.instructions[0].groups[0]["distribute"][
-                "to"][0]["volume"]) == "0.2:microliter")
-        p.distribute(c.well(2).set_volume("100:microliter"), c.well(
-            3), ".1:milliliter", new_group=True)
-        assert (str(
-            p.instructions[-1].groups[0]["distribute"]["to"][
-                0]["volume"]) == "100.0:microliter")
-
-    def test_dispense_speed(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.distribute(
-            c.well(0).set_volume("100:microliter"), c.well(1), "2:microliter",
-            dispense_speed="150:microliter/second")
-        assert ("dispense_speed" in p.instructions[-1].groups[-1]
-                ["distribute"]["to"][0])
-        p.distribute(
-            c.well(0), c.well(1), "2:microliter",
-            distribute_target={"dispense_speed": "100:microliter/second"})
-        assert ("x_dispense_target" in p.instructions[-1].groups[-1]
-                ["distribute"]["to"][0])
-
-
-class TestTransfer():
-
-    def test_single_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.well(0), c.well(1), "20:microliter")
-        assert (Unit(20, "microliter") == c.well(1).volume)
-        assert (c.well(0).volume is None)
-        assert ("transfer" in p.instructions[-1].groups[-1])
-
-    def test_uncover_before_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.cover(c)
-        p.transfer(c.well(0), c.well(1), "20:microliter")
-        assert (3 == len(p.instructions))
-        assert (Unit(20, "microliter") == c.well(1).volume)
-        assert (c.well(0).volume is None)
-        assert ("transfer" in p.instructions[-1].groups[-1])
-        assert (p.instructions[-2].op == "uncover")
-        assert (not c.cover)
-
-    def test_gt_900uL_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(
-            c.well(0),
-            c.well(1),
-            "2000:microliter"
-        )
-        assert (3 == len(p.instructions[0].groups))
-        assert (
-            Unit(900, 'microliter') ==
-            p.instructions[0].groups[0]['transfer'][0]['volume']
-        )
-        assert (
-            Unit(900, 'microliter') ==
-            p.instructions[0].groups[1]['transfer'][0]['volume']
-        )
-        assert (
-            Unit(200, 'microliter') ==
-            p.instructions[0].groups[2]['transfer'][0]['volume']
-        )
-
-    def test_gt_900uL_wellgroup_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(
-            c.wells_from(0, 8, columnwise=True),
-            c.wells_from(1, 8, columnwise=True),
-            '2000:microliter'
-        )
-        assert (
-            24 ==
-            len(p.instructions[0].groups)
-        )
-
-    def test_transfer_option_propagation(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(
-            c.well(0),
-            c.well(1),
-            "2000:microliter",
-            aspirate_source=aspirate_source(
-                depth("ll_bottom", distance=".004:meter")
-            )
-        )
-        assert (
-            len(p.instructions[0].groups[0]['transfer'][0]) ==
-            len(p.instructions[0].groups[1]['transfer'][0])
-        )
-        assert (
-            len(p.instructions[0].groups[0]['transfer'][0]) ==
-            len(p.instructions[0].groups[2]['transfer'][0])
-        )
-
-    def test_max_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "micro-2.0", storage="cold_4")
-        p.transfer(c.well(0), c.well(0), "3050:microliter")
-
-    def test_multiple_transfers(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.wells_from(0, 2), c.wells_from(2, 2), "20:microliter")
-        assert (c.well(2).volume == c.well(3).volume)
-        assert (2 == len(p.instructions[0].groups))
-
-    def test_one_tip(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.wells_from(0, 2), c.wells_from(2, 2), "20:microliter",
-                   one_tip=True)
-        assert (c.well(2).volume == c.well(3).volume)
-        assert (1 == len(p.instructions[0].groups))
-
-    def test_one_source(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        with pytest.raises(RuntimeError):
-            p.transfer(c.wells_from(0, 2),
-                       c.wells_from(2, 2), "40:microliter", one_source=True)
-        with pytest.raises(RuntimeError):
-            p.transfer(c.wells_from(0, 2).set_volume("1:microliter"),
-                       c.wells_from(1, 5), "10:microliter", one_source=True)
-        p.transfer(c.wells_from(0, 2).set_volume("50:microliter"),
-                   c.wells_from(2, 2), "40:microliter", one_source=True)
-        assert (2 == len(p.instructions[0].groups))
-        assert (p.instructions[0].groups[0]["transfer"][0]
-                ["from"] != p.instructions[0].groups[1]["transfer"]
-                [0]["from"])
-        p.transfer(c.wells_from(0, 2).set_volume("100:microliter"),
-                   c.wells_from(2, 4), "40:microliter", one_source=True)
-        assert (7 == len(p.instructions[0].groups))
-        assert (p.instructions[0].groups[2]["transfer"][0]
-                ["from"] == p.instructions[0].groups[4]["transfer"][0]["from"])
-        assert (p.instructions[0].groups[4]["transfer"][0]["volume"] ==
-                Unit.fromstring("20:microliter"))
-        p.transfer(c.wells_from(0, 2).set_volume("100:microliter"),
-                   c.wells_from(2, 4),
-                   ["20:microliter", "40:microliter",
-                    "60:microliter", "80:microliter"], one_source=True)
-        assert (12 == len(p.instructions[0].groups))
-        assert (p.instructions[0].groups[7]["transfer"][0]["from"] ==
-                p.instructions[0].groups[9]["transfer"][0]["from"])
-        assert (p.instructions[0].groups[9]["transfer"][0]["from"] !=
-                p.instructions[0].groups[10]["transfer"][0]["from"])
-        assert (Unit.fromstring("20:microliter") ==
-                p.instructions[0].groups[10]["transfer"][0]["volume"])
-        p.transfer(c.wells_from(0, 2).set_volume("50:microliter"),
-                   c.wells(2), "100:microliter", one_source=True)
-        c.well(0).set_volume("50:microliter")
-        c.well(1).set_volume("200:microliter")
-        p.transfer(c.wells_from(0, 2), c.well(
-            1), "100:microliter", one_source=True)
-        assert (p.instructions[0].groups[14]["transfer"][0]["from"] !=
-                p.instructions[0].groups[15]["transfer"][0]["from"])
-        c.well(0).set_volume("100:microliter")
-        c.well(1).set_volume("0:microliter")
-        c.well(2).set_volume("100:microliter")
-        p.transfer(c.wells_from(0, 3), c.wells_from(3, 2),
-                   "100:microliter", one_source=True)
-
-    def test_one_tip_true_gt_750(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(c.well(0), c.well(1), "1000:microliter", one_tip=True)
-        assert (1 == len(p.instructions[0].groups))
-
-    def test_unit_conversion(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.transfer(c.well(0), c.well(1), "200:nanoliter")
-        assert (
-            str(p.instructions[0].groups[0]['transfer'][
-                0]['volume']) == "0.2:microliter")
-        p.transfer(c.well(1), c.well(2), ".5:milliliter", new_group=True)
-        assert (
-            str(p.instructions[-1].groups[0]['transfer'][
-                0]['volume']) == "500.0:microliter")
-
-    def test_volume_rounding(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        c.well(0).set_volume("100.0000000000005:microliter")
-        c.well(1).set_volume("100:microliter")
-        p.transfer(c.wells_from(0, 2), c.wells_from(
-            3, 3), "50:microliter", one_source=True)
-        assert (3 == len(p.instructions[0].groups))
-
-        c.well(0).set_volume("50:microliter")
-        c.well(1).set_volume("101:microliter")
-        p.transfer(c.wells_from(0, 2), c.wells_from(
-            3, 3), "50.0000000000005:microliter", one_source=True)
-        assert (6 == len(p.instructions[0].groups))
-
-    def test_mix_before_and_after(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        with pytest.raises(RuntimeError):
-            p.transfer(
-                c.well(0), c.well(1), "10:microliter", mix_vol="15:microliter")
-            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_a=21)
-            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions=21)
-            p.transfer(c.well(0), c.well(1), "10:microliter", repetitions_b=21)
-            p.transfer(c.well(0), c.well(1), "10:microliter",
-                       flowrate_a="200:microliter/second")
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True,
-                   mix_vol="10:microliter", repetitions_a=20)
-        assert (int(
-            p.instructions[-1].groups[0]['transfer'][0]['mix_after'][
-                'repetitions']) == 20)
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True,
-                   mix_vol="10:microliter", repetitions_b=20)
-        assert (int(
-            p.instructions[-1].groups[-1]['transfer'][0]['mix_after'][
-                'repetitions']) == 10)
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_after=True)
-        assert (int(
-            p.instructions[-1].groups[-1]['transfer'][0]['mix_after'][
-                'repetitions']) == 10)
-        assert (str(
-            p.instructions[-1].groups[-1]['transfer'][0]['mix_after'][
-                'speed']) == "100:microliter/second")
-        assert (str(
-            p.instructions[-1].groups[-1]['transfer'][0]['mix_after'][
-                'volume']) == "6.0:microliter")
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True,
-                   mix_vol="10:microliter", repetitions_b=20)
-        assert (int(
-            p.instructions[-1].groups[-1]['transfer'][-1]['mix_before'][
-                'repetitions']) == 20)
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True,
-                   mix_vol="10:microliter", repetitions_a=20)
-        assert (int(
-            p.instructions[-1].groups[-1]['transfer'][-1]['mix_before'][
-                'repetitions']) == 10)
-        p.transfer(c.well(0), c.well(1), "12:microliter", mix_before=True)
-        assert (int(
-            p.instructions[-1].groups[-1]['transfer'][-1]['mix_before'][
-                'repetitions']) == 10)
-        assert (str(
-            p.instructions[-1].groups[-1]['transfer'][-1]['mix_before'][
-                'speed']) == "100:microliter/second")
-        assert (str(
-            p.instructions[-1].groups[-1]['transfer'][-1]['mix_before'][
-                'volume']) == "6.0:microliter")
-
-    def test_mix_false(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-deep", discard=True)
-        p.transfer(c.well(0), c.well(1), "20:microliter", mix_after=False)
-        assert ("mix_after" not in p.instructions[0].groups[0]["transfer"][0])
-        p.transfer(c.well(0), c.well(1), "20:microliter", mix_before=False)
-        assert ("mix_before" not in p.instructions[0].groups[1]["transfer"][0])
-        p.transfer(c.well(0), c.well(1), "2000:microliter", mix_after=False)
-        for i in range(2, 5):
-            assert ("mix_after" not in
-                    p.instructions[0].groups[i]["transfer"][0])
-        p.transfer(c.well(0), c.well(1), "2000:microliter", mix_before=False)
-        for i in range(5, 8):
-            assert ("mix_before" not in
-                    p.instructions[0].groups[i]["transfer"][0])
-
-
-class TestConsolidate():
-
-    def test_multiple_sources(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        with pytest.raises(TypeError):
-            p.consolidate(
-                c.wells_from(0, 3), c.wells_from(2, 3), "10:microliter")
-        with pytest.raises(ValueError):
-            p.consolidate(c.wells_from(0, 3), c.well(4), ["10:microliter"])
-        p.consolidate(c.wells_from(0, 3), c.well(4), "10:microliter")
-        assert (Unit(30, "microliter") == c.well(4).volume)
-        assert (3 == len(p.instructions[0].groups[0]["consolidate"]["from"]))
-
-    def test_one_source(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.consolidate(c.well(0), c.well(4), "30:microliter")
-        assert (Unit(30, "microliter") == c.well(4).volume)
-
-
-class TestStamp():
-
-    def test_volume_tracking(self, dummy_protocol):
-        p = dummy_protocol
-        plate_96 = p.ref("plate_96", None, "96-pcr", discard=True)
-        plate_96_2 = p.ref("plate_96_2", None, "96-pcr", discard=True)
-        plate_384 = p.ref("plate_384", None, "384-pcr", discard=True)
-        plate_384_2 = p.ref("plate_384_2", None, "384-pcr", discard=True)
-        p.stamp(plate_96.well(0), plate_384.well(0), "5:microliter",
-                {"columns": 12, "rows": 1})
-        assert (plate_384.well(0).volume == Unit(5, 'microliter'))
-        assert (plate_384.well(1).volume is None)
-        p.stamp(plate_96.well(0), plate_96_2.well(0), "10:microliter",
-                {"columns": 12, "rows": 1})
-        p.stamp(plate_96.well(0), plate_96_2.well(0), "10:microliter",
-                {"columns": 1, "rows": 8})
-        assert (plate_96_2.well(0).volume == Unit(20, "microliter"))
-        for w in plate_96_2.wells_from(1, 11):
-            assert (w.volume == Unit(10, "microliter"))
-        p.stamp(plate_96.well(0), plate_384_2.well(0), "5:microliter",
-                {"columns": 1, "rows": 8})
-        for w in plate_384_2.wells_from(0, 16, columnwise=True)[0::2]:
-            assert (w.volume == Unit(5, "microliter"))
-        for w in plate_384_2.wells_from(1, 16, columnwise=True)[0::2]:
-            assert (w.volume is None)
-        for w in plate_384_2.wells_from(1, 24)[0::2]:
-            assert (w.volume is None)
-        plate_384_2.all_wells().set_volume("0:microliter")
-        p.stamp(plate_96.well(0), plate_384_2.well(
-            0), "15:microliter", {"columns": 3, "rows": 8})
-        assert (plate_384_2.well("C3").volume == Unit(15, "microliter"))
-        assert (plate_384_2.well("B2").volume == Unit(0, "microliter"))
-
-    def test_single_transfers(self, dummy_protocol):
-        p = dummy_protocol
-        plate_1_6 = p.ref("plate_1_6", None, "6-flat", discard=True)
-        plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
-        plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
-        plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
-        plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
-        p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
-                "10:microliter", dict(rows=1, columns=12))
-        p.stamp(plate_1_96.well("A1"), plate_1_384.well("A2"),
-                "10:microliter", dict(rows=8, columns=2))
-        # Verify full plate to full plate transfer works for 96, 384 container
-        # input
-        p.stamp(plate_1_96, plate_2_96, "10:microliter")
-        p.stamp(plate_1_384, plate_2_384, "10:microliter")
-
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A2"),
-                    "10:microliter", dict(rows=9, columns=1))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("B1"),
-                    "10:microliter", dict(rows=1, columns=13))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_384.well("A1"), plate_2_384.well("A2"),
-                    "10:microliter", dict(rows=9, columns=1))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_384.well("A1"), plate_2_384.well("B1"),
-                    "10:microliter", dict(rows=1, columns=13))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("A2"),
-                    "10:microliter", dict(rows=1, columns=12))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_96.well("A1"), plate_2_96.well("D1"),
-                    "10:microliter", dict(rows=6, columns=12))
-        with pytest.raises(ValueError):
-            p.stamp(plate_1_6.well("A1"), plate_2_96.well("D1"),
-                    "10:microliter", dict(rows=1, columns=2))
-
-    def test_multiple_transfers(self):
-        # Set maximum number of full plate transfers (limited by maximum
-        # number of tip boxes)
-        maxFullTransfers = 4
-
-        # Test: Ensure individual transfers are appended one at a time
+    def test_thermocycle_lid_temperature(self):
+        groups = [
+            {"cycles": 1, "steps": [
+                {"temperature": "95:celsius", "duration": "60:second"},
+            ]}
+        ]
         p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
+        dummy = p.ref('plate', cont_type='96-pcr', discard=True)
+        p.thermocycle(dummy, groups, lid_temperature='55:celsius')
+        assert(p.instructions[-1].lid_temperature == Unit('55:celsius'))
 
-        for i in range(maxFullTransfers):
-            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                    "10:microliter")
-            assert (i + 1 == len(p.instructions[0].groups))
+    def test_thermocycle_builders(self):
+        t = Thermocycle(
+            "plate",
+            [
+                Thermocycle.builders.group(
+                    steps=[
+                        Thermocycle.builders.step("95:celsius", "5:minute")
+                    ]
+                ),
+                Thermocycle.builders.group(
+                    steps=[
+                        Thermocycle.builders.step("95:celsius", "30:second"),
+                        Thermocycle.builders.step("56:celsius", "20:second"),
+                        Thermocycle.builders.step(
+                            {'top': "72:celsius", 'bottom': "70:celsius"},
+                            "20:second"
+                        ),
+                    ],
+                    cycles=30
+                ),
+                Thermocycle.builders.group(
+                    steps=[
+                        Thermocycle.builders.step(
+                            "4:celsius",
+                            "10:minute"
+                        )
+                    ]
+                )
+            ]
+        )
+        assert(t.data["groups"] == [
+                        {
+                            "cycles": 1,
+                            "steps": [
+                                {
+                                    "duration": Unit("5:minute"),
+                                    "temperature": Unit("95:celsius")
+                                }
+                            ]
+                        },
+                        {
+                            "cycles": 30,
+                            "steps": [
+                                {
+                                    "duration": Unit("30:second"),
+                                    "temperature": Unit("95:celsius")
+                                },
+                                {
+                                    "duration": Unit("20:second"),
+                                    "temperature": Unit("56:celsius")
+                                },
+                                {
+                                    "duration": Unit("20:second"),
+                                    "gradient": {
+                                        "top": Unit("72:celsius"),
+                                        "bottom": Unit("70:celsius")
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "cycles": 1,
+                            "steps": [
+                                {
+                                    "duration": Unit("10:minute"),
+                                    "temperature": Unit("4:celsius")
+                                }
+                            ]
+                        }
+                    ]
+        )
 
-        # Ensure new stamp operation overflows into new instruction
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter")
-        assert (len(p.instructions) == 2)
-        assert (1 == len(p.instructions[1].groups))
-
-        # Test: Maximum number of containers on a deck
-        maxContainers = 3
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(maxContainers + 1)]
-
-        for i in range(maxContainers - 1):
-            p.stamp(plateList[i], plateList[i + 1], "10:microliter")
-        assert (1 == len(p.instructions))
-        assert (maxContainers - 1 == len(p.instructions[0].groups))
-
-        p.stamp(plateList[maxContainers - 1].well("A1"),
-                plateList[maxContainers].well("A1"), "10:microliter")
-        assert (2 == len(p.instructions))
-
-        # Test: Ensure col/row/full plate stamps are in separate instructions
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
-
-        p.stamp(plateList[0].well("G1"), plateList[1].well("G1"),
-                "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 1)
-        p.stamp(plateList[0].well("G1"), plateList[1].well("G1"),
-                "10:microliter", dict(rows=2, columns=12))
-        assert (len(p.instructions) == 1)
-        assert (len(p.instructions[0].groups) == 2)
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=2))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A12"),
-                "10:microliter", dict(rows=8, columns=1))
-        assert (len(p.instructions) == 2)
-        assert (len(p.instructions[1].groups) == 2)
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        assert (len(p.instructions) == 3)
-        assert (len(p.instructions[2].groups) == 2)
-
-        # Test: Check on max transfer limit - Full plate
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
-
-        for i in range(maxFullTransfers):
-            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                    "10:microliter", dict(rows=8, columns=12))
-        assert (len(p.instructions) == 1)
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=12))
-        assert (len(p.instructions) == 2)
-        assert (maxFullTransfers == len(p.instructions[0].groups))
-        assert (1 == len(p.instructions[1].groups))
-
-        # Test: Check on max transfer limit - Row-wise
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
-        # Mixture of rows
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=3, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=2, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=2, columns=12))
-        assert (len(p.instructions) == 1)
-        # Maximum number of row transfers
-        for i in range(8):
-            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                    "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 2)
-        assert (len(p.instructions[0].groups) == 4)
-        assert (len(p.instructions[1].groups) == 8)
-        # Overflow check
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 3)
-
-        # Test: Check on max transfer limit - Col-wise
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
-        # Mixture of columns
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=4))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=6))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=2))
-        assert (len(p.instructions) == 1)
-        # Maximum number of col transfers
-        for i in range(12):
-            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                    "10:microliter", dict(rows=8, columns=1))
-        assert (len(p.instructions) == 2)
-        assert (len(p.instructions[0].groups) == 3)
-        assert (len(p.instructions[1].groups) == 12)
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=8, columns=1))
-        assert (len(p.instructions) == 3)
-
-        # Test: Check on switching between tip volume types
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(2)]
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "31:microliter")
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "31:microliter")
-        assert (len(p.instructions) == 1)
-        assert (2 == len(p.instructions[0].groups))
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "90:microliter")
-        assert (len(p.instructions) == 2)
-        assert (2 == len(p.instructions[0].groups))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "90:microliter")
-        assert (len(p.instructions) == 2)
-        assert (2 == len(p.instructions[1].groups))
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "31:microliter")
-        assert (len(p.instructions) == 3)
-
-        # Test: Check on max transfer limit - Row-wise
-        p = Protocol()
-        plateList = [p.ref("plate_%s_96" % str(x + 1), None, "96-flat",
-                           discard=True) for x in range(3)]
-        # Mixture of columns
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=3, columns=12))
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=4, columns=12))
-        assert (len(p.instructions) == 1)
-        # Maximum number of row transfers
-        for i in range(8):
-            p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                    "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 2)
-        assert (len(p.instructions[0].groups) == 3)
-        assert (len(p.instructions[1].groups) == 8)
-
-        p.stamp(plateList[0].well("A1"), plateList[1].well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 3)
-        p.stamp(plateList[0].well("A1"), plateList[2].well("A1"),
-                "10:microliter", dict(rows=1, columns=12))
-        assert (len(p.instructions) == 4)
-
-    def test_one_tip(self, dummy_protocol):
-
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x + 1),
-                     None, "384-flat", discard=True) for x in range(plateCount)]
-        p.stamp(plateList[0], plateList[1], "330:microliter", one_tip=True)
-        assert (len(p.instructions[0].groups[0]["transfer"]) == 12)
-        assert (len(p.instructions[0].groups) == 1)
-
-    def test_one_tip_variable_volume(self, dummy_protocol):
-
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x + 1),
-                     None, "384-flat", discard=True) for x in range(plateCount)]
-        with pytest.raises(RuntimeError):
-            p.stamp(WellGroup([plateList[0].well(0),
-                    plateList[0].well(1)]),
-                    WellGroup([plateList[1].well(0), plateList[1].well(1)]),
-                    ["20:microliter", "90:microliter"], one_tip=True)
-        p.stamp(WellGroup([plateList[0].well(0), plateList[0].well(1)]),
-                WellGroup([plateList[1].well(0), plateList[1].well(1)]),
-                ["20:microliter", "90:microliter"], mix_after=True,
-                mix_vol="40:microliter", one_tip=True)
-        assert (len(p.instructions[0].groups[0]["transfer"]) == 2)
-        assert (len(p.instructions[0].groups) == 1)
-
-    def test_wellgroup(self, dummy_protocol):
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x + 1),
-                     None, "384-flat", discard=True) for x in range(plateCount)]
-        p.stamp(plateList[0].wells(list(range(12))), plateList[1].wells(
-            list(range(12))), "30:microliter", shape={"rows": 8, "columns": 1})
-        assert (len(p.instructions[0].groups) == 12)
-
-    def test_gt_148uL_transfer(self, dummy_protocol):
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_96" % str(
-            x + 1), None, "96-flat", discard=True) for x in range(plateCount)]
-        p.stamp(plateList[0], plateList[1], "296:microliter")
-        assert (2 == len(p.instructions[0].groups))
-        assert (Unit(148, 'microliter') ==
-                p.instructions[0].groups[0]['transfer'][0]['volume'])
-        assert (Unit(148, 'microliter') ==
-                p.instructions[0].groups[1]['transfer'][0]['volume'])
-
-    def test_one_source(self, dummy_protocol):
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x + 1),
-                     None, "384-flat", discard=True) for x in range(plateCount)]
-        with pytest.raises(RuntimeError):
-            p.stamp(plateList[0].wells(list(range(4))),
-                    plateList[1].wells(list(range(12))),
-                    "30:microliter", shape={"rows": 8, "columns": 1},
-                    one_source=True)
-        plateList[0].wells_from(
-            0, 64, columnwise=True).set_volume("10:microliter")
-        with pytest.raises(RuntimeError):
-            p.stamp(plateList[0].wells(list(range(4))),
-                    plateList[1].wells(list(range(12))),
-                    "30:microliter", shape={"rows": 8, "columns": 1},
-                    one_source=True)
-        plateList[0].wells_from(
-            0, 64, columnwise=True).set_volume("15:microliter")
-        p.stamp(plateList[0].wells(list(range(4))),
-                plateList[1].wells(list(range(12))), "5:microliter",
-                shape={"rows": 8, "columns": 1}, one_source=True)
-        assert (len(p.instructions[0].groups) == 12)
-
-    def test_implicit_uncover(self, dummy_protocol):
-        p = dummy_protocol
-        plateCount = 2
-        plateList = [p.ref("plate_%s_384" % str(x + 1), None, "384-flat",
-                           discard=True, cover="universal")
-                     for x in range(plateCount)]
-        for x in plateList:
-            assert (x.cover)
-        p.stamp(plateList[0], plateList[1], "5:microliter")
-        for x in plateList:
-            assert (not x.cover)
-        assert (len(p.instructions) == 3)
-        assert (p.instructions[0].op == "uncover")
-
-
-class TestRefify():
+class TestRefify:
 
     def test_refifying_various(self, dummy_protocol):
         p = dummy_protocol
@@ -913,7 +264,7 @@ class TestRefify():
         assert (24 == p._refify(i))
 
 
-class TestOuts():
+class TestOuts:
 
     def test_outs(self, dummy_protocol):
         p = dummy_protocol
@@ -931,7 +282,7 @@ class TestOuts():
                 ['test'] == 'foo')
 
 
-class TestInstructionIndex():
+class TestInstructionIndex:
 
     def test_instruction_index(self, dummy_protocol):
         p = dummy_protocol
@@ -943,6 +294,35 @@ class TestInstructionIndex():
         assert (p.get_instruction_index() == 0)
         p.uncover(plate)
         assert (p.get_instruction_index() == 1)
+
+
+class TestBatchContainers:
+    def test_batch_containers(self):
+        p = Protocol()
+
+        plate_1 = p.ref("p1", None, "96-pcr", storage="cold_4")
+        plate_2 = p.ref("p2", None, "96-pcr", storage="cold_4")
+
+        with pytest.raises(TypeError):
+            p.batch_containers("not_a_list")
+        with pytest.raises(TypeError):
+            p.batch_containers([plate_1, "not_a_plate"])
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            p.batch_containers([plate_1])
+            p.batch_containers([plate_1, plate_2], False)
+            assert (len(w) == 2)
+            for m in w:
+                assert ("has no effect" in str(m.message))
+
+        p.batch_containers([plate_1, plate_2])
+        assert (len(p.time_constraints) == 2)
+        p.batch_containers([plate_1, plate_2], False, True)
+        assert (len(p.time_constraints) == 4)
+        p.time_constraints = []
+        p.batch_containers([plate_1, plate_2], True, True)
+        assert (len(p.time_constraints) == 4)
 
 
 class TestTimeConstraints:
@@ -1061,123 +441,135 @@ class TestTimeConstraints:
 
 class TestAbsorbance:
 
-    def test_single_well(self, dummy_protocol):
-        p = dummy_protocol
+    def test_single_well(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading")
         assert isinstance(p.instructions[0].wells, list)
 
-    def test_bad_well(self, dummy_protocol):
-        p = dummy_protocol
+    def test_bad_well(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         with pytest.raises(ValueError):
             p.absorbance(test_plate, "bad_well_ref",
                          wavelength="450:nanometer", dataref="bad_wells")
 
-    def test_temperature(self, dummy_protocol):
-        p = dummy_protocol
+    def test_temperature(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading", temperature="30:celsius")
         assert (p.instructions[0].temperature == "30:celsius")
 
-    def test_incubate(self, dummy_protocol):
+    def test_settle_time(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                     "test_reading", settle_time=Unit(1, "microsecond"))
+        assert (p.instructions[-1].settle_time == Unit(1, "microsecond"))
+        with pytest.raises(ValueError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading", settle_time="-1:microsecond")
+
+    def test_incubate(self):
         from autoprotocol.util import incubate_params
 
-        p = dummy_protocol
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading",
                      incubate_before=incubate_params(
-                                                     "10:second",
-                                                     "3:millimeter",
-                                                     True)
+                         "10:second",
+                         "3:millimeter",
+                         True)
                      )
 
-        assert (p.instructions[0].incubate_before["shaking"]["orbital"])
-        assert (p.instructions[0].incubate_before["shaking"]["amplitude"] ==
-                "3:millimeter")
-        assert (p.instructions[0].incubate_before["duration"] == "10:second")
+        assert (
+            p.instructions[0].incubate_before["shaking"]["orbital"])
+        assert (
+                p.instructions[0].incubate_before["shaking"][
+                    "amplitude"] == "3:millimeter")
+        assert (
+                p.instructions[0].incubate_before["duration"] == "10:second")
 
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading",
                      incubate_before=incubate_params("10:second"))
 
         assert ("shaking" not in p.instructions[1].incubate_before)
-        assert (p.instructions[1].incubate_before["duration"] == "10:second")
+        assert (
+                p.instructions[1].incubate_before["duration"] == "10:second")
 
         with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0),
-                         "475:nanometer", "test_reading",
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading",
                          incubate_before=incubate_params("10:second",
-                                                         "-3:millimeter",
-                                                         True))
+                                                         "-3:millimeter", True))
 
         with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0),
-                         "475:nanometer", "test_reading",
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading",
                          incubate_before=incubate_params("10:second",
-                                                         "3:millimeter",
-                                                         "foo"))
+                                                         "3:millimeter", "foo"))
 
         with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0),
-                         "475:nanometer", "test_reading",
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading",
                          incubate_before=incubate_params("-10:second",
-                                                         "3:millimeter",
-                                                         True))
+                                                         "3:millimeter", True))
 
         with pytest.raises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(
                 0), "475:nanometer", "test_reading",
-                incubate_before=incubate_params("10:second", "3:millimeter"))
+                         incubate_before=incubate_params("10:second",
+                                                         "3:millimeter"))
 
         with pytest.raises(RuntimeError):
-            p.absorbance(test_plate, test_plate.well(0),
-                         "475:nanometer", "test_reading",
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading",
                          incubate_before=incubate_params("10:second",
                                                          shake_orbital=True))
 
         with pytest.raises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
-                         'shaking': {'amplitude': '3:mm', 'orbital': True}})
+                    'shaking': {'amplitude': '3:mm', 'orbital': True}})
 
         with pytest.raises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(
                 0), "475:nanometer", "test_reading",
-                incubate_before={'duration': '10:minute', 'shaking': {}})
-
-        with pytest.raises(RuntimeError):
-            p.absorbance(test_plate, test_plate.well(0),
-                         "475:nanometer", "test_reading", incubate_before={
-                         'duration': '10:minute', 'shaking': {'orbital': True}})
+                         incubate_before={'duration': '10:minute',
+                                          'shaking': {}})
 
         with pytest.raises(RuntimeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
-                         'duration': '10:minute',
-                         'shaking': {'amplitude': '3:mm'}})
+                    'duration': '10:minute', 'shaking': {'orbital': True}})
+
+        with pytest.raises(RuntimeError):
+            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
+                         "test_reading", incubate_before={
+                    'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
         with pytest.raises(KeyError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
-                         'duration': '10:minute',
-                         'shake': {'amplitude': '3:mm', 'orbital': True}})
+                    'duration': '10:minute',
+                    'shake': {'amplitude': '3:mm', 'orbital': True}})
 
 
 class TestFluorescence:
 
-    def test_single_well(self, dummy_protocol):
-        p = dummy_protocol
+    def test_single_well(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.fluorescence(test_plate, test_plate.well(0),
                        excitation="587:nanometer", emission="610:nanometer",
                        dataref="test_reading")
         assert (isinstance(p.instructions[0].wells, list))
 
-    def test_temperature(self, dummy_protocol):
-        p = dummy_protocol
+    def test_temperature(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.fluorescence(test_plate, test_plate.well(0),
                        excitation="587:nanometer",
@@ -1185,8 +577,8 @@ class TestFluorescence:
                        temperature="30:celsius")
         assert (p.instructions[0].temperature == "30:celsius")
 
-    def test_gain(self, dummy_protocol):
-        p = dummy_protocol
+    def test_gain(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         for i in range(0, 10):
             p.fluorescence(test_plate, test_plate.well(0),
@@ -1197,16 +589,14 @@ class TestFluorescence:
 
         with pytest.raises(ValueError):
             for i in range(-6, 10, 5):
-                p.fluorescence(test_plate,
-                               test_plate.well(0),
-                               excitation="587:nanometer",
-                               emission="610:nanometer",
+                p.fluorescence(test_plate, test_plate.well(
+                    0), excitation="587:nanometer", emission="610:nanometer",
                                dataref="test_reading", gain=i)
 
-    def test_incubate(self, dummy_protocol):
+    def test_incubate(self):
         from autoprotocol.util import incubate_params
 
-        p = dummy_protocol
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.fluorescence(test_plate, test_plate.well(0),
                        excitation="587:nanometer", emission="610:nanometer",
@@ -1215,10 +605,13 @@ class TestFluorescence:
                                                        "3:millimeter",
                                                        True))
 
-        assert (p.instructions[0].incubate_before["shaking"]["orbital"])
-        assert (p.instructions[0].incubate_before["shaking"]["amplitude"] ==
-                "3:millimeter")
-        assert (p.instructions[0].incubate_before["duration"] == "10:second")
+        assert (
+            p.instructions[0].incubate_before["shaking"]["orbital"])
+        assert (
+                p.instructions[0].incubate_before["shaking"][
+                    "amplitude"] == "3:millimeter")
+        assert (
+                p.instructions[0].incubate_before["duration"] == "10:second")
 
         p.fluorescence(test_plate, test_plate.well(0),
                        excitation="587:nanometer", emission="610:nanometer",
@@ -1226,7 +619,8 @@ class TestFluorescence:
                        incubate_before=incubate_params("10:second"))
 
         assert ("shaking" not in p.instructions[1].incubate_before)
-        assert (p.instructions[1].incubate_before["duration"] == "10:second")
+        assert (
+                p.instructions[1].incubate_before["duration"] == "10:second")
 
         with pytest.raises(ValueError):
             p.fluorescence(test_plate, test_plate.well(0),
@@ -1269,10 +663,8 @@ class TestFluorescence:
         with pytest.raises(RuntimeError):
             p.fluorescence(test_plate, test_plate.well(0),
                            excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before={'shaking':
-                                            {'amplitude': '3:mm',
-                                             'orbital': True}})
+                           dataref="test_reading", incubate_before={
+                    'shaking': {'amplitude': '3:mm', 'orbital': True}})
 
         with pytest.raises(RuntimeError):
             p.fluorescence(test_plate, test_plate.well(0),
@@ -1295,98 +687,220 @@ class TestFluorescence:
                            incubate_before={'duration': '10:minute',
                                             'shaking': {'amplitude': '3:mm'}})
 
+    def test_detection_mode(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer",
+                       emission="610:nanometer", dataref="test_reading",
+                       detection_mode="top")
+        assert (p.instructions[-1].detection_mode == "top")
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer",
+                       emission="610:nanometer", dataref="test_reading",
+                       detection_mode="bottom")
+        assert (p.instructions[-1].detection_mode == "bottom")
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading", detection_mode="not_valid")
+
+    def test_time_parameters(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        neg_time = Unit(-1, "second")
+        valid_time = Unit(1, "second")
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           settle_time=neg_time)
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           lag_time=neg_time)
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           integration_time=neg_time)
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer",
+                       emission="610:nanometer",
+                       dataref="test_reading",
+                       integration_time=valid_time,
+                       settle_time=valid_time,
+                       lag_time=valid_time)
+        assert all(time in p.instructions[-1].data for
+                   time in ["settle_time", "lag_time", "integration_time"])
+
+    def test_position_z(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        with pytest.raises(KeyError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           position_z={"bad_key": "not_valid"})
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           position_z={"manual": Unit(0, "meter"),
+                                       "calculated_from_wells":
+                                           [test_plate.well(0)]})
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           position_z={"manual": Unit(-1, "meter")})
+        # uncomment lines below once 'calculated_from_wells' has
+        # been implemented
+        # p.fluorescence(test_plate, test_plate.well(0),
+        #                excitation="587:nanometer",
+        #                emission="610:nanometer",
+        #                dataref="test_reading",
+        #                detection_mode="top",
+        #                position_z={"calculated_from_wells":
+        #                               [test_plate.well(0)]})
+        # assert (p.instructions[-1].detection_mode == "top")
+        # assert "calculated_from_wells" in (p.instructions[-1].position_z.keys())
+        # assert test_plate.well(0) in (p.instructions[-1].position_z["calculated_from_wells"])
+        with pytest.raises(ValueError):
+            p.fluorescence(test_plate, test_plate.well(0),
+                           excitation="587:nanometer",
+                           emission="610:nanometer",
+                           dataref="test_reading",
+                           detection_mode="bottom",
+                           position_z={"manual": Unit(0, "meter")})
+        p.fluorescence(test_plate, test_plate.well(0),
+                       excitation="587:nanometer",
+                       emission="610:nanometer",
+                       dataref="test_reading",
+                       detection_mode="top",
+                       position_z={"manual": Unit(1, "micrometer")})
+        assert (p.instructions[-1].data["position_z"]["manual"] == Unit(1,
+                                                                        "micrometer"))
+
 
 class TestLuminescence:
 
-    def test_single_well(self, dummy_protocol):
-        p = dummy_protocol
+    def test_single_well(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.luminescence(test_plate, test_plate.well(0), "test_reading")
         assert (isinstance(p.instructions[0].wells, list))
 
-    def test_temperature(self, dummy_protocol):
-        p = dummy_protocol
+    def test_temperature(self):
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.luminescence(test_plate, test_plate.well(
             0), "test_reading", temperature="30:celsius")
         assert (p.instructions[0].temperature == "30:celsius")
 
-    def test_incubate(self, dummy_protocol):
+    def test_settle_time(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                       settle_time=Unit(1, "microsecond"))
+        assert (p.instructions[-1].settle_time == Unit(1, "microsecond"))
+        with pytest.raises(ValueError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                           settle_time="-1:microsecond")
+
+    def test_integration_time(self):
+        p = Protocol()
+        test_plate = p.ref("test", None, "96-flat", discard=True)
+        p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                       integration_time=Unit(1, "microsecond"))
+        assert (p.instructions[-1].integration_time == Unit(1, "microsecond"))
+        with pytest.raises(ValueError):
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                           integration_time="-1:microsecond")
+
+    def test_incubate(self):
         from autoprotocol.util import incubate_params
 
-        p = dummy_protocol
+        p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.luminescence(test_plate, test_plate.well(0), "test_reading",
                        incubate_before=incubate_params("10:second",
                                                        "3:millimeter",
                                                        True))
 
-        assert (p.instructions[0].incubate_before["shaking"]["orbital"])
-        assert (p.instructions[0].incubate_before["shaking"]["amplitude"] ==
-                "3:millimeter")
-        assert (p.instructions[0].incubate_before["duration"] == "10:second")
+        assert (
+            p.instructions[0].incubate_before["shaking"]["orbital"])
+        assert (
+                p.instructions[0].incubate_before["shaking"][
+                    "amplitude"] == "3:millimeter")
+        assert (
+                p.instructions[0].incubate_before["duration"] == "10:second")
 
         p.luminescence(test_plate, test_plate.well(0), "test_reading",
                        incubate_before=incubate_params("10:second"))
 
         assert ("shaking" not in p.instructions[1].incubate_before)
-        assert (p.instructions[1].incubate_before["duration"] == "10:second")
+        assert (
+                p.instructions[1].incubate_before["duration"] == "10:second")
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before=incubate_params("10:second",
                                                            "-3:millimeter",
                                                            True))
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before=incubate_params("10:second",
                                                            "3:millimeter",
                                                            "foo"))
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before=incubate_params("-10:second",
                                                            "3:millimeter",
                                                            True))
 
         with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before=incubate_params("10:second",
                                                            "3:millimeter"))
 
         with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before=incubate_params("10:second",
                                                            shake_orbital=True))
 
         with pytest.raises(RuntimeError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
-                           'shaking': {'amplitude': '3:mm', 'orbital': True}})
+                               'shaking': {'amplitude': '3:mm',
+                                           'orbital': True}})
 
         with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0),
-                           "test_reading",
-                           incubate_before={
-                           'duration': '10:minute', 'shaking': {}})
+            p.luminescence(test_plate, test_plate.well(0), "test_reading",
+                           incubate_before={'duration': '10:minute',
+                                            'shaking': {}})
 
         with pytest.raises(RuntimeError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
-                           'duration': '10:minute', 'shaking':
-                           {'orbital': True}})
+                               'duration': '10:minute',
+                               'shaking': {'orbital': True}})
 
         with pytest.raises(RuntimeError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
-                           'duration': '10:minute', 'shaking':
-                           {'amplitude': '3:mm'}})
+                               'duration': '10:minute',
+                               'shaking': {'amplitude': '3:mm'}})
 
 
 class TestAcousticTransfer:
@@ -1399,13 +913,13 @@ class TestAcousticTransfer:
         p.acoustic_transfer(echo.well(0), dest.wells(1, 3, 5), "25:microliter")
         assert (len(p.instructions) == 1)
         p.acoustic_transfer(echo.well(0), dest.wells(0, 2, 4), "25:microliter")
-        assert (len(p.instructions) == 1)
+        assert (len(p.instructions) == 2)
         p.acoustic_transfer(echo.well(0), dest.wells(0, 2, 4), "25:microliter",
                             droplet_size="0.50:microliter")
-        assert (len(p.instructions) == 2)
+        assert (len(p.instructions) == 3)
         p.acoustic_transfer(
             echo.well(0), dest2.wells(0, 2, 4), "25:microliter")
-        assert (len(p.instructions) == 3)
+        assert (len(p.instructions) == 4)
 
     def test_one_source(self, dummy_protocol):
         p = dummy_protocol
@@ -1432,25 +946,6 @@ class TestAcousticTransfer:
         with pytest.raises(RuntimeError):
             p.acoustic_transfer(echo.wells(0, 1).set_volume("2:microliter"),
                                 dest.wells(0, 1), "1.31:microliter")
-
-
-class TestMix():
-
-    def test_mix(self, dummy_protocol):
-        p = dummy_protocol
-        w = p.ref("test", None, "micro-1.5",
-                  discard=True).well(0).set_volume("20:microliter")
-        p.mix(w, "5:microliter")
-        assert (Unit(20, "microliter") == w.volume)
-        assert ("mix" in p.instructions[-1].groups[-1])
-
-    def test_mix_one_tip(self, dummy_protocol):
-        p = dummy_protocol
-        c = p.ref("test", None, "96-flat", discard=True)
-        p.mix(c.wells(0, 1, 2), "5:microliter", one_tip=False)
-        assert (len(p.instructions[-1].groups) == 3)
-        p.mix(c.wells(0, 1, 2, 4), "5:microliter", one_tip=True)
-        assert (len(p.instructions[-1].groups) == 4)
 
 
 class TestMagneticTransfer:
@@ -1675,68 +1170,67 @@ class TestMagneticTransfer:
 
 class TestAutopick:
 
-    def test_autopick(self, dummy_protocol):
-        p = dummy_protocol
+    def test_autopick(self):
+        p = Protocol()
         dest_plate = p.ref("dest", None, "96-flat", discard=True)
-        p.refs["agar_plate"] = Ref("agar_plate", {"reserve": "ki17reefwqq3sq",
-                                   "discard": True},
-                                   Container(None, p.container_type("6-flat"),
-                                             name="agar_plate"))
+
+        p.refs["agar_plate"] = Ref(
+            "agar_plate",
+            {"reserve": "ki17reefwqq3sq", "discard": True},
+            Container(None, p.container_type("6-flat"), name="agar_plate"))
 
         agar_plate = Container(None, p.container_type("6-flat"),
                                name="agar_plate")
-        p.refs["agar_plate_1"] = Ref("agar_plate_1",
-                                     {"reserve": "ki17reefwqq3sq",
-                                      "discard": True},
-                                     Container(None, p.container_type("6-flat"),
-                                               name="agar_plate_1"))
 
-        agar_plate_1 = Container(
-            None, p.container_type("6-flat"), name="agar_plate_1")
+        p.refs["agar_plate_1"] = Ref(
+            "agar_plate_1",
+            {"reserve": "ki17reefwqq3sq", "discard": True},
+            Container(None, p.container_type("6-flat"), name="agar_plate_1"))
+
+        agar_plate_1 = Container(None, p.container_type("6-flat"),
+                                 name="agar_plate_1")
 
         p.autopick([agar_plate.well(0), agar_plate.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0,
-                   dataref="0", newpick=False)
+                   [dest_plate.well(1)] * 4, min_abort=0, dataref="0",
+                   newpick=False)
 
         assert (len(p.instructions) == 1)
         assert (len(p.instructions[0].groups) == 1)
         assert (len(p.instructions[0].groups[0]["from"]) == 2)
 
-        p.autopick([agar_plate.well(0), agar_plate.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0,
-                   dataref="1", newpick=True)
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [
+            dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=True)
 
         assert (len(p.instructions) == 2)
 
-        p.autopick([agar_plate.well(0), agar_plate.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0,
-                   dataref="1", newpick=False)
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [
+            dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=False)
 
         assert (len(p.instructions) == 2)
 
         for i in range(20):
-            p.autopick([agar_plate.well(i % 6), agar_plate.well((i + 1) % 6)],
-                       [dest_plate.well(i % 96)] * 4, min_abort=i,
+            p.autopick([agar_plate.well(i % 6), agar_plate.well(
+                (i + 1) % 6)], [dest_plate.well(i % 96)] * 4, min_abort=i,
                        dataref="1", newpick=False)
 
         assert (len(p.instructions) == 2)
 
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0,
-                   dataref="1", newpick=False)
+                   [dest_plate.well(1)] * 4, min_abort=0, dataref="1",
+                   newpick=False)
 
         assert (len(p.instructions) == 3)
 
         p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0,
-                   dataref="2", newpick=False)
+                   [dest_plate.well(1)] * 4, min_abort=0, dataref="2",
+                   newpick=False)
 
         assert (len(p.instructions) == 4)
 
         with pytest.raises(RuntimeError):
             p.autopick([agar_plate.well(0), agar_plate_1.well(1)],
-                       [dest_plate.well(1)] * 4, min_abort=0,
-                       dataref="1", newpick=False)
+                       [dest_plate.well(1)] * 4, min_abort=0, dataref="1",
+                       newpick=False)
 
 
 class TestMeasureConcentration:
@@ -1782,30 +1276,33 @@ class TestMeasureConcentration:
 
 class TestMeasureMass:
 
-    def test_measure_mass_single_container(self, dummy_protocol):
-        p = dummy_protocol
-        test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
-                           storage=None, discard=True)
+    def test_measure_mass_single_container(self):
+        p = Protocol()
+        test_plate = p.ref(
+            "test_plate", id=None, cont_type="96-flat", storage=None,
+            discard=True)
         p.measure_mass(test_plate, "test_ref")
         assert (len(p.instructions) == 1)
 
-    def test_measure_mass_list_containers(self, dummy_protocol):
-        p = dummy_protocol
-        test_plates = [p.ref("test_plate_%s" % i, id=None, cont_type="96-flat",
-                             storage=None, discard=True) for i in range(5)]
-        p.measure_mass(test_plates, "test_ref")
-        assert (len(p.instructions) == 1)
+    def test_measure_mass_list_containers(self):
+        p = Protocol()
+        test_plates = [p.ref(
+            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None,
+            discard=True) for i in range(5)]
+        with pytest.raises(TypeError):
+            p.measure_mass(test_plates, "test_ref")
 
-    def test_measure_mass_bad_list(self, dummy_protocol):
-        p = dummy_protocol
-        test_plates = [p.ref("test_plate_%s" % i, id=None, cont_type="96-flat",
-                             storage=None, discard=True) for i in range(5)]
+    def test_measure_mass_bad_list(self):
+        p = Protocol()
+        test_plates = [p.ref(
+            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None,
+            discard=True) for i in range(5)]
         test_plates.append("foo")
         with pytest.raises(TypeError):
             p.measure_mass(test_plates, "test_ref")
 
-    def test_measure_mass_bad_input(self, dummy_protocol):
-        p = dummy_protocol
+    def test_measure_mass_bad_input(self):
+        p = Protocol()
         with pytest.raises(TypeError):
             p.measure_mass("foo", "test_ref")
 
@@ -1908,8 +1405,8 @@ class TestGelPurify:
             p.gel_purify(extract, "10:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
 
-    def test_gel_purify_no_lane(self, dummy_protocol):
-        p = dummy_protocol
+    def test_gel_purify_no_lane(self):
+        p = Protocol()
         sample_wells = p.ref("test_plate", None, "96-pcr",
                              discard=True).wells_from(0, 20)
         extract_wells = [p.ref("extract_%s" % i, None, "micro-1.5",
@@ -2125,31 +1622,11 @@ class TestCoverStatus:
             assert (cont.cover != "clear")
             assert (not p.refs[cont.name].opts['cover'])
 
-    def test_implicit_unseal(self, dummy_protocol):
-        p = dummy_protocol
-        cont = p.ref("cont", None, "96-pcr", discard=True)
-        assert (not cont.cover)
-        p.seal(cont)
-        assert (cont.cover)
-        assert (cont.cover == "ultra-clear")
-        p.mix(cont.well(0))
-        assert (not cont.cover)
-
-    def test_implicit_uncover(self, dummy_protocol):
-        p = dummy_protocol
-        cont = p.ref("cont", None, "96-flat", discard=True)
-        assert (not cont.cover)
-        p.cover(cont, "universal")
-        assert (cont.cover)
-        assert (cont.cover == "universal")
-        p.mix(cont.well(0))
-        assert (not cont.cover)
-
 
 class TestDispense:
 
-    def test_resource_id(self, dummy_protocol):
-        p = dummy_protocol
+    def test_resource_id(self):
+        p = Protocol()
         container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 0, "volume": "10:ul"}], is_resource_id=True)
@@ -2159,8 +1636,8 @@ class TestDispense:
         with pytest.raises(AttributeError):
             p.instructions[0].reagent
 
-    def test_reagent(self, dummy_protocol):
-        p = dummy_protocol
+    def test_reagent(self):
+        p = Protocol()
         container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
         p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:ul",
                               is_resource_id=False)
@@ -2170,9 +1647,55 @@ class TestDispense:
         with pytest.raises(AttributeError):
             p.instructions[0].resource_id
 
-    def test_step_size(self, dummy_protocol):
+    def test_flowrate(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense_full_plate(container, "water", "10:ul", flowrate="5:ul/s")
+
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(container, "water", "10:ul", flowrate="5:s")
+
+    def test_shape(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense_full_plate(container, "water", "10:ul", shape={
+                              "rows": 8, "columns": 1, "format": "SBS96"})
+
+        with pytest.raises(TypeError):
+            p.dispense_full_plate(container, "water", "10:ul", shape="SBS96")
+
+    def test_shake_after(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense_full_plate(
+            container, "water", "10:ul",
+            shake_after=Dispense.builders.shake_after("5:second")
+        )
+
+        assert(
+            p.instructions[-1].data["shake_after"] ==
+            {"duration": Unit(5, "second")}
+        )
+
+    def test_pre_dispense(self):
+        p = Protocol()
+        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
+        p.dispense_full_plate(container, "water", "10:ul",
+                              pre_dispense="10:uL")
+        p.dispense_full_plate(container, "water", "10:ul",
+                              pre_dispense="0:uL")
+
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(
+                container, "water", "10:ul", pre_dispense="5:uL")
+
+        with pytest.raises(ValueError):
+            p.dispense_full_plate(
+                container, "water", "10:ul", pre_dispense="11:uL")
+
+    def test_step_size(self):
         # Initialize protocol and container
-        p = dummy_protocol
+        p = Protocol()
         container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
 
         # Test p.dispense while setting step_size to None
@@ -2180,43 +1703,36 @@ class TestDispense:
                    [{"column": 0, "volume": "10:microliter"}],
                    is_resource_id=True, step_size=None)
         assert ("step_size" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense while using step_size default
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 0, "volume": "10:microliter"}],
                    is_resource_id=True)
         assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense with step_size of 5 microliter
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 1, "volume": "10:microliter"}],
                    is_resource_id=True, step_size="5:microliter")
         assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense with step_size of 0.5 microliter
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 2, "volume": "0.5:microliter"}],
                    is_resource_id=True, step_size="0.5:microliter")
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
-        # Test p.dispense with step_size of 0.5 microliter,
-        # submitted as a Unit object
+        # Test p.dispense with step_size of 0.5 microliter, submitted as a Unit object
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 2, "volume": "0.5:microliter"}],
                    is_resource_id=True, step_size=Unit(0.5, "microliter"))
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Test p.dispense with step_size in nanoliters
         p.dispense(container, "rs17gmh5wafm5p",
                    [{"column": 2, "volume": "0.5:microliter"}],
                    is_resource_id=True, step_size="500:nanoliter")
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Test bad type for step_size
         with pytest.raises(TypeError):
@@ -2239,39 +1755,34 @@ class TestDispense:
                        is_resource_id=True, step_size="1:microliter")
 
         # Test volume that is not an integer multiple of step_size
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.dispense(container, "rs17gmh5wafm5p",
                        [{"column": 1, "volume": "11:microliter"}],
                        is_resource_id=True, step_size="5:microliter")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.dispense(container, "rs17gmh5wafm5p",
                        [{"column": 2, "volume": "1.6:microliter"}],
                        is_resource_id=True, step_size="0.5:microliter")
 
         # Test p.dispense_full_plate while setting step_size to None
-        p.dispense_full_plate(container, "rs17gmh5wafm5p",
-                              "10:microliter", is_resource_id=True,
-                              step_size=None)
+        p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
+                              is_resource_id=True, step_size=None)
         assert ("step_size" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense_full_plate while using step_size default
         p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
                               is_resource_id=True)
         assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense_full_plate with step_size of 5 microliter
         p.dispense_full_plate(container, "rs17gmh5wafm5p", "10:microliter",
                               is_resource_id=True, step_size="5:microliter")
         assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense_full_plate with step_size of 0.5 microliter
         p.dispense_full_plate(container, "rs17gmh5wafm5p", "0.5:microliter",
                               is_resource_id=True, step_size="0.5:microliter")
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Test p.dispense_full_plate with step_size of 0.5 microliter,
         # submitted as a Unit object
@@ -2279,13 +1790,11 @@ class TestDispense:
                               is_resource_id=True,
                               step_size=Unit(0.5, "microliter"))
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Test p.dispense_full_plate with step_size in nanoliters
         p.dispense_full_plate(container, "rs17gmh5wafm5p", "0.5:microliter",
                               is_resource_id=True, step_size="500:nanoliter")
         assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Test bad type for step_size
         with pytest.raises(TypeError):
@@ -2304,95 +1813,21 @@ class TestDispense:
                                   is_resource_id=True, step_size="1:microliter")
 
         # Test volume that is not an integer multiple of step_size
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.dispense_full_plate(container, "rs17gmh5wafm5p", "11:microliter",
                                   is_resource_id=True, step_size="5:microliter")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.dispense_full_plate(container, "rs17gmh5wafm5p", "1.6:microliter",
                                   is_resource_id=True,
                                   step_size="0.5:microliter")
 
-    def test_x_cassette(self, dummy_protocol):
-        # Initialize protocol and container
-        p = dummy_protocol
-        container = p.ref("Test_Container", cont_type="96-pcr", discard=True)
-
-        # Test p.dispense without setting x_cassette
-        p.dispense(container, "water",
-                   [{"column": 0, "volume": "10:microliter"}])
-        assert ("x_cassette" not in p.instructions[-1].data)
-        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
-
-        # Test p.dispense with x_cassette specified
-        p.dispense(container, "water",
-                   [{"column": 1, "volume": "10:microliter"}],
-                   step_size="0.5:microliter",
-                   x_cassette="ThermoFisher #24073295")
-        assert (p.instructions[-1].data["x_cassette"] ==
-                "ThermoFisher #24073295")
-        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
-
-        # Test bad x_cassette type
-        with pytest.raises(ValueError):
-            p.dispense(container, "water",
-                       [{"column": 1, "volume": "10:microliter"}],
-                       step_size="0.5:microliter",
-                       x_cassette="bad cassette type")
-
-        # Test mismatch between step_size and x_cassette
-        with pytest.raises(ValueError):
-            p.dispense(container, "water",
-                       [{"column": 1, "volume": "10:microliter"}],
-                       step_size="5:microliter",
-                       x_cassette="ThermoFisher #24073295")
-
-        # Test specification of x_cassette without step_size
-        with pytest.raises(ValueError):
-            p.dispense(container, "water",
-                       [{"column": 1, "volume": "10:microliter"}],
-                       x_cassette="ThermoFisher #24073295")
-
-        # Test p.dispense_full_plate without setting x_cassette
-        p.dispense_full_plate(container, "water", "10:microliter")
-        assert ("x_cassette" not in p.instructions[-1].data)
-        assert (p.instructions[-1].data["step_size"] == Unit(5, "microliter"))
-        assert ("x_human" not in p.instructions[-1].data)
-
-        # Test p.dispense_full_plate with x_cassette specified
-        p.dispense_full_plate(container, "water", "10:microliter",
-                              step_size="0.5:microliter",
-                              x_cassette="ThermoFisher #24073295")
-        assert (p.instructions[-1].data["x_cassette"] ==
-                "ThermoFisher #24073295")
-        assert (p.instructions[-1].data["step_size"] == Unit(0.5, "microliter"))
-        assert (p.instructions[-1].data["x_human"] is True)
-
-        # Test bad x_cassette type
-        with pytest.raises(ValueError):
-            p.dispense_full_plate(container, "water", "10:microliter",
-                                  step_size="0.5:microliter",
-                                  x_cassette="bad cassette type")
-
-        # Test mismatch between step_size and x_cassette
-        with pytest.raises(ValueError):
-            p.dispense_full_plate(container, "water", "10:microliter",
-                                  step_size="5:microliter",
-                                  x_cassette="ThermoFisher #24073295")
-
-        # Test specification of x_cassette without step_size
-        with pytest.raises(ValueError):
-            p.dispense_full_plate(container, "water", "10:microliter",
-                                  x_cassette="ThermoFisher #24073295")
-
-    def test_reagent_source(self, dummy_protocol):
+    def test_reagent_source(self):
         # Initialize protocol and containers for testing dispense
-        p = dummy_protocol
+        p = Protocol()
         dest1 = p.ref("destination_plate_1", cont_type="96-pcr", discard=True)
-        src1 = p.ref("source_well_1", None, cont_type="micro-2.0",
-                     discard=True).well(0)
-        src1.volume = Unit(2, "milliliter")
+        src1 = p.ref("source_well_1", None, cont_type="1-flat",
+                     discard=True, cover="universal").well(0)
+        src1.volume = Unit(40, "milliliter")
 
         dest2 = p.ref("destination_plate_2", cont_type="96-pcr", discard=True)
         src2 = p.ref("source_well_2", None, cont_type="96-deep", discard=True,
@@ -2407,7 +1842,6 @@ class TestDispense:
         assert (p.instructions[-1].data["reagent"] == "water")
         assert ("resource_id" not in p.instructions[-1].data)
         assert ("reagent_source" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense with resource_id
         p.dispense(dest3, "rs17gmh5wafm5p",
@@ -2416,38 +1850,38 @@ class TestDispense:
         assert ("reagent" not in p.instructions[-1].data)
         assert (p.instructions[-1].data["resource_id"] == "rs17gmh5wafm5p")
         assert ("reagent_source" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
+
+        # Test p.dispense with reagent_source
+        assert (src1.container.cover == "universal")
 
         p.dispense(dest1, src1, [{"column": 0, "volume": "10:microliter"},
-                   {"column": 1, "volume": "30:microliter"}])
+                                 {"column": 1, "volume": "30:microliter"}])
         assert (src1.container.cover is None)
         assert ("reagent" not in p.instructions[-1].data)
         assert ("resource_id" not in p.instructions[-1].data)
         assert (p.instructions[-1].data["reagent_source"] == src1)
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Check volumes
         for well in dest1.wells_from(0, 8, columnwise=True):
             assert (well.volume == Unit(10, "microliter"))
         for well in dest1.wells_from(1, 8, columnwise=True):
             assert (well.volume == Unit(30, "microliter"))
-        assert (src1.volume == Unit(1680, "microliter"))
+        assert (src1.volume == Unit(39680, "microliter"))
 
         # Test improper inputs for reagent
         with pytest.raises(TypeError):
             p.dispense(dest1, 1, [{"column": 0, "volume": "10:microliter"},
-                       {"column": 1, "volume": "30:microliter"}])
+                                  {"column": 1, "volume": "30:microliter"}])
         with pytest.raises(TypeError):
             p.dispense(dest1, dummy_plate.all_wells(),
                        [{"column": 0, "volume": "10:microliter"},
-                       {"column": 1, "volume": "30:microliter"}])
+                        {"column": 1, "volume": "30:microliter"}])
 
         # Test p.dispense_full_plate with reagent
         p.dispense_full_plate(dest3, "water", "10:microliter")
         assert (p.instructions[-1].data["reagent"] == "water")
         assert ("resource_id" not in p.instructions[-1].data)
         assert ("reagent_source" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense_full_plate with resource_id
         p.dispense_full_plate(dest3, "rs17gmh5wafm5p", "10:microliter",
@@ -2455,17 +1889,15 @@ class TestDispense:
         assert ("reagent" not in p.instructions[-1].data)
         assert (p.instructions[-1].data["resource_id"] == "rs17gmh5wafm5p")
         assert ("reagent_source" not in p.instructions[-1].data)
-        assert ("x_human" not in p.instructions[-1].data)
 
         # Test p.dispense_full_plate with reagent_source
-        assert(src2.container.cover == "universal")
+        assert (src2.container.cover == "universal")
 
         p.dispense_full_plate(dest2, src2, "10:microliter")
         assert (src2.container.cover is None)
         assert ("reagent" not in p.instructions[-1].data)
         assert ("resource_id" not in p.instructions[-1].data)
         assert (p.instructions[-1].data["reagent_source"] == src2)
-        assert (p.instructions[-1].data["x_human"] is True)
 
         # Check volumes
         for well in dest2.all_wells():
@@ -2600,7 +2032,7 @@ class TestDyeTest:
         _add_dye_to_preview_refs(p1)
 
         assert (len(p1.instructions) == 1)
-        assert (p1.instructions[0].data["op"] == "provision")
+        assert (p1.instructions[0].op == "provision")
         assert (p1.instructions[0].data["resource_id"] == "rs18qmhr7t9jwq")
         assert (len(p1.instructions[0].data["to"]) == 1)
         assert (p1.instructions[0].data["to"][0]["volume"] ==
@@ -2736,3 +2168,118 @@ class TestIncubate:
                        target_temperature="50:celsius",
                        shaking_params={"path": "ccw_diamond",
                                        "frequency": "701:rpm"})
+
+
+class TestProvision:
+    p = Protocol()
+    w1 = p.ref("w1", None, cont_type="96-pcr", discard=True)\
+        .well(0).set_volume("2:microliter")
+
+    def test_provision_well_capacity(self):
+        self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter")
+        assert (self.p.instructions[-1].op == "provision")
+        with pytest.raises(ValueError):
+            self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
+
+
+class TestSeal:
+    p = Protocol()
+    c1 = p.ref("c1", cont_type="96-pcr", discard=True)
+    c2 = p.ref("c2", cont_type="384-flat", discard=True)
+
+    def test_param_checks(self):
+        with pytest.raises(RuntimeError):
+            self.p.cover(self.c1)
+            self.p.seal(self.c1)
+        with pytest.raises(RuntimeError):
+            self.p.seal(self.c2)
+        with pytest.raises(RuntimeError):
+            self.p.seal(self.c1, type="aluminum")
+        with pytest.raises(RuntimeError):
+            self.p.seal(self.c1, mode="illegal")
+        with pytest.raises(TypeError):
+            self.p.seal(self.c1, temperature="bla")
+        with pytest.raises(TypeError):
+            self.p.seal(self.c1, duration="184:celsius")
+        with pytest.raises(RuntimeError):
+            self.p.seal(self.c1, mode="adhesive", duration="1:second")
+
+    def test_consecutive_seals(self):
+        p = Protocol()
+        c1 = p.ref("c1", cont_type="96-pcr", discard=True)
+        p.seal(c1, type="ultra-clear")
+        p.seal(c1, type="foil")
+
+        assert(len(p.instructions) == 1)
+        assert(p.instructions[0].data["type"] == "ultra-clear")
+
+    def test_mode_params(self):
+        p = Protocol()
+        c1 = p.ref("c1", cont_type="96-pcr", discard=True)
+        p.seal(c1, temperature="140:celsius")
+        p.unseal(c1)
+        p.seal(c1, duration="3:second")
+        p.unseal(c1)
+        p.seal(c1, temperature="140:celsius", duration="3:second")
+        seal_instructions = [instr.data for instr in p.instructions
+                             if instr.op == "seal"]
+
+        assert(seal_instructions[0]["mode"] == "thermal")
+        assert("duration" not in seal_instructions[0]["mode_params"].keys())
+
+        assert (seal_instructions[1]["mode"] == "thermal")
+        assert ("temperature" not in seal_instructions[1]["mode_params"])
+
+        assert (seal_instructions[2]["mode"] == "thermal")
+        assert (seal_instructions[2]["mode_params"]["temperature"] ==
+                Unit("140:celsius"))
+        assert (seal_instructions[2]["mode_params"]["duration"] ==
+                Unit("3:second"))
+
+
+class TestCountCells:
+    p = Protocol()
+    tube = p.ref("tube", id=None, cont_type="micro-1.5", discard=True)
+    plate = p.ref("plate", id=None, cont_type="96-pcr", discard=True)
+
+    def test_good_inputs(self):
+        self.p.count_cells(self.tube.well(0), "10:microliter", "cell_count_1",
+                           labels=["trypan_blue"])
+        assert (len(self.p.instructions) == 1)
+
+        self.p.count_cells([self.tube.well(0), self.plate.well(0)],
+                           "10:microliter", "cell_count_2", ["trypan_blue"])
+        assert (len(self.p.instructions) == 2)
+
+        self.p.count_cells(self.plate.wells_from(5, 10), Unit(5, "microliter"),
+                           "cell_count_3", ["trypan_blue"])
+        assert (len(self.p.instructions) == 3)
+
+        self.p.count_cells(self.plate.wells_from(5, 10), Unit(5, "microliter"),
+                           "cell_count_4", ["trypan_blue", "trypan_blue"])
+        assert (len(self.p.instructions) == 4)
+
+    def test_bad_inputs(self):
+        # Bad wells input
+        with pytest.raises(TypeError):
+            # Container used instead of Well/WellGroup
+            self.p.count_cells(self.tube, "10:microliter", "cell_count_4",
+                               ["trypan_blue"])
+        # Bad volume input
+        with pytest.raises(TypeError):
+            # Not a unit
+            self.p.count_cells(self.tube.well(0), 10, "cell_count_4",
+                               ["trypan_blue"])
+        with pytest.raises(TypeError):
+            # Not of correct dimensionality
+            self.p.count_cells(self.tube.well(0), "10:meter", "cell_count_4",
+                               ["trypan_blue"])
+        # Bad labels input
+        with pytest.raises(ValueError):
+            # GFP is not an accepted label
+            self.p.count_cells(self.tube.well(0), "10:microliter",
+                               "cell_count_4", ["GFP"])
+        with pytest.raises(ValueError):
+            # No label specified
+            self.p.count_cells(self.tube.well(0), "10:microliter",
+                               "cell_count_4")

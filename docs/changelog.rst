@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`-` change default linter to pylint and update tox
+
 * :release:`4.0.0 <2017-11-22>`
 * :feature:`-` add `ceil` and `floor` methods to `Unit`
 * :feature:`-` add shaking capabilities to :ref:`protocol-incubate`

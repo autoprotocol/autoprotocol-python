@@ -552,3 +552,128 @@ def is_valid_well(param):
         if not all(isinstance(well, Well) for well in param):
             return False
     return True
+
+def parse_unit(unit, accepted_unit=None):
+    """
+    Parses and checks unit provided and ensures its of valid type and
+    dimensionality.
+
+    Note that this also checks against the dimensionality of the
+    `accepted_unit`.
+    I.e. `parse_unit("1:s", "minute")` will return True.
+
+    Raises type errors if the Unit provided is invalid.
+
+    Parameters
+    ----------
+    unit: Unit, str
+        Input to be checked
+    accepted_unit: Unit, str, List[Unit], List[str], Optional
+        Dimensionality of unit should match against the accepted unit(s).
+        Examples:
+            parse_unit("1:ul", "1:ml")
+            parse_unit("1:ul", "ml")
+            parse_unit("1:ul", ["ml", "kg"])
+
+    Returns
+    -------
+    Unit:
+        Parsed and checked unit
+
+    Raises
+    ------
+    TypeError:
+        Error when input does not match expected type or dimensionality
+    """
+    if not isinstance(unit, Unit):
+        try:
+            unit = Unit(unit)
+        except (UnitStringError, UnitValueError):
+            raise TypeError("{} is not of type Unit/str".format(unit))
+    if accepted_unit is not None:
+        # Note: This is hacky. We should formalize the concept of base Units
+        # in AP-Py
+        def parse_base_unit(base_unit):
+            if not isinstance(base_unit, Unit):
+                if isinstance(base_unit, str):
+                    if ":" not in base_unit:
+                        base_unit = "1:" + base_unit
+            return Unit(base_unit)
+
+        if isinstance(accepted_unit, list):
+            accepted_unit = [parse_base_unit(a_u) for a_u in accepted_unit]
+        else:
+            accepted_unit = [parse_base_unit(accepted_unit)]
+        if all([unit.dimensionality != a_u.dimensionality for a_u in
+                accepted_unit]):
+            raise TypeError("{} is not of the expected dimensionality "
+                            "{}".format(unit, accepted_unit))
+
+    return unit
+
+
+def check_unit(value, lb=None, ub=None, label=None):
+    """
+    Checks that the provided unit is within the specified bounds
+
+    Parameters
+    ----------
+    value: Unit
+        Input to be checked
+    lb: Unit
+        Lower-bound of range (inclusive)
+    ub: Unit
+        Upper-bound of range (inclusive)
+    label: str, optional
+        Label of unit, used in the error message if provided
+
+    Returns
+    -------
+    Unit:
+        Validated unit which is in range
+
+    Raises
+    ------
+    TypeError:
+        Error when inputs are not of the same dimensionality
+    ValueError:
+        Error when the unit is out of bounds
+    ValueError:
+        No bounds are specified
+    """
+    if lb is None and ub is None:
+        raise ValueError("At least one bound should be specified in order to "
+                         "check")
+
+    # Ensure comparators are all units
+    if not all(isinstance(_, Unit) for _ in [value, lb, ub] if _ is not None):
+        raise TypeError(
+            "All compared units have be of type `Unit`"
+        )
+
+    # Ensure comparators all have the same dimensionality
+    if len({_.dimensionality for _ in [value, lb, ub] if _ is not None}) != 1:
+        raise TypeError(
+            "All compared units have to be of the same dimensionality"
+        )
+
+    if label is not None:
+        prefix = "{} {} has to be".format(label, value)
+    else:
+        prefix = "{} has to be".format(value)
+
+    if ub is None:
+        if not (lb <= value):
+            raise ValueError("{} has to be greater or equal to {}".format(
+                prefix, lb))
+    elif lb is None:
+        if not (value <= ub):
+            raise ValueError("{} has to be less than or equal to {}".format(
+                prefix, ub))
+    else:
+        if not (lb <= value <= ub):
+            raise ValueError("{} has to be within [{}, {}]".format(
+                prefix, lb, ub))
+
+    return value
+

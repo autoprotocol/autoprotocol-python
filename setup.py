@@ -13,14 +13,14 @@ setup(
         'Pint==0.8.1'
     ],
     tests_require=[
-        'coverage>=4.0.3,<5',
+        'coverage>=4,<5',
         'pylint>=1,<2',
         'pytest>=3,<4',
-        'tox>=2.3.1,<4'
+        'tox>=3,<4'
     ],
     extras_require={
         "docs": [
-            "Sphinx>=1.7,<1.8",
+            "Sphinx>=1.7,<2",
             "sphinx-rtd-theme",
             "releases"
         ]

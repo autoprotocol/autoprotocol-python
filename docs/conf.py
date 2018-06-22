@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.abspath('../autoprotocol'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
     'releases'
 ]
 

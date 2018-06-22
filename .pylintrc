@@ -1,0 +1,21 @@
+[MASTER]
+
+load-plugins=
+    pylint.extensions.docparams,
+
+# Ignore non-python files
+ignore-patterns=
+    ^.*\.(?!py$)[^.]+$
+
+
+[MESSAGES CONTROL]
+
+disable=
+    fixme,
+    wildcard-import,
+    too-many-arguments,
+    too-many-lines,
+
+[FORMAT]
+
+max-line-length=80

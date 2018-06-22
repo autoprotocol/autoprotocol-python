@@ -1,12 +1,10 @@
 {
   "linters": {
-    "flake8-warning": {
-      "type": "flake8",
+    "pylint": {
+      "type": "pylint",
       "include": "(\\.py$)",
-      "severity": {
-      },
-      "severity.rules": {
-        "(^E)": "warning"
+       "severity.rules": {
+        "(^W)": "advice"
       }
     }
   }

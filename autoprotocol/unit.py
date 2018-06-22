@@ -7,7 +7,7 @@ import sys
 if sys.version_info[0] >= 3:
     string_type = str
 else:
-    string_type = basestring
+    string_type = basestring  # pylint: disable=undefined-variable
 
 """
     :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS

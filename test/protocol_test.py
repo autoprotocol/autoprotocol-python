@@ -116,8 +116,8 @@ class TestThermocycle:
             ]},
         ], "20:microliter")
         # Test for correct number of groups
-        assert (len(t.groups) == 3)
-        assert (t.volume == "20:microliter")
+        assert (len(t.data["groups"]) == 3)
+        assert (t.data["volume"] == "20:microliter")
 
     def test_thermocycle_dyes_and_datarefs(self):
         pytest.raises(ValueError,

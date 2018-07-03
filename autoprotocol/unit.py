@@ -1,25 +1,100 @@
 from __future__ import division, print_function
 from pint import UnitRegistry
 from pint.quantity import _Quantity
-from math import ceil as math_ceil, floor as math_floor
+from pint.util import UnitsContainer
+from pint.errors import UndefinedUnitError
+from decimal import Decimal, InvalidOperation
+from collections import defaultdict
+from math import ceil, floor
+from numbers import Number
 import sys
 
-if sys.version_info[0] >= 3:
-    string_type = str
-else:
-    string_type = basestring  # pylint: disable=undefined-variable
+if sys.version_info.major == 3:
+    basestring = str  # pylint: disable=invalid-name
 
-"""
+'''
     :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-"""
+'''
+
+
+def to_decimal(number):
+    """
+    Casts a number to a Decimal safely.
+
+    Parameters
+    ----------
+    number: Number
+        number to be cast to a decimal
+
+    Returns
+    -------
+    Decimal
+    """
+    if isinstance(number, Decimal):
+        decimal = number
+    elif isinstance(number, Number):
+        decimal = Decimal(str(number))
+    else:
+        raise ValueError(
+            "Tried to cast {} to decimal but it was of non-numeric type {}."
+            "".format(number, type(number)))
+    return decimal
+
+
+class DecimalUnitRegistry(UnitRegistry):
+    """
+    Redefines builtin UnitRegistry methods for doing conversions to use Decimals
+    instead of floats to eliminate floating point imprecision, particularly
+    converting .to("new_unit").
+    """
+
+    def _get_root_units(self, input_units, check_nonmult=True):
+        if not input_units:
+            return Decimal('1'), UnitsContainer()
+
+        # The cache is only done for check_nonmult=True
+        if check_nonmult and input_units in self._root_units_cache:
+            return self._root_units_cache[input_units]
+
+        accumulators = [Decimal('1'), defaultdict(Decimal)]
+        self._get_root_units_recurse(input_units, Decimal('1'), accumulators)
+
+        factor = accumulators[0]
+        units = UnitsContainer(dict(
+            (k, v) for k, v in accumulators[1].items() if v != Decimal('0')))
+
+        if check_nonmult:
+            for unit in units.keys():
+                if not self._units[unit].converter.is_multiplicative:
+                    return None, units
+
+        if check_nonmult:
+            self._root_units_cache[input_units] = factor, units
+
+        return factor, units
+
+    def _get_root_units_recurse(self, ref, exp, accumulators):
+        for key in sorted(ref):
+            exp2 = to_decimal(exp) * to_decimal(ref[key])
+            key = self.get_name(key)
+            reg = self._units[key]
+            if reg.is_base:
+                accumulators[1][key] += exp2
+            else:
+                accumulators[0] *= (
+                    to_decimal(reg._converter.scale) ** exp2)
+                if reg.reference is not None:
+                    self._get_root_units_recurse(
+                        reg.reference, exp2, accumulators)
+
 
 # Preload UnitRegistry (Use default Pints definition file as a base)
-_UnitRegistry = UnitRegistry()
+_UnitRegistry = DecimalUnitRegistry()
 
-"""Map string representation of Pint units over to Autoprotocol format"""
+'''Map string representation of Pint units over to Autoprotocol format'''
 # Map Temperature Unit names
 _UnitRegistry._units["degC"]._name = "celsius"
 _UnitRegistry._units["celsius"]._name = "celsius"
@@ -30,7 +105,7 @@ _UnitRegistry._units["rankine"]._name = "rankine"
 # Map Speed Unit names
 _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
-"""Add support for Molarity Unit"""
+'''Add support for Molarity Unit'''
 _UnitRegistry.define('molar = mole/liter = M')
 
 
@@ -47,18 +122,18 @@ class UnitError(Exception):
 
 
 class UnitStringError(UnitError):
-    message_text = ("Invalid format for %s: when building a Unit from a "
-                    "string argument, string must be in \'1:meter\' format.")
+    message_text = ("Invalid format '%s'; when building a Unit from a string "
+                    "it must be formatted as '1:meter'.")
 
 
 class UnitValueError(UnitError):
-    message_text = ("Invalid value for %s: when building a Unit from a "
-                    "value argument, value must be numeric.")
+    message_text = ("Invalid value '%s'; when building a Unit "
+                    "the value must be numeric.")
 
 
-class UnitAttributeError(UnitError):
-    message_text = ("Invalid or undefined unit of measure %s: is not "
-                    "defined in the unit registry.")
+class UnitUnitsError(UnitError):
+    message_text = ("Invalid value '%s'; when building a Unit "
+                    "the units must be in the UnitRegistry.")
 
 
 class Unit(_Quantity):
@@ -88,15 +163,15 @@ class Unit(_Quantity):
 
     Returns
     -------
-
-        .. code-block:: json
+    Unit
+        unit object
+        .. code-block:: none
 
             10000010.0:microliter
             10.0:microliter / second
             0.036:liter / hour
 
     """
-
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False
@@ -106,92 +181,126 @@ class Unit(_Quantity):
             return value
 
         # Automatically parse String if no units provided
-        if not units and isinstance(value, string_type):
+        if not units and isinstance(value, basestring):
             try:
                 value, units = value.split(":")
             except ValueError:
                 raise UnitStringError(value)
         try:
-            return super(Unit, cls).__new__(cls, float(value), units)
-        except ValueError:
+            return super(Unit, cls).__new__(cls, Decimal(str(value)), units)
+        except (ValueError, InvalidOperation):
             raise UnitValueError(value)
-        except AttributeError:
-            raise UnitAttributeError(value)
+        except UndefinedUnitError:
+            raise UnitUnitsError(units)
 
     def __init__(self, value, units=None):
         super(Unit, self).__init__()
         self.unit = self.units.__str__()
 
-    @staticmethod
-    def fromstring(s):
-        """
-        Convert a string representation of a unit into a Unit object.
-
-        Example
-        -------
-
-        .. code-block:: python
-
-            Unit.fromstring("10:microliter")
-
-        becomes
-
-        .. code-block:: python
-
-            Unit(10, "microliter")
-
+    def __str__(self, ndigits=12):
+        '''
         Parameters
         ----------
-        s : str
-            String in the format of "value:unit"
-
-        """
-        if isinstance(s, Unit):
-            return s
-        else:
-            return Unit(s)
-
-    def __str__(self):
-        """Returns string formatted unit"""
-        return ":".join([str(self._magnitude),
-                        "^".join(self.unit.split("**"))]).replace(" ", "")
+        ndigits: int, optional
+            Number of decimal places to round to, useful for numerical
+            precision reasons
+        Returns
+        -------
+        rounded representation: str
+            This rounds the string presentation to 12 decimal places by default
+            to account for the majority of numerical precision issues
+        '''
+        rounded_magnitude = round(self.magnitude, ndigits)
+        normalized_magnitude = to_decimal(rounded_magnitude).normalize()
+        unit_repr = self.unit.replace("**", "^").replace(" ", "")
+        return "{:f}:{:s}".format(normalized_magnitude, unit_repr)
 
     def __repr__(self):
-        """Returns Unit representation"""
-        return "Unit({0}, '{1}')".format(self._magnitude, self._units)
+        return "Unit({:f}, '{:s}')".format(self.magnitude, self.units)
+
+    def __ceil__(self):
+        return self.__class__(ceil(self.magnitude), self.units)
+
+    def __floor__(self):
+        return self.__class__(floor(self.magnitude), self.units)
 
     def _mul_div(self, other, magnitude_op, units_op=None):
-        """
+        '''
         Extends Pint's base _Quantity multiplication/division
-        implementation by checking for dimensionality
-        """
+        implementation by checking for dimensionality and
+        casting Numbers to Decimals
+        '''
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
-                other = other.to(self.unit)
+                other = other.to(self.units)
+        else:
+            other = to_decimal(other)
+
         return super(Unit, self)._mul_div(other, magnitude_op, units_op)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
-        """
+        '''
         Extends Pint's base _Quantity multiplication/division
-        implementation by checking for dimensionality
-        """
+        implementation by checking for dimensionality and
+        casting Numbers to Decimals
+        '''
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
-                other = other.to(self.unit)
+                other = other.to(self.units)
+        else:
+            other = to_decimal(other)
+
         return super(Unit, self)._imul_div(other, magnitude_op, units_op)
+
+    @property
+    def magnitude(self):
+        return self._magnitude
+
+    @magnitude.setter
+    def magnitude(self, magnitude):
+        try:
+            self._magnitude = to_decimal(magnitude)
+        except ValueError:
+            raise RuntimeError(
+                "Tried to set Unit's magnitude {} but it was of type {}. "
+                "Magnitudes must be numeric.".format(
+                    magnitude, type(magnitude)))
+
+    @staticmethod
+    def fromstring(s):
+        return Unit(s)
 
     def ceil(self):
         """
-        Returns:
-        ceil: Unit
-            The unit rounded up to the nearest integer
+        Equivalent of math.ceil(Unit) for python 2 compatibility
+
+        Returns
+        -------
+        Unit
         """
-        return Unit(math_ceil(self.magnitude), self.unit)
+        return self.__ceil__()
 
     def floor(self):
         """
-        Returns:
-        floor: Unit
-            The unit rounded down to the nearest integer
+        Equivalent of math.floor(Unit) for python 2 compatibility
+
+        Returns
+        -------
+        Unit
         """
-        return Unit(math_floor(self.magnitude), self.unit)
+        return self.__floor__()
+
+    def round(self, ndigits):
+        """
+        Equivalent of round(Unit) for python 2 compatibility
+
+        Parameters
+        ----------
+        ndigits: int
+            number of decimal places to be rounded to
+
+        Returns
+        -------
+        Unit
+        """
+        return self.__round__(ndigits)

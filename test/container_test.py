@@ -4,7 +4,7 @@ from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.unit import Unit
 
 if sys.version_info[0] >= 3:
-    xrange = range
+    xrange = range  # pylint: disable=invalid-name
 
 
 class TestContainerWellRef:
@@ -38,7 +38,6 @@ class TestContainerWellRef:
             self.c.humanize(-1)
         # check input type
         with pytest.raises(TypeError):
-            self.c.humanize("10")
             self.c.humanize(self.c.well(0))
 
     def test_robotize(self):
@@ -259,6 +258,10 @@ class TestWellProperty:
                 list(self.c.well(0).properties.values()))
         with pytest.raises(TypeError):
             self.c.well(0).set_properties(["property", "value"])
+        with pytest.raises(TypeError):
+            self.c.well(0).set_properties({"property", True})
+        with pytest.raises(TypeError):
+            self.c.well(0).set_properties({("property"), "value"})
 
     def test_add_properties(self):
         self.c.well(0).add_properties({"nickname": "dummy"})
@@ -379,3 +382,35 @@ class TestContainerVolumes:
                 dummy_96.container_type.well_volume_ul)
         assert (dummy_tube.container_type.true_max_vol_ul ==
                 dummy_tube.container_type.well_volume_ul)
+
+
+class TestAliquotProperties(object):
+    @pytest.fixture(autouse=True)
+    def make_container(self, dummy_type):
+        self.c = Container(None, dummy_type)
+
+    def test_wells(self):
+        self.c.well(0).add_properties({"test0": "true"})
+        assert(self.c.well(0).properties["test0"] == "true")
+
+        self.c.well(0).set_properties({"test1": "true"})
+        assert(self.c.well(0).properties == {"test1": "true"})
+
+        assert(self.c.well(3).properties == {})
+
+    def test_well_groups(self):
+        self.c.wells(0, 1).add_properties({"test0": "true"})
+        assert(self.c.well(1).properties["test0"] == "true")
+
+        self.c.wells(0, 1).set_properties({"test1": "true"})
+        assert(self.c.well(1).properties == {"test1": "true"})
+
+        assert(self.c.well(3).properties == {})
+
+    def test_correct_formatting(self):
+        with pytest.raises(TypeError):
+            self.c.well(0).add_properties({True: "True"})
+        with pytest.raises(TypeError):
+            self.c.well(0).add_properties({"True": True})
+        with pytest.raises(TypeError):
+            self.c.well(0).add_properties([])

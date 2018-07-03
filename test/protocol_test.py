@@ -247,7 +247,7 @@ class TestRefify:
 
         # refify Unit
         a_unit = Unit("30:microliter")
-        assert (p._refify(a_unit) == "30.0:microliter")
+        assert (p._refify(a_unit) == "30:microliter")
 
         # refify Instruction
         p.cover(refs["plate"])
@@ -1938,8 +1938,8 @@ class TestFlowAnalyze:
         assert (p.instructions[1].op == "uncover")
         assert (hasattr(p.instructions[2], "channels"))
 
-    def test_flow_bad_params(self, dummy_protocol):
-        p = dummy_protocol
+    def test_flow_bad_params(self):
+        p = Protocol()
         container = p.ref("Test_Container1", cont_type="96-pcr", discard=True)
         container2 = p.ref("Test_Container2", cont_type="96-flat", discard=True)
         colors = [
@@ -1991,7 +1991,7 @@ class TestFlowAnalyze:
                                      "volume": "200:microliter"},
                                     {"well": container2.well(2),
                                      "volume": "200:microliter"}])
-        with pytest.raises(ValueError):
+        with pytest.raises(UnitError):
             p.flow_analyze(dataref="Test",
                            FSC={"voltage_range": {"low": "230:volt",
                                                   "high": "280:volt"}},
@@ -2025,8 +2025,8 @@ class TestFlowAnalyze:
 
 class TestDyeTest:
 
-    def test_add_dye_to_preview_refs(self, dummy_protocol):
-        p1 = dummy_protocol
+    def test_add_dye_to_preview_refs(self):
+        p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
         c1.well(0).set_volume("10:microliter")
         _add_dye_to_preview_refs(p1)
@@ -2035,8 +2035,7 @@ class TestDyeTest:
         assert (p1.instructions[0].op == "provision")
         assert (p1.instructions[0].data["resource_id"] == "rs18qmhr7t9jwq")
         assert (len(p1.instructions[0].data["to"]) == 1)
-        assert (p1.instructions[0].data["to"][0]["volume"] ==
-                Unit(10, "microliter"))
+        assert (p1.instructions[0].data["to"][0]["volume"] == Unit(10, "microliter"))
         assert (p1.instructions[0].data["to"][0]["well"] == c1.well(0))
         assert (c1.well(0).volume == Unit(10, "microliter"))
 
@@ -2080,47 +2079,70 @@ class TestDyeTest:
     def test_convert_dispense(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        c2 = p1.ref("c2", id=None, cont_type="res-sw96-hp", discard=True)
+        c2.well(0).set_volume("50:milliliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.dispense(c1, "rs18s8x4qbsvjz",
                     [{"column": 0, "volume": "10:microliter"}],
                     is_resource_id=True)
         p1.dispense(c1, "pbs", [{"column": 1, "volume": "10:microliter"}])
+        p1.dispense(c1, c2.well(0), [{"column": 2, "volume": "10:microliter"}])
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.dispense(c1, "rs18s8x4qbsvjz",
-                    [{"column": 2, "volume": "10:microliter"}],
+                    [{"column": 3, "volume": "10:microliter"}],
                     is_resource_id=True)
-        p1.dispense(c1, "pbs", [{"column": 3, "volume": "10:microliter"}])
-        _convert_dispense_instructions(p1, 3, 5)
+        p1.dispense(c1, "pbs", [{"column": 4, "volume": "10:microliter"}])
+        p1.dispense(c1, c2.well(0), [{"column": 5, "volume": "10:microliter"}])
+        _convert_dispense_instructions(p1, 4, 7)
+
         assert ("resource_id" in p1.instructions[1].data)
         assert ("reagent" not in p1.instructions[1].data)
+        assert ("reagent_source" not in p1.instructions[1].data)
+
         assert ("resource_id" not in p1.instructions[2].data)
         assert ("reagent" in p1.instructions[2].data)
-        assert ("resource_id" in p1.instructions[4].data)
-        assert ("reagent" not in p1.instructions[4].data)
+        assert ("reagent_source" not in p1.instructions[2].data)
+
+        assert ("resource_id" not in p1.instructions[3].data)
+        assert ("reagent" not in p1.instructions[3].data)
+        assert ("reagent_source" in p1.instructions[3].data)
+
         assert ("resource_id" in p1.instructions[5].data)
         assert ("reagent" not in p1.instructions[5].data)
+        assert ("reagent_source" not in p1.instructions[5].data)
+
+        assert ("resource_id" in p1.instructions[6].data)
+        assert ("reagent" not in p1.instructions[6].data)
+        assert ("reagent_source" not in p1.instructions[6].data)
+
+        assert ("resource_id" not in p1.instructions[7].data)
+        assert ("reagent" not in p1.instructions[7].data)
+        assert ("reagent_source" in p1.instructions[7].data)
+
         assert (p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz")
         assert (p1.instructions[2].data["reagent"] == "pbs")
-        assert (p1.instructions[4].data["resource_id"] == "rs17gmh5wafm5p")
+        assert (p1.instructions[3].data["reagent_source"] == c2.well(0))
         assert (p1.instructions[5].data["resource_id"] == "rs17gmh5wafm5p")
+        assert (p1.instructions[6].data["resource_id"] == "rs17gmh5wafm5p")
+        assert (p1.instructions[7].data["reagent_source"] == c2.well(0))
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, "3", 5)
+            _convert_dispense_instructions(p1, "4", 7)
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, 3, "5")
+            _convert_dispense_instructions(p1, 4, "7")
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, -1, 5)
+            _convert_dispense_instructions(p1, -1, 7)
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, 6, 7)
+            _convert_dispense_instructions(p1, 8, 9)
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, 3, 7)
+            _convert_dispense_instructions(p1, 3, 9)
 
         with pytest.raises(ValueError):
-            _convert_dispense_instructions(p1, 5, 3)
+            _convert_dispense_instructions(p1, 7, 4)
 
 
 class TestIncubate:
@@ -2128,7 +2150,7 @@ class TestIncubate:
     def test_incubate(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("c1", id=None,
-                   cont_type="96-10-spot-vplex-m-pro-inflamm1-MSD",
+                   cont_type="96-flat",
                    discard=True)
 
         p.incubate(c1, "ambient", "10:minute", shaking=True,

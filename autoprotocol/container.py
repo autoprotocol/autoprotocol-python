@@ -3,18 +3,18 @@ from .unit import Unit
 from .util import quad_ind_to_num
 import sys
 
-if sys.version_info[0] >= 3:
-    xrange = range
-    basestring = str
+if sys.version_info.major == 3:
+    xrange = range  # pylint: disable=invalid-name
+    basestring = str  # pylint: disable=invalid-name
 
-"""
+'''
     :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
-"""
+'''
 
-SEAL_TYPES = ["ultra-clear", "foil"]
+SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
@@ -45,6 +45,23 @@ class Well(object):
         self.name = None
         self.properties = {}
 
+    @staticmethod
+    def validate_properties(properties):
+        if not isinstance(properties, dict):
+            raise TypeError(
+                "Aliquot properties {} are of type {}, "
+                "they should be a `dict`.".format(
+                    properties, type(properties)))
+        for key, value in properties.items():
+            if not isinstance(key, basestring):
+                raise TypeError(
+                    "Aliquot property {} : {} has a key of type {}, "
+                    "it should be a 'str'.".format(key, value, type(key)))
+            if not isinstance(value, basestring):
+                raise TypeError(
+                    "Aliquot property {} : {} has a value of type {}, "
+                    "it should be a 'str'.".format(key, value, type(value)))
+
     def set_properties(self, properties):
         """
         Set properties for a Well. Existing property dictionary
@@ -56,9 +73,8 @@ class Well(object):
             Custom properties for a Well in dictionary form.
 
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties is not of type 'dict'.")
-        self.properties = {key: value for key, value in properties.items()}
+        self.validate_properties(properties)
+        self.properties = properties.copy()
         return self
 
     def add_properties(self, properties):
@@ -74,8 +90,7 @@ class Well(object):
             Dictionary of properties to add to a Well.
 
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties given is not of type 'dict'.")
+        self.validate_properties(properties)
         for key, value in properties.items():
             self.properties[key] = value
         return self
@@ -91,12 +106,15 @@ class Well(object):
 
         """
         if not isinstance(vol, basestring) and not isinstance(vol, Unit):
-            raise TypeError("Volume given is not of type str or "
-                            "Unit. %s" % type(vol))
-        v = Unit.fromstring(vol)
-        if v > self.container.container_type.true_max_vol_ul:
-            raise ValueError("Theoretical volume you are trying to set "
-                             "exceeds the maximum volume of this well.")
+            raise TypeError(
+                "Volume {} is of type {}, it should be either 'str' or 'Unit'."
+                "".format(vol, type(vol)))
+        v = Unit(vol)
+        max_vol = self.container.container_type.true_max_vol_ul
+        if v > max_vol:
+            raise ValueError(
+                "Theoretical volume {} to be set exceeds "
+                "maximum well volume {}.".format(v, max_vol))
         self.volume = v
         return self
 
@@ -132,7 +150,7 @@ class Well(object):
 
         """
         if self.volume is None:
-            raise RuntimeError("Well {} has no volume".format(self))
+            raise RuntimeError("well {} has no volume".format(self))
         return self.volume - self.container.container_type.dead_volume_ul
 
     def __repr__(self):
@@ -181,10 +199,22 @@ class WellGroup(object):
             Dictionary of properties to set on Well(s).
 
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties given is not of type 'dict'.")
         for w in self.wells:
             w.set_properties(properties)
+        return self
+
+    def add_properties(self, properties):
+        """
+        Add the same properties for each Well in a WellGroup.
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to set on Well(s).
+
+        """
+        for w in self.wells:
+            w.add_properties(properties)
         return self
 
     def set_volume(self, vol):
@@ -197,8 +227,6 @@ class WellGroup(object):
             Theoretical volume of each well in the WellGroup.
 
         """
-        if not isinstance(vol, (Unit, basestring)):
-            raise TypeError("Volume given is not of type Unit or 'str'.")
         for w in self.wells:
             w.set_volume(vol)
         return self

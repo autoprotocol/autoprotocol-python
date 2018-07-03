@@ -177,11 +177,11 @@ class AcousticTransfer(Instruction):
 
     """
 
-    def __init__(self, transfers, droplet_size):
+    def __init__(self, groups, droplet_size):
         super(AcousticTransfer, self).__init__(
             op="acoustic_transfer",
             data={
-                "groups": [{"transfer": transfers}],
+                "groups": groups,
                 "droplet_size": droplet_size
             })
 

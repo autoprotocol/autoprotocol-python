@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`-` converted all Unit internals to use Decimals in place of other Numbers
+* :support:`-` cleaned up references of `Unit.fromstring` and `Unit._magnitude`
+* :feature:`-` added builtin support for `ceil` and `floor` and changed py2 compatibility `Unit.floor` and `Unit.ceil` methods to use them
 * :feature:`-` add `spectrophotometry` instruction (ASC-038)
 * :feature:`-` add `count_cells` instruction (ASC-033)
 * :feature:`-` change `measure_mass` instruction to take in a single container instead (ASC-030)

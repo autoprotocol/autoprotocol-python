@@ -1156,7 +1156,7 @@ class Protocol(object):
             x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
 
         return self._append_and_return(
-            AcousticTransfer(transfers, droplet_size)
+            AcousticTransfer([{"transfer": transfers}], droplet_size)
         )
 
     def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size,

@@ -1,3 +1,12 @@
+"""
+Container-type object and associated functions
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+"""
+
 import re
 import sys
 from collections import namedtuple
@@ -7,13 +16,6 @@ from .unit import Unit
 if sys.version_info[0] >= 3:
     xrange = range
     basestring = str
-
-"""
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
-        for more details.
-    :license: BSD, see LICENSE for more details
-
-"""
 
 
 class ContainerType(namedtuple("ContainerType",
@@ -236,14 +238,19 @@ class ContainerType(namedtuple("ContainerType",
 
         Parameters
         ----------
-        well_ref : str, int
+        idx : str or int
             Well index in either human-readable or integer form.
 
         Returns
         -------
-        well_ref : tuple
+        tuple
             tuple containing the column number and row number of the given
             well_ref.
+
+        Raises
+        ------
+        TypeError
+            Index given is not of the right parameter type
 
         """
         if not isinstance(idx, (int, basestring, Well)):

@@ -1,8 +1,9 @@
-from .util import parse_unit, check_unit, is_valid_well
+from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well
 from .unit import Unit
 
 
+# pragma pylint: disable=no-init
 class ThermocycleBuilders:
     """
     These builders are meant for helping to construct the `groups`
@@ -15,16 +16,26 @@ class ThermocycleBuilders:
 
         Parameters
         ----------
-        steps: List(ThermocycleBuilders.step)
+        steps: list(ThermocycleBuilders.step)
             Steps to be carried out. At least one step has to be specified.
             See `ThermocycleBuilders.step` for more information
-        cycles: Int, optional
+        cycles: int, optional
             Number of cycles to repeat the specified steps. Defaults to 1
 
         Returns
         -------
-        group: Dictionary
+        dict
             A thermocycling group
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, i.e. `cycles` is not of type int and `steps`
+            is not of type list
+        ValueError
+            `cycles` is not positive
+        ValueError
+            `steps` does not contain any elements
         """
         if not isinstance(cycles, int):
             raise TypeError("`cycles` {} has to be of type int".format(cycles))
@@ -56,7 +67,7 @@ class ThermocycleBuilders:
 
         Parameters
         ----------
-        temperature: Unit, dict(str -> Unit)
+        temperature: Unit or dict(str, Unit)
             Block temperature which the contents should be thermocycled at.
 
             If a gradient thermocycle is desired, specifying a dict with
@@ -68,18 +79,26 @@ class ThermocycleBuilders:
 
               temperature = {"top": "50:celsius", "bottom": "45:celsius"}
 
-        duration: str, Unit
+        duration: str or Unit
             Duration where the specified temperature parameters will be applied
         read: Boolean, optional
             Determines if a read at wavelengths specified by the dyes in the
             parent `thermocycle` instruction will be enabled for this particular
             step. Useful for qPCR applications.
 
-
         Returns
         -------
-        step: dict
+        dict
             A thermocycling step
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. `read` is not of type bool
+        ValueError
+            Invalid format specified for `temperature` dict
+        ValueError
+            Duration is not greater than 0 second
 
         """
         step_dict = dict()
@@ -106,6 +125,7 @@ class ThermocycleBuilders:
             step_dict['read'] = read
 
         return step_dict
+# pragma pylint: enable=no-init
 
 
 class DispenseBuilders(object):
@@ -119,6 +139,7 @@ class DispenseBuilders(object):
         ]
 
     @staticmethod
+    # pragma pylint: disable=unused-argument
     def nozzle_position(position_x=None, position_y=None, position_z=None):
         """
         Generates a validated nozzle_position parameter.
@@ -132,13 +153,16 @@ class DispenseBuilders(object):
         Returns
         -------
         dict
+            Dictionary of nozzle position parameters
         """
+
         position_dict = {
             name: parse_unit(position, "mm")
             for name, position in locals().items() if position is not None
         }
 
         return position_dict
+    # pragma pylint: enable=unused-argument
 
     @staticmethod
     def column(column, volume):
@@ -152,7 +176,9 @@ class DispenseBuilders(object):
 
         Returns
         -------
-        {"column": int, "volume": Unit}
+        dict
+            Column parameter of type {"column": int, "volume": Unit}
+
         """
         return {
             "column": int(column),
@@ -169,7 +195,15 @@ class DispenseBuilders(object):
 
         Returns
         -------
-        list({"column": int, "volume": str, Unit})
+        list
+            List of columns of type ({"column": int, "volume": str, Unit})
+
+        Raises
+        ------
+        ValueError
+            No `column` specified for columns
+        ValueError
+            Non-unique column indices
         """
         if not len(columns) > 0:
             raise ValueError(
@@ -197,7 +231,14 @@ class DispenseBuilders(object):
 
         Returns
         -------
-        {"duration": Unit, "frequency": Unit, "path": str, "amplitude": Unit}
+        dict
+            Shake after dictionary of type {"duration": Unit,
+            "frequency": Unit, "path": str, "amplitude": Unit}
+
+        Raises
+        ------
+        ValueError
+            Invalid shake path specified
         """
 
         if path and path not in self.SHAKE_PATHS:
@@ -249,7 +290,7 @@ class SpectrophotometryBuilders(object):
 
         Returns
         -------
-        selection : dict
+        dict
             Wavelength selection parameters.
         """
 
@@ -275,7 +316,7 @@ class SpectrophotometryBuilders(object):
 
         Returns
         -------
-        groups : list(dict)
+        list(dict)
             A list of spectrophotometry groups.
         """
         return [self.group(_["mode"], _["mode_params"]) for _ in groups]
@@ -291,8 +332,13 @@ class SpectrophotometryBuilders(object):
 
         Returns
         -------
-        group : dict
+        dict
             A spectrophotometry group.
+
+        Raises
+        ------
+        ValueError
+            Invalid mode specified
         """
         if mode not in self.MODES.keys():
             raise ValueError(
@@ -310,19 +356,27 @@ class SpectrophotometryBuilders(object):
         """
         Parameters
         ----------
-        wells : iterable(Well), WellGroup
+        wells : iterable(Well) or WellGroup
             Wells to be read.
-        wavelength : Unit, str, list(Unit, str)
+        wavelength : Unit or str
             The wavelengths at which to make absorbance measurements.
         num_flashes : int, optional
             The number of discrete reads to be taken and then averaged.
-        settle_time : Unit, str, optional
+        settle_time : Unit or str, optional
             The time to wait between moving to a well and reading it.
 
         Returns
         -------
-        mode_params : dict
+        dict
             Formatted mode_params for an absorbance mode.
+
+        Raises
+        ------
+        TypeError
+            Invalid type specified for input parameters, e.g. `num_flashes`
+            not of type int
+        ValueError
+            Invalid wells specified
         """
         if not is_valid_well(wells):
             raise ValueError(
@@ -341,7 +395,7 @@ class SpectrophotometryBuilders(object):
         ]
 
         if num_flashes is not None and not isinstance(num_flashes, int):
-            raise ValueError(
+            raise TypeError(
                 "Invalid num_flashes {}, must be an int".format(num_flashes)
             )
 
@@ -366,21 +420,21 @@ class SpectrophotometryBuilders(object):
         """
         Parameters
         ----------
-        wells : iterable(Well), WellGroup
+        wells : iterable(Well) or WellGroup
             Wells to be read.
         excitation : list(dict)
             A list of SpectrophotometryBuilders.wavelength_selection to
             determine the wavelegnth(s) of excitation light used.
         emission : list(dict)
-        A list of SpectrophotometryBuilders.wavelength_selection to
+            A list of SpectrophotometryBuilders.wavelength_selection to
             determine the wavelegnth(s) of emission light used.
         num_flashes : int, optional
             The number of discrete reads to be taken and then combined.
-        settle_time : Unit, str, optional
+        settle_time : Unit or str, optional
             The time to wait between moving to a well and reading it.
-        lag_time : Unit, str, optional
+        lag_time : Unit or str, optional
             The time to wait between excitation and reading.
-        integration_time : Unit, str, optional
+        integration_time : Unit or str, optional
             Time over which the data should be collected and integrated.
         gain : int, optional
             The amount of gain to be applied to the readings.
@@ -389,8 +443,17 @@ class SpectrophotometryBuilders(object):
 
         Returns
         -------
-        mode_params : dict
+        dict
             Formatted mode_params for a fluorescence mode.
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. settle_time is not of type Unit(second)
+        ValueError
+            Invalid wells specified
+        ValueError
+            Gain is not between 0 and 1
         """
         if not is_valid_well(wells):
             raise ValueError(
@@ -425,7 +488,7 @@ class SpectrophotometryBuilders(object):
 
         if gain is not None:
             if not isinstance(gain, (int, float)):
-                raise ValueError(
+                raise TypeError(
                     "Invalid gain {}, must be an int".format(gain)
                 )
             gain = float(gain)
@@ -464,21 +527,29 @@ class SpectrophotometryBuilders(object):
         """
         Parameters
         ----------
-        wells : iterable(Well), WellGroup
+        wells : iterable(Well) or WellGroup
             Wells to be read.
         num_flashes : int, optional
             The number of discrete reads to be taken and then combined.
-        settle_time : Unit, str, optional
+        settle_time : Unit or str, optional
             The time to wait between moving to a well and reading it.
-        integration_time : Unit, str, optional
+        integration_time : Unit or str, optional
             Time over which the data should be collected and integrated.
         gain : int, optional
             The amount of gain to be applied to the readings.
 
         Returns
         -------
-        mode_params : dict
+        dict
             Formatted mode_params for a luminescence mode.
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. settle_time is not of type Unit(second)
+        ValueError
+            Gain is not between 0 and 1
+
         """
         if not is_valid_well(wells):
             raise ValueError(
@@ -490,7 +561,7 @@ class SpectrophotometryBuilders(object):
             wells = WellGroup([wells])
 
         if num_flashes is not None and not isinstance(num_flashes, int):
-            raise ValueError(
+            raise TypeError(
                 "Invalid num_flashes {}, must be an int".format(num_flashes)
             )
 
@@ -502,7 +573,7 @@ class SpectrophotometryBuilders(object):
 
         if gain is not None:
             if not isinstance(gain, (int, float)):
-                raise ValueError(
+                raise TypeError(
                     "Invalid gain {}, must be an int".format(gain)
                 )
             gain = float(gain)
@@ -529,20 +600,20 @@ class SpectrophotometryBuilders(object):
         """
         Parameters
         ----------
-        duration : Unit, str, optional
+        duration : Unit or str, optional
             The duration of the shaking incubation, if not specified then the
             incubate will last until the end of read interval.
-        frequency : Unit, str, optional
+        frequency : Unit or str, optional
             The frequency of the shaking motion.
         path : str, optional
             The name of a shake path. See the spectrophotometry ASC for
             diagrams of different shake paths.
-        amplitude : Unit, str, optional
+        amplitude : Unit or str, optional
             The amplitude of the shaking motion.
 
         Returns
         -------
-        mode_params : dict
+        dict
             Formatted mode_params for a shake mode.
         """
         return self._shake(
@@ -556,19 +627,19 @@ class SpectrophotometryBuilders(object):
         """
         Parameters
         ----------
-        duration : Unit, str
+        duration : Unit or str
             The duration of the shaking incubation.
-        frequency : Unit, str, optional
+        frequency : Unit or str, optional
             The frequency of the shaking motion.
         path : str, optional
             The name of a shake path. See the spectrophotometry ASC for
             diagrams of different shake paths.
-        amplitude : Unit, str, optional
+        amplitude : Unit or str, optional
             The amplitude of the shaking motion.
 
         Returns
         -------
-        mode_params : dict
+        dict
             Formatted mode_params for a shake mode.
         """
         duration = parse_unit(duration, "second")

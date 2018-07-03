@@ -1,16 +1,17 @@
-# pragma pylint: disable=too-few-public-methods
-import json
-from .builders import DispenseBuilders, ThermocycleBuilders, \
-    SpectrophotometryBuilders
-from functools import reduce
-
-
 """
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+Contains all the Autoprotocol Instruction objects
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
+
+# pragma pylint: disable=too-few-public-methods, redefined-builtin
+import json
+from .builders import DispenseBuilders, ThermocycleBuilders, \
+    SpectrophotometryBuilders
+from functools import reduce
 
 
 class Instruction(object):
@@ -43,31 +44,35 @@ class MagneticTransfer(Instruction):
 
     Parameters
     ----------
-    collect:
-        Collects beads from the specified "object" by raising and lowering
-        magnetized tips repeatedly with an optional pause at well bottom.
-    release:
-        Release beads from unmagnetized tips by oscillating the tips
-        vertically into and out of the "object".
-    dry:
-        Dry beads on magnetized tips above and outside the "object".
-    incubate:
-        Incubate the "object".
-    mix:
-        Oscillate the tips into and out of the "object"
+    groups: list(dict)
+        dict in the groups should belong to one of the following categories:
+
+        collect:
+            Collects beads from the specified "object" by raising and lowering
+            magnetized tips repeatedly with an optional pause at well bottom.
+        release:
+            Release beads from unmagnetized tips by oscillating the tips
+            vertically into and out of the "object".
+        dry:
+            Dry beads on magnetized tips above and outside the "object".
+        incubate:
+            Incubate the "object".
+        mix:
+            Oscillate the tips into and out of the "object"
+    head_type: str
+        Head-type used for this instruction
 
     """
-
     HEAD_TYPE = ["96-deep", "96-pcr"]
 
     def __init__(self, groups, head_type):
         if head_type not in self.HEAD_TYPE:
             raise ValueError(
                 "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
-        super(MagneticTransfer, self).__init__(op="magnetic_transfer", data={
-            "groups": groups,
-            "magnetic_head": head_type
-        })
+        super(MagneticTransfer, self).__init__(
+            op="magnetic_transfer",
+            data={"groups": groups, "magnetic_head": head_type}
+        )
 
 
 class Dispense(Instruction):
@@ -78,7 +83,7 @@ class Dispense(Instruction):
 
     Parameters
     ----------
-    object : Container, str
+    object : Container or str
         Container for reagent to be dispensed to.
     columns : list
         Columns to be dispensed to, in the form of a list of dicts specifying
@@ -91,17 +96,17 @@ class Dispense(Instruction):
         Resource to be dispensed.
     reagent_source : Well, optional
         Aliquot to be dispensed from.
-    step_size : str, Unit, optional
+    step_size : str or Unit, optional
         Specifies that the dispense operation must be executed
         using a pump that has a dispensing resolution of step_size.
-    flowrate : str, Unit, optional
+    flowrate : str or Unit, optional
         The rate at which the peristaltic pump should dispense in Units of
         flow rate, e.g. microliter/second.
     nozzle_position : dict, optional
         A dict represent nozzle offsets from the center of the bottom of the
         plate's well. see Dispense.builders.nozzle_position; specified as
         {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
-    pre_dispense : str, Unit, optional
+    pre_dispense : str or Unit, optional
         The volume of reagent to be dispensed per-nozzle into waste
         immediately prior to dispensing into the ref.
     shape: dict, optional
@@ -171,7 +176,7 @@ class AcousticTransfer(Instruction):
             ]
         }
 
-    droplet_size : str, Unit
+    droplet_size : str or Unit
         Volume representing a droplet_size.  The volume of each transfer should
         be a multiple of this volume.
 
@@ -192,18 +197,18 @@ class Spin(Instruction):
 
     Parameters
     ----------
-    object : Ref, str
+    object : Ref or str
         Container to be centrifuged.
     acceleration : str
         Amount of acceleration to be applied to the container, expressed in
         units of "g" or "meter/second^2"
-    duration : str, Unit
+    duration : str or Unit
         Amount of time to apply acceleration.
-    flow_direction: str
+    flow_direction : str
         Specifies the direction contents will tend toward with respect to
         the container. Valid directions are "inward" and "outward", default
         value is "inward".
-    spin_direction: list of strings
+    spin_direction : list(str)
         A list of "cw" (clockwise), "cww" (counterclockwise). For each
         element in the list, the container will be spun in the stated
         direction for the set "acceleration" and "duration". Default values
@@ -256,26 +261,26 @@ class Thermocycle(Instruction):
 
     Parameters
     ----------
-    ref : str, Ref
+    object : str or Ref
         Container to be thermocycled
-    groups : list of dicts
+    groups : list(dict)
         List of thermocycling instructions formatted as above
-    volume : str, Unit, optional
+    volume : str or Unit, optional
         Volume contained in wells being thermocycled
     dataref : str, optional
         Name of dataref representing read data if performing qPCR
     dyes : dict, optional
         Dictionary mapping dye types to the wells they're used in
-    melting_start: str, Unit
+    melting_start: str or Unit
         Temperature at which to start the melting curve.
-    melting_end: str, Unit
+    melting_end: str or Unit
         Temperature at which to end the melting curve.
-    melting_increment: str, Unit
+    melting_increment: str or Unit
         Temperature by which to increment the melting curve. Accepted increment
         values are between 0.1 and 9.9 degrees celsius.
-    melting_rate: str, Unit
+    melting_rate: str or Unit
         Specifies the duration of each temperature step in the melting curve.
-    lid_temperature: str, Unit
+    lid_temperature: str or Unit
         Specifies the lid temperature throughout the duration of the instruction
 
     Raises
@@ -392,21 +397,23 @@ class Incubate(Instruction):
 
     Parameters
     ----------
-    object : Ref, str
+    object : Ref or str
         The container to be incubated
-    where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+    where : Enum({"ambient", "warm_37", "cold_4", "cold_20", "cold_80"})
         Temperature at which to incubate specified container
-    duration : Unit, str
+    duration : Unit or str
         Length of time to incubate container
     shaking : bool, optional
         Specify whether or not to shake container if available at the specified
         temperature
-    target_temperature : Unit, str, optional
+    target_temperature : Unit or str, optional
         Specify a target temperature for a device (eg. an incubating block)
         to reach during the specified duration.
     shaking_params: dict, optional
-        Specifify "path" and "frequency" of shaking parameters to be used
+        Specify "path" and "frequency" of shaking parameters to be used
         with compatible devices (eg. thermoshakes)
+    co2 : int, optional
+        Carbon dioxide percentage
 
     """
     WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
@@ -445,7 +452,7 @@ class IlluminaSeq(Instruction):
     ----------
     flowcell : str
       Flowcell designation: "SR" or " "PE"
-    lanes : list of dicts
+    lanes : list(dict)
 
         .. code-block:: json
 
@@ -464,7 +471,10 @@ class IlluminaSeq(Instruction):
     library_size: integer
         Library size expressed as an integer of basepairs
     dataref : str
-      Name of sequencing dataset that will be returned.
+        Name of sequencing dataset that will be returned.
+    cycles: Enum({"read_1", "read_2", "index_1", "index_2"})
+        Parameter specific to Illuminaseq read-length or number of
+        sequenced bases. Refer to the ASC for more details
 
     """
 
@@ -493,17 +503,22 @@ class SangerSeq(Instruction):
 
     Parameters
     ----------
-    cont : Container, str
+    object : Container or str
       Container with well(s) that contain material to be sequenced.
-    wells : list of str
+    wells : list(str)
       Well indices of the container that contain appropriate materials to be
       sent for sequencing.
     dataref : str
       Name of sequencing dataset that will be returned.
+    type: Enum({"standard", "rca"})
+        Sanger sequencing type
+    primer: Container, optional
+        Tube containing primers for sequencing operations, only applicable
+        for RCA
 
     """
 
-    def __init__(self, object, wells, dataref, type, primer):
+    def __init__(self, object, wells, dataref, type, primer=None):
         seq = {
             "type": type,
             "object": object,
@@ -521,17 +536,17 @@ class GelSeparate(Instruction):
 
     Parameters
     ----------
-    objects: list, WellGroup, Well
+    objects: list or WellGroup or Well
         List of wells or WellGroup containing wells to be
         separated on gel.
-    volume : str, Unit
+    volume : str or Unit
         Volume of liquid to be transferred from each well specified to a
         lane of the gel.
     matrix : str
         Matrix (gel) in which to gel separate samples
     ladder : str
         Ladder by which to measure separated fragment size
-    duration : str, Unit
+    duration : str or Unit
         Length of time to run current through gel.
     dataref : str
         Name of this set of gel separation results.
@@ -556,9 +571,9 @@ class GelPurify(Instruction):
 
     Parameters
     ----------
-    objects: list, WellGroup
+    objects: list or WellGroup
         WellGroup of wells to be purified
-    volume : str, Unit
+    volume : str or Unit
         Volume of sample required for analysis
     dataref : str
         Name of this specific dataset of measurements
@@ -568,7 +583,7 @@ class GelPurify(Instruction):
         Size range of ladder to be used to compare band size to
     dataref : str
         Name of dataset containing fragment sizes returned
-    extract: list of Dictionary
+    extract: list(dict)
 
         .. code-block:: json
 
@@ -606,27 +621,31 @@ class Absorbance(Instruction):
 
     Parameters
     ----------
-    object : str, Ref
-    wells : list, WellGroup
+    object : str or Ref
+        Object to execute the absorbance read on
+    wells : list(Well) or WellGroup
         WellGroup of wells to be measured or a list of well references in
         the form of ["A1", "B1", "C5", ...]
-    wavelength : str, Unit
+    wavelength : str or Unit
         wavelength of light absorbance to be read for the indicated wells
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+        number of flashes for the read
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
+    settle_time: str or Unit, optional
+        time to pause before each well read
 
     """
 
@@ -654,35 +673,37 @@ class Fluorescence(Instruction):
 
     Parameters
     ----------
-    object : str, Container
-    wells : list, WellGroup
+    object : str or Container
+        object to execute the fluorescence read on
+    wells : list(Well) or WellGroup
         WellGroup of wells to be measured or a list of well references in
         the form of ["A1", "B1", "C5", ...]
-    excitation : str, Unit
+    excitation : str or Unit
         wavelength of light used to excite the wells indicated
-    emission : str, Unit
+    emission : str or Unit
         wavelength of light to be measured for the indicated wells
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+        number of flashes for this read
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
     gain: float, optional
             float between 0 and 1, multiplier of maximum signal amplification
     detection_mode: str, optional
         set the detection mode of the optics, ["top", "bottom"],
         defaults to vendor specified defaults.
-    position_z: dict, optonal
+    position_z: dict, optional
         distance from the optics to the surface of the plate transport,
         only valid for "top" detection_mode and vendor capabilities.
         Specified as either a set distance - "manual", OR calculated from
@@ -744,22 +765,26 @@ class Luminescence(Instruction):
 
     Parameters
     ----------
-    object: str, Container
-    wells : list, WellGroup
+    object: str or Container
+        object to execute the luminescence read on
+    wells : list or WellGroup
         WellGroup or list of wells to be measured
     dataref : str
+        name which dataset will be saved under
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
+    settle_time: str or Unit, optional
+        time to pause before each well read
     integration_time: Unit, optional
         duration of the signal recording, per Well, defaults to vendor
         specifications
@@ -788,7 +813,7 @@ class Seal(Instruction):
 
     Parameters
     ----------
-    object : Ref, str
+    object : Ref or str
         Container to be sealed
     type : str, optional
         Seal type to be used (optional)
@@ -819,7 +844,7 @@ class Unseal(Instruction):
 
     Parameters
     ----------
-    object : Ref, str
+    object : Ref or str
         Container to be unsealed
 
     """
@@ -837,7 +862,7 @@ class Cover(Instruction):
     ----------
     object : str
         Container to be covered
-    lid : {"standard", "universal", "low_evaporation"}, optional
+    lid : Enum({'standard', 'universal', 'low_evaporation'}), optional
         Type of lid to cover container with
     retrieve_lid : bool
         Flag to retrieve lid from stored location
@@ -932,7 +957,7 @@ class FlowAnalyze(Instruction):
               "weight": false           //default: false
             }
 
-    neg_controls : list of dicts
+    negative_controls : list(dict)
         List of negative control wells in the form of:
 
         .. code-block:: json
@@ -945,7 +970,7 @@ class FlowAnalyze(Instruction):
             }
 
         at least one negative control is required.
-    samples : list of dicts
+    samples : list(dict)
         List of samples in the form of:
 
         .. code-block:: json
@@ -957,7 +982,7 @@ class FlowAnalyze(Instruction):
             }
 
         at least one sample is required
-    colors : list of dicts, optional
+    colors : list(dict), optional
         Optional list of colors in the form of:
 
         .. code-block:: json
@@ -976,7 +1001,7 @@ class FlowAnalyze(Instruction):
         }, ... ]
 
 
-    pos_controls : list of dicts, optional
+    positive_controls : list(dict), optional
         Optional list of positive control wells in the form of:
 
         .. code-block:: json
@@ -1001,7 +1026,7 @@ class FlowAnalyze(Instruction):
                  negative_controls,
                  samples,
                  colors=None,
-                 pos_controls=None):
+                 positive_controls=None):
         flow_instr = {"dataref": dataref, "channels": {}}
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
@@ -1009,8 +1034,8 @@ class FlowAnalyze(Instruction):
         flow_instr["samples"] = samples
         if colors:
             flow_instr["channels"]["colors"] = colors
-        if pos_controls:
-            flow_instr["positive_controls"] = pos_controls
+        if positive_controls:
+            flow_instr["positive_controls"] = positive_controls
 
         super(FlowAnalyze, self).__init__(op="flow_analyze", data=flow_instr)
 
@@ -1051,27 +1076,25 @@ class Oligosynthesize(Instruction):
 
 class Spread(Instruction):
     """
-    Spread the specified volume of the source aliquot across the surace of the
+    Spread the specified volume of the source aliquot across the surface of the
     agar contained in the object container
 
     Parameters
     ----------
-    source : str, Well
+    source : str or Well
         Source of material to spread on agar
-    dest : str, Well
+    dest : str or Well
         Reference to destination location (plate containing agar)
-    volume : str, Unit
+    volume : str or Unit
         Volume of source material to spread on agar
 
     """
 
     def __init__(self, source, dest, volume):
-        super(Spread, self).__init__({
-            "op": "spread",
-            "from": source,
-            "to": dest,
-            "volume": volume
-        })
+        super(Spread, self).__init__(
+            op="spread",
+            data={"from": source, "to": dest, "volume": volume}
+        )
 
 
 class Autopick(Instruction):
@@ -1082,21 +1105,14 @@ class Autopick(Instruction):
     pickable colonies have been identified from the location(s) specified in
     `sources`, the run will stop and no further instructions will be executed.
 
-    Example Usage:
-
-    Autoprotocol Output:
-
     Parameters
     ----------
-    sources : list of str, list of Wells
-      Reference to wells containing agar and colonies to pick
-    dests : list of str, list of Wells
-      List of destination(s) for picked colonies
+    groups : list(dict)
+        Groups of colonies to pick and where to transport them to
     criteria : dict
-      Dictionary of autopicking criteria.
-    min_abort : int, optional
-      Total number of colonies that must be detected in the aggregate
-      list of `from` wells to avoid aborting the entire run.
+        Dictionary of autopicking criteria.
+    dataref: str
+        Name of dataset to save the picked colonies to
 
     """
 
@@ -1143,14 +1159,8 @@ class Provision(Instruction):
     ----------
     resource_id : str
       Resource ID from catalog.
-    dests : Well, WellGroup
-      Destination(s) for specified resource.
-    volumes : str, Unit, list of str, list of Unit
-      Volume(s) to transfer of the resource to each destination well.  If
-      one volume of specified, each destination well recieve that volume of
-      the resource.  If destinations should recieve different volumes, each
-      one should be specified explicitly in a list matching the order of the
-      specified destinations.
+    dests : list(dict)
+      Destination(s) for specified resource, together with volume information
 
     Raises
     ------
@@ -1165,10 +1175,10 @@ class Provision(Instruction):
     """
 
     def __init__(self, resource_id, dests):
-        super(Provision, self).__init__(op="provision", data={
-            "resource_id": resource_id,
-            "to": dests
-        })
+        super(Provision, self).__init__(
+            op="provision",
+            data={"resource_id": resource_id, "to": dests}
+        )
 
 
 class FlashFreeze(Instruction):
@@ -1178,9 +1188,9 @@ class FlashFreeze(Instruction):
 
     Parameters
     ----------
-    object : Container, str
+    object : Container or str
         Container to be flash frozen.
-    duration : str, Unit
+    duration : str or Unit
         Duration to submerge specified container in liquid nitrogen.
 
     """
@@ -1199,9 +1209,9 @@ class MeasureConcentration(Instruction):
 
     Parameters
     ----------
-    object : list, WellGroup
+    object : list or WellGroup
         WellGroup of wells to be measured
-    volume : str, Unit
+    volume : str or Unit
         Volume of sample required for analysis
     dataref : str
         Name of this specific dataset of measurements
@@ -1243,7 +1253,7 @@ class MeasureVolume(Instruction):
 
     Parameters
     ----------
-    object: list of containers
+    object: list(Container)
         list of containers
     dataref: str
         Name of the data for the measurement
@@ -1268,7 +1278,7 @@ class CountCells(Instruction):
         of cell counting.
     dataref: str
         Name of dataset that will be returned.
-    labels: [string], optional
+    labels: list(string), optional
         Cells will be scored for presence or absence of each label
         in this list. If staining is required to visualize these labels,
         they must be added before execution of this instruction.
@@ -1294,17 +1304,17 @@ class Spectrophotometry(Instruction):
     ----------
     dataref : str
         Name of the resultant dataset to be returned.
-    obj : Container, str
+    object : Container or str
         Container to be read.
     groups : list
         A list of groups generated by SpectrophotometryBuilders groups builders,
         any of absorbance_mode_params, fluorescence_mode_params,
         luminescence_mode_params, or shake_mode_params.
-    interval : Unit, str, optional
+    interval : Unit or str, optional
         The time between each of the read intervals.
     num_intervals : int, optional
         The number of times that the groups should be executed.
-    temperature : Unit, str, optional
+    temperature : Unit or str, optional
         The temperature that the entire instruction should be executed at.
     shake_before : dict, optional
         A dict of params generated by SpectrophotometryBuilders.shake_before
@@ -1313,11 +1323,11 @@ class Spectrophotometry(Instruction):
     """
     builders = SpectrophotometryBuilders()
 
-    def __init__(self, dataref, obj, groups, interval=None, num_intervals=None,
-                 temperature=None, shake_before=None):
+    def __init__(self, dataref, object, groups, interval=None,
+                 num_intervals=None, temperature=None, shake_before=None):
         spec = {
             "dataref": dataref,
-            "object": obj,
+            "object": object,
             "groups": groups,
             "interval": interval,
             "num_intervals": num_intervals,

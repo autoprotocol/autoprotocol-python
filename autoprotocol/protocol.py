@@ -1,3 +1,12 @@
+"""
+Module containing the main `Protocol` object and associated functions
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+"""
+
 from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .unit import Unit, UnitError
@@ -11,14 +20,6 @@ import warnings
 if sys.version_info[0] >= 3:
     xrange = range
     basestring = str
-
-
-"""
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
-        for more details.
-    :license: BSD, see LICENSE for more details
-
-"""
 
 
 class Ref(object):
@@ -5346,7 +5347,7 @@ class Protocol(object):
         return self._append_and_return(
             Spectrophotometry(
                 dataref=dataref,
-                obj=obj,
+                object=obj,
                 groups=groups,
                 interval=interval,
                 num_intervals=num_intervals,

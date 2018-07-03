@@ -1,14 +1,14 @@
-from .unit import Unit
-from .unit import Unit, UnitStringError, UnitValueError
-from textwrap import dedent
-
-
 """
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+Module containing utility functions
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
+
+from .unit import Unit, UnitStringError, UnitValueError
+from textwrap import dedent
 
 
 def quad_ind_to_num(q):

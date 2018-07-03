@@ -1,3 +1,12 @@
+"""
+Module containing a Units library
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+"""
+
 from __future__ import division, print_function
 from pint import UnitRegistry
 from pint.quantity import _Quantity
@@ -12,13 +21,6 @@ import sys
 if sys.version_info.major == 3:
     basestring = str  # pylint: disable=invalid-name
 
-'''
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
-        for more details.
-    :license: BSD, see LICENSE for more details
-
-'''
-
 
 def to_decimal(number):
     """
@@ -32,6 +34,11 @@ def to_decimal(number):
     Returns
     -------
     Decimal
+
+    Raises
+    ------
+    ValueError
+        Number is not of a type that's castable to decimal
     """
     if isinstance(number, Decimal):
         decimal = number
@@ -44,6 +51,7 @@ def to_decimal(number):
     return decimal
 
 
+# pragma pylint: disable=protected-access
 class DecimalUnitRegistry(UnitRegistry):
     """
     Redefines builtin UnitRegistry methods for doing conversions to use Decimals
@@ -84,8 +92,7 @@ class DecimalUnitRegistry(UnitRegistry):
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= (
-                    to_decimal(reg._converter.scale) ** exp2)
+                accumulators[0] *= (to_decimal(reg._converter.scale) ** exp2)
                 if reg.reference is not None:
                     self._get_root_units_recurse(
                         reg.reference, exp2, accumulators)
@@ -107,6 +114,7 @@ _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
 '''Add support for Molarity Unit'''
 _UnitRegistry.define('molar = mole/liter = M')
+# pragma pylint: enable=protected-access
 
 
 class UnitError(Exception):
@@ -193,23 +201,24 @@ class Unit(_Quantity):
         except UndefinedUnitError:
             raise UnitUnitsError(units)
 
-    def __init__(self, value, units=None):
+    def __init__(self, value, units=None):  # pylint: disable=unused-argument
         super(Unit, self).__init__()
         self.unit = self.units.__str__()
 
     def __str__(self, ndigits=12):
-        '''
+        """
         Parameters
         ----------
         ndigits: int, optional
             Number of decimal places to round to, useful for numerical
             precision reasons
+
         Returns
         -------
-        rounded representation: str
+        str
             This rounds the string presentation to 12 decimal places by default
             to account for the majority of numerical precision issues
-        '''
+        """
         rounded_magnitude = round(self.magnitude, ndigits)
         normalized_magnitude = to_decimal(rounded_magnitude).normalize()
         unit_repr = self.unit.replace("**", "^").replace(" ", "")
@@ -225,11 +234,11 @@ class Unit(_Quantity):
         return self.__class__(floor(self.magnitude), self.units)
 
     def _mul_div(self, other, magnitude_op, units_op=None):
-        '''
+        """
         Extends Pint's base _Quantity multiplication/division
         implementation by checking for dimensionality and
         casting Numbers to Decimals
-        '''
+        """
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
                 other = other.to(self.units)
@@ -239,11 +248,11 @@ class Unit(_Quantity):
         return super(Unit, self)._mul_div(other, magnitude_op, units_op)
 
     def _imul_div(self, other, magnitude_op, units_op=None):
-        '''
+        """
         Extends Pint's base _Quantity multiplication/division
         implementation by checking for dimensionality and
         casting Numbers to Decimals
-        '''
+        """
         if isinstance(other, Unit):
             if self.dimensionality == other.dimensionality:
                 other = other.to(self.units)
@@ -277,6 +286,7 @@ class Unit(_Quantity):
         Returns
         -------
         Unit
+            ceil of Unit
         """
         return self.__ceil__()
 
@@ -287,6 +297,7 @@ class Unit(_Quantity):
         Returns
         -------
         Unit
+            floor of Unit
         """
         return self.__floor__()
 
@@ -302,5 +313,6 @@ class Unit(_Quantity):
         Returns
         -------
         Unit
+            rounded unit
         """
         return self.__round__(ndigits)

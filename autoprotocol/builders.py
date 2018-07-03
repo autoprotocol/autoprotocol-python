@@ -83,27 +83,17 @@ class ThermocycleBuilders:
 
         """
         step_dict = dict()
-
-        # Constants are currently based off the Biorad thermocyclers, and
-        # assumes that they are generally reflective of other thermocyclers
-        _MIN_BLOCK_TEMP = Unit("0:celsius")
-        _MAX_BLOCK_TEMP = Unit("100:celsius")
-
-        def validate_temperature(temp):
-            parsed = parse_unit(temp, 'celsius')
-            return check_unit(parsed, _MIN_BLOCK_TEMP, _MAX_BLOCK_TEMP,
-                              label="Block temperature")
-
         if isinstance(temperature, dict):
             if set(temperature.keys()) != {'top', 'bottom'}:
                 raise ValueError("{} was specified, but only 'top' and 'bottom'"
                                  " keys are allowed for a temperature "
                                  "dictionary".format(temperature))
-            top_temp = validate_temperature(temperature['top'])
-            bottom_temp = validate_temperature(temperature['bottom'])
-            step_dict['gradient'] = dict(top=top_temp, bottom=bottom_temp)
+            step_dict['gradient'] = dict(
+                top=parse_unit(temperature['top'], "celsius"),
+                bottom=parse_unit(temperature['bottom'], "celsius")
+            )
         else:
-            step_dict['temperature'] = validate_temperature(temperature)
+            step_dict['temperature'] = parse_unit(temperature, 'celsius')
 
         duration = parse_unit(duration, 'second')
         if duration <= Unit("0:second"):
@@ -147,16 +137,6 @@ class DispenseBuilders(object):
             name: parse_unit(position, "mm")
             for name, position in locals().items() if position is not None
         }
-
-        _VALID_RANGES = {
-            "position_x": (Unit(-3, "mm"), Unit(3, "mm")),
-            "position_y": (Unit(-3, "mm"), Unit(3, "mm")),
-            "position_z": (Unit(5, "mm"), Unit(55, "mm"))
-        }
-
-        for name, position in position_dict.items():
-            pos_min, pos_max = _VALID_RANGES[name][0], _VALID_RANGES[name][1]
-            check_unit(position, pos_min, pos_max, label=name)
 
         return position_dict
 

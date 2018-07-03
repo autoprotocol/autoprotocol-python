@@ -14,27 +14,6 @@ class TestDispenseBuilders(object):
         {"column": 4, "volume": Unit("50:microliter")}
     ]
 
-    def test_nozzle_position(self):
-        assert(Dispense.builders.nozzle_position() == {})
-
-        reference = {
-            "position_x": Unit(-3, "mm"),
-            "position_y": Unit(3, "mm"),
-            "position_z": Unit(5, "mm")
-        }
-        pos = Dispense.builders.nozzle_position("-3:mm", "3:mm", "5:mm")
-        assert(pos == reference)
-
-        bad_value = [
-            ["4:mm", None, None], [None, "-7:mm", None], [None, None, "0:mm"]
-        ]
-        for x, y, z in bad_value:
-            with pytest.raises(ValueError):
-                Dispense.builders.nozzle_position(x, y, z)
-
-        with pytest.raises(TypeError):
-            Dispense.builders.nozzle_position(1)
-
     def test_column(self):
         for column in self.columns_reference:
             assert(column == Dispense.builders.column(**column))
@@ -66,6 +45,17 @@ class TestDispenseBuilders(object):
 
         with pytest.raises(ValueError):
             Dispense.builders.columns([])
+
+    def test_nozzle_position(self):
+        assert(Dispense.builders.nozzle_position() == {})
+
+        reference = {
+            "position_x": Unit(-3, "mm"),
+            "position_y": Unit(3, "mm"),
+            "position_z": Unit(5, "mm")
+        }
+        pos = Dispense.builders.nozzle_position("-3:mm", "3:mm", "5:mm")
+        assert(pos == reference)
 
     def test_shake_after(self):
         assert(
@@ -122,14 +112,6 @@ class TestThermocycleBuilders:
                                        'bottom': '1:celsius',
                                        'middle': '1:celsius'},
                                       '1:s')
-
-    def test_step_temperature_bounds(self):
-        with pytest.raises(ValueError):
-            Thermocycle.builders.step('-1:celsius', '1:s')
-        with pytest.raises(ValueError):
-            Thermocycle.builders.step('101:celsius', '1:s')
-        with pytest.raises(ValueError):
-            Thermocycle.builders.step('5:celsius', '-1:s')
 
     def test_step_output(self):
         s = Thermocycle.builders.step('1:celsius', '1:s', True)

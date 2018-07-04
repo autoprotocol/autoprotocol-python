@@ -1,3 +1,12 @@
+"""
+Module containing the harness module which helps with Manifest interpretation
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+"""
+
 from __future__ import print_function
 import json
 import io
@@ -11,13 +20,6 @@ import sys
 if sys.version_info.major == 3:
     basestring = str  # pylint: disable=invalid-name
 
-'''
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
-        for more details.
-    :license: BSD, see LICENSE for more details
-
-'''
-
 _DYE_TEST_RS = {
     "dye4000": "rs18qmhr7t9jwq",
     "water": "rs17gmh5wafm5p"
@@ -28,7 +30,7 @@ def param_default(typeDesc):
     if isinstance(typeDesc, basestring):
         typeDesc = {'type': typeDesc}
 
-    type = typeDesc['type']
+    type = typeDesc['type']  # pylint: disable=redefined-builtin
     default = typeDesc.get('default')
 
     if default is not None and type != 'group-choice':
@@ -62,7 +64,7 @@ def param_default(typeDesc):
         return None
 
 
-def convert_param(protocol, val, typeDesc):
+def convert_param(protocol, val, type_desc):
     """
     Convert parameters based on their input types
 
@@ -70,19 +72,45 @@ def convert_param(protocol, val, typeDesc):
     ----------
     protocol : Protocol
         Protocol object being parsed.
-    val : str, int, bool, dict, list
+    val : str or int or bool or dict or list
         Parameter value to be converted.
-    typeDesc : dict, str
+    type_desc : dict or str
         Description of input type.
 
+    Returns
+    -------
+    list or dict or Unit or int or str or float or bool or None
+        Converted parameter of the relevant type
+
+    Raises
+    ------
+    RuntimeError
+        Invalid aliquot reference provided for aliquot, aliquot+, aliquot++
+    RuntimeError
+        Invalid container reference provided for container, container+
+    RuntimeError
+        Invalid unit-type provided
+    RuntimeError
+        Invalid temperature condition provided
+    RuntimeError
+        Invalid format provided for integer or decimal
+    RuntimeError
+        Invalid value or format provided for group or group+
+    RuntimeError
+        Invalid format provided for thermocycle or thermocycle_step
+    RuntimeError
+        Invalid format provided for csv input
+    ValueError
+        Unknown input type provided
+
     """
-    if isinstance(typeDesc, basestring):
-        typeDesc = {'type': typeDesc}
+    if isinstance(type_desc, basestring):
+        type_desc = {'type': type_desc}
     if val is None:
-        val = param_default(typeDesc)
+        val = param_default(type_desc)
     if val is None:  # still None?
         return None
-    type = typeDesc['type']
+    type = type_desc['type']  # pylint: disable=redefined-builtin
 
     if type == 'aliquot':
         try:
@@ -90,7 +118,7 @@ def convert_param(protocol, val, typeDesc):
             well_idx = val.split('/')[-1]
             return protocol.refs[container].container.well(well_idx)
         except (KeyError, AttributeError, ValueError):
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError("'%s' (supplied to input '%s') is not a valid "
                                "reference to an aliquot" % (val, label))
     elif type == 'aliquot+':
@@ -98,7 +126,7 @@ def convert_param(protocol, val, typeDesc):
             return WellGroup(
                 [convert_param(protocol, a, 'aliquot') for a in val])
         except:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type aliquot+) is "
                 "improperly formatted." % label)
@@ -106,7 +134,7 @@ def convert_param(protocol, val, typeDesc):
         try:
             return [convert_param(protocol, aqs, 'aliquot+') for aqs in val]
         except:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type aliquot++) is "
                 "improperly formatted." % label)
@@ -115,14 +143,14 @@ def convert_param(protocol, val, typeDesc):
         try:
             return protocol.refs[val].container
         except KeyError:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError("'%s' (supplied to input '%s') is not a valid "
                                "reference to a container" % (val, label))
     elif type == 'container+':
         try:
             return [convert_param(protocol, cont, 'container') for cont in val]
         except:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type container+) is "
                 "improperly formatted." % label)
@@ -156,7 +184,7 @@ def convert_param(protocol, val, typeDesc):
         try:
             return int(val)
         except ValueError:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type integer) is improperly "
                 "formatted." % label)
@@ -164,38 +192,38 @@ def convert_param(protocol, val, typeDesc):
         try:
             return float(val)
         except ValueError:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type decimal) is improperly "
                 "formatted." % label)
     elif type == 'group':
         try:
             return {
-                k: convert_param(protocol, val.get(k), typeDesc['inputs'][k])
-                for k in typeDesc['inputs']
+                k: convert_param(protocol, val.get(k), type_desc['inputs'][k])
+                for k in type_desc['inputs']
             }
         except KeyError as e:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type group) is missing "
                 "a(n) %s field." % (label, e))
         except AttributeError:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type group) is improperly "
                 "formatted." % label)
     elif type == 'group+':
         try:
             return [{
-                k: convert_param(protocol, x.get(k), typeDesc['inputs'][k])
-                for k in typeDesc['inputs']
+                k: convert_param(protocol, x.get(k), type_desc['inputs'][k])
+                for k in type_desc['inputs']
             } for x in val]
         except (TypeError, AttributeError):
             raise RuntimeError(
                 "The value supplied to input '%s' (type group+) must be in "
-                "the form of a list of dictionaries" % typeDesc['label'])
+                "the form of a list of dictionaries" % type_desc['label'])
         except KeyError as e:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The value supplied to input '%s' (type group+) is missing "
                 "a(n) %s field." % (label, e))
@@ -208,12 +236,12 @@ def convert_param(protocol, val, typeDesc):
                         protocol,
                         val['inputs'].get(opt['value']),
                         {'type': 'group', 'inputs': opt['inputs']})
-                    for opt in typeDesc['options'] if
+                    for opt in type_desc['options'] if
                 opt['value'] == val['value']
                 }
             }
         except (KeyError, AttributeError) as e:
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             if e in ["value", "inputs"]:
                 raise RuntimeError(
                     "The value supplied to input '%s' (type group-choice) "
@@ -264,20 +292,20 @@ def convert_param(protocol, val, typeDesc):
             for i, row in enumerate(val[1]):
                 value = {}
                 for header, header_value in row.items():
-                    typeDesc = {
+                    type_desc = {
                         "type": val[0].get(header),
                         "label": "csv-table item (%s): %s" % (i, header)
                     }
 
                     value[header] = convert_param(protocol, header_value,
-                                                  typeDesc=typeDesc)
+                                                  type_desc=type_desc)
 
                 values.append(value)
 
             return values
 
         except (AttributeError, IndexError, TypeError):
-            label = typeDesc.get('label') or "[unknown]"
+            label = type_desc.get('label') or "[unknown]"
             raise RuntimeError(
                 "The values supplied to %s (type csv-table) are improperly "
                 "formatted. Format must be a list of dictionaries with the "
@@ -291,8 +319,8 @@ def convert_param(protocol, val, typeDesc):
 
 class ProtocolInfo(object):
 
-    def __init__(self, json):
-        self.input_types = json['inputs']
+    def __init__(self, json_dict):
+        self.input_types = json_dict['inputs']
 
     def parse(self, protocol, inputs):
         refs = inputs['refs']
@@ -357,8 +385,8 @@ class Manifest(object):
 
     """
 
-    def __init__(self, json):
-        self.protocols = json['protocols']
+    def __init__(self, json_dict):
+        self.protocols = json_dict['protocols']
 
     def protocol_info(self, name):
         try:
@@ -402,6 +430,8 @@ def run(fn, protocol_name=None, seal_after_run=True):
 
     source = json.loads(io.open(args.config, encoding='utf-8').read())
     protocol = Protocol()
+
+    # pragma pylint: disable=protected-access
     if protocol_name:
         manifest_json = io.open('manifest.json', encoding='utf-8').read()
         manifest = Manifest(json.loads(manifest_json))
@@ -412,6 +442,7 @@ def run(fn, protocol_name=None, seal_after_run=True):
             num_dye_steps = _add_dye_to_preview_refs(protocol)
     else:
         params = protocol._ref_containers_and_wells(source["parameters"])
+    # pragma pylint: enable=protected-access
 
     try:
         fn(protocol, params)
@@ -443,7 +474,7 @@ def _add_dye_to_preview_refs(protocol, rs=_DYE_TEST_RS["dye4000"]):
     starting_num = len(protocol.instructions)
 
     # For each ref in protocol
-    for ref_name, ref_obj in protocol.refs.items():
+    for _, ref_obj in protocol.refs.items():
 
         ref_cont = ref_obj.container
         # Raise RuntimeError if any refs have an id, to avoid adding dye to
@@ -623,7 +654,7 @@ def seal_on_store(protocol):
             }
 
     """
-    for name, ref in protocol.refs.items():
+    for _, ref in protocol.refs.items():
         if "store" in ref.opts.keys():
             if not (ref.container.is_covered() or ref.container.is_sealed()):
                 default_method = (

@@ -27,6 +27,16 @@ def quad_ind_to_num(q):
         A string or integer representing a well index that corresponds to a
         quadrant on a 384-well plate.
 
+    Returns
+    -------
+    int
+        Integer form for well index
+
+    Raises
+    ------
+    ValueError
+        Invalid index given
+
     """
     if isinstance(q, str):
         q = q.lower()
@@ -59,6 +69,16 @@ def quad_num_to_ind(q, human=False):
     human : bool, optional
         Return the corresponding well index in human readable form instead of
         as an integer if True.
+
+    Returns
+    -------
+    str or int
+        String or int well-index for given quadrant
+
+    Raises
+    ------
+    ValueError
+        Invalid quadrant number
 
     """
     if q == 0:
@@ -219,7 +239,7 @@ def check_valid_mag_params(mag_dict):
             raise ValueError("Temperature set at {}, must not be less than "
                              "absolute zero'".format(mag_dict["temperature"]))
     elif "temperature" in mag_dict and not mag_dict["temperature"]:
-            del mag_dict["temperature"]
+        del mag_dict["temperature"]
 
     if "amplitude" in mag_dict:
         if mag_dict["amplitude"] > mag_dict["center"]:
@@ -316,7 +336,7 @@ def make_gel_extract_params(source, band_list, lane=None, gel=None):
     ----------
     source: well
         Source well for the extraction
-    band_list: list, dict
+    band_list: list or dict
         List of bands to collect from the source (use make_band_param to make
         a band dictionary)
     lane: int, optional
@@ -325,6 +345,11 @@ def make_gel_extract_params(source, band_list, lane=None, gel=None):
     gel: int, optional
         Gel to load and collect the source. If not set, gel will be
         auto-generated
+
+    Returns
+    -------
+    dict
+        Dictionary of gel extract parameters
 
     """
     if isinstance(band_list, dict):
@@ -355,7 +380,7 @@ def make_band_param(elution_buffer, elution_volume, max_bp, min_bp,
     ----------
     elution_buffer: str
         Elution buffer to use to retrieve band
-    elution_volume: str, Unit
+    elution_volume: str or Unit
         Volume to elute band into
     max_bp: int
         Max basepairs of band
@@ -364,6 +389,10 @@ def make_band_param(elution_buffer, elution_volume, max_bp, min_bp,
     destination: Well
         Well to place extracted band into
 
+    Returns
+    -------
+    dict
+        Dictionary of band parameters
     """
     band = {
         "band_size_range": {
@@ -427,7 +456,12 @@ def deep_merge_params(defaults, override):
         Default dictionary to compare with overrides.
     override : dict
         Dictionary containing additional keys and/or values to override those
-        corresponding to keys in the defaults dicitonary.
+        corresponding to keys in the defaults dictionary.
+
+    Returns
+    -------
+    dict
+        Merged dictionary
 
     """
     defaults = make_dottable_dict(defaults.copy())
@@ -444,17 +478,28 @@ def deep_merge_params(defaults, override):
 def incubate_params(duration, shake_amplitude=None, shake_orbital=None):
     """
     Create a dictionary with incubation parameters which can be used as input
-    for instructions. Currenly supports plate reader instructions and could be
+    for instructions. Currently supports plate reader instructions and could be
     extended for use with other instructions.
 
     Parameters
     ----------
-    shake_amplitude: str, Unit
+    shake_amplitude: str or Unit
         amplitude of shaking between 1 and 6:millimeter
     shake_orbital: bool
-        True for oribital and False for linear shaking
-    duration: str, Unit
+        True for orbital and False for linear shaking
+    duration: str or Unit
         time for shaking
+
+    Returns
+    -------
+    dict
+        Dictionary of incubate parameters
+
+    Raises
+    ------
+    RuntimeError
+        Specifying only shake amplitude or shake orbital
+
     """
     incubate_dict = {}
     incubate_dict["duration"] = duration
@@ -538,12 +583,12 @@ def is_valid_well(param):
 
     Parameters
     ----------
-    param :
+    param : Well or WellGroup or list(Well)
         Parameter to validate is type Well, WellGroup, list of Wells.
 
     Returns
     -------
-    bool :
+    bool
         Returns True if param is of type Well, WellGroup or list of type Well.
     """
     from autoprotocol.container import Well, WellGroup
@@ -568,9 +613,9 @@ def parse_unit(unit, accepted_unit=None):
 
     Parameters
     ----------
-    unit: Unit, str
+    unit: Unit or str
         Input to be checked
-    accepted_unit: Unit, str, List[Unit], List[str], Optional
+    accepted_unit: Unit or str or list[Unit] or list[str], optional
         Dimensionality of unit should match against the accepted unit(s).
         Examples:
             parse_unit("1:ul", "1:ml")
@@ -579,12 +624,12 @@ def parse_unit(unit, accepted_unit=None):
 
     Returns
     -------
-    Unit:
+    Unit
         Parsed and checked unit
 
     Raises
     ------
-    TypeError:
+    TypeError
         Error when input does not match expected type or dimensionality
     """
     if not isinstance(unit, Unit):
@@ -631,16 +676,16 @@ def check_unit(value, lb=None, ub=None, label=None):
 
     Returns
     -------
-    Unit:
+    Unit
         Validated unit which is in range
 
     Raises
     ------
-    TypeError:
+    TypeError
         Error when inputs are not of the same dimensionality
-    ValueError:
+    ValueError
         Error when the unit is out of bounds
-    ValueError:
+    ValueError
         No bounds are specified
     """
     if lb is None and ub is None:

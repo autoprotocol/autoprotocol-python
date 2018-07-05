@@ -7,6 +7,7 @@ if sys.version_info[0] >= 3:
     xrange = range  # pylint: disable=invalid-name
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestContainerWellRef:
 
     @pytest.fixture(autouse=True)

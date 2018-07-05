@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`-` deprecate `newpick` in `p.autopick`
+* :feature:`-` deprecate `util.make_dottable_dict` and `util.deep_merge_params`
 * :feature:`-` converted all Unit internals to use Decimals in place of other Numbers
 * :support:`-` cleaned up references of `Unit.fromstring` and `Unit._magnitude`
 * :feature:`-` added builtin support for `ceil` and `floor` and changed py2 compatibility `Unit.floor` and `Unit.ceil` methods to use them

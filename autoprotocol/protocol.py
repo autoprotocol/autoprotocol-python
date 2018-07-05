@@ -152,6 +152,7 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
+    # pragma pylint: disable=redefined-builtin
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None,
             cover=None):
         """
@@ -204,19 +205,21 @@ class Protocol(object):
             id of the container being created, from your organization's
             inventory on http://secure.transcriptic.com.  Strings representing
             ids begin with "ct".
-        cont_type : str, ContainerType
+        cont_type : str or ContainerType
             container type of the Container object that will be generated.
-        storage : {"ambient", "cold_20", "cold_4", "warm_37"}, optional
+        storage : Enum({"ambient", "cold_20", "cold_4", "warm_37"}), optional
             temperature the container being referenced should be stored at
             after a run is completed.  Either a storage condition must be
             specified or discard must be set to True.
         discard : bool, optional
             if no storage condition is specified and discard is set to True,
             the container being referenced will be discarded after a run.
+        cover: str, optional
+            name of the cover which will be on the container/ref
 
         Returns
         -------
-        container : Container
+        Container
             Container object generated from the id and container type
              provided.
 
@@ -267,6 +270,7 @@ class Protocol(object):
         )
         self.refs[name] = Ref(name, opts, container)
         return container
+    # pragma pylint: enable=redefined-builtin
 
     def add_time_constraint(self, from_dict, to_dict, less_than=None,
                             more_than=None, mirror=False, ideal=None,
@@ -416,17 +420,17 @@ class Protocol(object):
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
-        less_than: str, Unit
+        less_than: str or Unit, optional
             max time between from_dict and to_dict
-        more_than: str, Unit
+        more_than: str or Unit, optional
             min time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
             should be added in both directions
             (only applies to the less_than constraint)
-        ideal: str, Unit
+        ideal: str or Unit, optional
             ideal time between from_dict and to_dict
-        optimization_cost: Enum("linear", "squared", "exponential"), optional
+        optimization_cost: Enum({"linear", "squared", "exponential"}), optional
             cost function used for calculating the penalty for missing the
             `ideal` timing
 
@@ -688,8 +692,9 @@ class Protocol(object):
 
         Returns
         -------
-        instructions: Instruction
+        Instruction
             Instruction object(s) to be appended and returned
+
         """
         self.append(instructions)
         return instructions
@@ -860,6 +865,7 @@ class Protocol(object):
 
         """
         outs = {}
+        # pragma pylint: disable=protected-access
         for n, ref in self.refs.items():
             for well in ref.container._wells:
                 if well.name or len(well.properties) > 0:
@@ -880,6 +886,7 @@ class Protocol(object):
             elif ref.container.storage is not None and "discard" in ref.opts:
                 ref.opts["store"] = {"where": ref.container.storage}
                 del ref.opts["discard"]
+        # pragma pylint: enable=protected-access
 
         if outs:
             setattr(self, "outs", outs)
@@ -992,7 +999,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        source : Well, WellGroup
+        source : Well or WellGroup or list(Well)
             Well or wells to transfer liquid from.  If multiple source wells
             are supplied and one_source is set to True, liquid will be
             transferred from each source well specified as long as it contains
@@ -1000,11 +1007,11 @@ class Protocol(object):
             must match the number of destination wells specified and liquid
             will be transferred from each source well to its corresponding
             destination well.
-        dest : Well, WellGroup
+        dest : Well or WellGroup or list(Well)
             Well or WellGroup to which to transfer liquid.  The number of
             destination wells must match the number of source wells specified
             unless one_source is set to True.
-        volume : str, Unit, list
+        volume : str or Unit or list
             The volume(s) of liquid to be transferred from source wells to
             destination wells.  Volume can be specified as a single string or
             Unit, or can be given as a list of volumes.  The length of a list
@@ -1013,9 +1020,27 @@ class Protocol(object):
         one_source : bool, optional
             Specify whether liquid is to be transferred to destination wells
             from a group of wells all containing the same substance.
-        droplet_size : str, Unit, optional
+        droplet_size : str or Unit, optional
             Volume representing a droplet_size.  The volume of each `transfer`
             group should be a multiple of this volume.
+
+        Returns
+        -------
+        AcousticTransfer
+            Returns the :py:class:`autoprotocol.instruction.AcousticTransfer`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Incorrect input types, e.g. source/dest are not Well or WellGroup
+            or list of Well
+        RuntimeError
+            Incorrect length for source and destination
+        RuntimeError
+            Transfer volume not being a multiple of droplet size
+        RuntimeError
+            Insufficient volume in source wells
 
         """
         # Check valid well inputs
@@ -1245,7 +1270,7 @@ class Protocol(object):
         ----------
         flowcell : str
             Flowcell designation: "SR" or " "PE"
-        lanes : list of dicts
+        lanes : list(dict)
 
             .. code-block:: none
 
@@ -1262,24 +1287,35 @@ class Protocol(object):
             Mode designation: "rapid", "mid" or "high"
         index : str
             Index designation: "single", "dual" or "none"
-        library_size: integer
+        library_size: int
             Library size expressed as an integer of basepairs
         dataref : str
             Name of sequencing dataset that will be returned.
+        cycles : Enum({"read_1", "read_2", "index_1", "index_2"})
+            Parameter specific to Illuminaseq read-length or number of
+            sequenced bases. Refer to the ASC for more details
+
+        Returns
+        -------
+        IlluminaSeq
+            Returns the :py:class:`autoprotocol.instruction.IlluminaSeq`
+            instruction created from the specified parameters
 
         Raises
         ------
-        TypeError:
+        TypeError
             If index and dataref are not of type str.
-        TypeError:
+        TypeError
             If library_concentration is not a number.
-        TypeError:
+        TypeError
             If library_size is not an integer.
-        ValueError:
+        ValueError
             If flowcell, sequencer, mode, index are not of type a valid option.
-        ValueError:
+        ValueError
             If number of lanes specified is more than the maximum lanes of the
             specified type of sequencer.
+        KeyError
+            Invalid keys specified for cycles parameter
         """
 
         valid_flowcells = ["PE", "SR"]
@@ -1315,13 +1351,13 @@ class Protocol(object):
                              "".format(', '.join(valid_sequencers.keys())))
         if not isinstance(lanes, list):
             raise TypeError(
-                "Illumina sequencing lanes must be a list of dicts"
+                "Illumina sequencing lanes must be a list(dict)"
             )
 
         for l in lanes:
             if not isinstance(l, dict):
                 raise TypeError(
-                    "Illumina sequencing lanes must be a list of dicts"
+                    "Illumina sequencing lanes must be a list(dict)"
                 )
             if not all(k in l.keys() for k in [
                     "object", "library_concentration"]):
@@ -1370,7 +1406,7 @@ class Protocol(object):
                     "If specifying cycles, 'read_1' must be designated."
                 )
             if flowcell == "SR" and "read_2" in cycles.keys():
-                raise RuntimeError("SR does not have a second read: 'read_2'.")
+                raise ValueError("SR does not have a second read: 'read_2'.")
             if not all(isinstance(i, int) for i in cycles.values()):
                 raise ValueError("Cycles must be specified as an integer.")
             for read in ["read_1", "read_2"]:
@@ -1394,13 +1430,14 @@ class Protocol(object):
                 else:
                     cycles[ind] = 0
 
-        self._append_and_return(
+        return self._append_and_return(
             IlluminaSeq(
                 flowcell, lanes, sequencer, mode,
                 index, library_size, dataref, cycles
             )
         )
 
+    # pylint: disable=redefined-builtin
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """
         Send the indicated wells of the container specified for Sanger
@@ -1445,24 +1482,38 @@ class Protocol(object):
 
         Parameters
         ----------
-        cont : Container, str
+        cont : Container or str
             Container with well(s) that contain material to be sequenced.
-        type : str
-            Type of sequencing reaction to take place ("standard" or "rca"),
-            defaults to "standard"
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        primer : container
+        dataref : str
+            Name of sequencing dataset that will be returned.
+        type: Enum({"standard", "rca"})
+            Sanger sequencing type
+        primer : Container, optional
             Tube containing sufficient primer for all RCA reactions.  This field
             will be ignored if you specify the sequencing type as "standard".
             Tube containing sufficient primer for all RCA reactions
-        dataref : str
-            Name of sequencing dataset that will be returned.
+
+        Returns
+        -------
+        SangerSeq
+            Returns the :py:class:`autoprotocol.instruction.SangerSeq`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        RuntimeError
+            No primer location specified for rca sequencing type
+        ValueError
+            Wells belong to more than one container
+        TypeError
+            Invalid input type for wells
 
         """
-        type = type.lower()
-        if type == "rca" and not primer:
+        seq_type = type.lower()
+        if seq_type == "rca" and not primer:
             raise RuntimeError("You must specify the location of primer for "
                                "RCA sequencing reactions.")
 
@@ -1478,9 +1529,11 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. SangerSeq wells accepts either a"
+            raise TypeError("Unknown input. SangerSeq wells accepts either a"
                              "Well, a WellGroup, or a list of well indices")
-        self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
+
+        return self._append_and_return(
+            SangerSeq(cont, wells, dataref, type, primer))
 
     def dispense(self, ref, reagent, columns, is_resource_id=False,
                  step_size="5:uL", flowrate=None, nozzle_position=None,
@@ -1588,32 +1641,32 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str, well
+        reagent : str or well
             Reagent to be dispensed. Use a string to specify the name or
             resource_id (see below) of the reagent to be dispensed.
             Alternatively, use a well to specify that the dispense operation
             must be executed using a specific aliquot as the dispense source.
         columns : list(dict("column": int, "volume": str/Unit))
-            Columns to be dispensed to, in the form of a list of dicts
+            Columns to be dispensed to, in the form of a list(dict)
             specifying the column number and the volume to be dispensed to that
             column. Columns are expressed as integers indexed from 0.
             [{"column": <column num>, "volume": <volume>}, ...]
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
-        step_size : str, Unit, optional
+        step_size : str or Unit, optional
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
             multiple of the step_size. Currently, step_size must be either
             5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
-        flowrate : str, Unit, optional
+        flowrate : str or Unit, optional
             The rate at which liquid is dispensed into the ref in units
             of volume/time.
         nozzle_position : dict, optional
             A dict represent nozzle offsets from the bottom middle of the
             plate's wells. see Dispense.builders.nozzle_position; specified as
             {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
-        pre_dispense : str, Unit, optional
+        pre_dispense : str or Unit, optional
             The volume of reagent to be dispensed per-nozzle into waste
             immediately prior to dispensing into the ref.
         shape: dict, optional
@@ -1624,6 +1677,24 @@ class Protocol(object):
         shake_after: dict, optional
             Parameters that specify how a plate should be shaken at the very
             end of the instruction execution. See Dispense.builders.shake_after.
+
+        Returns
+        -------
+        Dispense
+            Returns the :py:class:`autoprotocol.instruction.Dispense`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. ref is not of type Container
+        ValueError
+            Columns specified is invalid for this container type
+        ValueError
+            Invalid step-size given
+        ValueError
+            Invalid pre-dispense volume
+
         """
         _VALID_STEP_SIZES = [Unit(5, "uL"), Unit(0.5, "uL")]
         _DEFAULT_NOZZLE_COUNT = 8
@@ -1820,29 +1891,29 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str, well
+        reagent : str or Well
             Reagent to be dispensed. Use a string to specify the name or
             resource_id (see below) of the reagent to be dispensed.
             Alternatively, use a well to specify that the dispense operation
             must be executed using a specific aliquot as the dispense source.
-        volume : Unit, str
+        volume : Unit or str
             Volume of reagent to be dispensed to each well
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
-        step_size : str, Unit, optional
+        step_size : str or Unit, optional
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
             multiple of the step_size. Currently, step_size must be either
             5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
-        flowrate : str, Unit, optional
+        flowrate : str or Unit, optional
             The rate at which liquid is dispensed into the ref in units
             of volume/time.
         nozzle_position : dict, optional
             A dict represent nozzle offsets from the bottom middle of the
             plate's wells. see Dispense.builders.nozzle_position; specified as
             {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
-        pre_dispense : str, Unit, optional
+        pre_dispense : str or Unit, optional
             The volume of reagent to be dispensed per-nozzle into waste
             immediately prior to dispensing into the ref.
         shape: dict, optional
@@ -1853,14 +1924,21 @@ class Protocol(object):
         shake_after: dict, optional
             Parameters that specify how a plate should be shaken at the very
             end of the instruction execution. See Dispense.builders.shake_after.
+
+        Returns
+        -------
+        Dispense
+            Returns the :py:class:`autoprotocol.instruction.Dispense`
+            instruction created from the specified parameters
+
         """
         columns = Dispense.builders.columns(
             [{"column": col, "volume": volume}
              for col in range(ref.container_type.col_count)])
 
-        self.dispense(ref, reagent, columns, is_resource_id,
-                      step_size, flowrate, nozzle_position, pre_dispense,
-                      shape, shake_after)
+        return self.dispense(ref, reagent, columns, is_resource_id,
+                             step_size, flowrate, nozzle_position,
+                             pre_dispense, shape, shake_after)
 
     def spin(self, ref, acceleration, duration, flow_direction=None,
              spin_direction=None):
@@ -1904,13 +1982,13 @@ class Protocol(object):
         acceleration: str
             Acceleration to be applied to the plate, in units of `g` or
             `meter/second^2`.
-        duration: str, Unit
+        duration: str or Unit
             Length of time that acceleration should be applied.
         flow_direction: str
             Specifies the direction contents will tend toward with respect to
             the container. Valid directions are "inward" and "outward", default
             value is "inward".
-        spin_direction: list of strings
+        spin_direction: list(str)
             A list of "cw" (clockwise), "cww" (counterclockwise). For each
             element in the list, the container will be spun in the stated
             direction for the set "acceleration" and "duration". Default values
@@ -1919,13 +1997,19 @@ class Protocol(object):
             ["cw", "ccw"]. If "flow_direction" is "inward", then
             "spin_direction" defaults to ["cw"].
 
+        Returns
+        -------
+        Spin
+            Returns the :py:class:`autoprotocol.instruction.Spin`
+            instruction created from the specified parameters
+
         Raises
         ------
-        TypeError:
+        TypeError
             If ref to spin is not of type Container.
-        TypeError:
+        TypeError
             If spin_direction or flow_direction are not properly formatted.
-        ValueError:
+        ValueError
             If spin_direction or flow_direction do not have appropriate values.
 
         """
@@ -1983,7 +2067,7 @@ class Protocol(object):
                     lid_temperature=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
-        groups is a list of dicts in the form of:
+        groups is a list(dict) in the form of:
 
         .. code-block:: python
 
@@ -2240,34 +2324,45 @@ class Protocol(object):
         ----------
         ref : Container
             Container to be thermocycled.
-        groups : list of dicts
+        groups : list(dict)
             List of thermocycling instructions formatted as above
-        volume : str, Unit, optional
+        volume : str or Unit, optional
             Volume contained in wells being thermocycled
         dataref : str, optional
             Name of dataref representing read data if performing qPCR
         dyes : dict, optional
             Dictionary mapping dye types to the wells they're used in
-        melting_start: str, Unit
+        melting_start: str or Unit, optional
             Temperature at which to start the melting curve.
-        melting_end: str, Unit
+        melting_end: str or Unit, optional
             Temperature at which to end the melting curve.
-        melting_increment: str, Unit
+        melting_increment: str or Unit, optional
             Temperature by which to increment the melting curve. Accepted
             increment values are between 0.1 and 9.9 degrees celsius.
-        melting_rate: str, Unit
+        melting_rate: str or Unit, optional
             Specifies the duration of each temperature step in the melting
             curve.
-        lid_temperature: str, Unit
+        lid_temperature: str or Unit, optional
             Specifies the lid temperature throughout the duration of the
             thermocycling instruction
 
+        Returns
+        -------
+        Thermocycle
+            Returns the :py:class:`autoprotocol.instruction.Thermocycle`
+            instruction created from the specified parameters
+
         Raises
         ------
-        AttributeError:
+        AttributeError
             If groups are not properly formatted
-        TypeError:
+        TypeError
             If ref to thermocycle is not of type Container.
+        ValueError
+            Container specified cannot be thermocycled
+        ValueError
+            Lid temperature is not within bounds
+            
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -2278,7 +2373,7 @@ class Protocol(object):
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         if "thermocycle" not in ref.container_type.capabilities:
-            raise RuntimeError(
+            raise ValueError(
                 "Container '{}' type '{}', cannot be thermocycled."
                 "".format(ref.name, ref.container_type.shortname)
             )
@@ -2349,21 +2444,38 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : Ref, str
+        ref : Ref or str
             The container to be incubated
-        where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+        where : Enum({"ambient", "warm_37", "cold_4", "cold_20", "cold_80"})
             Temperature at which to incubate specified container
-        duration : Unit, str
+        duration : Unit or str
             Length of time to incubate container
         shaking : bool, optional
-            Specify whether or not to shake container if available at the specified
-            temperature
-        target_tempterature : Unit, str, optional
+            Specify whether or not to shake container if available at the
+            specified temperature
+        co2 : int, optional
+            Carbon dioxide percentage
+        uncovered: bool, optional
+            Specify whether the container should be uncovered during incubation
+        target_temperature : Unit or str, optional
             Specify a target temperature for a device (eg. an incubating block)
             to reach during the specified duration.
         shaking_params: dict, optional
-            Specifify "path" and "frequency" of shaking parameters to be used
+            Specify "path" and "frequency" of shaking parameters to be used
             with compatible devices (eg. thermoshakes)
+
+        Returns
+        -------
+        Incubate
+            Returns the :py:class:`autoprotocol.instruction.Incubate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types given, e.g. ref is not of type Container
+        RuntimeError
+            Incubating uncovered in a location which is shaking
 
         """
         if not isinstance(ref, Container):
@@ -2374,55 +2486,10 @@ class Protocol(object):
                 "If incubating uncovered, location must be in "
                 "{} and not shaking.".format(', '.join(allowed_uncovered))
             )
-        # thermoshake validations
-        ts_loc = ["ambient"]
-        ts_temp_max = Unit(70, "celsius")
-        ts_temp_min = Unit(4, "celsius")
-        ts_freq_maximums = {
-            "cw_orbital": Unit(1700, "rpm"),
-            "ccw_orbital": Unit(1700, "rpm"),
-            "portrait_linear": Unit(400, "rpm"),
-            "landscape_linear": Unit(600, "rpm"),
-            "cw_diamond": Unit(700, "rpm"),
-            "ccw_diamond": Unit(700, "rpm")
-        }
-        ts_freq_min = Unit(100, "rpm")
+
         if target_temperature:
-            if where not in ts_loc:
-                raise AttributeError("If specifying a 'target_temperature', "
-                                     "the 'where' parameter must be 'ambient'.")
-            target_temperature = Unit(target_temperature)
-            if not (ts_temp_min <= target_temperature <= ts_temp_max):
-                raise ValueError("The target temperature must be between "
-                                 "{} and {}, inclusive. You entered {}."
-                                 "".format(ts_temp_min, ts_temp_max,
-                                           target_temperature))
-        if shaking_params:
-            valid_shake_paths = ts_freq_maximums.keys()
-            if not isinstance(shaking_params, dict):
-                raise TypeError("'shaking_params' must be a dict "
-                                "containing keys 'frequency' and "
-                                "'path'.")
-            if not all(k in shaking_params.keys() for k in ["frequency", "path"]):
-                raise KeyError("'shaking_params' keys must contain 'frequency' "
-                               "and 'path'")
-            ts_path = shaking_params["path"]
-            if ts_path not in valid_shake_paths:
-                raise ValueError(
-                    "The valid paths for shaking are: {} . You entered {} ."
-                    "".format(valid_shake_paths, ts_path)
-                )
-            frequency = Unit(shaking_params["frequency"])
-            try:
-                ts_freq_max = ts_freq_maximums[ts_path]
-            except KeyError:
-                raise ValueError("An appropriate maximum frequency was not "
-                                 "determined for path {}. Valid paths are: {}."
-                                 "".format(ts_path, valid_shake_paths))
-            if not (ts_freq_min <= frequency <= ts_freq_max):
-                raise ValueError("The frequency must be between "
-                                 "{} and {}, inclusive. You entered {}."
-                                 "".format(ts_freq_min, ts_freq_max, frequency))
+            target_temperature = parse_unit(target_temperature, "celsius")
+
         if not uncovered:
             self._add_cover(ref, "incubate")
         return self._append_and_return(Incubate(ref, where, duration, shaking,
@@ -2480,16 +2547,18 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Ref
-        wells : list, WellGroup, Well
+        ref : str or Ref
+            Object to execute the absorbance read on
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        wavelength : str, Unit
+        wavelength : str or Unit
             wavelength of light absorbance to be read for the indicated wells
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
-        temperature: str, Unit, optional
+            number of flashes for the read
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
         settle_time: Unit, optional
             the time before the start of the measurement, defaults
@@ -2501,11 +2570,29 @@ class Protocol(object):
 
                 {
                     "shaking": {
-                        "amplitude": str, Unit
+                        "amplitude": str or Unit
                         "orbital": bool
                     },
-                    "duration": str, Unit
+                    "duration": str or Unit
                 }
+
+        Returns
+        -------
+        Absorbance
+            Returns the :py:class:`autoprotocol.instruction.Absorbance`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time has to be greater than 0
+        UnitError
+            Settle time is not of type Unit
 
         """
         if isinstance(wells, Well):
@@ -2520,7 +2607,7 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError(
+            raise TypeError(
                 "Unknown input. Absorbance wells accepts either a Well, "
                 "a WellGroup, or a list of well indices"
             )
@@ -2602,20 +2689,20 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to plate read.
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        excitation : str, Unit
+        excitation : str or Unit
             Wavelength of light used to excite the wells indicated
-        emission : str, Unit
+        emission : str or Unit
             Wavelength of light to be measured for the indicated wells
         dataref : str
             Name of this specific dataset of measured fluoresence
         flashes : int, optional
             Number of flashes.
-        temperature: str, Unit, optional
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
         gain: float, optional
             float between 0 and 1, multiplier, gain=0.2 of maximum signal
@@ -2625,7 +2712,7 @@ class Protocol(object):
         detection_mode: str, optional
             set the detection mode of the optics, ["top", "bottom"],
             defaults to vendor specified defaults.
-        position_z: dict, optonal
+        position_z: dict, optional
             distance from the optics to the surface of the plate transport,
             only valid for "top" detection_mode and vendor capabilities.
             Specified as either a set distance - "manual", OR calculated from
@@ -2640,14 +2727,6 @@ class Protocol(object):
                     "calculated_from_wells": []
                 }
 
-        manual: str, Unit, optional
-            parameter available within "position_z" to set the distance from
-            the optics to the plate transport.
-        calculated_from_wells: list, WellGroup, Well, optional
-            parameter available within "position_z" to set the distance from
-            the optics to the plate transport.  If specified, the average
-            optimal (maximal signal) distance will be chosen from the list
-            of wells and applied to all measurements.
         settle_time: Unit, optional
             the time before the start of the measurement, defaults
             to vendor specifications
@@ -2664,10 +2743,10 @@ class Protocol(object):
 
                 {
                     "shaking": {
-                        "amplitude": str, Unit
+                        "amplitude": str or Unit
                         "orbital": bool
                     },
-                    "duration": str, Unit
+                    "duration": str or Unit
                 }
 
             position_z examples:
@@ -2684,6 +2763,35 @@ class Protocol(object):
                     "manual": "20:micrometer"
                 }
 
+        Returns
+        -------
+        Fluorescence
+            Returns the :py:class:`autoprotocol.instruction.Fluorescence`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time, integration time or lag time has to be greater than 0
+        UnitError
+            Settle time, integration time, lag time or position z is not
+            of type Unit
+        ValueError
+            Unknown value given for `detection_mode`
+        ValueError
+            Position z specified for non-top detection mode
+        KeyError
+            For position_z, only `manual` and `calculated_from_wells`
+            is allowed
+        NotImplementedError
+            Specifying `calculated_from_wells` as that has not been
+            implemented yet
+
         """
         if isinstance(wells, Well):
             wells = WellGroup(wells)
@@ -2697,13 +2805,13 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError(
+            raise TypeError(
                 "Unknown input. Fluorescence wells accepts either a Well, "
                 "a WellGroup, or a list of well indices"
             )
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError(
-                "fluoresence gain set to %s must be between 0 and 1, "
+                "fluorescence gain set to %s must be between 0 and 1, "
                 "inclusive" % gain
             )
 
@@ -2718,7 +2826,8 @@ class Protocol(object):
             )
         if detection_mode == "bottom" and position_z:
             raise ValueError(
-                "position_z is only valid for 'top' detection_mode measurements."
+                "position_z is only valid for 'top' detection_mode "
+                "measurements."
                 )
         if settle_time:
             try:
@@ -2790,10 +2899,13 @@ class Protocol(object):
             if "calculated_from_wells" in position_z.keys():
                 # blocking calculated_from_wells until fully implemented
                 # remove below RunTimeError to release feature
-                raise NotImplementedError("This feature, 'calculated_from_wells', "
-                                          "has not been implemented yet.  Please use "
-                                          "'position_z':{'manual': 'set_value'} to "
-                                          "specify a position_z.")
+                raise NotImplementedError(
+                    "This feature, 'calculated_from_wells', "
+                    "has not been implemented yet.  Please use "
+                    "'position_z':{'manual': 'set_value'} to "
+                    "specify a position_z.")
+
+                # pragma pylint: disable=unreachable, unused-variable
                 z_ws = position_z["calculated_from_wells"]
                 if isinstance(z_ws, Well):
                     z_ws = [z_ws]
@@ -2817,7 +2929,9 @@ class Protocol(object):
                     except ValueError:
                         raise ValueError("Well indices specified for "
                                          "'calculated_from_wells' must "
-                                         "be valid wells of the ref'd container.")
+                                         "be valid wells of the ref'd "
+                                         "container.")
+                # pragma pylint: enable=unreachable, unused-variable
 
         return self._append_and_return(
             Fluorescence(
@@ -2874,14 +2988,14 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to plate read.
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
         dataref : str
             Name of this dataset of measured luminescence readings.
-        temperature: str, Unit, optional
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
         settle_time: Unit, optional
             the time before the start of the measurement, defaults
@@ -2896,11 +3010,29 @@ class Protocol(object):
 
                 {
                     "shaking": {
-                        "amplitude": str, Unit
+                        "amplitude": str or Unit
                         "orbital": bool
                     },
-                    "duration": str, Unit
+                    "duration": str or Unit
                 }
+
+        Returns
+        -------
+        Luminescence
+            Returns the :py:class:`autoprotocol.instruction.Luminescence`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time or integration time has to be greater than 0
+        UnitError
+            Settle time or integration time is not of type Unit
 
         """
         if isinstance(wells, Well):
@@ -2914,7 +3046,7 @@ class Protocol(object):
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError(
+            raise TypeError(
                 "Unknown input. Luminescence wells accepts either a Well, "
                 "a WellGroup, or a list of well indices"
             )
@@ -3018,7 +3150,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        extracts: List of dicts
+        extracts: list(dict)
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
@@ -3045,27 +3177,29 @@ class Protocol(object):
 
             util.make_gel_extract_params() and util.make_band_param() can be
             used to create these dictionaries
-        band_list: list of dicts
-            List of bands to be extracted from the lane
-        band_size_range: dict
-            Dictionary for the size range of the band to be extracted
-        max_bp: int
-            Maximum size for the band
-        min_bp: int
-            Minimum size for the band
-        destination: Well
-            Well to place the extracted material
-        elution_buffer: str
-            Buffer to use to extract the band, commonly "water"
-        elution_volume: str, Unit
-            Volume of elution_buffer to extract the band into
-        gel: int
-            Integer identifier for the gel if using multiple gels
-        lane: int
-            Integer identifier for the lane of a gel to run the source
-        source: Well
-            Well from whcih to purify the material
-        volume: str, Unit
+
+            band_list: list(dict)
+                List of bands to be extracted from the lane
+            band_size_range: dict
+                Dictionary for the size range of the band to be extracted
+            max_bp: int
+                Maximum size for the band
+            min_bp: int
+                Minimum size for the band
+            destination: Well
+                Well to place the extracted material
+            elution_buffer: str
+                Buffer to use to extract the band, commonly "water"
+            elution_volume: str or Unit
+                Volume of elution_buffer to extract the band into
+            gel: int
+                Integer identifier for the gel if using multiple gels
+            lane: int
+                Integer identifier for the lane of a gel to run the source
+            source: Well
+                Well from which to purify the material
+
+        volume: str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
         matrix: str
@@ -3075,32 +3209,37 @@ class Protocol(object):
         dataref: str
             Name of this set of gel separation results.
 
+        Returns
+        -------
+        GelPurify
+            Returns the :py:class:`autoprotocol.instruction.GelPurify`
+            instruction created from the specified parameters
 
         Raises
         -------
-        RuntimeError:
+        RuntimeError
             If matrix is not properly formatted.
-        AttributeError:
+        AttributeError
             If extract parameters are not a list of dictionaries.
-        KeyError:
+        KeyError
             If extract parameters do not contain the specified parameter keys.
-        ValueError:
+        ValueError
             If min_bp is greater than max_bp.
-        ValueError:
+        ValueError
             If extract destination is not of type Well.
-        ValueError:
+        ValueError
             If extract elution volume is not of type Unit
-        ValueError:
+        ValueError
             if extract elution volume is not greater than 0.
-        RuntimeError:
+        RuntimeError
             If gel extract lanes are set for some but not all extract wells.
-        RuntimeError:
+        RuntimeError
             If all samples do not fit on single gel type.
-        TypeError:
+        TypeError
             If lane designated for gel extracts is not an integer.
-        RuntimeError:
+        RuntimeError
             If designated lane index is outside lanes within the gel.
-        RuntimeError:
+        RuntimeError
             If lanes not designated and number of extracts not equal to number
             of samples.
 
@@ -3267,6 +3406,12 @@ class Protocol(object):
             optimized seal times for the target container type. Currently
             applies only to thermal sealing.
 
+        Returns
+        -------
+        Seal
+            Returns the :py:class:`autoprotocol.instruction.Seal`
+            instruction created from the specified parameters
+
         Raises
         ------
         TypeError
@@ -3363,6 +3508,12 @@ class Protocol(object):
         ref : Container
             Container to be unsealed.
 
+        Returns
+        -------
+        Unseal
+            Returns the :py:class:`autoprotocol.instruction.Unseal`
+            instruction created from the specified parameters
+
         Raises
         ------
         TypeError
@@ -3417,6 +3568,12 @@ class Protocol(object):
             the container type.
         retrieve_lid: bool, optional
             Flag to retrieve lid from previously stored location (see uncover).
+
+        Returns
+        -------
+        Cover
+            Returns the :py:class:`autoprotocol.instruction.Cover`
+            instruction created from the specified parameters
 
         Raises
         ------
@@ -3489,6 +3646,12 @@ class Protocol(object):
         ----------
         ref : Container
             Container to remove lid.
+
+        Returns
+        -------
+        Uncover
+            Returns the :py:class:`autoprotocol.instruction.Uncover`
+            instruction created from the specified parameters
 
         Raises
         ------
@@ -3630,7 +3793,7 @@ class Protocol(object):
                     "weight": false           //default: false
                 }
 
-        neg_controls : list of dicts
+        neg_controls : list(dict)
             List of negative control wells in the form of:
 
             .. code-block:: none
@@ -3643,7 +3806,7 @@ class Protocol(object):
                 }
 
             at least one negative control is required.
-        samples : list of dicts
+        samples : list(dict)
             List of samples in the form of:
 
             .. code-block:: none
@@ -3655,7 +3818,7 @@ class Protocol(object):
                 }
 
             at least one sample is required
-        colors : list of dicts, optional
+        colors : list(dict), optional
             Optional list of colors in the form of:
 
             .. code-block:: none
@@ -3675,7 +3838,7 @@ class Protocol(object):
                     }, ...
                 ]
 
-        pos_controls : list of dicts, optional
+        pos_controls : list(dict), optional
             Optional list of positive control wells in the form of:
 
             .. code-block:: none
@@ -3691,6 +3854,12 @@ class Protocol(object):
                           "to": [color]
                     }, ...
                 ]
+
+        Returns
+        -------
+        FlowAnalyze
+            Returns the :py:class:`autoprotocol.instruction.FlowAnalyze`
+            instruction created from the specified parameters
 
         Raises
         ------
@@ -3723,8 +3892,8 @@ class Protocol(object):
 
         for s in sources:
             if not isinstance(s.get("well"), Well):
-                    raise TypeError("The well for each sample or control must "
-                                    "be of type Well.")
+                raise TypeError("The well for each sample or control must "
+                                "be of type Well.")
             try:
                 Unit(s.get("volume"))
             except (ValueError, TypeError) as e:
@@ -3861,7 +4030,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        oligos : list of dicts
+        oligos : list(dict)
             List of oligonucleotides to synthesize.  Each dictionary should
             contain the oligo's sequence, destination, scale and purification
 
@@ -3884,80 +4053,18 @@ class Protocol(object):
                         // default: standard
                     }, ...
                 ]
+
+        Returns
+        -------
+        Oligosynthesize
+            Returns the :py:class:`autoprotocol.instruction.Oligosynthesize`
+            instruction created from the specified parameters
+
         """
         return self._append_and_return(Oligosynthesize(oligos))
 
-    def spread(self, source, dest, volume):
-        """
-        Spread the specified volume of the source aliquot across the surface of
-        the agar contained in the object container
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-
-            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
-            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
-
-            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
-
-
-        Autoprotocol Output:
-
-        .. code-block:: json
-
-            {
-              "refs": {
-                "bacteria": {
-                  "new": "micro-1.5",
-                  "discard": true
-                },
-                "agar_plate": {
-                  "new": "1-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                {
-                  "volume": "55.0:microliter",
-                  "to": "agar_plate/0",
-                  "from": "bacteria/0",
-                  "op": "spread"
-                }
-              ]
-            }
-
-
-        Parameters
-        ----------
-        source : Well
-            Source of material to spread on agar
-        dest : Well
-            Reference to destination location (plate containing agar)
-        volume : str, Unit
-            Volume of source material to spread on agar
-
-        """
-        # Check validity of Well inputs
-        if not isinstance(source, Well):
-            raise TypeError("Source must be of type Well.")
-        if not isinstance(dest, Well):
-            raise TypeError("Destination, (dest), must be of type Well.")
-        self._remove_cover(source.container, "spread")
-        self._remove_cover(dest.container, "spread")
-        volume = Unit.fromstring(volume)
-        if dest.volume:
-            dest.volume += volume
-        else:
-            dest.volume = volume
-        if source.volume:
-            source.volume -= volume
-        self.instructions.append(Spread(source, dest, volume))
-
-    def autopick(self, sources, dests, min_abort=0, criteria={},
-                 dataref="autopick", newpick=False):
+    def autopick(self, sources, dests, min_abort=0, criteria=None,
+                 dataref="autopick"):
         """
 
         Pick colonies from the agar-containing location(s) specified in
@@ -3973,15 +4080,30 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : Well, WellGroup, list of Wells
+        sources : Well or WellGroup or list(Well)
             Reference wells containing agar and colonies to pick
-        dests : Well, WellGroup, list of Wells
+        dests : Well or WellGroup or list(Well)
             List of destination(s) for picked colonies
         criteria : dict
             Dictionary of autopicking criteria.
         min_abort : int, optional
             Total number of colonies that must be detected in the aggregate
             list of `from` wells to avoid aborting the entire run.
+        dataref: str
+            Name of dataset to save the picked colonies to
+
+        Returns
+        -------
+        Autopick
+            Returns the :py:class:`autoprotocol.instruction.Autopick`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types for sources and dests
+        ValueError
+            Source wells are not all from the same container
 
         """
         # Check valid well inputs
@@ -3996,7 +4118,7 @@ class Protocol(object):
         sources = WellGroup(sources)
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
-            raise RuntimeError("All source wells for autopick must exist "
+            raise ValueError("All source wells for autopick must exist "
                                "on the same container")
         dests = WellGroup(dests)
         pick["to"] = dests
@@ -4004,18 +4126,14 @@ class Protocol(object):
 
         group = [pick]
 
-        [self._remove_cover(s.container, "autopick") for s in pick["from"]]
-        [self._remove_cover(d.container, "autopick") for d in pick["to"]]
+        for s in pick["from"]:
+            self._remove_cover(s.container, "autopick")
+        for d in pick["to"]:
+            self._remove_cover(d.container, "autopick")
 
-        if (not newpick and self.instructions and
-                self.instructions[-1].op == "autopick" and
-                self.instructions[-1].dataref == dataref and
-                self.instructions[-1].criteria == criteria and
-                self.instructions[-1].groups[0]['from'][0].container ==
-                sources[0].container):
-            self.instructions[-1].groups.extend(group)
-        else:
-            return self._append_and_return(Autopick(group, criteria, dataref))
+        criteria = {} if criteria is None else criteria
+
+        return self._append_and_return(Autopick(group, criteria, dataref))
 
     def mag_dry(self, head, container, duration, new_tip=False,
                 new_instruction=False):
@@ -4061,23 +4179,24 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to dry beads above
-        duration : str, Unit
+        duration : str or Unit
             Time for drying
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
-        """
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
 
+        """
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ["duration"]:
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_dry")
@@ -4130,29 +4249,35 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Time for incubation
         magnetize : bool
             Specify whether to magnetize the tips
         tip_position : float
             Position relative to well height that tips are held
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ("duration", "magnetize", "tip_position", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["magnetize"] = magnetize
+        mag["tip_position"] = tip_position
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_incubate")
@@ -4209,28 +4334,33 @@ class Protocol(object):
             Container to incubate beads
         cycles: int
             Number of cycles to raise and lower tips
-        pause_duration : str, Unit
+        pause_duration : str or Unit
             Time tips are paused in bottom position each cycle
         bottom_position : float
             Position relative to well height that tips are held during pause
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in (
-                "cycles", "pause_duration", "bottom_position", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["cycles"] = cycles
+        mag["pause_duration"] = parse_unit(pause_duration, "second")
+        mag["bottom_position"] = bottom_position
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_collect")
@@ -4286,32 +4416,38 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Total time for this sub-operation
-        frequency : str, Unit
+        frequency : str or Unit
             Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
         amplitude : float
             Distance relative to well height to oscillate around "center"
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in (
-                "duration", "frequency", "center", "amplitude", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["frequency"] = parse_unit(frequency, "hertz")
+        mag["center"] = center
+        mag["amplitude"] = amplitude
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_release")
@@ -4368,9 +4504,9 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Total time for this sub-operation
-        frequency : str, Unit
+        frequency : str or Unit
             Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
@@ -4378,25 +4514,31 @@ class Protocol(object):
             Distance relative to well height to oscillate around "center"
         magnetize : bool
             Specify whether to magnetize the tips
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in (
-                "duration", "frequency", "center", "amplitude",
-                "magnetize", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["frequency"] = parse_unit(frequency, "hertz")
+        mag["center"] = center
+        mag["amplitude"] = amplitude
+        mag["magnetize"] = magnetize
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_mix")
@@ -4462,12 +4604,18 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to take image of
         mode : str
             Imaging mode (currently supported: "top")
         dataref : str
             Name of data reference of resulting image
+
+        Returns
+        -------
+        ImagePlate
+            Returns the :py:class:`autoprotocol.instruction.ImagePlate`
+            instruction created from the specified parameters
 
         """
         return self._append_and_return(ImagePlate(ref, mode, dataref))
@@ -4482,9 +4630,9 @@ class Protocol(object):
         ----------
         resource_id : str
           Resource ID from catalog.
-        dests : Well, WellGroup, list of Wells
+        dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
-        volumes : str, Unit, list of str, list of Unit
+        volumes : str or Unit or list(str) or list(Unit)
           Volume(s) to transfer of the resource to each destination well.  If
           one volume of specified, each destination well recieve that volume of
           the resource.  If destinations should recieve different volumes, each
@@ -4494,12 +4642,20 @@ class Protocol(object):
         Raises
         ------
         TypeError
-          If resource_id is not a string.
+            If resource_id is not a string.
         RuntimeError
-          If length of the list of volumes specified does not match the number
-          of destination wells specified.
+            If length of the list of volumes specified does not match the number
+            of destination wells specified.
         TypeError
-          If volume is not specified as a string or Unit (or a list of either)
+            If volume is not specified as a string or Unit (or a list of either)
+        ValueError
+            Volume to provision exceeds max capacity of well
+
+        Returns
+        -------
+        Provision
+            Returns the :py:class:`autoprotocol.instruction.Provision`
+            instruction created from the specified parameters
 
         """
         # Check valid well inputs
@@ -4595,11 +4751,16 @@ class Protocol(object):
 
         Parameters
         ----------
-        container : Container, str
+        container : Container or str
           Container to be flash frozen.
-        duration : str, Unit
+        duration : str or Unit
           Duration to submerge specified container in liquid nitrogen.
 
+        Returns
+        -------
+        FlashFreeze
+            Returns the :py:class:`autoprotocol.instruction.FlashFreeze`
+            instruction created from the specified parameters
         """
 
         return self._append_and_return(FlashFreeze(container, duration))
@@ -4709,13 +4870,15 @@ class Protocol(object):
         Unpacks protocol objects into Autoprotocol compliant ones
 
         Used by as_dict().
+
         Parameters
         ----------
         op_data: any protocol object
 
         Returns
         -------
-        Autoprotocol compliant objects
+        dict or str or list or any
+            Autoprotocol compliant objects
 
         """
         if type(op_data) is dict:
@@ -4782,6 +4945,16 @@ class Protocol(object):
         ----------
         params : dict
             A dictionary of parameters to be passed to a protocol.
+
+        Returns
+        -------
+        dict
+            Dictionary of containers and wells
+
+        Raises
+        ------
+        RuntimeError
+            Invalid parameters
 
         """
         parameters = {}
@@ -4892,15 +5065,27 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured
-        volume : str, Unit
+        volume : str or Unit
             Volume of sample required for analysis
         dataref : str
             Name of this specific dataset of measurements
         measurement : str
             Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
             "protein"].
+
+        Returns
+        -------
+        MeasureConcentration
+            Returns the
+            :py:class:`autoprotocol.instruction.MeasureConcentration`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
 
         """
         if not is_valid_well(wells):
@@ -4957,15 +5142,22 @@ class Protocol(object):
         dataref : str
             Name of this specific dataset of measurements
 
+        Returns
+        -------
+        MeasureMass
+            Returns the :py:class:`autoprotocol.instruction.MeasureMass`
+            instruction created from the specified parameters
+
         Raises
         ------
         TypeError
             Input given is not of type Container
+
         """
         if not isinstance(container, Container):
             raise TypeError("{} has to be of type Container".format(container))
 
-        self._append_and_return(MeasureMass(container, dataref))
+        return self._append_and_return(MeasureMass(container, dataref))
 
     def measure_volume(self, wells, dataref):
         """
@@ -5008,10 +5200,21 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : list, well, WellGroup
+        wells : list(Well) or WellGroup or Well
             list of wells to be measured
         dataref : str
             Name of this specific dataset of measurements
+
+        Returns
+        -------
+        MeasureVolume
+            Returns the :py:class:`autoprotocol.instruction.MeasureVolume`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
 
         """
         if not is_valid_well(wells):
@@ -5075,21 +5278,30 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells: well, [well], WellGroup
+        wells: Well or list(Well) or WellGroup
             List of wells that will be used for cell counting.
         volume: Unit
             Volume that should be consumed from each well for the purpose
             of cell counting.
         dataref: str
             Name of dataset that will be returned.
-        labels: [string], optional
+        labels: list(string), optional
             Cells will be scored for presence or absence of each label
             in this list. If staining is required to visualize these labels,
             they must be added before execution of this instruction.
 
-        """
-        _ALLOWED_LABELS = ["trypan_blue"]
+        Returns
+        -------
+        CountCells
+            Returns the :py:class:`autoprotocol.instruction.CountCells`
+            instruction created from the specified parameters
 
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
+
+        """
         # Check valid well inputs
         if not is_valid_well(wells):
             raise TypeError(
@@ -5099,14 +5311,6 @@ class Protocol(object):
         # Parse volume
         parsed_volume = parse_unit(volume, "microliter")
 
-        # Check labels against allowed list
-        if labels:
-            for label in labels:
-                if label not in _ALLOWED_LABELS:
-                    raise ValueError("Only the following labels are allowed:"
-                                     " {}".format(_ALLOWED_LABELS))
-        else:
-            raise ValueError("At least one label must be specified")
         # Eliminate duplicates from labels
         parsed_labels = list(set(labels))
 
@@ -5292,22 +5496,36 @@ class Protocol(object):
         ----------
         dataref : str
             Name of the resultant dataset to be returned.
-        obj : Container, str
+        obj : Container or str
             Container to be read.
         groups : list
             A list of groups generated by SpectrophotometryBuilders groups
             builders, any of absorbance_mode_params, fluorescence_mode_params,
             luminescence_mode_params, or shake_mode_params.
-        interval : Unit, str, optional
+        interval : Unit or str, optional
             The time between each of the read intervals.
         num_intervals : int, optional
             The number of times that the groups should be executed.
-        temperature : Unit, str, optional
+        temperature : Unit or str, optional
             The temperature that the entire instruction should be executed at.
         shake_before : dict, optional
             A dict of params generated by SpectrophotometryBuilders.shake_before
             that dictates how the obj should be incubated with shaking before
             any of the groups are executed.
+
+        Returns
+        -------
+        Spectrophotometry
+            Returns the :py:class:`autoprotocol.instruction.Spectrophotometry`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid num_intervals specified, must be an int
+        ValueError
+            No interval specified but shake groups specified with no duration
+
         """
 
         groups = Spectrophotometry.builders.groups(groups)
@@ -5316,7 +5534,7 @@ class Protocol(object):
             interval = parse_unit(interval, "seconds")
 
         if num_intervals and not isinstance(num_intervals, int):
-            raise ValueError(
+            raise TypeError(
                 "Invalid num_intervals {}, must be an int."
                 "".format(num_intervals)
             )

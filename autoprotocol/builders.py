@@ -1,3 +1,12 @@
+"""
+Module containing builders, which help build inputs for Instruction parameters
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
+"""
+
 from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well
 from .unit import Unit

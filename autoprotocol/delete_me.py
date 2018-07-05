@@ -1,4 +1,8 @@
-# Temporary file for missing deps that will be fixed once liquid handle fixes are in
+"""
+Temporary file for missing deps that will be fixed once liquid handle fixes are in
+"""
+# pragma pylint:disable=all
+
 _SUPPORTED_SHAPES = ["SBS96", "SBS384"]
 
 def shape_builder(rows=1, columns=1, format="SBS96"):

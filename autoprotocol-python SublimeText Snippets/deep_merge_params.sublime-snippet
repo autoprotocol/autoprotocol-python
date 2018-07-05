@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-deep_merge_params(${1:Dict defaults}, ${2:Dict override})
-]]></content>
-    <tabTrigger>deep_merge_params</tabTrigger>
-    <scope>source.python</scope>
-    <description>Merge two dictionaries</description>
-</snippet>

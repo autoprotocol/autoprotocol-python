@@ -472,7 +472,7 @@ class IlluminaSeq(Instruction):
         Library size expressed as an integer of basepairs
     dataref : str
         Name of sequencing dataset that will be returned.
-    cycles: Enum({"read_1", "read_2", "index_1", "index_2"})
+    cycles : Enum({"read_1", "read_2", "index_1", "index_2"})
         Parameter specific to Illuminaseq read-length or number of
         sequenced bases. Refer to the ASC for more details
 
@@ -512,9 +512,10 @@ class SangerSeq(Instruction):
       Name of sequencing dataset that will be returned.
     type: Enum({"standard", "rca"})
         Sanger sequencing type
-    primer: Container, optional
-        Tube containing primers for sequencing operations, only applicable
-        for RCA
+    primer : Container, optional
+        Tube containing sufficient primer for all RCA reactions.  This field
+        will be ignored if you specify the sequencing type as "standard".
+        Tube containing sufficient primer for all RCA reactions
 
     """
 
@@ -1072,29 +1073,6 @@ class Oligosynthesize(Instruction):
         super(Oligosynthesize, self).__init__(op="oligosynthesize", data={
             "oligos": oligos
         })
-
-
-class Spread(Instruction):
-    """
-    Spread the specified volume of the source aliquot across the surface of the
-    agar contained in the object container
-
-    Parameters
-    ----------
-    source : str or Well
-        Source of material to spread on agar
-    dest : str or Well
-        Reference to destination location (plate containing agar)
-    volume : str or Unit
-        Volume of source material to spread on agar
-
-    """
-
-    def __init__(self, source, dest, volume):
-        super(Spread, self).__init__(
-            op="spread",
-            data={"from": source, "to": dest, "volume": volume}
-        )
 
 
 class Autopick(Instruction):

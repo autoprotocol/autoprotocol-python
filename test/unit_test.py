@@ -55,6 +55,7 @@ class TestUnitMath:
         assert (u3 > u1)
         assert (u2 < u3)
 
+    # pragma pylint: disable=expression-not-assigned
     def test_units_match(self):
         with pytest.raises(ValueError):
             Unit(20, 'microliter') + Unit(30, 'second')
@@ -64,6 +65,7 @@ class TestUnitMath:
 
         with pytest.raises(ValueError):
             Unit(20, 'microliter') < Unit(30, 'second')
+    # pragma pylint: enable=expression-not-assigned
 
     def test_string_repr(self):
         assert ('20:microliter' == str(Unit(20, 'microliter')))

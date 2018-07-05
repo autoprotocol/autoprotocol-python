@@ -451,7 +451,7 @@ class TestAbsorbance:
     def test_bad_well(self):
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             p.absorbance(test_plate, "bad_well_ref",
                          wavelength="450:nanometer", dataref="bad_wells")
 
@@ -1182,55 +1182,12 @@ class TestAutopick:
         agar_plate = Container(None, p.container_type("6-flat"),
                                name="agar_plate")
 
-        p.refs["agar_plate_1"] = Ref(
-            "agar_plate_1",
-            {"reserve": "ki17reefwqq3sq", "discard": True},
-            Container(None, p.container_type("6-flat"), name="agar_plate_1"))
-
-        agar_plate_1 = Container(None, p.container_type("6-flat"),
-                                 name="agar_plate_1")
-
-        p.autopick([agar_plate.well(0), agar_plate.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0, dataref="0",
-                   newpick=False)
+        p.autopick([agar_plate.well(0), agar_plate.well(1)], [
+            dest_plate.well(1)] * 4, min_abort=0, dataref="1")
 
         assert (len(p.instructions) == 1)
         assert (len(p.instructions[0].groups) == 1)
         assert (len(p.instructions[0].groups[0]["from"]) == 2)
-
-        p.autopick([agar_plate.well(0), agar_plate.well(1)], [
-            dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=True)
-
-        assert (len(p.instructions) == 2)
-
-        p.autopick([agar_plate.well(0), agar_plate.well(1)], [
-            dest_plate.well(1)] * 4, min_abort=0, dataref="1", newpick=False)
-
-        assert (len(p.instructions) == 2)
-
-        for i in range(20):
-            p.autopick([agar_plate.well(i % 6), agar_plate.well(
-                (i + 1) % 6)], [dest_plate.well(i % 96)] * 4, min_abort=i,
-                       dataref="1", newpick=False)
-
-        assert (len(p.instructions) == 2)
-
-        p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0, dataref="1",
-                   newpick=False)
-
-        assert (len(p.instructions) == 3)
-
-        p.autopick([agar_plate_1.well(0), agar_plate_1.well(1)],
-                   [dest_plate.well(1)] * 4, min_abort=0, dataref="2",
-                   newpick=False)
-
-        assert (len(p.instructions) == 4)
-
-        with pytest.raises(RuntimeError):
-            p.autopick([agar_plate.well(0), agar_plate_1.well(1)],
-                       [dest_plate.well(1)] * 4, min_abort=0, dataref="1",
-                       newpick=False)
 
 
 class TestMeasureConcentration:
@@ -1583,7 +1540,7 @@ class TestIlluminaSeq:
                                   1], "library_concentration": 2}
                           ],
                           "miseq", "high", 'none', 250, "not_enough_lanes")
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.illuminaseq("SR",
                           [
                               {"object": sample_wells[
@@ -2159,38 +2116,6 @@ class TestIncubate:
                                    "frequency": "1700:rpm"})
         assert (p.instructions[-1].op == "incubate")
 
-    def test_shaking_params(self, dummy_protocol, dummy_96):
-        p = dummy_protocol
-        with pytest.raises(KeyError):
-            p.incubate(dummy_96, "ambient", "1:minute",
-                       shaking_params={"path": "cw_orbital"})
-        with pytest.raises(TypeError):
-            p.incubate(dummy_96, "ambient", "1:minute",
-                       shaking_params="not_dict")
-        with pytest.raises(ValueError):
-            p.incubate(dummy_96, "ambient", "10:minute",
-                       target_temperature="50:celsius",
-                       shaking_params={"path": "cw_orbital",
-                                       "frequency": "2000:rpm"})
-
-    def test_shaking_freq(self, dummy_protocol, dummy_96):
-        p = dummy_protocol
-        with pytest.raises(ValueError):
-            p.incubate(dummy_96, "ambient", "10:minute",
-                       target_temperature="50:celsius",
-                       shaking_params={"path": "landscape_linear",
-                                       "frequency": "601:rpm"})
-        with pytest.raises(ValueError):
-            p.incubate(dummy_96, "ambient", "10:minute",
-                       target_temperature="50:celsius",
-                       shaking_params={"path": "portrait_linear",
-                                       "frequency": "401:rpm"})
-        with pytest.raises(ValueError):
-            p.incubate(dummy_96, "ambient", "10:minute",
-                       target_temperature="50:celsius",
-                       shaking_params={"path": "ccw_diamond",
-                                       "frequency": "701:rpm"})
-
 
 class TestProvision:
     p = Protocol()
@@ -2296,12 +2221,3 @@ class TestCountCells:
             # Not of correct dimensionality
             self.p.count_cells(self.tube.well(0), "10:meter", "cell_count_4",
                                ["trypan_blue"])
-        # Bad labels input
-        with pytest.raises(ValueError):
-            # GFP is not an accepted label
-            self.p.count_cells(self.tube.well(0), "10:microliter",
-                               "cell_count_4", ["GFP"])
-        with pytest.raises(ValueError):
-            # No label specified
-            self.p.count_cells(self.tube.well(0), "10:microliter",
-                               "cell_count_4")

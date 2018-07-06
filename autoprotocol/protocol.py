@@ -14,6 +14,7 @@ from .instruction import *  # pylint: disable=unused-wildcard-import
 from .util import *  # pylint: disable=unused-wildcard-import
 from .delete_me import shape_builder
 
+from builtins import round
 import sys
 import warnings
 

@@ -10,7 +10,8 @@ setup(
     version='4.0.0',
     test_suite='test',
     install_requires=[
-        'Pint==0.8.1'
+        'Pint==0.8.1',
+        'future==0.16.0'
     ],
     tests_require=[
         'coverage>=4,<5',

@@ -3,6 +3,7 @@
 import pytest
 from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
 from autoprotocol import Unit, Well
+from autoprotocol.unit import UnitError
 
 
 class TestDispenseBuilders(object):
@@ -137,7 +138,7 @@ def cast_values_as_units(params):
         try:
             if isinstance(item, str):
                 item = Unit(item)
-        except:
+        except UnitError:
             pass
         return item
     return {k: to_unit(v) for k, v in params.items()}
@@ -248,6 +249,7 @@ class TestSpectrophotometryBuilders(object):
         )
 
     def test_shake_params(self):
+        # pylint: disable=protected-access
         assert(
             Spectrophotometry.builders._shake(**self.shake) ==
             cast_values_as_units(self.shake)

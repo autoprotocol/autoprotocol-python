@@ -7,9 +7,10 @@ class TestUserError:
         with pytest.raises(UserError):
             raise UserError("spam")
 
-        with pytest.raises(UserError) as e:
+        try:
             raise UserError("eggs")
-            assert "eggs" in e.value
+        except UserError as e:
+            assert "eggs" in e.message
 
         e = UserError("Test")
         assert e.message == "Test"

@@ -50,6 +50,7 @@ class TestRef:
         assert (p.refs["test"].opts["discard"])
         assert ("where" not in p.refs["test"].opts)
 
+    # pragma pylint: disable=expression-not-assigned
     def test_storage_condition_change(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "micro-2.0", storage="cold_20")
@@ -64,6 +65,7 @@ class TestRef:
         c1.set_storage("cold_4")
         assert (
             p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4")
+    # pragma pylint: enable=expression-not-assigned
 
 
 class TestThermocycle:
@@ -227,8 +229,9 @@ class TestThermocycle:
                     ]
         )
 
-class TestRefify:
 
+class TestRefify:
+    # pragma pylint: disable=protected-access
     def test_refifying_various(self, dummy_protocol):
         p = dummy_protocol
         # refify container
@@ -262,6 +265,7 @@ class TestRefify:
         i = 24
         assert ("randomstring" == p._refify(s))
         assert (24 == p._refify(i))
+    # pragma pylint: enable=protected-access
 
 
 class TestOuts:
@@ -339,7 +343,7 @@ class TestTimeConstraints:
         time_point_2 = p.get_instruction_index()
 
         with pytest.raises(AttributeError):
-            p.time_constraints
+            p.time_constraints  # pylint: disable=pointless-statement
 
         p.add_time_constraint({"mark": time_point_1, "state": "start"},
                               {"mark": time_point_1, "state": "end"},
@@ -918,7 +922,9 @@ class TestAcousticTransfer:
                             droplet_size="0.50:microliter")
         assert (len(p.instructions) == 3)
         p.acoustic_transfer(
-            echo.well(0), dest2.wells(0, 2, 4), "25:microliter")
+            echo.well(0), dest2.wells(0, 2, 4), "25:microliter",
+            droplet_size="2.5:nanoliter"
+        )
         assert (len(p.instructions) == 4)
 
     def test_one_source(self, dummy_protocol):
@@ -1283,6 +1289,7 @@ class TestMeasureVolume:
 
 class TestSpin:
 
+    # pragma pylint: disable=pointless-statement
     def test_spin_default(self, dummy_protocol):
         p = dummy_protocol
         test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
@@ -1293,6 +1300,7 @@ class TestSpin:
                spin_direction=["ccw", "cw", "ccw"])
         p.spin(test_plate, "1000:g", "20:minute", flow_direction="inward")
         assert (len(p.instructions) == 7)
+
         with pytest.raises(AttributeError):
             p.instructions[1].flow_direction
         with pytest.raises(AttributeError):
@@ -1304,6 +1312,7 @@ class TestSpin:
         assert (p.instructions[5].spin_direction == ["ccw", "cw", "ccw"])
         assert (p.instructions[6].flow_direction == "inward")
         assert (p.instructions[6].spin_direction == ["cw"])
+        # pragma pylint: enable=pointless-statement
 
     def test_spin_bad_values(self):
         p = Protocol()
@@ -1591,7 +1600,7 @@ class TestDispense:
         assert (container.well(3).volume is None)
         assert (hasattr(p.instructions[0], "resource_id"))
         with pytest.raises(AttributeError):
-            p.instructions[0].reagent
+            p.instructions[0].reagent  # pylint: disable=pointless-statement
 
     def test_reagent(self):
         p = Protocol()
@@ -1602,7 +1611,7 @@ class TestDispense:
         assert (container.well(3).volume is not None)
         assert (hasattr(p.instructions[0], "reagent"))
         with pytest.raises(AttributeError):
-            p.instructions[0].resource_id
+            p.instructions[0].resource_id  # pylint: disable=pointless-statement
 
     def test_flowrate(self):
         p = Protocol()

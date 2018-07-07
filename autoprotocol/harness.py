@@ -26,28 +26,28 @@ _DYE_TEST_RS = {
 }
 
 
-def param_default(typeDesc):
-    if isinstance(typeDesc, basestring):
-        typeDesc = {'type': typeDesc}
+def param_default(type_desc):
+    if isinstance(type_desc, basestring):
+        type_desc = {'type': type_desc}
 
-    type = typeDesc['type']  # pylint: disable=redefined-builtin
-    default = typeDesc.get('default')
+    type = type_desc['type']  # pylint: disable=redefined-builtin
+    default = type_desc.get('default')
 
     if default is not None and type != 'group-choice':
         return default
 
-    if typeDesc['type'] in ['aliquot+', 'aliquot++', 'container+']:
+    if type_desc['type'] in ['aliquot+', 'aliquot++', 'container+']:
         return []
-    elif typeDesc['type'] == 'group+':
+    elif type_desc['type'] == 'group+':
         return [{}]
-    elif typeDesc['type'] == 'group':
+    elif type_desc['type'] == 'group':
         return {
             k: param_default(v)
-            for k, v in typeDesc['inputs'].items()
+            for k, v in type_desc['inputs'].items()
         }
-    elif typeDesc['type'] == 'group-choice':
+    elif type_desc['type'] == 'group-choice':
         default_inputs = {}
-        for option in typeDesc.get('options', []):
+        for option in type_desc.get('options', []):
             value = option.get('value')
             inputs = option.get('inputs')
             if inputs:
@@ -58,7 +58,7 @@ def param_default(typeDesc):
             'value': default,
             'inputs': default_inputs
         }
-    elif typeDesc['type'] == 'csv-table':
+    elif type_desc['type'] == 'csv-table':
         return [{}, {}]
     else:
         return None

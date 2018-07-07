@@ -537,7 +537,7 @@ class WellGroup(object):
             return WellGroup(self.wells + other.wells)
 
 
-# pragma pylint: disable=redefined-builtin
+# pylint: disable=redefined-builtin
 class Container(object):
     """
     A reference to a specific physical container (e.g. a tube or 96-well
@@ -947,4 +947,3 @@ class Container(object):
         """
         return "Container(%s%s)" % (str(self.name), ", cover=" +
                                     self.cover if self.cover else "")
-# pragma pylint: enable=redefined-builtin

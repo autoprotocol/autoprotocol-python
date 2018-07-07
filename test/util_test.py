@@ -1,47 +1,26 @@
 import pytest
-from autoprotocol.util import check_unit
+
+from autoprotocol.util import parse_unit
 from autoprotocol.unit import Unit
 
 
-class TestCheckUnit(object):
-    def test_check_unit_inputs(self):
+class TestParseUnit:
+
+    def test_casting_to_unit(self):
+        assert Unit("1:second") == parse_unit("1:second")
+        assert Unit("1:ul") == parse_unit("1:microliter")
+
         with pytest.raises(TypeError):
-            check_unit("1:s", "1:s", "1:s")
+            parse_unit("1 second")
+
+    def test_accepted_unit(self):
+        assert Unit("1:ul") == parse_unit("1:ul", "ml")
+        assert Unit("1:ul") == parse_unit("1:ul", "milliliter")
+        assert Unit("1:ul") == parse_unit("1:ul", "1:ml")
+        assert Unit("1:ul") == parse_unit("1:ul", ["kg", "ml"])
+
         with pytest.raises(TypeError):
-            check_unit(Unit("1:s"), Unit("1:s"), Unit("1:celsius"))
-        with pytest.raises(ValueError):
-            check_unit(Unit("1:s"))
+            parse_unit("1:ul", "second")
 
-    def test_check_unit_outputs(self):
-        val = Unit("1:s")
-        lb = Unit("0:s")
-        ub = Unit("2:s")
-
-        # These are all valid checks
-        assert(val == check_unit(val, lb))
-        assert (val == check_unit(val, lb=val))
-
-        assert (val == check_unit(val, ub=ub))
-        assert (val == check_unit(val, ub=val))
-
-        assert (val == check_unit(val, lb, ub))
-        assert (val == check_unit(val, lb=val, ub=val))
-
-        with pytest.raises(
-            ValueError,
-            message="Time 1:second has to be greater or equal to 2:second"
-        ):
-            check_unit(val, lb=Unit("2:s"))
-
-        with pytest.raises(
-            ValueError,
-            message="Time 1:second has to be less than or equal to 0:second"
-        ):
-            check_unit(val, ub=Unit("0:s"))
-
-        with pytest.raises(
-                ValueError,
-                message="Time 3:second has to be within [0:second, 2:second]"
-        ):
-            check_unit(Unit("3:s"), lb=lb, ub=ub)
-
+        with pytest.raises(TypeError):
+            parse_unit("1:ul", ["second", "kg"])

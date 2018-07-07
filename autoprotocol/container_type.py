@@ -13,9 +13,9 @@ from collections import namedtuple
 from .container import Well
 from .unit import Unit
 
-if sys.version_info[0] >= 3:
-    xrange = range
-    basestring = str
+if sys.version_info.major == 3:
+    xrange = range  # pylint: disable=invalid-name
+    basestring = str  # pylint: disable=invalid-name
 
 
 class ContainerType(namedtuple("ContainerType",
@@ -39,9 +39,9 @@ class ContainerType(namedtuple("ContainerType",
       Indicates whether a ContainerType is a tube (container with one well).
     well_count : int
       Number of wells a ContainerType contains.
-    well_depth_mm : int
+    well_depth_mm : float
       Depth of well(s) contained in a ContainerType in millimeters.
-    well_volume_ul : int
+    well_volume_ul : Unit
       Maximum volume of well(s) contained in a ContainerType in microliters.
     well_coating : str
       Coating of well(s) in container (ex. collagen).
@@ -58,20 +58,20 @@ class ContainerType(namedtuple("ContainerType",
       Short name used to refer to a ContainerType.
     col_count : int
       Number of columns a ContainerType contains.
-    dead_volume_ul : int
+    dead_volume_ul : Unit
       Volume of liquid that cannot be aspirated from any given well of a
       ContainerType via liquid-handling.
-    safe_min_volume_ul : int
+    safe_min_volume_ul : Unit
       Minimum volume of liquid to ensure adequate volume for liquid-handling
       aspiration from any given well of a ContainerType.
-    true_max_vol_ul : int
+    true_max_vol_ul : Unit, optional
       Maximum volume of well(s) in microliters, often same value as
       well_volume_ul (maximum working volume), however, some ContainerType(s)
       can have a different value corresponding to a true maximum volume
       of a well (ex. echo compatible containers)
-    vendor: str
+    vendor: str, optional
       ContainerType commercial vendor, if available.
-    cat_no: str
+    cat_no: str, optional
       ContainerType vendor catalog number, if available.
     prioritize_seal_or_cover: str, optional
         "seal" or "cover", determines whether to prioritize sealing or covering

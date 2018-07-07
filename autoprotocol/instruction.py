@@ -9,8 +9,7 @@ Contains all the Autoprotocol Instruction objects
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 import json
-from .builders import DispenseBuilders, ThermocycleBuilders, \
-    SpectrophotometryBuilders
+from .builders import *
 from functools import reduce
 
 
@@ -891,11 +890,19 @@ class Uncover(Instruction):
     ----------
     object : str
         Container to remove lid from
+    store_lid : bool
+        Flag to store the uncovered lid
 
     """
 
-    def __init__(self, object):
-        super(Uncover, self).__init__(op="uncover", data={"object": object})
+    def __init__(self, object, store_lid=None):
+        super(Uncover, self).__init__(
+            op="uncover",
+            data={
+                "object": object,
+                "store_lid": store_lid
+            }
+        )
 
 
 class FlowAnalyze(Instruction):

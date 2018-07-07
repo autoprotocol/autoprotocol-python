@@ -8,7 +8,7 @@ from autoprotocol.harness import _add_dye_to_preview_refs, \
 import warnings
 
 
-class TestProtocolMultipleExist():
+class TestProtocolMultipleExist:
 
     def test_multiple_exist(self, dummy_protocol, dummy_96):
         p1 = dummy_protocol
@@ -20,24 +20,32 @@ class TestProtocolMultipleExist():
         assert (len(p1.instructions) == 2)
 
 
-class TestProtocolAppend:
+class TestProtocolAppendReturn:
 
-    def test_protocol_append(self, dummy_protocol):
+    def test_protocol_append_return(self, dummy_protocol):
         p = dummy_protocol
         # assert empty list of instructions
         assert (len(p.instructions) == 0)
 
-        p.append(Spin("dummy_ref", "100:meter/second^2", "60:second"))
+        inst = p._append_and_return(Spin("dummy_ref", "100:meter/second^2",
+                                         "60:second"))
         assert (len(p.instructions) == 1)
-        assert(p.instructions[0].op == "spin")
+        assert (p.instructions[0].op == "spin")
+        assert (inst.op == "spin")
 
-        p.append([
+    def test_protocol_append_return_multiple(self, dummy_protocol):
+        p = dummy_protocol
+
+        insts = p._append_and_return([
             Incubate("dummy_ref", "ambient", "30:second"),
             Spin("dummy_ref", "2000:rpm", "120:second")
         ])
-        assert (len(p.instructions) == 3)
-        assert (p.instructions[1].op == "incubate")
-        assert (p.instructions[2].op == "spin")
+        assert (len(p.instructions) == 2)
+        assert (p.instructions[0].op == "incubate")
+        assert (p.instructions[1].op == "spin")
+
+        assert (insts[0].op == "incubate")
+        assert (insts[1].op == "spin")
 
 
 class TestRef:
@@ -489,21 +497,17 @@ class TestAbsorbance:
                          True)
                      )
 
-        assert (
-            p.instructions[0].incubate_before["shaking"]["orbital"])
-        assert (
-                p.instructions[0].incubate_before["shaking"][
+        assert (p.instructions[0].incubate_before["shaking"]["orbital"])
+        assert (p.instructions[0].incubate_before["shaking"][
                     "amplitude"] == "3:millimeter")
-        assert (
-                p.instructions[0].incubate_before["duration"] == "10:second")
+        assert (p.instructions[0].incubate_before["duration"] == "10:second")
 
         p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                      "test_reading",
                      incubate_before=incubate_params("10:second"))
 
         assert ("shaking" not in p.instructions[1].incubate_before)
-        assert (
-                p.instructions[1].incubate_before["duration"] == "10:second")
+        assert (p.instructions[1].incubate_before["duration"] == "10:second")
 
         with pytest.raises(ValueError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",

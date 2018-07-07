@@ -548,7 +548,7 @@ def parse_unit(unit, accepted_unit=None):
     ----------
     unit: Unit or str
         Input to be checked
-    accepted_unit: Unit or str or list[Unit] or list[str], optional
+    accepted_unit: Unit or str or list(Unit) or list(str), optional
         Dimensionality of unit should match against the accepted unit(s).
         Examples:
             parse_unit("1:ul", "1:ml")
@@ -590,69 +590,3 @@ def parse_unit(unit, accepted_unit=None):
                             "{}".format(unit, accepted_unit))
 
     return unit
-
-
-def check_unit(value, lb=None, ub=None, label=None):
-    """
-    Checks that the provided unit is within the specified bounds
-
-    Parameters
-    ----------
-    value: Unit
-        Input to be checked
-    lb: Unit
-        Lower-bound of range (inclusive)
-    ub: Unit
-        Upper-bound of range (inclusive)
-    label: str, optional
-        Label of unit, used in the error message if provided
-
-    Returns
-    -------
-    Unit
-        Validated unit which is in range
-
-    Raises
-    ------
-    TypeError
-        Error when inputs are not of the same dimensionality
-    ValueError
-        Error when the unit is out of bounds
-    ValueError
-        No bounds are specified
-    """
-    if lb is None and ub is None:
-        raise ValueError("At least one bound should be specified in order to "
-                         "check")
-
-    # Ensure comparators are all units
-    if not all(isinstance(_, Unit) for _ in [value, lb, ub] if _ is not None):
-        raise TypeError(
-            "All compared units have be of type `Unit`"
-        )
-
-    # Ensure comparators all have the same dimensionality
-    if len({_.dimensionality for _ in [value, lb, ub] if _ is not None}) != 1:
-        raise TypeError(
-            "All compared units have to be of the same dimensionality"
-        )
-
-    if label is not None:
-        prefix = "{} {} has to be".format(label, value)
-    else:
-        prefix = "{} has to be".format(value)
-
-    if ub is None:
-        if not (lb <= value):
-            raise ValueError("{} has to be greater or equal to {}".format(
-                prefix, lb))
-    elif lb is None:
-        if not (value <= ub):
-            raise ValueError("{} has to be less than or equal to {}".format(
-                prefix, ub))
-    else:
-        if not (lb <= value <= ub):
-            raise ValueError("{} has to be within [{}, {}]".format(
-                prefix, lb, ub))
-
-    return value

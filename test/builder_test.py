@@ -1,4 +1,4 @@
-# pragma pylint: disable=C0111
+# pragma pylint: disable=missing-docstring
 
 import pytest
 from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry

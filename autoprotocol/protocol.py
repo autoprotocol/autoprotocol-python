@@ -18,7 +18,7 @@ from builtins import round
 import sys
 import warnings
 
-if sys.version_info[0] >= 3:
+if sys.version_info.major == 3:
     xrange = range
     basestring = str
 
@@ -637,10 +637,12 @@ class Protocol(object):
             raise ValueError("Instruction index less than 0")
         return instruction_index
 
-    def append(self, instructions):
+    def _append_and_return(self, instructions):
         """
-        Append instruction(s) to the list of Instruction objects associated
-        with this protocol.  The other functions on Protocol() should be used
+        Append instruction(s) to the Protocol list and returns the
+        Instruction(s).
+
+        The other functions on Protocol() should be used
         in lieu of doing this directly.
 
         Example Usage:
@@ -648,7 +650,9 @@ class Protocol(object):
         .. code-block:: python
 
             p = Protocol()
-            p.append(Incubate("sample_plate", "ambient", "1:hour"))
+            p._append_and_return(
+                Incubate("sample_plate", "ambient", "1:hour")
+            )
 
         Autoprotocol Output:
 
@@ -667,28 +671,6 @@ class Protocol(object):
         Parameters
         ----------
         instructions : Instruction
-            Instruction object to be appended.
-
-        """
-        if type(instructions) is list:
-            self.instructions.extend(instructions)
-        else:
-            self.instructions.append(instructions)
-
-    def _append_and_return(self, instructions):
-        """
-        Append instruction(s) to the Protocol list and returns the
-        Instruction(s).
-
-        This is a helper method and shouldn't be used directly.
-
-        Please refer to
-        :meth:`Protocol.append <autoprotocol.protocol.Protocol.append>`
-        for more details.
-
-        Parameters
-        ----------
-        instructions : Instruction
             Instruction object(s) to be appended.
 
         Returns
@@ -697,7 +679,11 @@ class Protocol(object):
             Instruction object(s) to be appended and returned
 
         """
-        self.append(instructions)
+        if type(instructions) is list:
+            self.instructions.extend(instructions)
+        else:
+            self.instructions.append(instructions)
+
         return instructions
 
     def batch_containers(self, containers, batch_in=True, batch_out=False):
@@ -2363,7 +2349,7 @@ class Protocol(object):
             Container specified cannot be thermocycled
         ValueError
             Lid temperature is not within bounds
-            
+
         """
         if not isinstance(groups, list):
             raise AttributeError(
@@ -3086,6 +3072,100 @@ class Protocol(object):
             )
         )
 
+    def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
+        """
+        Separate nucleic acids on an agarose gel.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_plate = p.ref("sample_plate",
+                                 None,
+                                 "96-flat",
+                                 storage="warm_37")
+
+            p.gel_separate(sample_plate.wells_from(0,12), "10:microliter",
+                           "agarose(8,0.8%)", "ladder1", "11:minute",
+                           "genotyping_030214")
+
+        Autoprotocol Output:
+
+        .. code-block:: none
+
+            "instructions": [
+                {
+                    "dataref": "genotyping_030214",
+                    "matrix": "agarose(8,0.8%)",
+                    "volume": "10:microliter",
+                    "ladder": "ladder1",
+                    "objects": [
+                        "sample_plate/0",
+                        "sample_plate/1",
+                        "sample_plate/2",
+                        "sample_plate/3",
+                        "sample_plate/4",
+                        "sample_plate/5",
+                        "sample_plate/6",
+                        "sample_plate/7",
+                        "sample_plate/8",
+                        "sample_plate/9",
+                        "sample_plate/10",
+                        "sample_plate/11"
+                    ],
+                    "duration": "11:minute",
+                    "op": "gel_separate"
+                }
+            ]
+
+        Parameters
+        ----------
+        wells : list, WellGroup, Well
+            List of wells or WellGroup containing wells to be
+            separated on gel.
+        volume : str, Unit
+            Volume of liquid to be transferred from each well specified to a
+            lane of the gel.
+        matrix : str
+            Matrix (gel) in which to gel separate samples
+        ladder : str
+            Ladder by which to measure separated fragment size
+        duration : str, Unit
+            Length of time to run current through gel.
+        dataref : str
+            Name of this set of gel separation results.
+
+        Returns
+        -------
+        GelSeparate
+            Returns the :py:class:`autoprotocol.instruction.GelSeparate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+
+        """
+        # Check valid well inputs
+        if not is_valid_well(wells):
+            raise TypeError("Wells must be of type Well, list of Wells, or "
+                            "WellGroup.")
+        if isinstance(wells, Well):
+            wells = WellGroup(wells)
+        for w in wells:
+            self._remove_cover(w.container, "gel separate")
+        max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
+        if len(wells) > max_well:
+            raise ValueError("Number of wells is greater than available"
+                             "lanes in matrix")
+
+        return self._append_and_return(
+            GelSeparate(wells, volume, matrix, ladder, duration, dataref)
+        )
+
     def gel_purify(self, extracts, volume, matrix, ladder, dataref):
         """
         Separate nucleic acids on an agarose gel and purify according to
@@ -3609,7 +3689,7 @@ class Protocol(object):
             ref.cover = lid
             return self._append_and_return(Cover(ref, lid, retrieve_lid))
 
-    def uncover(self, ref):
+    def uncover(self, ref, store_lid=None):
         """
         Remove lid from specified container
 
@@ -3629,17 +3709,17 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "lid": "universal",
-                  "object": "sample_plate",
-                  "op": "cover"
+                    "lid": "universal",
+                    "object": "sample_plate",
+                    "op": "cover"
                 },
                 {
-                  "object": "sample_plate",
-                  "op": "uncover"
+                    "object": "sample_plate",
+                    "op": "uncover"
                 }
               ]
 
@@ -3647,6 +3727,8 @@ class Protocol(object):
         ----------
         ref : Container
             Container to remove lid.
+        store_lid: bool, optional
+            Flag to store the uncovered lid.
 
         Returns
         -------
@@ -3657,9 +3739,11 @@ class Protocol(object):
         Raises
         ------
         TypeError
-          If ref is not of type Container.
+            If ref is not of type Container.
         RuntimeError
-          If container is sealed with a seal not covered with a lid.
+            If container is sealed with a seal not covered with a lid.
+        TypeError
+            If store_lid is not a boolean.
 
         """
         if not isinstance(ref, Container):
@@ -3667,6 +3751,8 @@ class Protocol(object):
         if ref.is_sealed():
             raise RuntimeError("A container with a seal cannot be uncovered, "
                                "use the instruction unseal.")
+        if store_lid is not None and not isinstance(store_lid, bool):
+            raise TypeError("Uncover: store_lid must be of type bool")
         if ref.is_covered():
             ref.cover = None
             return self._append_and_return(Uncover(ref))

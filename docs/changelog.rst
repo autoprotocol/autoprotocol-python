@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`-` deprecate support for `p.append` in favor of `p._append_and_return`
+* :feature:`-` deprecate support for generating multiple GelSeparate instructions using `p.gel_separate`
 * :feature:`-` deprecate `newpick` in `p.autopick`
 * :feature:`-` deprecate `util.make_dottable_dict` and `util.deep_merge_params`
 * :feature:`-` converted all Unit internals to use Decimals in place of other Numbers
@@ -10,6 +12,7 @@ Changelog
 * :feature:`-` add `spectrophotometry` instruction (ASC-038)
 * :feature:`-` add `count_cells` instruction (ASC-033)
 * :feature:`-` change `measure_mass` instruction to take in a single container instead (ASC-030)
+* :feature:`-` add `store_lid` to `p.uncover` (ASC-040)
 * :feature:`-` add `retrieve_lid` to `p.cover` (ASC-040)
 * :feature:`-` add parameters to `p.seal`, including `mode`, `temperature`, `duration` (ASC-034)
 * :feature:`-` add parameters to `p.luminescence`, including `settle_time`, `integration_time` (ASC-026)

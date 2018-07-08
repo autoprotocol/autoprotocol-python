@@ -20,6 +20,7 @@ class TestProtocolMultipleExist:
         assert (len(p1.instructions) == 2)
 
 
+# pylint: disable=protected-access
 class TestProtocolAppendReturn:
 
     def test_protocol_append_return(self, dummy_protocol):

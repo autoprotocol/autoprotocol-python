@@ -9,7 +9,7 @@ Contains all the Autoprotocol Instruction objects
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 import json
-from .builders import *
+from .builders import *  # pylint: disable=unused-wildcard-import
 from functools import reduce
 
 

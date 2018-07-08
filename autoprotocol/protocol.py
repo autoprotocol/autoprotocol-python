@@ -14,7 +14,7 @@ from .instruction import *  # pylint: disable=unused-wildcard-import
 from .util import *  # pylint: disable=unused-wildcard-import
 from .delete_me import shape_builder
 
-from builtins import round
+from builtins import round  # pylint: disable=redefined-builtin
 import sys
 import warnings
 
@@ -3121,17 +3121,17 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             List of wells or WellGroup containing wells to be
             separated on gel.
-        volume : str, Unit
+        volume : str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
         matrix : str
             Matrix (gel) in which to gel separate samples
         ladder : str
             Ladder by which to measure separated fragment size
-        duration : str, Unit
+        duration : str or Unit
             Length of time to run current through gel.
         dataref : str
             Name of this set of gel separation results.
@@ -3147,6 +3147,9 @@ class Protocol(object):
         TypeError
             Invalid input types, e.g. wells given is of type Well, WellGroup
             or list of wells
+        ValueError
+            Specifying more wells than the number of available lanes in
+            the selected matrix
 
         """
         # Check valid well inputs

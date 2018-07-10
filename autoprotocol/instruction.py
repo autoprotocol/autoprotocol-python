@@ -21,16 +21,39 @@ class Instruction(object):
     def __init__(self, op, data):
         super(Instruction, self).__init__()
         self.op = op
-        # Remove fields which are null
-        non_empty_fields = {k: v for k, v in data.items() if v is not None}
-        self.data = non_empty_fields
-        self.__dict__.update(non_empty_fields)
+        self.data = self._remove_empty_fields(data)
+        self.__dict__.update(self.data)
 
     def json(self):
         """Return instruction object properly encoded as JSON for Autoprotocol.
 
         """
         return json.dumps(dict(op=self.op, **self.data), indent=2)
+
+    @staticmethod
+    def _remove_empty_fields(data):
+        """
+        Helper function to recursively search through and pop fields with
+        None values
+
+        Parameters
+        ----------
+        data : dict or list
+            Data dictionary or list to remove empty fields from
+
+        Returns
+        -------
+        dict or list
+            Dictionary or list without fields with None values
+
+        """
+        if isinstance(data, dict):
+            return {k: Instruction._remove_empty_fields(v) for k, v in
+                    data.items() if v is not None}
+        elif isinstance(data, list):
+            return [Instruction._remove_empty_fields(_) for _ in data]
+        else:
+            return data
 
 
 class MagneticTransfer(Instruction):

@@ -19,6 +19,8 @@ class TestParseUnit:
         assert Unit("1:ul") == parse_unit("1:ul", "1:ml")
         assert Unit("1:ul") == parse_unit("1:ul", ["kg", "ml"])
 
+        assert Unit("1:ul") == parse_unit(Unit("1:ul"), "ml")
+
         with pytest.raises(TypeError):
             parse_unit("1:ul", "second")
 

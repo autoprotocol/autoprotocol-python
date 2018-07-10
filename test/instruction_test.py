@@ -1,6 +1,66 @@
 from autoprotocol import Unit
-from autoprotocol.instruction import Dispense
+from autoprotocol.instruction import Instruction, Dispense
 import pytest
+
+
+class TestBaseInstruction(object):
+    @pytest.fixture
+    def test_instruction(self):
+        example_data = {
+            "dict_1": {
+                "dict_1a": {
+                    "empty": None,
+                    "some_int": 12,
+                    "list_1": [
+                        {
+                            "empty": None,
+                            "some_str": "something"
+                        }
+                    ]
+                }
+            },
+            "empty": None,
+            "dict_2": {
+                "empty": None,
+                "some_bool": True
+            }
+        }
+        return Instruction(op="test_instruction", data=example_data)
+
+    def test_remove_empty_fields(self):
+        assert dict(some_str="something") == Instruction._remove_empty_fields(
+            {"some_str": "something", "empty": None})
+
+        assert dict(some_str="something", dict_1=dict(some_int=1)) == \
+               Instruction._remove_empty_fields(
+                   {"some_str": "something", "empty": None,
+                    "dict_1": {"some_int": 1, "empty": None}})
+
+        assert [dict(some_bool=True)] == \
+               Instruction._remove_empty_fields(
+                   [dict(some_bool=True, empty=None)])
+
+    @staticmethod
+    def test_op(test_instruction):
+        assert test_instruction.op == "test_instruction"
+
+    @staticmethod
+    def test_data(test_instruction):
+        assert test_instruction.data == {
+            "dict_1": {
+                "dict_1a": {
+                    "some_int": 12,
+                    "list_1": [
+                        {
+                            "some_str": "something"
+                        }
+                    ]
+                }
+            },
+            "dict_2": {
+                "some_bool": True
+            }
+        }
 
 
 class TestInstruction(object):

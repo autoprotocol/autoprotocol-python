@@ -12,7 +12,7 @@ from .container import WellGroup, Well
 from .unit import Unit
 
 
-# pragma pylint: disable=no-init
+# pylint: disable=no-init
 class ThermocycleBuilders:
     """
     These builders are meant for helping to construct the `groups`
@@ -134,7 +134,6 @@ class ThermocycleBuilders:
             step_dict['read'] = read
 
         return step_dict
-# pragma pylint: enable=no-init
 
 
 class DispenseBuilders(object):

@@ -3,6 +3,7 @@ from autoprotocol.instruction import Instruction, Dispense
 import pytest
 
 
+# pylint: disable=protected-access
 class TestBaseInstruction(object):
     @pytest.fixture
     def test_instruction(self):

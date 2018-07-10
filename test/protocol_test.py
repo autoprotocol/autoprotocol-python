@@ -8,7 +8,7 @@ from autoprotocol.harness import _add_dye_to_preview_refs, \
 import warnings
 
 
-class TestProtocolMultipleExist:
+class TestProtocolMultipleExist(object):
 
     def test_multiple_exist(self, dummy_protocol, dummy_96):
         p1 = dummy_protocol
@@ -21,7 +21,7 @@ class TestProtocolMultipleExist:
 
 
 # pylint: disable=protected-access
-class TestProtocolAppendReturn:
+class TestProtocolAppendReturn(object):
 
     def test_protocol_append_return(self, dummy_protocol):
         p = dummy_protocol
@@ -49,7 +49,7 @@ class TestProtocolAppendReturn:
         assert (insts[1].op == "spin")
 
 
-class TestRef:
+class TestRef(object):
 
     def test_duplicates_not_allowed(self, dummy_protocol):
         p = dummy_protocol
@@ -77,7 +77,7 @@ class TestRef:
     # pragma pylint: enable=expression-not-assigned
 
 
-class TestThermocycle:
+class TestThermocycle(object):
 
     def test_thermocycle_append(self):
         t = Thermocycle("plate", [
@@ -239,7 +239,7 @@ class TestThermocycle:
         )
 
 
-class TestRefify:
+class TestRefify(object):
     # pragma pylint: disable=protected-access
     def test_refifying_various(self, dummy_protocol):
         p = dummy_protocol
@@ -277,7 +277,7 @@ class TestRefify:
     # pragma pylint: enable=protected-access
 
 
-class TestOuts:
+class TestOuts(object):
 
     def test_outs(self, dummy_protocol):
         p = dummy_protocol
@@ -295,7 +295,7 @@ class TestOuts:
                 ['test'] == 'foo')
 
 
-class TestInstructionIndex:
+class TestInstructionIndex(object):
 
     def test_instruction_index(self, dummy_protocol):
         p = dummy_protocol
@@ -309,7 +309,7 @@ class TestInstructionIndex:
         assert (p.get_instruction_index() == 1)
 
 
-class TestBatchContainers:
+class TestBatchContainers(object):
     def test_batch_containers(self):
         p = Protocol()
 
@@ -338,7 +338,7 @@ class TestBatchContainers:
         assert (len(p.time_constraints) == 4)
 
 
-class TestTimeConstraints:
+class TestTimeConstraints(object):
 
     def test_time_constraint(self, dummy_protocol):
         p = dummy_protocol
@@ -452,7 +452,7 @@ class TestTimeConstraints:
         assert (len(p.time_constraints) == 4)
 
 
-class TestAbsorbance:
+class TestAbsorbance(object):
 
     def test_single_well(self):
         p = Protocol()
@@ -567,7 +567,7 @@ class TestAbsorbance:
                     'shake': {'amplitude': '3:mm', 'orbital': True}})
 
 
-class TestFluorescence:
+class TestFluorescence(object):
 
     def test_single_well(self):
         p = Protocol()
@@ -800,7 +800,7 @@ class TestFluorescence:
                                                                         "micrometer"))
 
 
-class TestLuminescence:
+class TestLuminescence(object):
 
     def test_single_well(self):
         p = Protocol()
@@ -912,7 +912,7 @@ class TestLuminescence:
                                'shaking': {'amplitude': '3:mm'}})
 
 
-class TestAcousticTransfer:
+class TestAcousticTransfer(object):
 
     def test_append(self, dummy_protocol):
         p = dummy_protocol
@@ -959,7 +959,7 @@ class TestAcousticTransfer:
                                 dest.wells(0, 1), "1.31:microliter")
 
 
-class TestMagneticTransfer:
+class TestMagneticTransfer(object):
 
     def test_head_type(self, dummy_protocol):
         p = dummy_protocol
@@ -1179,7 +1179,7 @@ class TestMagneticTransfer:
         assert p.instructions[-2].op == "uncover"
 
 
-class TestAutopick:
+class TestAutopick(object):
 
     def test_autopick(self):
         p = Protocol()
@@ -1201,7 +1201,7 @@ class TestAutopick:
         assert (len(p.instructions[0].groups[0]["from"]) == 2)
 
 
-class TestMeasureConcentration:
+class TestMeasureConcentration(object):
 
     def test_measure_concentration_single_well(self, dummy_protocol):
         p = dummy_protocol
@@ -1242,7 +1242,7 @@ class TestMeasureConcentration:
         assert (len(p.instructions) == 4)
 
 
-class TestMeasureMass:
+class TestMeasureMass(object):
 
     def test_measure_mass_single_container(self):
         p = Protocol()
@@ -1275,7 +1275,7 @@ class TestMeasureMass:
             p.measure_mass("foo", "test_ref")
 
 
-class TestMeasureVolume:
+class TestMeasureVolume(object):
 
     def test_measure_volume_single_well(self, dummy_protocol):
         p = dummy_protocol
@@ -1292,7 +1292,7 @@ class TestMeasureVolume:
         assert (len(p.instructions) == 1)
 
 
-class TestSpin:
+class TestSpin(object):
 
     # pragma pylint: disable=pointless-statement
     def test_spin_default(self, dummy_protocol):
@@ -1335,7 +1335,7 @@ class TestSpin:
             p.spin(test_plate2, "1000:g", "20:minute", spin_direction=[])
 
 
-class TestGelPurify:
+class TestGelPurify(object):
 
     def test_gel_purify_lane_set(self, dummy_protocol):
         p = dummy_protocol
@@ -1479,7 +1479,7 @@ class TestGelPurify:
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
 
 
-class TestIlluminaSeq:
+class TestIlluminaSeq(object):
 
     def test_illumina_seq(self, dummy_protocol):
         p = dummy_protocol
@@ -1577,7 +1577,7 @@ class TestIlluminaSeq:
                            "index_1": 4, "index_2": 13})
 
 
-class TestCoverStatus:
+class TestCoverStatus(object):
 
     def test_ref_cover_status(self, dummy_protocol):
         p = dummy_protocol
@@ -1594,7 +1594,7 @@ class TestCoverStatus:
             assert (not p.refs[cont.name].opts['cover'])
 
 
-class TestDispense:
+class TestDispense(object):
 
     def test_resource_id(self):
         p = Protocol()
@@ -1883,7 +1883,7 @@ class TestDispense:
                                   "10:microliter")
 
 
-class TestFlowAnalyze:
+class TestFlowAnalyze(object):
 
     def test_default(self, dummy_protocol):
         p = dummy_protocol
@@ -1994,7 +1994,7 @@ class TestFlowAnalyze:
                            colors=colors)
 
 
-class TestDyeTest:
+class TestDyeTest(object):
 
     def test_add_dye_to_preview_refs(self):
         p1 = Protocol()
@@ -2116,7 +2116,7 @@ class TestDyeTest:
             _convert_dispense_instructions(p1, 7, 4)
 
 
-class TestIncubate:
+class TestIncubate(object):
 
     def test_incubate(self, dummy_protocol):
         p = dummy_protocol
@@ -2131,7 +2131,7 @@ class TestIncubate:
         assert (p.instructions[-1].op == "incubate")
 
 
-class TestProvision:
+class TestProvision(object):
     p = Protocol()
     w1 = p.ref("w1", None, cont_type="96-pcr", discard=True)\
         .well(0).set_volume("2:microliter")
@@ -2143,7 +2143,7 @@ class TestProvision:
             self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
 
 
-class TestSeal:
+class TestSeal(object):
     p = Protocol()
     c1 = p.ref("c1", cont_type="96-pcr", discard=True)
     c2 = p.ref("c2", cont_type="384-flat", discard=True)
@@ -2198,7 +2198,7 @@ class TestSeal:
                 Unit("3:second"))
 
 
-class TestCountCells:
+class TestCountCells(object):
     p = Protocol()
     tube = p.ref("tube", id=None, cont_type="micro-1.5", discard=True)
     plate = p.ref("plate", id=None, cont_type="96-pcr", discard=True)

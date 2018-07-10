@@ -50,10 +50,9 @@ class Instruction(object):
         if isinstance(data, dict):
             return {k: Instruction._remove_empty_fields(v) for k, v in
                     data.items() if v is not None}
-        elif isinstance(data, list):
+        if isinstance(data, list):
             return [Instruction._remove_empty_fields(_) for _ in data]
-        else:
-            return data
+        return data
 
 
 class MagneticTransfer(Instruction):

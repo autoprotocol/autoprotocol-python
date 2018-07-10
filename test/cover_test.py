@@ -2,7 +2,7 @@ import pytest
 from autoprotocol.protocol import Protocol
 
 
-class TestCoverSeal:
+class TestCoverSeal(object):
     def test_sequence_cover_instructions2(self):
         p = Protocol()
         cont1 = p.ref("c1", None, "96-pcr", storage="cold_4")

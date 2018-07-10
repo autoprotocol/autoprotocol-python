@@ -4,7 +4,7 @@ from autoprotocol.util import parse_unit
 from autoprotocol.unit import Unit
 
 
-class TestParseUnit:
+class TestParseUnit(object):
 
     def test_casting_to_unit(self):
         assert Unit("1:second") == parse_unit("1:second")

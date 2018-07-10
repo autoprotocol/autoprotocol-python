@@ -14,7 +14,7 @@ class TestUnitType(object):
             Unit(1j, "microliter")
 
 
-class TestUnitMath:
+class TestUnitMath(object):
     def test_arithmetic(self):
         u1 = Unit(20, 'microliter')
         u2 = Unit(30, 'microliter')

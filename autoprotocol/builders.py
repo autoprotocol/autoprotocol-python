@@ -13,7 +13,7 @@ from .unit import Unit
 
 
 # pylint: disable=no-init
-class ThermocycleBuilders:
+class ThermocycleBuilders(object):
     """
     These builders are meant for helping to construct the `groups`
     argument in the `Protocol.thermocycle` method

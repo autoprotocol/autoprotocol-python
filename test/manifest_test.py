@@ -4,7 +4,7 @@ from autoprotocol import Protocol, Unit, Well, WellGroup
 import json
 
 
-class TestManifest:
+class TestManifest(object):
 
     @pytest.fixture(autouse=True)
     def setUp(self):

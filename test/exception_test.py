@@ -2,7 +2,7 @@ import pytest
 from autoprotocol import UserError
 
 
-class TestUserError:
+class TestUserError(object):
     def test_catch(self):
         with pytest.raises(UserError):
             raise UserError("spam")

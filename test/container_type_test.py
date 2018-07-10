@@ -1,7 +1,7 @@
 import pytest
 
 
-class TestContainerRobotize:
+class TestContainerRobotize(object):
     def test_robotize_decompose(self, dummy_type):
         for ref in ["a1", "A1", "0", 0]:
             assert (0 == dummy_type.robotize(ref))
@@ -54,7 +54,7 @@ class TestContainerRobotize:
             dummy_type.humanize("A1")
 
 
-class TestAllContainerTypes:
+class TestAllContainerTypes(object):
     def test_all_container_types(self):
         from autoprotocol.container_type import _CONTAINER_TYPES
         from autoprotocol.protocol import Protocol
@@ -66,13 +66,13 @@ class TestAllContainerTypes:
         assert (len(p.refs) == len(_CONTAINER_TYPES))
 
 
-class TestContainerTypeVolumes:
+class TestContainerTypeVolumes(object):
     def test_true_vol_default(self, dummy_type):
         assert (dummy_type.true_max_vol_ul ==
                 dummy_type.well_volume_ul)
 
 
-class TestContainerTypeAttributes:
+class TestContainerTypeAttributes(object):
     def test_default_attributes(self, dummy_type):
         assert dummy_type.vendor is None
         assert dummy_type.cat_no is None

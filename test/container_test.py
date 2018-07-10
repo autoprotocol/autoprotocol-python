@@ -8,7 +8,7 @@ if sys.version_info[0] >= 3:
 
 
 # pylint: disable=attribute-defined-outside-init
-class TestContainerWellRef:
+class TestContainerWellRef(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -55,7 +55,7 @@ class TestContainerWellRef:
             self.c.robotize(["A1", 0.1])
 
 
-class TestContainerWellGroupConstruction:
+class TestContainerWellGroupConstruction(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -192,7 +192,7 @@ class TestContainerWellGroupConstruction:
             dummy_384.quadrant(9)
 
 
-class TestWellVolume:
+class TestWellVolume(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -233,7 +233,7 @@ class TestWellVolume:
             echo_w.set_volume("136:microliter")
 
 
-class TestWellProperty:
+class TestWellProperty(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -307,7 +307,7 @@ class TestWellProperty:
             assert ("property2" in well.properties)
 
 
-class TestWellName:
+class TestWellName(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -318,7 +318,7 @@ class TestWellName:
         assert (self.c.well(0).name == "sample")
 
 
-class TestWellGroupName:
+class TestWellGroupName(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -330,7 +330,7 @@ class TestWellGroupName:
         assert (ws.name == "test_name")
 
 
-class TestWellGroupList:
+class TestWellGroupList(object):
 
     @pytest.fixture(autouse=True)
     def make_container(self, dummy_type):
@@ -377,7 +377,7 @@ class TestWellGroupList:
         assert (len(ws) == 5)
 
 
-class TestContainerVolumes:
+class TestContainerVolumes(object):
     def test_true_vol_default(self, dummy_tube, dummy_96):
         assert (dummy_96.container_type.true_max_vol_ul ==
                 dummy_96.container_type.well_volume_ul)

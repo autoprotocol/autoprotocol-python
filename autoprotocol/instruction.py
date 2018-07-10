@@ -33,8 +33,9 @@ class Instruction(object):
     @staticmethod
     def _remove_empty_fields(data):
         """
-        Helper function to recursively search through and pop fields with
-        None values
+        Helper function to recursively search through and pop items containing
+        empty dictionaries/lists or dictionaries containing fields with None
+        values
 
         Parameters
         ----------
@@ -47,11 +48,20 @@ class Instruction(object):
             Dictionary or list without fields with None values
 
         """
+        # We're not checking against the generic not since there are values
+        # such as `0` or False which are valid.
+        def filter_criteria(item):
+            # Workaround for Unit equality comparison issues
+            if isinstance(item, Unit):
+                return False
+            return item is None or item == [] or item == {}
+
         if isinstance(data, dict):
             return {k: Instruction._remove_empty_fields(v) for k, v in
-                    data.items() if v is not None}
+                    data.items() if not filter_criteria(v)}
         if isinstance(data, list):
-            return [Instruction._remove_empty_fields(_) for _ in data]
+            return [Instruction._remove_empty_fields(_) for _ in data
+                    if not filter_criteria(_)]
         return data
 
 

@@ -16,14 +16,16 @@ class TestBaseInstruction(object):
                         {
                             "empty": None,
                             "some_str": "something"
-                        }
+                        },
+                        {}
                     ]
                 }
             },
             "empty": None,
             "dict_2": {
                 "empty": None,
-                "some_bool": True
+                "empty_list": [],
+                "some_bool": False
             }
         }
         return Instruction(op="test_instruction", data=example_data)
@@ -40,6 +42,12 @@ class TestBaseInstruction(object):
         assert [dict(some_bool=True)] == \
                Instruction._remove_empty_fields(
                    [dict(some_bool=True, empty=None)])
+        assert [dict(some_bool=True)] == \
+               Instruction._remove_empty_fields(
+                   [dict(some_bool=True, empty={})])
+        assert [dict(some_bool=True)] == \
+               Instruction._remove_empty_fields(
+                   [dict(some_bool=True, empty=[])])
 
     @staticmethod
     def test_op(test_instruction):
@@ -59,7 +67,7 @@ class TestBaseInstruction(object):
                 }
             },
             "dict_2": {
-                "some_bool": True
+                "some_bool": False
             }
         }
 

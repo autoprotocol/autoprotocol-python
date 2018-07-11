@@ -3573,7 +3573,7 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {

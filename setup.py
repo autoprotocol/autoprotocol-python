@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup
+exec(open('autoprotocol/version.py').read())  # pylint: disable=exec-used
 
 setup(
     name='autoprotocol',
@@ -7,7 +8,7 @@ setup(
     author='Vanessa Biggers',
     description='Python library for generating Autoprotocol',
     author_email="vanessa@transcriptic.com",
-    version='4.0.0',
+    version=__version__,  # pylint: disable=undefined-variable
     test_suite='test',
     install_requires=[
         'Pint==0.8.1',

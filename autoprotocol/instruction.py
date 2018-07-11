@@ -27,6 +27,10 @@ class Instruction(object):
     def json(self):
         """Return instruction object properly encoded as JSON for Autoprotocol.
 
+        Returns
+        -------
+        str
+            Instruction object encoded as json string
         """
         return json.dumps(dict(op=self.op, **self.data), indent=2)
 
@@ -187,7 +191,7 @@ class Dispense(Instruction):
 
 class AcousticTransfer(Instruction):
     """
-    Specify source and destination wells for transfering liquid via an acoustic
+    Specify source and destination wells for transferring liquid via an acoustic
     liquid handler.  Droplet size is usually device-specific.
 
     Parameters
@@ -197,15 +201,15 @@ class AcousticTransfer(Instruction):
 
         .. code-block:: json
 
-        {
-            "transfer": [
-                {
-                    "to": well,
-                    "from": well,
-                    "volume": volume
-                }
-            ]
-        }
+            {
+                "transfer": [
+                    {
+                        "to": "foo/A1",
+                        "from": "bar/A1",
+                        "volume": "1:nl"
+                    }
+                ]
+            }
 
     droplet_size : str or Unit
         Volume representing a droplet_size.  The volume of each transfer should
@@ -485,7 +489,7 @@ class IlluminaSeq(Instruction):
       Flowcell designation: "SR" or " "PE"
     lanes : list(dict)
 
-        .. code-block:: json
+        .. code-block:: none
 
           "lanes": [{
                 "object": aliquot, Well,
@@ -617,7 +621,7 @@ class GelPurify(Instruction):
         Name of dataset containing fragment sizes returned
     extract: list(dict)
 
-        .. code-block:: json
+        .. code-block:: none
 
           "extract": [{
                 "elution_volume": volume,
@@ -666,14 +670,17 @@ class Absorbance(Instruction):
         number of flashes for the read
     incubate_before: dict, optional
         incubation prior to reading if desired
+
         shaking: dict, optional
             shake parameters if desired
                 amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
+
         duration: str, Unit, optional
             time prior to plate reading
+
     temperature: str or Unit, optional
         set temperature to heat plate reading chamber
     settle_time: str or Unit, optional
@@ -699,7 +706,7 @@ class Absorbance(Instruction):
 class Fluorescence(Instruction):
 
     """
-    Read the fluoresence for the indicated wavelength for the indicated
+    Read the fluorescence for the indicated wavelength for the indicated
     wells.  Append a Fluorescence instruction to the list of instructions
     for this Protocol object.
 
@@ -720,18 +727,21 @@ class Fluorescence(Instruction):
         number of flashes for this read
     incubate_before: dict, optional
         incubation prior to reading if desired
+
         shaking: dict, optional
             shake parameters if desired
                 amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
+
         duration: str, Unit, optional
             time prior to plate reading
+
     temperature: str or Unit, optional
         set temperature to heat plate reading chamber
     gain: float, optional
-            float between 0 and 1, multiplier of maximum signal amplification
+        float between 0 and 1, multiplier of maximum signal amplification
     detection_mode: str, optional
         set the detection mode of the optics, ["top", "bottom"],
         defaults to vendor specified defaults.
@@ -739,13 +749,17 @@ class Fluorescence(Instruction):
         distance from the optics to the surface of the plate transport,
         only valid for "top" detection_mode and vendor capabilities.
         Specified as either a set distance - "manual", OR calculated from
-        a WellGroup - "calculated_from_wells".   Only one position_z
+        a WellGroup - "calculated_from_wells". Only one position_z
         determination may be specified
-        position_z = {
-            "manual": Unit
-            - OR -
-            "calculated_from_wells": []
-        }
+
+        .. code-block:: none
+
+            position_z = {
+                "manual": Unit
+                - OR -
+                "calculated_from_wells": []
+            }
+
     manual: str, Unit, optional
         parameter available within "position_z" to set the distance from
         the optics to the plate transport.
@@ -805,14 +819,17 @@ class Luminescence(Instruction):
         name which dataset will be saved under
     incubate_before: dict, optional
         incubation prior to reading if desired
+
         shaking: dict, optional
             shake parameters if desired
                 amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
+
         duration: str, Unit, optional
             time prior to plate reading
+
     temperature: str or Unit, optional
         set temperature to heat plate reading chamber
     settle_time: str or Unit, optional
@@ -853,10 +870,13 @@ class Seal(Instruction):
         Method used to seal plate (optional). "thermal" or "adhesive"
     mode_params : dict, optional
         Thermal sealing parameters
+
         temperature : str, optional
             Temperature to seal plate at
+
         duration : str, optional
             Duration for which to apply heated sealing plate onto ref
+
     """
 
     def __init__(self, object, type="ultra-clear", mode=None, mode_params=None):
@@ -970,7 +990,7 @@ class FlowAnalyze(Instruction):
     FSC : dict
         Dictionary containing FSC channel parameters in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
               "voltage_range": {
@@ -985,7 +1005,7 @@ class FlowAnalyze(Instruction):
     SSC : dict
         Dictionary of SSC channel parameters in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
               "voltage_range": {
@@ -1000,7 +1020,7 @@ class FlowAnalyze(Instruction):
     negative_controls : list(dict)
         List of negative control wells in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
                 "well": well,
@@ -1013,7 +1033,7 @@ class FlowAnalyze(Instruction):
     samples : list(dict)
         List of samples in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
                 "well": well,
@@ -1025,26 +1045,26 @@ class FlowAnalyze(Instruction):
     colors : list(dict), optional
         Optional list of colors in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
-        [{
-          "name": "FitC",
-          "emission_wavelength": "495:nanometer",
-          "excitation_wavelength": "519:nanometer",
-          "voltage_range": {
-            "low": <voltage>,
-            "high": <voltage>
-          },
-          "area": true,             //default: true
-          "height": false,          //default: false
-          "weight": false           //default: false
-        }, ... ]
+            [{
+              "name": "FitC",
+              "emission_wavelength": "495:nanometer",
+              "excitation_wavelength": "519:nanometer",
+              "voltage_range": {
+                "low": <voltage>,
+                "high": <voltage>
+              },
+              "area": true,             //default: true
+              "height": false,          //default: false
+              "weight": false           //default: false
+            }]
 
 
     positive_controls : list(dict), optional
         Optional list of positive control wells in the form of:
 
-        .. code-block:: json
+        .. code-block:: none
 
             [{
                 "well": well,
@@ -1054,8 +1074,8 @@ class FlowAnalyze(Instruction):
                 "minimize_bleed": [{            // optional
                   "from": color,
                   "to": [color]
-                }, ...
-            ]
+                }]
+            }]
 
     """
 
@@ -1088,7 +1108,7 @@ class Oligosynthesize(Instruction):
         List of oligonucleotides to synthesize.  Each dictionary should
         contain the oligo's sequence, destination, scale and purification
 
-        .. code-block:: json
+        .. code-block:: none
 
             [
                 {

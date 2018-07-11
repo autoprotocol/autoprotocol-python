@@ -5,6 +5,7 @@
   :hidden:
 
   AP Protocol <protocol>
+  AP Instruction <instruction>
   AP Container <container>
   AP Container Type <container_type>
   AP Other <autoprotocol>
@@ -199,7 +200,7 @@ Search the Docs
 * :ref:`genindex`
 * :ref:`search`
 
-:copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+:copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
     for more details.
 :license: BSD, see LICENSE for more details
 

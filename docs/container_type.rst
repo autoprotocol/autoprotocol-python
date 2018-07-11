@@ -7,30 +7,9 @@ autoprotocol.container_type
 container_type.ContainerType
 ----------------------------
 .. autoclass:: autoprotocol.container_type.ContainerType
+   :members:
 
-.. _container-type-robotize:
-
-ContainerType.robotize()
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. automethod:: autoprotocol.container_type.ContainerType.robotize
-
-.. _container-type-humanize:
-
-ContainerType.humanize()
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. automethod:: autoprotocol.container_type.ContainerType.humanize
-
-.. _container-type-decompose:
-
-ContainerType.decompose()
-~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automethod:: autoprotocol.container_type.ContainerType.decompose
-
-.. _container-type-rowcount:
-
-ContainerType.row_count()
-~~~~~~~~~~~~~~~~~~~~~~~~~
-.. automethod:: autoprotocol.container_type.ContainerType.row_count
+.. autodata:: autoprotocol.container_type.Flat384
 
 
 Container Types
@@ -43,7 +22,7 @@ Container Types
 .. literalinclude:: ../autoprotocol/container_type.py
    :language: python
    :dedent: 8
-   :lines: 232-249
+   :lines: 297-316
 
 .. _container-type-384-pcr:
 

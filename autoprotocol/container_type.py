@@ -267,6 +267,31 @@ class ContainerType(namedtuple("ContainerType",
         return self.well_count // self.col_count
 
 
+#:
+Flat384 = ContainerType(
+        name="384-well UV flat-bottom plate",
+        well_count=384,
+        well_depth_mm=None,
+        well_volume_ul=Unit(90.0, "microliter"),
+        well_coating=None,
+        sterile=False,
+        is_tube=False,
+        cover_types=["standard", "universal"],
+        seal_types=None,
+        capabilities=["pipette", "spin", "absorbance",
+                      "fluorescence", "luminescence",
+                      "incubate", "gel_separate",
+                      "gel_purify", "cover", "stamp",
+                      "dispense"],
+        shortname="384-flat",
+        col_count=24,
+        dead_volume_ul=Unit(7, "microliter"),
+        safe_min_volume_ul=Unit(15, "microliter"),
+        vendor="Corning",
+        cat_no="3706"
+    )
+
+#:
 _CONTAINER_TYPES = {
     "384-flat": ContainerType(
         name="384-well UV flat-bottom plate",

@@ -10,24 +10,11 @@ autoprotocol.unit
 unit.Unit
 ~~~~~~~~~
 .. autoclass:: autoprotocol.unit.Unit
-
-.. _unit-fromstring:
-
-Unit.fromstring()
-^^^^^^^^^^^^^^^^^
-.. automethod:: autoprotocol.unit.Unit.fromstring
+    :members:
 
 
 autoprotocol.util
 -----------------
-
-util.make_dottable_dict
-~~~~~~~~~~~~~~~~~~~~~~~
-.. autoclass:: autoprotocol.util.make_dottable_dict
-
-util.deep_merge_params()
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: autoprotocol.util.deep_merge_params
 
 util.incubate_params()
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -4,7 +4,7 @@ from autoprotocol import Protocol, Unit, Well, WellGroup
 import json
 
 
-class TestManifest:
+class TestManifest(object):
 
     @pytest.fixture(autouse=True)
     def setUp(self):
@@ -212,6 +212,8 @@ class TestManifest:
         assert ('test' in parsed['group_test'][1])
         assert (isinstance(parsed['group_test'][1]['test'], Well))
         assert (1 == parsed['group_test'][1]['test'].index)
+
+        # pragma pylint: disable=duplicate-key
         with pytest.raises(RuntimeError):
             parsed = protocol_info.parse(self.protocol, {
                 'refs': {
@@ -243,6 +245,7 @@ class TestManifest:
                     ]
                 }
             })
+        # pragma pylint: enable=duplicate-key
 
     def test_group_choice(self):
         protocol_info = ProtocolInfo({

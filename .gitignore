@@ -37,3 +37,4 @@ doctrees/
 .cache
 .eggs/
 docs/make.bat
+.pytest_cache/

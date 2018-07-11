@@ -1,22 +1,26 @@
-from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
-from .container_type import ContainerType, _CONTAINER_TYPES
-from .unit import Unit, UnitError
-from .instruction import *  # pylint: disable=unused-wildcard-import
-from .pipette_tools import assign
-from .util import *  # pylint: disable=unused-wildcard-import
-
-import sys
-if sys.version_info[0] >= 3:
-    xrange = range
-    basestring = str
-
-
 """
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+Module containing the main `Protocol` object and associated functions
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
+
+from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
+from .container_type import ContainerType, _CONTAINER_TYPES
+from .unit import Unit, UnitError
+from .instruction import *  # pylint: disable=unused-wildcard-import
+from .util import *  # pylint: disable=unused-wildcard-import
+from .delete_me import shape_builder
+
+from builtins import round  # pylint: disable=redefined-builtin
+import sys
+import warnings
+
+if sys.version_info.major == 3:
+    xrange = range
+    basestring = str
 
 
 class Ref(object):
@@ -149,7 +153,9 @@ class Protocol(object):
             raise ValueError("Unknown container type %s (known types=%s)" %
                              (shortname, str(_CONTAINER_TYPES.keys())))
 
-    def ref(self, name, id=None, cont_type=None, storage=None, discard=None, cover=None):
+    # pragma pylint: disable=redefined-builtin
+    def ref(self, name, id=None, cont_type=None, storage=None, discard=None,
+            cover=None):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
         and return a Container with the id, container type and storage or
@@ -200,19 +206,21 @@ class Protocol(object):
             id of the container being created, from your organization's
             inventory on http://secure.transcriptic.com.  Strings representing
             ids begin with "ct".
-        cont_type : str, ContainerType
+        cont_type : str or ContainerType
             container type of the Container object that will be generated.
-        storage : {"ambient", "cold_20", "cold_4", "warm_37"}, optional
+        storage : Enum({"ambient", "cold_20", "cold_4", "warm_37"}), optional
             temperature the container being referenced should be stored at
             after a run is completed.  Either a storage condition must be
             specified or discard must be set to True.
         discard : bool, optional
             if no storage condition is specified and discard is set to True,
             the container being referenced will be discarded after a run.
+        cover: str, optional
+            name of the cover which will be on the container/ref
 
         Returns
         -------
-        container : Container
+        Container
             Container object generated from the id and container type
              provided.
 
@@ -229,8 +237,10 @@ class Protocol(object):
         """
 
         if name in self.refs.keys():
-            raise RuntimeError("Two containers within the same protocol "
-                               "cannot have the same name.")
+            raise RuntimeError(
+                "Two containers within the same protocol cannot have the same "
+                "name."
+            )
         opts = {}
 
         # Check container type
@@ -241,24 +251,31 @@ class Protocol(object):
             elif cont_type:
                 opts["new"] = cont_type.shortname
         except ValueError:
-            raise RuntimeError("%s is not a recognized container type."
-                               % (cont_type))
+            raise RuntimeError(
+                "%s is not a recognized container type." % (cont_type)
+            )
 
         if storage:
             opts["store"] = {"where": storage}
         elif discard and not storage:
             opts["discard"] = discard
         else:
-            raise RuntimeError("You must specify either a valid storage "
-                               "condition or set discard=True for a Ref.")
+            raise RuntimeError(
+                "You must specify either a valid storage condition or set "
+                "discard=True for a Ref."
+            )
         container = Container(
-            id, cont_type, name=name, storage=storage if storage else None, cover=cover if cover else None)
+            id, cont_type, name=name,
+            storage=storage if storage else None,
+            cover=cover if cover else None
+        )
         self.refs[name] = Ref(name, opts, container)
         return container
-
+    # pragma pylint: enable=redefined-builtin
 
     def add_time_constraint(self, from_dict, to_dict, less_than=None,
-                            more_than=None, mirror=False):
+                            more_than=None, mirror=False, ideal=None,
+                            optimization_cost=None):
         """Constraint the time between two instructions
 
         Add time constraints from `from_dict` to `to_dict`. Time constraints
@@ -277,6 +294,14 @@ class Protocol(object):
         to the less_than constraint, as the more_than constraint implies both a
         minimum delay betweeen two timing points and also an explicit ordering
         between the two timing points.
+
+        Ideal time constraints are sometimes helpful for ensuring that a certain
+        set of operations happen within some specified time. This can be specified
+        by using the `ideal` parameter. There is an optional `optimization_cost`
+        parameter associated with `ideal` time constraints for specifying the
+        penalization system used for calculating deviations from the `ideal` time.
+        When left unspecified, the `optimization_cost` function defaults to linear.
+        Please refer to the ASC for more details on how this is implemented.
 
         Example Usage:
 
@@ -300,7 +325,14 @@ class Protocol(object):
             protocol.add_time_constraint(
                 {"mark": time_point_2, "state": "start"},
                 {"mark": time_point_1, "state": "start"},
-                less_than = "1:minute", True)
+                less_than = "1:minute", mirror=True)
+
+            # Ideal time constraint
+            protocol.add_time_constraint(
+                {"mark": time_point_1, "state": "start"},
+                {"mark": time_point_2, "state": "end"},
+                ideal = "30:second",
+                optimization_cost = "squared")
 
 
         Autoprotocol Output:
@@ -345,7 +377,20 @@ class Protocol(object):
                         "from": {
                             "instruction_start": 0
                         }
+                    },
+                    {
+                        "from": {
+                            "instruction_start": 0
+                        },
+                        "to": {
+                            "instruction_end": 1
+                        },
+                        "ideal": {
+                            "value": "5:minute",
+                            "optimization_cost": "squared"
+                        }
                     }
+
                 ],
                 "instructions": [
                     {
@@ -376,14 +421,19 @@ class Protocol(object):
         to_dict: dict
             Dictionary defining the end time constraint condition.
             Specified in the same format as from_dict
-        less_than: str, Unit
+        less_than: str or Unit, optional
             max time between from_dict and to_dict
-        more_than: str, Unit
+        more_than: str or Unit, optional
             min time between from_dict and to_dict
         mirror: bool, optional
             choice to mirror the from and to positions when time constraints
             should be added in both directions
             (only applies to the less_than constraint)
+        ideal: str or Unit, optional
+            ideal time between from_dict and to_dict
+        optimization_cost: Enum({"linear", "squared", "exponential"}), optional
+            cost function used for calculating the penalty for missing the
+            `ideal` timing
 
         Raises
         ------
@@ -393,16 +443,24 @@ class Protocol(object):
             If mark is not container or integer
         TypeError
             If state not in ['start', 'end']
+        TypeError
+            If any of `ideal`, `more_than`, `less_than` is not a
+            Unit of the 'time' dimension
         KeyError
-            If to_dict or from_dict does not contain 'mark'
+            If `to_dict` or `from_dict` does not contain 'mark'
         KeyError
-            If to_dict or from_dict does not contain 'state'
+            If `to_dict` or `from_dict` does not contain 'state'
         ValueError
             If time is less than '0:second'
+        ValueError
+            If `optimization_cost` is specified but `ideal` is not
+        ValueError
+            If `more_than` is greater than `less_than`
+        ValueError
+            If `ideal` is smaller than `more_than` or greater than
+            `less_than`
         RuntimeError
-            If from_dict and to_dict are equal
-        RuntimeError
-            If more_than is greater than less_than
+            If `from_dict` and `to_dict` are equal
         RuntimeError
             If from_dict["marker"] and to_dict["marker"] are equal and
             from_dict["state"] = "end"
@@ -427,15 +485,52 @@ class Protocol(object):
             mirror = more_than
             more_than = None
 
-        if more_than:
-            more_than = Unit(more_than)
-        if less_than:
-            less_than = Unit(less_than)
+        # Validate input types
+        def validate_timing(constraint):
+            if constraint is not None:
+                constraint = parse_unit(constraint, 'minute')
+                if constraint < Unit(0, 'second'):
+                    raise ValueError(
+                        "The timing constraint {} cannot be "
+                        "less than '0:second'".format(constraint)
+                    )
+            return constraint
+
+        more_than = validate_timing(more_than)
+        less_than = validate_timing(less_than)
+        ideal = validate_timing(ideal)
+
+        if ideal and optimization_cost is None:
+            optimization_cost = "linear"
+
+        if optimization_cost is not None:
+            if ideal is None:
+                raise ValueError(
+                    "'optimization_cost' can only be specified if 'ideal'"
+                    "is also specified"
+                )
+            ACCEPTED_COST_FUNCTIONS = ["linear", "squared", "exponential"]
+            if optimization_cost not in ACCEPTED_COST_FUNCTIONS:
+                raise ValueError(
+                    "'optimization_cost': {} has to be a member of "
+                    "{}".format(optimization_cost, ACCEPTED_COST_FUNCTIONS)
+                )
 
         if more_than and less_than and more_than > less_than:
             raise ValueError(
-                "'more_than': %s cannot be greater than 'less_than': %s"
-                % more_than, less_than
+                "'more_than': {} cannot be greater than 'less_than': "
+                "{}".format(more_than, less_than)
+            )
+
+        if ideal and more_than and ideal < more_than:
+            raise ValueError(
+                "'ideal': {} cannot be smaller than 'more_than': "
+                "{}".format(ideal, more_than)
+            )
+        if ideal and less_than and ideal > less_than:
+            raise ValueError(
+                "'ideal': {} cannot be greater than 'less_than': "
+                "{}".format(ideal, less_than)
             )
 
         for m in [from_dict, to_dict]:
@@ -446,57 +541,45 @@ class Protocol(object):
                     k = inst_string
                     if m["mark"] < 0:
                         raise ValueError(
-                            "The instruction 'mark' in %s must be greater "
-                            "than and equal to 0" % m
+                            "The instruction 'mark' in {} must be greater "
+                            "than and equal to 0".format(m)
                         )
                 else:
                     raise TypeError(
-                        "The 'mark' in %s must be Container or Integer" % m
+                        "The 'mark' in {} must be Container or Integer".format(m)
                     )
             else:
-                raise KeyError("The %s dict must contain `mark`" % m)
+                raise KeyError("The {} dict must contain `mark`".format(m))
 
             if "state" in m:
                 if m["state"] in state_strings:
                     k += m["state"]
                 else:
                     raise TypeError(
-                        "The 'state' in %s must be in %s"
-                        % (m, ", ".join(state_strings))
+                        "The 'state' in {} must be in "
+                        "{}".format(m, ", ".join(state_strings))
                     )
             else:
-                raise KeyError("The %s dict must contain 'state'" % m)
+                raise KeyError("The {} dict must contain 'state'".format(m))
 
             keys.append(k)
-
-        if less_than and less_than < Unit(0, 'second'):
-            raise ValueError(
-                "The 'less_than': %s cannot be less than "
-                "'0:second'" % less_than
-            )
-
-        if more_than and more_than < Unit(0, 'second'):
-            raise ValueError(
-                "The 'more_than': %s cannot be less than "
-                "'0:second'" % less_than
-            )
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
                 raise RuntimeError(
-                    "The from_dict: %s and to_dict: %s are the "
-                    "same" % (from_dict, to_dict)
+                    "The from_dict: {} and to_dict: {} are the "
+                    "same".format(from_dict, to_dict)
                 )
             if from_dict["state"] == "end":
                 raise RuntimeError(
-                    "The from_dict: %s cannot come before the "
-                    "to_dict %s" % (from_dict, to_dict)
+                    "The from_dict: {} cannot come before the "
+                    "to_dict {}".format(from_dict, to_dict)
                 )
 
         from_time_point = {keys[0]: from_dict["mark"]}
         to_time_point = {keys[1]: to_dict["mark"]}
 
-        if less_than:
+        if less_than is not None:
             add_time_constraint_internal({
                 "from": from_time_point,
                 "to": to_time_point,
@@ -507,11 +590,22 @@ class Protocol(object):
                 self.add_time_constraint(to_dict, from_dict, less_than,
                                          mirror=False)
 
-        if more_than:
+        if more_than is not None:
             add_time_constraint_internal({
                 "from": from_time_point,
                 "to": to_time_point,
                 "more_than": more_than
+            })
+
+        if ideal is not None:
+            ideal_dict = dict(value=ideal)
+            if optimization_cost is not None:
+                ideal_dict['optimization_cost'] = optimization_cost
+
+            add_time_constraint_internal({
+                "from": from_time_point,
+                "to": to_time_point,
+                "ideal": ideal_dict
             })
 
     def get_instruction_index(self):
@@ -543,10 +637,12 @@ class Protocol(object):
             raise ValueError("Instruction index less than 0")
         return instruction_index
 
-    def append(self, instructions):
+    def _append_and_return(self, instructions):
         """
-        Append instruction(s) to the list of Instruction objects associated
-        with this protocol.  The other functions on Protocol() should be used
+        Append instruction(s) to the Protocol list and returns the
+        Instruction(s).
+
+        The other functions on Protocol() should be used
         in lieu of doing this directly.
 
         Example Usage:
@@ -554,11 +650,13 @@ class Protocol(object):
         .. code-block:: python
 
             p = Protocol()
-            p.append(Incubate("sample_plate", "ambient", "1:hour"))
+            p._append_and_return(
+                Incubate("sample_plate", "ambient", "1:hour")
+            )
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
@@ -573,13 +671,128 @@ class Protocol(object):
         Parameters
         ----------
         instructions : Instruction
-            Instruction object to be appended.
+            Instruction object(s) to be appended.
+
+        Returns
+        -------
+        Instruction
+            Instruction object(s) to be appended and returned
 
         """
         if type(instructions) is list:
             self.instructions.extend(instructions)
         else:
             self.instructions.append(instructions)
+
+        return instructions
+
+    def batch_containers(self, containers, batch_in=True, batch_out=False):
+        """
+        Batch containers such that they all enter or exit together.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            plate_1 = protocol.ref("p1", None, "96-pcr", storage="cold_4")
+            plate_2 = protocol.ref("p2", None, "96-pcr", storage="cold_4")
+
+            protocol.batch_containers([plate_1, plate_2])
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "refs": {
+                "p1": {
+                  "new": "96-pcr",
+                  "store": {
+                    "where": "cold_4"
+                  }
+                },
+                "p2": {
+                  "new": "96-pcr",
+                  "store": {
+                    "where": "cold_4"
+                  }
+                }
+              },
+              "time_constraints": [
+                {
+                  "from": {
+                    "ref_start": "p1"
+                  },
+                  "less_than": "0:second",
+                  "to": {
+                    "ref_start": "p2"
+                  }
+                },
+                {
+                  "from": {
+                    "ref_start": "p1"
+                  },
+                  "more_than": "0:second",
+                  "to": {
+                    "ref_start": "p2"
+                  }
+                }
+              ]
+            }
+
+        Parameters
+        ----------
+        containers : list(Container)
+            Containers to batch
+        batch_in : bool, optional
+            Batch the entry of containers, default True
+        batch_out: bool, optional
+            Batch the exit of containers, default False
+
+        Raises
+        ------
+        TypeError
+            If containers is not a list
+        TypeError
+            If containers is not a list of Container object
+
+        """
+
+        time = Unit(0, "second")
+
+        if not isinstance(containers, list):
+            raise TypeError("batch_containers containers must be a list")
+        if not all(isinstance(cont, Container) for cont in containers):
+            raise TypeError(
+                "batch_containers containers must be a list of containers."
+            )
+        if not batch_in and not batch_out or len(containers) < 2:
+            warnings.warn("batch_containers is used but has no effect")
+
+        reference_container = containers[0]
+        remainder_containers = containers[1:]
+
+        states = []
+        if batch_in:
+            states.append("start")
+        if batch_out:
+            states.append("end")
+
+        for container in remainder_containers:
+            for state in states:
+                from_dict = {
+                    "mark": reference_container,
+                    "state": state
+                }
+                to_dict = {
+                    "mark": container,
+                    "state": state
+                }
+                self.add_time_constraint(
+                    from_dict=from_dict,
+                    to_dict=to_dict,
+                    less_than=time,
+                    more_than=time)
 
     def as_dict(self):
         """
@@ -639,6 +852,7 @@ class Protocol(object):
 
         """
         outs = {}
+        # pragma pylint: disable=protected-access
         for n, ref in self.refs.items():
             for well in ref.container._wells:
                 if well.name or len(well.properties) > 0:
@@ -659,6 +873,7 @@ class Protocol(object):
             elif ref.container.storage is not None and "discard" in ref.opts:
                 ref.opts["store"] = {"where": ref.container.storage}
                 del ref.opts["discard"]
+        # pragma pylint: enable=protected-access
 
         if outs:
             setattr(self, "outs", outs)
@@ -695,12 +910,14 @@ class Protocol(object):
             condition = None
         if not isinstance(container, Container):
             raise TypeError(
-                "Protocol.store() can only be used on a Container object.")
+                "Protocol.store() can only be used on a Container object."
+            )
         container.storage = condition
         r = self.refs.get(container.name)
         if not r:
             raise RuntimeError(
-                "That container does not exist in the refs for this protocol.")
+                "That container does not exist in the refs for this protocol."
+            )
         if "discard" in r.opts:
             r.opts.pop("discard")
         if condition:
@@ -709,756 +926,11 @@ class Protocol(object):
             r.opts.pop("store")
             r.opts["discard"] = True
 
-    def distribute(self, source, dest, volume, allow_carryover=False,
-                   mix_before=False, mix_vol=None, repetitions=10,
-                   flowrate="100:microliter/second", aspirate_speed=None,
-                   aspirate_source=None, dispense_speed=None,
-                   distribute_target=None, pre_buffer=None, disposal_vol=None,
-                   transit_vol=None, blowout_buffer=None, tip_type=None,
-                   new_group=False):
-        """
-        Distribute liquid from source well(s) to destination wells(s).
-
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            sample_plate = p.ref("sample_plate",
-                                 None,
-                                 "96-flat",
-                                 storage="warm_37")
-            sample_source = p.ref("sample_source",
-                                  "ct32kj234l21g",
-                                  "micro-1.5",
-                                  storage="cold_20")
-
-            p.distribute(sample_source.well(0),
-                         sample_plate.wells_from(0,8,columnwise=True),
-                         "200:microliter",
-                         mix_before=True,
-                         mix_vol="500:microliter",
-                         repetitions=20)
-
-        Autoprotocol Output:
-
-        .. code-block:: json
-
-            "instructions": [
-              {
-                "groups": [
-                  {
-                    "distribute": {
-                      "to": [
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/0"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/12"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/24"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/36"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/48"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/60"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/72"
-                        },
-                        {
-                          "volume": "150.0:microliter",
-                          "well": "sample_plate/84"
-                        }
-                      ],
-                      "from": "sample_source/0",
-                      "mix_before": {
-                        "volume": "500:microliter",
-                        "repetitions": 20,
-                        "speed": "100:microliter/second"
-                      }
-                    }
-                  }
-                ],
-                "op": "pipette"
-              }
-            ]
-
-        Parameters
-        ----------
-        source : Well, WellGroup
-            Well or wells to distribute liquid from.  If passed as a WellGroup
-            with set_volume() called on it, liquid will be automatically be
-            drawn from the wells specified using the fill_wells function.
-        dest : Well, WellGroup
-            Well or wells to distribute liquid to.
-        volume : str, Unit, list
-            Volume of liquid to be distributed to each destination well.  If a
-            single string or unit is passed to represent the volume, that
-            volume will be distributed to each destination well.  If a list of
-            volumes is provided, that volume will be distributed to the
-            corresponding well in the WellGroup provided. The length of the
-            volumes list must therefore match the number of wells in the
-            destination WellGroup if destination wells are recieving different
-            volumes.
-        allow_carryover : bool, optional
-            specify whether the same pipette tip can be used to aspirate more
-            liquid from source wells after the previous volume aspirated has
-            been depleted.
-        mix_before : bool, optional
-            Specify whether to mix the liquid in the destination well before
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in a wells
-            before liquid is distributed.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in a well before liquid is distributed.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before liquid is distributed.
-        aspirate_speed : str, Unit, optional
-            Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this is
-            the maximum aspiration speed, with the start speed being half of
-            the speed specified.
-        aspirate_source : fn, optional
-            Can't be specified if aspirate_speed is also specified.
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May
-            not be specified if dispense_target is also specified.
-        distribute_target : fn, optional
-            A function that contains additional parameters for distributing to
-            target wells including depth, dispense_speed, and calibrated
-            volume.
-            If this parameter is specified, the same parameters will be
-            applied to every destination well.
-            Will supersede dispense_speed parameters if also specified.
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid.
-        disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into
-            trash afterwards.
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence
-            of bubbles at pipette tip.
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume.
-            Cannot be true if disposal_vol is specified.
-
-        Raises
-        ------
-        RuntimeError
-            If no mix volume is specified for the mix_before instruction.
-        ValueError
-            If source and destination well(s) is/are not expressed as either
-            Wells or WellGroups.
-
-        """
-        # Check valid well inputs
-        if not is_valid_well(source):
-            raise TypeError("Source must be of type Well, list of Wells, or "
-                            "WellGroup.")
-        if not is_valid_well(dest):
-            raise TypeError("Destination (dest) must be of type Well, list of "
-                            "Wells, or WellGroup.")
-
-        opts = {}
-        try:
-            dists = self.fill_wells(dest, source, volume, distribute_target, dispense_speed)
-        except ValueError:
-            raise RuntimeError("When distributing liquid, source well(s) "
-                               "must have an associated volume (aliquot).")
-        groups = []
-        for d in dists:
-            opts = {}
-            if mix_before:
-                if not mix_vol:
-                    raise RuntimeError("No mix volume specified for "
-                                       "mix_before.")
-                opts["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if allow_carryover:
-                opts["allow_carryover"] = allow_carryover
-            self._remove_cover(d["from"].container, "pipette from")
-            [self._remove_cover(t['well'].container, "pipette to")
-             for t in d['to']]
-            opts["from"] = d["from"]
-            opts["to"] = d["to"]
-
-            # Append transfer options
-            opt_list = ["aspirate_speed", "allow_carryover"]
-            for option in opt_list:
-                assign(opts, option, eval(option))
-            x_opt_list = ["x_aspirate_source", "x_pre_buffer",
-                          "x_disposal_vol", "x_transit_vol",
-                          "x_blowout_buffer", "x_tip_type"]
-            for x_option in x_opt_list:
-                assign(opts, x_option, eval(x_option[2:]))
-
-            groups.append({"distribute": opts})
-
-        if new_group:
-            self.append(Pipette(groups))
-        else:
-            self._pipette(groups)
-
-    def transfer(self, source, dest, volume, one_source=False, one_tip=False,
-                 aspirate_speed=None, dispense_speed=None,
-                 aspirate_source=None, dispense_target=None, pre_buffer=None,
-                 disposal_vol=None, transit_vol=None, blowout_buffer=None,
-                 tip_type=None, new_group=False, **mix_kwargs):
-        """
-        Transfer liquid from one specific well to another.  A new pipette tip
-        is used between each transfer step unless the "one_tip" parameter
-        is set to True.
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            sample_plate = p.ref("sample_plate",
-                                 ct32kj234l21g,
-                                 "96-flat",
-                                 storage="warm_37")
-
-
-            # a basic one-to-one transfer:
-            p.transfer(sample_plate.well("B3"),
-                       sample_plate.well("C3"),
-                       "20:microliter")
-
-            # using a basic transfer in a loop:
-            for i in xrange(1, 12):
-              p.transfer(sample_plate.well(i-1),
-                         sample_plate.well(i),
-                         "10:microliter")
-
-            # transfer liquid from each well in the first column of a 96-well
-            # plate to each well of the second column using a new tip and
-            # a different volume each time:
-            volumes = ["5:microliter", "10:microliter", "15:microliter",
-                       "20:microliter", "25:microliter", "30:microliter",
-                       "35:microliter", "40:microliter"]
-
-            p.transfer(sample_plate.wells_from(0,8,columnwise=True),
-                       sample_plate.wells_from(1,8,columnwise=True),
-                       volumes)
-
-            # transfer liquid from wells A1 and A2 (which both contain the same
-            # source) into each of the following 10 wells:
-            p.transfer(sample_plate.wells_from("A1", 2),
-                       sample_plate.wells_from("A3", 10),
-                       "10:microliter",
-                       one_source=True)
-
-            # transfer liquid from wells containing the same source to multiple
-            # other wells without discarding the tip in between:
-            p.transfer(sample_plate.wells_from("A1", 2),
-                       sample_plate.wells_from("A3", 10),
-                       "10:microliter",
-                       one_source=True,
-                       one_tip=True)
-
-
-        Parameters
-        ----------
-        source : Well, WellGroup
-            Well or wells to transfer liquid from.  If multiple source wells
-            are supplied and one_source is set to True, liquid will be
-            transfered from each source well specified as long as it contains
-            sufficient volume. Otherwise, the number of source wells specified
-            must match the number of destination wells specified and liquid
-            will be transfered from each source well to its corresponding
-            destination well.
-        dest : Well, WellGroup
-            Well or WellGroup to which to transfer liquid.  The number of
-            destination wells must match the number of source wells specified
-            unless one_source is set to True.
-        volume : str, Unit, list
-            The volume(s) of liquid to be transferred from source wells to
-            destination wells.  Volume can be specified as a single string or
-            Unit, or can be given as a list of volumes.  The length of a list
-            of volumes must match the number of destination wells given unless
-            the same volume is to be transferred to each destination well.
-        one_source : bool, optional
-            Specify whether liquid is to be transferred to destination wells
-            from a group of wells all containing the same substance.
-        one_tip : bool, optional
-            Specify whether all transfer steps will use the same tip or not.
-        mix_after : bool, optional
-            Specify whether to mix the liquid in the destination well after
-            liquid is transferred.
-        mix_before : bool, optional
-            Specify whether to mix the liquid in the source well before
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in a wells
-            before and/or after each transfer step.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in well before and/or after each transfer step.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before and/or after each
-            transfer step.
-        aspirate_speed : str, Unit, optional
-            Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this is
-            the maximum aspiration speed, with the start speed being half of
-            the speed specified.
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May
-            not be specified if dispense_target is also specified.
-        aspirate_source : fn, optional
-            Can't be specified if aspirate_speed is also specified.
-        dispense_target : fn, optional
-            Same but opposite of  aspirate_source.
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid.
-        disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into
-            trash afterwards.
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence
-            of bubbles at pipette tip.
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume. Cannot be true if disposal_vol is specified.
-        tip_type : str, optional
-            Type of tip to be used for the transfer operation.
-        new_group : bool, optional
-
-        Raises
-        ------
-        RuntimeError
-            If more than one volume is specified as a list but the list length
-            does not match the number of destination wells given.
-        RuntimeError
-            If transferring from WellGroup to WellGroup that have different
-            number of wells and one_source is not True.
-
-        """
-        # Check valid well inputs
-        if not is_valid_well(source):
-            raise TypeError("Source must be of type Well, list of Wells, or "
-                            "WellGroup.")
-        if not is_valid_well(dest):
-            raise TypeError("Destination (dest) must be of type Well, list of "
-                            "Wells, or WellGroup.")
-
-        opts = []
-        source = WellGroup(source)
-        dest = WellGroup(dest)
-        len_source = len(source.wells)
-        len_dest = len(dest.wells)
-
-        # Auto-generate well-group if only 1 well specified and using >1 source
-        if not one_source:
-            if len_dest > 1 and len_source == 1:
-                source = WellGroup(source.wells * len_dest)
-                len_source = len(source.wells)
-            if len_dest == 1 and len_source > 1:
-                dest = WellGroup(dest.wells * len_source)
-                len_dest = len(dest.wells)
-            if len_source != len_dest:
-                raise RuntimeError("To transfer liquid from one well or "
-                                   "multiple wells  containing the same "
-                                   "source, set one_source to True. To "
-                                   "transfer liquid from multiple wells to a "
-                                   "single destination well, specify only one "
-                                   "destination well. Otherwise, you must "
-                                   "specify the same number of source and "
-                                   "destination wells to do a one-to-one "
-                                   "transfer.")
-
-        # Auto-generate list from single volume, check if list length matches
-        if isinstance(volume, basestring) or isinstance(volume, Unit):
-            if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume).to("ul")] * len_source
-            else:
-                volume = [Unit.fromstring(volume).to("ul")] * len_dest
-        elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(
-                map(lambda x: Unit.fromstring(x).to("ul"), volume))
-        else:
-            raise RuntimeError("Unless the same volume of liquid is being "
-                               "transferred to each destination well, each "
-                               "destination well must have a corresponding "
-                               "volume in the form of a list.")
-
-        # Ensure enough volume in single well to transfer to all dest wells
-        if one_source:
-            try:
-                source_vol = [s.volume for s in source.wells]
-                if sum([a for a in volume]) > sum([a for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the "
-                                       "source well(s) specified to complete "
-                                       "the transfers.")
-                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
-                    sources = source.wells[:len_dest]
-                    destinations = dest.wells
-                    volumes = volume
-                else:
-                    sources = []
-                    source_counter = 0
-                    destinations = []
-                    volumes = []
-                    s = source.wells[source_counter]
-                    vol = s.volume
-                    max_decimal_places = 12
-                    for idx, d in enumerate(dest.wells):
-                        vol_d = volume[idx]
-                        while vol_d > Unit.fromstring("0:microliter"):
-                            if vol > vol_d:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol_d)
-                                vol -= vol_d
-                                vol._magnitude = round(
-                                    vol._magnitude, max_decimal_places)
-                                vol_d -= vol_d
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
-                            else:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol)
-                                vol_d -= vol
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
-                                source_counter += 1
-                                if source_counter < len_source:
-                                    s = source.wells[source_counter]
-                                    vol = s.volume
-                source = WellGroup(sources)
-                dest = WellGroup(destinations)
-                volume = volumes
-            except (ValueError, AttributeError, TypeError) as e:
-                raise RuntimeError("When transferring liquid from multiple "
-                                   "wells containing the same substance to "
-                                   "multiple other wells, each source Well "
-                                   "must have a volume attribute (aliquot) "
-                                   "associated with it.")
-
-        for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            self._remove_cover(s.container, "pipette from")
-            self._remove_cover(d.container, "pipette into")
-            if v > Unit(900, "microliter"):
-                diff = Unit.fromstring(v)
-                while diff > Unit(900, "microliter"):
-                    # Organize transfer options into dictionary (for json
-                    # parsing)
-
-                    v = Unit(900, "microliter")
-
-                    xfer = {
-                        "from": s,
-                        "to": d,
-                        "volume": v
-                    }
-                    # Volume accounting
-                    if d.volume:
-                        d.volume += v
-                    else:
-                        d.volume = v
-                    if s.volume:
-                        s.volume -= v
-                    # mix before and/or after parameters
-                    if mix_kwargs and (
-                        "mix_before" not in mix_kwargs and (
-                            "mix_after" not in mix_kwargs)):
-                        raise RuntimeError("If you specify mix arguments on "
-                                           "transfer() you must also specify "
-                                           "mix_before and/or mix_after=True."
-                                           )
-                    if mix_kwargs.get("mix_before"):
-                        xfer["mix_before"] = {
-                            "volume": mix_kwargs.get(
-                                "mix_vol_b") or mix_kwargs.get(
-                                "mix_vol") or v / 2,
-                            "repetitions": mix_kwargs.get(
-                                "repetitions_b") or mix_kwargs.get(
-                                "repetitions") or 10,
-                            "speed":  mix_kwargs.get(
-                                "flowrate_b") or mix_kwargs.get(
-                                "flowrate") or "100:microliter/second"
-                        }
-                    if mix_kwargs.get("mix_after"):
-                        xfer["mix_after"] = {
-                            "volume":  mix_kwargs.get(
-                                "mix_vol_a") or mix_kwargs.get(
-                                "mix_vol") or v / 2,
-                            "repetitions": mix_kwargs.get(
-                                "repetitions_a") or mix_kwargs.get(
-                                "repetitions") or 10,
-                            "speed": mix_kwargs.get(
-                                "flowrate_a") or mix_kwargs.get(
-                                "flowrate") or "100:microliter/second"
-                        }
-                    # Append transfer options
-                    opt_list = ["aspirate_speed", "dispense_speed"]
-                    for option in opt_list:
-                        assign(xfer, option, eval(option))
-                    x_opt_list = ["x_aspirate_source",
-                                  "x_dispense_target",
-                                  "x_pre_buffer",
-                                  "x_disposal_vol",
-                                  "x_transit_vol",
-                                  "x_blowout_buffer"]
-                    for x_option in x_opt_list:
-                        assign(xfer, x_option, eval(x_option[2:]))
-                    if v > Unit(0, "microliter"):
-                        opts.append(xfer)
-
-                    diff -= Unit(900, "microliter")
-
-                v = diff
-
-            # Organize transfer options into dictionary (for json parsing)
-            xfer = {
-                "from": s,
-                "to": d,
-                "volume": v
-            }
-            # Volume accounting
-            if d.volume:
-                d.volume += v
-            else:
-                d.volume = v
-            if s.volume:
-                s.volume -= v
-            # mix before and/or after parameters
-            if mix_kwargs and ("mix_before" not in mix_kwargs and "mix_after" not in mix_kwargs):
-                raise RuntimeError("If you specify mix arguments on transfer()"
-                                   " you must also specify mix_before and/or"
-                                   " mix_after=True.")
-            if mix_kwargs.get("mix_before"):
-                xfer["mix_before"] = {
-                    "volume": mix_kwargs.get("mix_vol_b") or mix_kwargs.get("mix_vol") or v / 2,
-                    "repetitions": mix_kwargs.get("repetitions_b") or mix_kwargs.get("repetitions") or 10,
-                    "speed":  mix_kwargs.get("flowrate_b") or mix_kwargs.get("flowrate") or "100:microliter/second"
-                }
-            if mix_kwargs.get("mix_after"):
-                xfer["mix_after"] = {
-                    "volume":  mix_kwargs.get("mix_vol_a") or mix_kwargs.get("mix_vol") or v / 2,
-                    "repetitions": mix_kwargs.get("repetitions_a") or mix_kwargs.get("repetitions") or 10,
-                    "speed": mix_kwargs.get("flowrate_a") or mix_kwargs.get("flowrate") or "100:microliter/second"
-                }
-            # Append transfer options
-            opt_list = ["aspirate_speed", "dispense_speed"]
-            for option in opt_list:
-                assign(xfer, option, eval(option))
-            x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                          "x_blowout_buffer"]
-            for x_option in x_opt_list:
-                assign(xfer, x_option, eval(x_option[2:]))
-            if v > Unit(0, "microliter"):
-                opts.append(xfer)
-
-        trans = {}
-        assign(trans, "x_tip_type", tip_type)
-        if one_tip:
-            trans["transfer"] = opts
-            if new_group:
-                self.append(Pipette([trans]))
-            else:
-                self._pipette([trans])
-        else:
-            for x in opts:
-                trans = {}
-                assign(trans, "x_tip_type", tip_type)
-                trans["transfer"] = [x]
-                if new_group:
-                    self.append(Pipette([trans]))
-                else:
-                    self._pipette([trans])
-
-    def consolidate(self, sources, dest, volumes, allow_carryover=False,
-                    mix_after=False, mix_vol=None,
-                    flowrate="100:microliter/second", repetitions=10,
-                    aspirate_speed=None, dispense_speed=None, aspirate_source=None,
-                    dispense_target=None, pre_buffer=None, transit_vol=None,
-                    blowout_buffer=None, tip_type=None, new_group=False):
-        """
-        Aspirates from each source well, in order, the volume specified, then
-        dispenses the sum volume into the target well. Be aware that the same
-        tip will be used to aspirate from all the source wells, so if you want
-        to avoid contaminating any of them you should use a separate transfer
-        group. Consolidate is limited by the maximum volume of the disposable
-        tip. If the total volume you want to dispense into the target well
-        exceeds the volume that will fit in one tip, you must either specify
-        `allow_carryover` to allow the tip to carry on pipetting from the
-        source wells after it has touched the target well, or break up your
-        operation into multiple groups with separate tips.
-
-        Parameters
-        ----------
-        sources : Well, WellGroup
-            Well or wells to transfer liquid from.
-        dest : Well
-            Well to which to transfer consolidated liquid.
-        volumes : str, Unit, list
-            The volume(s) of liquid to be transferred from source well(s) to
-            destination well.  Volume can be specified as a single string or
-            Unit, or can be given as a list of volumes.  The length of a list
-            of volumes must match the number of source wells given.
-        mix_after : bool, optional
-            Specify whether to mix the liquid in the destination well after
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in a wells
-            before and/or after each transfer step.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in well before and/or after each transfer step.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before and/or after each
-            transfer step.
-        aspirate speed : str, Unit, optional
-            Speed at which to aspirate liquid from source well.  May not be
-            specified if aspirate_source is also specified. By default this
-            is the maximum aspiration speed, with the start speed being half
-            of the speed specified.
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well. May
-            not be specified if dispense_target is also specified.
-        aspirate_source : fn, optional
-            Options for aspirating liquid. Cannot be specified if
-            aspirate_speed is also specified.
-        dispense_target : fn, optional
-            Options for dispensing liquid. Cannot be specified if
-            dispense_speed is also specified.
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid.
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce
-            presence of bubbles at pipette tip.
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume cannot be true if disposal_vol is specified.
-
-        Raises
-        ------
-        TypeError
-            If supplying more than one destination well for consolidation.
-        ValueError
-            If a volume list is supplied and the length does not match the
-            number of source wells.
-        """
-        # Check valid well inputs
-        if not is_valid_well(sources):
-            raise TypeError("Source must be of type Well, list of Wells, or "
-                            "WellGroup.")
-        if not isinstance(dest, Well):
-            raise TypeError("You can only consolidate liquid into one "
-                            "destination well which must be of type Well.")
-
-        self._remove_cover(dest.container, "consolidate into")
-        if isinstance(sources, (Well, basestring)):
-            sources = [sources]
-        if isinstance(volumes, list):
-            if len(volumes) != len(sources):
-                raise ValueError("If supplying consolidate "
-                                 "volumes as a list, its length "
-                                 "must match the number of "
-                                 "source wells specified.")
-            volumes = [Unit.fromstring(v).to("ul") for v in volumes]
-        else:
-            volumes = [Unit.fromstring(volumes).to("ul")] * len(sources)
-
-        # Initialize instructions
-        cons = {"consolidate": {}}
-        cons_instr = cons["consolidate"]
-        assign(cons_instr, "to", dest)
-        from_wells = []
-        # Generate instructions for each transfer from source wells
-        for s, v in zip(sources, volumes):
-            self._remove_cover(s.container, "consolidate from")
-            source_opts = {}
-            source_opts["well"] = s
-            source_opts["volume"] = v
-            assign(source_opts, "aspirate_speed", aspirate_speed)
-            assign(source_opts, "x_aspirate_source", aspirate_source)
-            from_wells.append(source_opts)
-            if dest.volume:
-                dest.volume += v
-            else:
-                dest.volume = v
-            if s.volume:
-                s.volume -= v
-        assign(cons_instr, "from", from_wells)
-        # Append mix options
-        if mix_after:
-            cons_instr["mix_after"] = {
-                "volume": mix_vol,
-                "repetitions": repetitions,
-                "speed": flowrate
-            }
-        # Append transfer options
-        opt_list = ["allow_carryover", "dispense_speed"]
-        for option in opt_list:
-            assign(cons_instr, option, eval(option))
-        x_opt_list = ["x_dispense_target", "x_pre_buffer",
-                      "x_transit_vol", "x_blowout_buffer", "x_tip_type"]
-        for x_option in x_opt_list:
-            assign(cons_instr, x_option, eval(x_option[2:]))
-        # Create new pipette instruction group if necessary
-        if new_group:
-            self.append(Pipette([cons]))
-        else:
-            self._pipette([cons])
-
     def acoustic_transfer(self, source, dest, volume, one_source=False,
                           droplet_size="25:nanoliter"):
         """
-        Specify source and destination wells for transfering liquid via an
+        Specify source and destination wells for transferring liquid via an
         acoustic liquid handler.  Droplet size is usually device-specific.
-
-        Parameters
-        ----------
-        source : Well, WellGroup
-            Well or wells to transfer liquid from.  If multiple source wells
-            are supplied and one_source is set to True, liquid will be
-            transfered from each source well specified as long as it contains
-            sufficient volume. Otherwise, the number of source wells specified
-            must match the number of destination wells specified and liquid
-            will be transfered from each source well to its corresponding
-            destination well.
-        dest : Well, WellGroup
-            Well or WellGroup to which to transfer liquid.  The number of
-            destination wells must match the number of source wells specified
-            unless one_source is set to True.
-        volume : str, Unit, list
-            The volume(s) of liquid to be transferred from source wells to
-            destination wells.  Volume can be specified as a single string or
-            Unit, or can be given as a list of volumes.  The length of a list
-            of volumes must match the number of destination wells given unless
-            the same volume is to be transferred to each destination well.
-        one_source : bool, optional
-            Specify whether liquid is to be transferred to destination wells
-            from a group of wells all containing the same substance.
-        droplet_size : str, Unit, optional
-            Volume representing a droplet_size.  The volume of each `transfer`
-            group should be a multiple of this volume.
-
 
         Example Usage:
 
@@ -1471,59 +943,111 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
-            {
-              "groups": [
                 {
-                  "transfer": [
-                    {
-                      "volume": "0.004:microliter",
-                      "to": "plate/0",
-                      "from": "echo_plate/0"
-                    },
-                    {
-                      "volume": "0.004:microliter",
-                      "to": "plate/1",
-                      "from": "echo_plate/0"
-                    },
-                    {
-                      "volume": "0.004:microliter",
-                      "to": "plate/2",
-                      "from": "echo_plate/0"
-                    },
-                    {
-                      "volume": "0.004:microliter",
-                      "to": "plate/3",
-                      "from": "echo_plate/1"
-                    },
-                    {
-                      "volume": "0.004:microliter",
-                      "to": "plate/4",
-                      "from": "echo_plate/1"
-                    }
-                  ]
+                    "groups": [
+                        {
+                            "transfer": [
+                                {
+                                    "volume": "0.004:microliter",
+                                    "to": "plate/0",
+                                    "from": "echo_plate/0"
+                                },
+                                {
+                                    "volume": "0.004:microliter",
+                                    "to": "plate/1",
+                                    "from": "echo_plate/0"
+                                },
+                                {
+                                    "volume": "0.004:microliter",
+                                    "to": "plate/2",
+                                    "from": "echo_plate/0"
+                                },
+                                {
+                                    "volume": "0.004:microliter",
+                                    "to": "plate/3",
+                                    "from": "echo_plate/1"
+                                },
+                                {
+                                    "volume": "0.004:microliter",
+                                    "to": "plate/4",
+                                    "from": "echo_plate/1"
+                                }
+                            ]
+                        }
+                    ],
+                    "droplet_size": "25:microliter",
+                    "op": "acoustic_transfer"
                 }
-              ],
-              "droplet_size": "25:microliter",
-              "op": "acoustic_transfer"
-            }]
+            ]
+
+
+        Parameters
+        ----------
+        source : Well or WellGroup or list(Well)
+            Well or wells to transfer liquid from.  If multiple source wells
+            are supplied and one_source is set to True, liquid will be
+            transferred from each source well specified as long as it contains
+            sufficient volume. Otherwise, the number of source wells specified
+            must match the number of destination wells specified and liquid
+            will be transferred from each source well to its corresponding
+            destination well.
+        dest : Well or WellGroup or list(Well)
+            Well or WellGroup to which to transfer liquid.  The number of
+            destination wells must match the number of source wells specified
+            unless one_source is set to True.
+        volume : str or Unit or list
+            The volume(s) of liquid to be transferred from source wells to
+            destination wells.  Volume can be specified as a single string or
+            Unit, or can be given as a list of volumes.  The length of a list
+            of volumes must match the number of destination wells given unless
+            the same volume is to be transferred to each destination well.
+        one_source : bool, optional
+            Specify whether liquid is to be transferred to destination wells
+            from a group of wells all containing the same substance.
+        droplet_size : str or Unit, optional
+            Volume representing a droplet_size.  The volume of each `transfer`
+            group should be a multiple of this volume.
+
+        Returns
+        -------
+        AcousticTransfer
+            Returns the :py:class:`autoprotocol.instruction.AcousticTransfer`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Incorrect input types, e.g. source/dest are not Well or WellGroup
+            or list of Well
+        RuntimeError
+            Incorrect length for source and destination
+        RuntimeError
+            Transfer volume not being a multiple of droplet size
+        RuntimeError
+            Insufficient volume in source wells
 
         """
         # Check valid well inputs
         if not is_valid_well(source):
-            raise TypeError("Source must be of type Well, list of Wells, or "
-                            "WellGroup.")
+            raise TypeError(
+                "Source must be of type Well, list of Wells, or WellGroup."
+            )
         if not is_valid_well(dest):
-            raise TypeError("Destination (dest) must be of type Well, list of "
-                            "Wells, or WellGroup.")
+            raise TypeError(
+                "Destination (dest) must be of type Well, list of Wells, or "
+                "WellGroup."
+            )
+
         transfers = []
         source = WellGroup(source)
         dest = WellGroup(dest)
         len_source = len(source.wells)
         len_dest = len(dest.wells)
-        droplet_size = Unit.fromstring(droplet_size)
+        droplet_size = Unit(droplet_size)
+        max_decimal_places = 12  # for rounding after floating point arithmetic
 
         # Auto-generate well-group if only 1 well specified and using >1 source
         if not one_source:
@@ -1534,46 +1058,51 @@ class Protocol(object):
                 dest = WellGroup(dest.wells * len_source)
                 len_dest = len(dest.wells)
             if len_source != len_dest:
-                raise RuntimeError("To transfer liquid from one well or "
-                                   "multiple wells  containing the same "
-                                   "source, set one_source to True. To "
-                                   "transfer liquid from multiple wells to a "
-                                   "single destination well, specify only one "
-                                   "destination well. Otherwise, you must "
-                                   "specify the same number of source and "
-                                   "destination wells to do a one-to-one "
-                                   "transfer.")
+                raise RuntimeError(
+                    "To transfer liquid from one well or multiple wells "
+                    "containing the same source, set one_source to True. To "
+                    "transfer liquid from multiple wells to a single "
+                    "destination well, specify only one destination well. "
+                    "Otherwise, you must specify the same number of source and "
+                    "destination wells to do a one-to-one transfer."
+                )
 
         # Auto-generate list from single volume, check if list length matches
         if isinstance(volume, basestring) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume).to("ul")] * len_source
+                volume = [Unit(volume).to("ul")] * len_source
             else:
-                volume = [Unit.fromstring(volume).to("ul")] * len_dest
+                volume = [Unit(volume).to("ul")] * len_dest
         elif isinstance(volume, list) and len(volume) == len_dest:
             volume = list(
-                map(lambda x: Unit.fromstring(x).to("ul"), volume))
+                map(lambda x: Unit(x).to("ul"), volume))
         else:
-            raise RuntimeError("Unless the same volume of liquid is being "
-                               "transferred to each destination well, each "
-                               "destination well must have a corresponding "
-                               "volume in the form of a list.")
+            raise RuntimeError(
+                "Unless the same volume of liquid is being transferred to each "
+                "destination well, each destination well must have a "
+                "corresponding volume in the form of a list."
+            )
         vol_errors = []
         for vol_d in volume:
-            if not (vol_d / droplet_size)._magnitude.is_integer():
+            if not round(vol_d / droplet_size, max_decimal_places) % 1 == 0:
                 vol_errors.append(vol_d)
         if len(vol_errors) > 0:
-            raise RuntimeError("Transfer volume has to be a multiple of "
-                               "the droplet size. This is not true for the "
-                               "following volumes: {} ".format(vol_errors))
+            raise RuntimeError(
+                "Transfer volume has to be a multiple of the droplet size ({})."
+                "This is not true for the following volumes: {}"
+                .format(droplet_size, vol_errors)
+            )
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
             try:
                 source_vol = [s.volume for s in source.wells]
                 if sum([a for a in volume]) > sum([a for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the source well(s) specified to complete "
-                                       "the transfers.")
-                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
+                    raise RuntimeError(
+                        "There is not enough volume in the source well(s) "
+                        "specified to complete the transfers."
+                    )
+                if len_source >= len_dest and all(
+                        i > j for i, j in zip(source_vol, volume)):
                     sources = source.wells[:len_dest]
                     destinations = dest.wells
                     volumes = volume
@@ -1584,28 +1113,25 @@ class Protocol(object):
                     volumes = []
                     s = source.wells[source_counter]
                     vol = s.volume
-                    max_decimal_places = 12
+
                     for idx, d in enumerate(dest.wells):
                         vol_d = volume[idx]
-                        while vol_d > Unit.fromstring("0:microliter"):
+                        while vol_d > Unit("0:microliter"):
                             if vol > vol_d:
                                 sources.append(s)
                                 destinations.append(d)
                                 volumes.append(vol_d)
                                 vol -= vol_d
-                                vol._magnitude = round(
-                                    vol._magnitude, max_decimal_places)
+                                vol = round(vol, max_decimal_places)
                                 vol_d -= vol_d
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
+                                vol_d = round(vol_d, max_decimal_places)
                             else:
                                 sources.append(s)
                                 destinations.append(d)
                                 vol = int(vol / droplet_size) * droplet_size
                                 volumes.append(vol)
                                 vol_d -= vol
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
+                                vol_d = round(vol_d, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
@@ -1613,10 +1139,13 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError, TypeError) as e:
-                raise RuntimeError("When transferring liquid from multiple wells containing the same substance to "
-                                   "multiple other wells, each source Well must have a volume attribute (aliquot) "
-                                   "associated with it.")
+            except(ValueError, AttributeError, TypeError):
+                raise RuntimeError(
+                    "When transferring liquid from multiple wells containing "
+                    "the same substance to multiple other wells, each source "
+                    "Well must have a volume attribute (aliquot) associated "
+                    "with it."
+                )
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             self._remove_cover(s.container, "acoustic_transfer")
@@ -1637,764 +1166,14 @@ class Protocol(object):
                 transfers.append(xfer)
 
         for x in transfers:
-            x["volume"] = x["volume"].to("nl")
-        if self.instructions and self.instructions[-1].op == "acoustic_transfer":
-            prev_inst = self.instructions[-1].data["groups"][0]["transfer"][-1]
-            if (prev_inst["from"].container == transfers[0]["from"].container and
-                    prev_inst["to"].container == transfers[0]["to"].container and
-                    droplet_size == self.instructions[-1].data["droplet_size"]):
-                self.instructions[-
-                                  1].data["groups"][0]["transfer"].extend(transfers)
-                return
-        self.append(AcousticTransfer(transfers, droplet_size))
+            x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
 
-    def stamp(self, source_origin, dest_origin, volume, shape=dict(rows=8,
-                                                                   columns=12), mix_before=False, mix_after=False, mix_vol=None,
-              repetitions=10, flowrate="100:microliter/second",
-              aspirate_speed=None, dispense_speed=None, aspirate_source=None,
-              dispense_target=None, pre_buffer=None, disposal_vol=None,
-              transit_vol=None, blowout_buffer=None, one_source=False,
-              one_tip=False, new_group=False):
-        """
-        **Note: the way this method now works is significantly different to the
-        way it has in previous versions, please make sure to read the
-        documentation below and adjust existing scripts utilizing stamp()
-        accordingly**
+        return self._append_and_return(
+            AcousticTransfer([{"transfer": transfers}], droplet_size)
+        )
 
-        A stamp instruction consists of a list of groups of transfers, each of
-        which specifies from and to well references (ref/well_index)
-        representing the top-left well or origin of a specified shape.
-
-        The volume field defines the volume of liquid that will be aspirated
-        from every well of the shape specified starting at the from field and
-        dispensed into the corresponding wells starting at the to field.
-
-        Currently, the shape field may only be a rectangle object defined by
-        rows and columns attributes representing the number of contiguous tip
-        rows and columns to transfer.
-
-        The shape parameter is optional and will default to a full 8 rows by
-        12 columns. The tip_layout field refers to the SBS compliant layout of
-        tips, is optional, and will default to the layout of a 96 tip box.
-
-        The following plate types are currently supported: 96 and 384.
-
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-
-            plate_1_96 = p.ref("plate_1_96", None, "96-flat", discard=True)
-            plate_2_96 = p.ref("plate_2_96", None, "96-flat", discard=True)
-            plate_1_384 = p.ref("plate_1_384", None, "384-flat", discard=True)
-            plate_2_384 = p.ref("plate_2_384", None, "384-flat", discard=True)
-
-            # A full-plate transfer between two 96 or 384-well plates
-            p.stamp(plate_1_96, plate_2_96, "10:microliter")
-            p.stamp(plate_1_384, plate_2_384, "10:microliter")
-
-            # Defining shapes for selective stamping:
-            row_rectangle = dict(rows=1, columns=12)
-            two_column_rectangle = dict(rows=8, columns=2)
-
-            # A transfer from the G row to the H row of another 96-well plate
-            p.stamp(plate_1_96.well("G1"), plate_2_96.well("H1"),
-            "10:microliter", row_rectangle)
-
-            # A 2-column transfer from columns 1,2 of a 96-well plate to
-            #columns 2,4 of a 384-well plate
-            p.stamp(plate_1_96.well("A1"), plate_1_384.wells_from("A2", 2,
-            columnwise=True), "10:microliter", two_column_rectangle)
-
-            # A 2-row transfer from rows 1,2 of a 384-well plate to rows 2,3
-            #of a 96-well plate
-            p.stamp(plate_1_384.wells(["A1", "A2", "B1", "B2"]), plate_1_96.
-            wells(["B1", "B1", "C1", "C1"]), "10:microliter",
-            shape=row_rectangle)
-
-        Parameters
-        ----------
-        source_origin : Container, Well, WellGroup, List of Wells
-            Top-left well or wells where the rows/columns will be defined with
-            respect to the source transfer.
-            If a container is specified, stamp will be applied to all
-            quadrants of the container.
-        dest_origin : Container, Well, WellGroup, List of Wells
-            Top-left well or wells where the rows/columns will be defined with
-            respect to the destination transfer.
-            If a container is specified, stamp will be applied to all
-            quadrants of the container
-        volume : str, Unit, list
-            Volume(s) of liquid to move from source plate to destination
-            plate. Volume can be specified as a single string or Unit, or can
-            be given as a list of volumes.  The length of a list of volumes
-            must match the number of destination wells given unless the same
-            volume is to be transferred to each destination well.
-        shape : dictionary, list, optional
-            The shape(s) parameter is optional and will default to a rectangle
-            corresponding to a full 96-well plate (8 rows by 12 columns).
-            The rows and columns will be defined wrt the specified origin.
-            The length of a list of shapes must match the number of
-            destination wells given unless the same shape is to be used for
-            each destination well. If the length of shape is greater than 1,
-            one_tip=False.
-
-            Example
-
-            .. code-block:: python
-
-                rectangle = {}
-                rectangle["rows"] = 8
-                rectangle["columns"] = 12
-
-        mix_after : bool, optional
-            Specify whether to mix the liquid in destination wells after
-            liquid is transferred.
-        mix_before : bool, optional
-            Specify whether to mix the liquid in source wells before
-            liquid is transferred.
-        mix_vol : str, Unit, optional
-            Volume to aspirate and dispense in order to mix liquid in wells
-            before and/or after it is transfered.
-        repetitions : int, optional
-            Number of times to aspirate and dispense in order to mix
-            liquid in wells before and/or after it is transfered.
-        flowrate : str, Unit, optional
-            Speed at which to mix liquid in well before and/or after each
-            transfer step in units of "microliter/second".
-        dispense_speed : str, Unit, optional
-            Speed at which to dispense liquid into the destination well.  May
-            not be specified if dispense_target is also specified.
-        aspirate_source : fn, optional
-            Can't be specified if aspirate_speed is also specified.
-        dispense_target : fn, optional
-            Same but opposite of  aspirate_source.
-        pre_buffer : str, Unit, optional
-            Volume of air aspirated before aspirating liquid.
-        disposal_vol : str, Unit, optional
-            Volume of extra liquid to aspirate that will be dispensed into
-            trash afterwards.
-        transit_vol : str, Unit, optional
-            Volume of air aspirated after aspirating liquid to reduce presence
-            of bubbles at pipette tip.
-        blowout_buffer : bool, optional
-            If true the operation will dispense the pre_buffer along with the
-            dispense volume. Cannot be true if disposal_vol is specified.
-        one_source : bool, optional
-            Specify whether liquid is to be transferred to destination origins
-            from a group of origins all containing the same substance. Volume
-            of all wells in the shape must be equal to or greater than the
-            volume in the origin well. Specifying origins with overlapping
-            shapes can produce undesireable effects.
-        one_tip : bool, optional
-            Specify whether all transfer steps will use the same tip or not.
-            If multiple different shapes are used, one_tip cannot be true.
-        new_group : bool, optional
-
-            Example
-
-            .. code-block:: python
-
-                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-                p.stamp(plate_1_96.well("A1"), plate_2_96.well("A1"),
-                "10:microliter")
-
-            Autoprotocol Output:
-
-            .. code-block:: json
-
-                "instructions": [
-                    {
-                      "groups": [
-                        {
-                          "transfer": [
-                            {
-                              "volume": "10.0:microliter",
-                              "to": "plate_2_96/0",
-                              "from": "plate_1_96/0"
-                            }
-                          ],
-                          "shape": {
-                            "rows": 8,
-                            "columns": 12
-                          },
-                          "tip_layout": 96
-                        }
-                      ],
-                      "op": "stamp"
-                    },
-                    {
-                      "groups": [
-                        {
-                          "transfer": [
-                            {
-                              "volume": "10.0:microliter",
-                              "to": "plate_2_96/0",
-                              "from": "plate_1_96/0"
-                            }
-                          ],
-                          "shape": {
-                            "rows": 8,
-                            "columns": 12
-                          },
-                          "tip_layout": 96
-                        }
-                      ],
-                      "op": "stamp"
-                    }
-                  ]
-
-        """
-
-        # Support existing transfer syntax by converting a container to all
-        # quadrants of that container
-        if isinstance(source_origin, Container):
-            source_plate = source_origin
-            source_plate_type = source_plate.container_type
-            if source_plate_type.well_count == 96:
-                source_origin = source_plate.well(0)
-            elif source_plate_type.well_count == 384:
-                source_origin = source_plate.wells([0, 1, 24, 25])
-            else:
-                raise TypeError("Invalid source_origin type given. If "
-                                "source_origin is a container, it must be a "
-                                "container with 96 or 384 wells.")
-        if isinstance(dest_origin, Container):
-            dest_plate = dest_origin
-            dest_plate_type = dest_plate.container_type
-            if dest_plate_type.well_count == 96:
-                dest_origin = dest_plate.well(0)
-            elif dest_plate_type.well_count == 384:
-                dest_origin = dest_plate.wells([0, 1, 24, 25])
-            else:
-                raise TypeError("Invalid dest_origin type given. If "
-                                "dest_origin is a container, it must be a "
-                                "container with 96 or 384 wells.")
-
-        # Check valid well inputs
-        if not is_valid_well(source_origin):
-            raise TypeError("Source (source_origin) must be of type Well, "
-                            "list of Wells, or WellGroup.")
-        if not is_valid_well(dest_origin):
-            raise TypeError("Destination (dest_origin) must be of type Well, "
-                            "list of Wells, or WellGroup.")
-
-        # Initialize input parameters
-        source = WellGroup(source_origin)
-        dest = WellGroup(dest_origin)
-        opts = []  # list of transfers
-        oshp = []  # list of shapes
-        osta = []  # list of stamp_types
-        len_source = len(source.wells)
-        len_dest = len(dest.wells)
-
-        # Auto-generate well-group if only 1 well specified for either source
-        # or destination if one_source=False
-        if not one_source:
-            if len_dest > 1 and len_source == 1:
-                source = WellGroup(source.wells * len_dest)
-                len_source = len(source.wells)
-            if len_dest == 1 and len_source > 1:
-                dest = WellGroup(dest.wells * len_source)
-                len_dest = len(dest.wells)
-            if len_source != len_dest:
-                raise RuntimeError("To transfer liquid from one origin or "
-                                   "multiple origins containing the same "
-                                   "source, set one_source to True. To "
-                                   "transfer from multiple origins to a "
-                                   "single destination well, specify only one "
-                                   "destination well. Otherwise, you must "
-                                   "specify the same number of source and "
-                                   "destination wells to do a one-to-one "
-                                   "transfer.")
-
-        # Auto-generate list from single volume, check if volume list length
-        # matches
-        if isinstance(volume, basestring) or isinstance(volume, Unit):
-            if len_dest == 1 and not one_source:
-                volume = [Unit.fromstring(volume).to("ul")] * len_source
-            else:
-                volume = [Unit.fromstring(volume).to("ul")] * len_dest
-        elif isinstance(volume, list) and len(volume) == len_dest:
-            volume = list(map(lambda x: Unit.fromstring(x).to("ul"), volume))
-        else:
-            raise RuntimeError("Unless the same volume of liquid is being "
-                               "transferred to each destination well, each "
-                               "destination well must have a corresponding "
-                               "volume in the form of a list.")
-
-        # Auto-generate list from single shape, check if list length matches
-        if isinstance(shape, dict):
-            if len_dest == 1 and not one_source:
-                shape = [shape] * len_source
-            else:
-                shape = [shape] * len_dest
-        elif isinstance(shape, list) and len(shape) == len_dest:
-            shape = shape
-        else:
-            raise RuntimeError("Unless the same shape is being used for all "
-                               "transfers, each destination well must have a "
-                               "corresponding shape in the form of a list.")
-
-        # Read through shape list and generate stamp_type, rows, and columns
-        stamp_type = []
-        rows = []
-        columns = []
-
-        for s in shape:
-            # Check and load rows/columns from given shape
-            if "rows" not in s or "columns" not in s:
-                raise TypeError("Invalid input shape given. Rows and columns "
-                                "of a rectangle has to be defined.")
-            r = s["rows"]
-            c = s["columns"]
-            rows.append(r)
-            columns.append(c)
-
-            # Check on complete rows/columns (assumption: tip_layout=96)
-            if c == 12 and r == 8:
-                stamp_type.append("full")
-            elif c == 12:
-                stamp_type.append("row")
-            elif r == 8:
-                stamp_type.append("col")
-            else:
-                raise ValueError("Only complete rows or columns are allowed.")
-
-        # Check dimensions of shape and ensure that origins are valid
-        for s, d, c, r, st in list(zip(source.wells, dest.wells, columns, rows, stamp_type)):
-            src_col_count = s.container.container_type.col_count
-            dest_col_count = d.container.container_type.col_count
-            if c < 0 or c > src_col_count or c > dest_col_count:
-                raise ValueError("Columns given exceed plate dimensions.")
-
-            src_row_count = s.container.container_type.well_count // src_col_count
-            dest_row_count = d.container.container_type.well_count // dest_col_count
-            if r < 0 or r > src_row_count or r > dest_row_count:
-                raise ValueError("Rows given exceed plate dimensions.")
-
-            # Check if origins are valid
-            check_valid_origin(s, st, c, r)
-            check_valid_origin(d, st, c, r)
-
-        # Check if shapes are the same given one_tip or one_source = True
-        if one_tip or one_source:
-            if not all([s == shape[0] for s in shape]):
-                raise RuntimeError("The same shape must be used if one_tip or "
-                                   "one_source is true.")
-
-        # Create source, destination, and volumes list for one_source=True
-        if one_source:
-            try:
-                # Check if all wells in shape have same or greater volume given
-                # one_source = True
-                for w, c, r, st in list(zip(source.wells, columns, rows, stamp_type)):
-                    columnWise = False
-                    if st == "col":
-                        columnWise = True
-                    if w.container.container_type.col_count == 24:
-                        if columnWise:
-                            source_wells = [w.container.wells_from(
-                                w, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                        else:
-                            source_wells = [w.container.wells_from(
-                                w, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-                    else:
-                        source_wells = w.container.wells_from(
-                            w, c * r, columnWise)
-                    if not all([s.volume >= w.volume for s in source_wells]):
-                        raise RuntimeError("Each well in a shape must have "
-                                           "the same or greater volume as the "
-                                           "origin well.")
-
-                # Create volumes list
-                source_vol = [s.volume for s in source.wells]
-                if sum([a for a in volume]) > sum([a for a in source_vol]):
-                    raise RuntimeError("There is not enough volume in the "
-                                       "source well(s) specified to complete "
-                                       "the transfers.")
-                if len_source >= len_dest and all(i > j for i, j in zip(source_vol, volume)):
-                    sources = source.wells[:len_dest]
-                    destinations = dest.wells
-                    volumes = volume
-                else:
-                    sources = []
-                    source_counter = 0
-                    destinations = []
-                    volumes = []
-                    s = source.wells[source_counter]
-                    vol = s.volume
-                    max_decimal_places = 12
-                    for idx, d in enumerate(dest.wells):
-                        vol_d = volume[idx]
-                        while vol_d > Unit.fromstring("0:microliter"):
-                            if vol > vol_d:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol_d)
-                                vol -= vol_d
-                                vol._magnitude = round(
-                                    vol._magnitude, max_decimal_places)
-                                vol_d -= vol_d
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
-                            else:
-                                sources.append(s)
-                                destinations.append(d)
-                                volumes.append(vol)
-                                vol_d -= vol
-                                vol_d._magnitude = round(
-                                    vol_d._magnitude, max_decimal_places)
-                                source_counter += 1
-                                if source_counter < len_source:
-                                    s = source.wells[source_counter]
-                                    vol = s.volume
-                source = WellGroup(sources)
-                dest = WellGroup(destinations)
-                volume = volumes
-                shape = [shape[0]] * len(volume)
-                rows = [rows[0]] * len(volume)
-                columns = [columns[0]] * len(volume)
-                stamp_type = [stamp_type[0]] * len(volume)
-            except (ValueError, AttributeError, TypeError):
-                raise RuntimeError("When transferring liquid from multiple "
-                                   "wells containing the same substance to "
-                                   "multiple other wells, each source Well "
-                                   "must have a volume attribute (aliquot) "
-                                   "associated with it.")
-
-        # Checking on containers and volume consistency if one_tip = True
-
-        # Set volume at which tip volume type changes defined by TCLE - hardcoded for the two current tip volume types
-        # TODO remove this when consolidating to 165ul filtered tips
-        volumeSwitch = Unit.fromstring("31:microliter")
-
-        if one_tip:
-            # Volume consistency
-            if not mix_vol:
-                temp_vol = Unit.fromstring("0:microliter")
-            else:
-                temp_vol = Unit.fromstring(mix_vol)
-            if not (all([v > volumeSwitch for v in volume]) or all([v <= volumeSwitch for v in volume]) or (temp_vol > volumeSwitch)):
-                raise RuntimeError("Volumes must all be > or <= 31:microliter "
-                                   "for one_tip = True. If one_source = True, "
-                                   "it may be generating volumes which are "
-                                   "incompatible.")
-
-            # Container consistency
-            st = stamp_type[0]
-            if st == "full":
-                maxContainers = 3
-            else:
-                maxContainers = 2
-
-            all_wells = source + dest
-
-            if len(set(map(lambda x: x.container, all_wells.wells))) > maxContainers:
-                raise RuntimeError("Exceeded maximum allowed containers when "
-                                   "using one_tip = True")
-
-        # Calculate max_tip_vol smartly based on residual volumes
-        # tip_capacity determined with calibration parameters
-        tip_capacity = Unit.fromstring("158:microliter")
-        primer_resid = Unit.fromstring("5:microliter")
-        transit_resid = Unit.fromstring("1:microliter")
-        pre_buffer_resid = Unit.fromstring("5:microliter")
-
-        if aspirate_source:
-            if 'primer_vol' in aspirate_source.keys():
-                primer_resid = Unit.fromstring(aspirate_source['primer_vol'])
-        if pre_buffer:
-            pre_buffer_resid = Unit.fromstring(pre_buffer)
-        if transit_vol:
-            transit_resid = Unit.fromstring(transit_vol)
-        # Determine max(transit_vol, primer_vol)
-        if primer_resid > Unit.fromstring(transit_resid):
-            primer_or_transit = primer_resid
-        else:
-            primer_or_transit = transit_resid
-
-        max_tip_vol = tip_capacity - pre_buffer_resid - primer_or_transit
-
-        for s, d, v, c, r, st, sh in list(zip(source.wells, dest.wells, volume, columns, rows, stamp_type, shape)):
-
-            # Splitting volumes up if greater than max_tip_vol
-            if v > max_tip_vol:
-                diff = v
-                while diff > max_tip_vol:
-
-                    # Logic for splitting volume in half once less than
-                    # 2*max_tip_volum
-                    if diff < max_tip_vol * 2:
-                        diff = diff / 2
-                        v = diff
-
-                        xfer = {
-                            "from": s,
-                            "to": d,
-                            "volume": v
-                        }
-
-                        # Volume accounting
-                        columnWise = False
-                        if st == "col":
-                            columnWise = True
-                        if d.container.container_type.col_count == 24:
-                            if columnWise:
-                                dest_wells = [d.container.wells_from(
-                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                            else:
-                                dest_wells = [d.container.wells_from(
-                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-                        else:
-                            dest_wells = d.container.wells_from(
-                                d, c * r, columnWise)
-                        if s.container.container_type.col_count == 24:
-                            if columnWise:
-                                source_wells = [s.container.wells_from(
-                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                            else:
-                                source_wells = [s.container.wells_from(
-                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-                        else:
-                            source_wells = s.container.wells_from(
-                                s, c * r, columnWise)
-                        for well in source_wells:
-                            if well.volume:
-                                well.volume -= v
-                        for well in dest_wells:
-                            if well.volume:
-                                well.volume += v
-                            else:
-                                well.volume = v
-
-                        # Adding liquid transfer options
-                        opt_list = ["aspirate_speed", "dispense_speed"]
-                        for option in opt_list:
-                            assign(xfer, option, eval(option))
-                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                                      "x_blowout_buffer"]
-                        for x_option in x_opt_list:
-                            assign(xfer, x_option, eval(x_option[2:]))
-                        if not mix_vol and (mix_before or mix_after):
-                            mix_vol = v * .5
-                        if mix_before:
-                            xfer["mix_before"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if mix_after:
-                            xfer["mix_after"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if v > Unit(0, 'microliter'):
-                            opts.append(xfer)
-                            oshp.append(sh)
-                            osta.append(st)
-
-                    # Logic for splitting out max_tip_vol if volume greater
-                    # than max_tip_vol
-                    else:
-                        diff -= max_tip_vol
-                        v = max_tip_vol
-
-                        xfer = {
-                            "from": s,
-                            "to": d,
-                            "volume": v
-                        }
-
-                        # Volume accounting
-                        columnWise = False
-                        if st == "col":
-                            columnWise = True
-                        if d.container.container_type.col_count == 24:
-                            if columnWise:
-                                dest_wells = [d.container.wells_from(
-                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                            else:
-                                dest_wells = [d.container.wells_from(
-                                    d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-                        else:
-                            dest_wells = d.container.wells_from(
-                                d, c * r, columnWise)
-                        if s.container.container_type.col_count == 24:
-                            if columnWise:
-                                source_wells = [s.container.wells_from(
-                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                            else:
-                                source_wells = [s.container.wells_from(
-                                    s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-                        else:
-                            source_wells = s.container.wells_from(
-                                s, c * r, columnWise)
-                        for well in source_wells:
-                            if well.volume:
-                                well.volume -= v
-                        for well in dest_wells:
-                            if well.volume:
-                                well.volume += v
-                            else:
-                                well.volume = v
-
-                        # Adding liquid transfer options
-                        opt_list = ["aspirate_speed", "dispense_speed"]
-                        for option in opt_list:
-                            assign(xfer, option, eval(option))
-                        x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                                      "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                                      "x_blowout_buffer"]
-                        for x_option in x_opt_list:
-                            assign(xfer, x_option, eval(x_option[2:]))
-                        if not mix_vol and (mix_before or mix_after):
-                            mix_vol = v * .5
-                        if mix_before:
-                            xfer["mix_before"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if mix_after:
-                            xfer["mix_after"] = {
-                                "volume": mix_vol,
-                                "repetitions": repetitions,
-                                "speed": flowrate
-                            }
-                        if v > Unit(0, 'microliter'):
-                            opts.append(xfer)
-                            oshp.append(sh)
-                            osta.append(st)
-                v = diff
-
-            self._remove_cover(s.container, "stamp")
-            self._remove_cover(d.container, "stamp")
-            xfer = {
-                "from": s,
-                "to": d,
-                "volume": v
-            }
-
-            # Volume accounting
-            columnWise = False
-            if st == "col":
-                columnWise = True
-            if d.container.container_type.col_count == 24:
-                if columnWise:
-                    dest_wells = [d.container.wells_from(
-                        d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                else:
-                    dest_wells = [d.container.wells_from(
-                        d, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-            else:
-                dest_wells = d.container.wells_from(d, c * r, columnWise)
-            if s.container.container_type.col_count == 24:
-                if columnWise:
-                    source_wells = [s.container.wells_from(
-                        s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 16) % 2 == 0]
-                else:
-                    source_wells = [s.container.wells_from(
-                        s, c * r * 4, columnWise)[x] for x in range(c * r * 4) if (x % 2) == (x // 24) % 2 == 0]
-            else:
-                source_wells = s.container.wells_from(s, c * r, columnWise)
-            for well in source_wells:
-                if well.volume:
-                    well.volume -= v
-            for well in dest_wells:
-                if well.volume:
-                    well.volume += v
-                else:
-                    well.volume = v
-
-            # Adding liquid transfer options
-            opt_list = ["aspirate_speed", "dispense_speed"]
-            for option in opt_list:
-                assign(xfer, option, eval(option))
-            x_opt_list = ["x_aspirate_source", "x_dispense_target",
-                          "x_pre_buffer", "x_disposal_vol", "x_transit_vol",
-                          "x_blowout_buffer"]
-            for x_option in x_opt_list:
-                assign(xfer, x_option, eval(x_option[2:]))
-            if not mix_vol and (mix_before or mix_after):
-                mix_vol = v * .5
-            if mix_before:
-                xfer["mix_before"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if mix_after:
-                xfer["mix_after"] = {
-                    "volume": mix_vol,
-                    "repetitions": repetitions,
-                    "speed": flowrate
-                }
-            if v > Unit(0, 'microliter'):
-                opts.append(xfer)
-                oshp.append(sh)
-                osta.append(st)
-
-        trans = {}
-
-        # one_tip appends all transfers into one transfer group
-        if one_tip:
-            trans["transfer"] = opts
-            assign(trans, "shape", oshp[0])
-            assign(trans, "tip_layout", 96)
-            stamp_type = osta[0]
-
-            if stamp_type == "full":
-                maxTransfers = 4
-                maxContainers = 3
-            elif stamp_type == "col":
-                maxTransfers = 12
-                maxContainers = 2
-            else:
-                maxTransfers = 8
-                maxContainers = 2
-            if new_group:
-                self.instructions.append(Stamp([trans]))
-            elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
-                # Append to existing instruction
-                self.instructions[-1].groups.append(trans)
-            else:
-                # Initialize new stamp list/instruction
-                self.instructions.append(Stamp([trans]))
-
-        else:
-            for x, y, z in list(zip(opts, oshp, osta)):
-                trans = {}
-                trans["transfer"] = [x]
-                assign(trans, "shape", y)
-                assign(trans, "tip_layout", 96)
-                stamp_type = z
-
-                if stamp_type == "full":
-                    maxTransfers = 4
-                    maxContainers = 3
-                elif stamp_type == "col":
-                    maxTransfers = 12
-                    maxContainers = 2
-                else:
-                    maxTransfers = 8
-                    maxContainers = 2
-                if new_group:
-                    self.instructions.append(Stamp([trans]))
-                elif (len(self.instructions) > 0 and self.instructions[-1].op == "stamp" and check_stamp_append(trans, self.instructions[-1].groups, maxTransfers, maxContainers, volumeSwitch)):
-                    # Append to existing instruction
-                    self.instructions[-1].groups.append(trans)
-                else:
-                    # Initialize new stamp list/instruction
-                    self.instructions.append(Stamp([trans]))
-
-    def illuminaseq(self, flowcell, lanes, sequencer, mode, index,
-                    library_size, dataref, cycles=None):
+    def illuminaseq(self, flowcell, lanes, sequencer, mode, index, library_size,
+                    dataref, cycles=None):
         """
         Load aliquots into specified lanes for Illumina sequencing.
         The specified aliquots should already contain the appropriate mix for
@@ -2403,114 +1182,127 @@ class Protocol(object):
 
         Example Usage:
 
-          .. code-block:: python
+        .. code-block:: python
 
-              p = Protocol()
-              sample_wells = p.ref(
-                  "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
+            p = Protocol()
+            sample_wells = p.ref(
+                "test_plate", None, "96-pcr", discard=True).wells_from(0, 8)
 
-              p.illuminaseq("PE",
-                            [
-                                {"object": sample_wells[0], "library_concentration": 1.0},
-                                {"object": sample_wells[1], "library_concentration": 5.32},
-                                {"object": sample_wells[2], "library_concentration": 54},
-                                {"object": sample_wells[3], "library_concentration": 20},
-                                {"object": sample_wells[4], "library_concentration": 23},
-                                {"object": sample_wells[5], "library_concentration": 23},
-                                {"object": sample_wells[6], "library_concentration": 21},
-                                {"object": sample_wells[7], "library_concentration": 62}
-                            ],
-                            "hiseq", "rapid", 'none', 250, "my_illumina")
+            p.illuminaseq(
+                "PE",
+                [
+                    {"object": sample_wells[0], "library_concentration": 1.0},
+                    {"object": sample_wells[1], "library_concentration": 5.32},
+                    {"object": sample_wells[2], "library_concentration": 54},
+                    {"object": sample_wells[3], "library_concentration": 20},
+                    {"object": sample_wells[4], "library_concentration": 23},
+                    {"object": sample_wells[5], "library_concentration": 23},
+                    {"object": sample_wells[6], "library_concentration": 21},
+                    {"object": sample_wells[7], "library_concentration": 62}
+                ],
+                "hiseq", "rapid", 'none', 250, "my_illumina")
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "my_illumina",
-                  "index": "none",
-                  "lanes": [
-                    {
-                      "object": "test_plate/0",
-                      "library_concentration": 1.0
-                    },
-                    {
-                      "object": "test_plate/1",
-                      "library_concentration": 5.32
-                    },
-                    {
-                      "object": "test_plate/2",
-                      "library_concentration": 54
-                    },
-                    {
-                      "object": "test_plate/3",
-                      "library_concentration": 20
-                    },
-                    {
-                      "object": "test_plate/4",
-                      "library_concentration": 23
-                    },
-                    {
-                      "object": "test_plate/5",
-                      "library_concentration": 23
-                    },
-                    {
-                      "object": "test_plate/6",
-                      "library_concentration": 21
-                    },
-                    {
-                      "object": "test_plate/7",
-                      "library_concentration": 62
-                    }
-                  ],
-                  "flowcell": "PE",
-                  "mode": "mid",
-                  "sequencer": "hiseq",
-                  "library_size": 250,
-                  "op": "illumina_sequence"
+                    "dataref": "my_illumina",
+                    "index": "none",
+                    "lanes": [
+                        {
+                            "object": "test_plate/0",
+                            "library_concentration": 1
+                        },
+                        {
+                            "object": "test_plate/1",
+                            "library_concentration": 5.32
+                        },
+                        {
+                            "object": "test_plate/2",
+                            "library_concentration": 54
+                        },
+                        {
+                            "object": "test_plate/3",
+                            "library_concentration": 20
+                        },
+                        {
+                            "object": "test_plate/4",
+                            "library_concentration": 23
+                        },
+                        {
+                            "object": "test_plate/5",
+                            "library_concentration": 23
+                        },
+                        {
+                            "object": "test_plate/6",
+                            "library_concentration": 21
+                        },
+                        {
+                            "object": "test_plate/7",
+                            "library_concentration": 62
+                        }
+                    ],
+                    "flowcell": "PE",
+                    "mode": "mid",
+                    "sequencer": "hiseq",
+                    "library_size": 250,
+                    "op": "illumina_sequence"
                 }
-              ]
+            ]
 
 
         Parameters
         ----------
         flowcell : str
-          Flowcell designation: "SR" or " "PE"
-        lanes : list of dicts
+            Flowcell designation: "SR" or " "PE"
+        lanes : list(dict)
 
-            .. code-block:: json
+            .. code-block:: none
 
-              "lanes": [{
+                "lanes": [
+                {
                     "object": aliquot, Well,
                     "library_concentration": decimal, // ng/uL
-                  },
-                  {...}]
+                },
+                {...}]
 
         sequencer : str
-          Sequencer designation: "miseq", "hiseq" or "nextseq"
+            Sequencer designation: "miseq", "hiseq" or "nextseq"
         mode : str
-          Mode designation: "rapid", "mid" or "high"
+            Mode designation: "rapid", "mid" or "high"
         index : str
-          Index designation: "single", "dual" or "none"
-        library_size: integer
+            Index designation: "single", "dual" or "none"
+        library_size: int
             Library size expressed as an integer of basepairs
         dataref : str
-          Name of sequencing dataset that will be returned.
+            Name of sequencing dataset that will be returned.
+        cycles : Enum({"read_1", "read_2", "index_1", "index_2"})
+            Parameter specific to Illuminaseq read-length or number of
+            sequenced bases. Refer to the ASC for more details
+
+        Returns
+        -------
+        IlluminaSeq
+            Returns the :py:class:`autoprotocol.instruction.IlluminaSeq`
+            instruction created from the specified parameters
 
         Raises
         ------
-        TypeError:
-          If index and dataref are not of type str.
-        TypeError:
-          If library_concentration is not a number.
-        TypeError:
-          If library_size is not an integer.
-        ValueError:
-          If flowcell, sequencer, mode, index are not of type a valid option.
-        ValueError:
-          If number of lanes specified is more than the maximum lanes of the
-          specified type of sequencer.
+        TypeError
+            If index and dataref are not of type str.
+        TypeError
+            If library_concentration is not a number.
+        TypeError
+            If library_size is not an integer.
+        ValueError
+            If flowcell, sequencer, mode, index are not of type a valid option.
+        ValueError
+            If number of lanes specified is more than the maximum lanes of the
+            specified type of sequencer.
+        KeyError
+            Invalid keys specified for cycles parameter
         """
 
         valid_flowcells = ["PE", "SR"]
@@ -2539,28 +1331,31 @@ class Protocol(object):
         max_cycles_ind = 12
 
         if flowcell not in valid_flowcells:
-            raise ValueError("Illumina sequencing flowcell type must be one "
-                             "of: {}}.".format(', '.join(valid_flowcells)))
+            raise ValueError("Illumina sequencing flowcell type must be one of:"
+                             " {}.".format(', '.join(valid_flowcells)))
         if sequencer not in valid_sequencers.keys():
             raise ValueError("Illumina sequencer must be one of: {}."
                              "".format(', '.join(valid_sequencers.keys())))
         if not isinstance(lanes, list):
             raise TypeError(
-                "Illumina sequencing lanes must be a list of dicts")
+                "Illumina sequencing lanes must be a list(dict)"
+            )
 
         for l in lanes:
             if not isinstance(l, dict):
                 raise TypeError(
-                    "Illumina sequencing lanes must be a list of dicts")
-            if not all(k in l.keys() for k in ["object", "library_concentration"]):
+                    "Illumina sequencing lanes must be a list(dict)"
+                )
+            if not all(k in l.keys() for k in [
+                    "object", "library_concentration"]):
                 raise TypeError("Each Illumina sequencing lane must contain an "
                                 "'object' and a 'library_concentration'")
             if not isinstance(l["object"], Well):
-                raise TypeError("Each Illumina sequencing object must be of type "
-                                "Well")
+                raise TypeError("Each Illumina sequencing object must be of "
+                                "type Well")
             if not isinstance(l["library_concentration"], (float, int)):
-                raise TypeError("Each Illumina sequencing library_concentration "
-                                "must be a number.")
+                raise TypeError("Each Illumina sequencing "
+                                "library_concentration must be a number.")
         if len(lanes) > valid_sequencers[sequencer]["max_lanes"]:
             raise ValueError("The type of sequencer selected ({}) only has {} "
                              "lane(s).  You specified {}. Please submit "
@@ -2584,7 +1379,8 @@ class Protocol(object):
             raise TypeError("dataref: %s, must be a string" % dataref)
         if not isinstance(library_size, int):
             raise TypeError(
-                "library_size: %s, must be an integer." % library_size)
+                "library_size: %s, must be an integer." % library_size
+            )
 
         if cycles:
             if not isinstance(cycles, dict):
@@ -2594,32 +1390,45 @@ class Protocol(object):
                     ', '.join(valid_cycles)))
             if "read_1" not in cycles.keys():
                 raise ValueError(
-                    "If specifying cycles, 'read_1' must be designated.")
+                    "If specifying cycles, 'read_1' must be designated."
+                )
             if flowcell == "SR" and "read_2" in cycles.keys():
-                raise RuntimeError("SR does not have a second read: 'read_2'.")
+                raise ValueError("SR does not have a second read: 'read_2'.")
             if not all(isinstance(i, int) for i in cycles.values()):
                 raise ValueError("Cycles must be specified as an integer.")
             for read in ["read_1", "read_2"]:
                 if cycles.get(read):
-                    if cycles[read] > valid_sequencers[sequencer]["max_cycles_read"]:
-                        raise ValueError("The maximum number of cycles for {} is {}."
-                                         "".format(read,
-                                                   valid_sequencers[sequencer]["max_cycles_read"]))
+                    if (cycles[read] >
+                            valid_sequencers[sequencer]["max_cycles_read"]):
+                        raise ValueError(
+                            "The maximum number of cycles for "
+                            "{} is {}.".format(
+                                read,
+                                valid_sequencers[sequencer]["max_cycles_read"])
+                        )
             for ind in ["index_1", "index_2"]:
                 if cycles.get(ind):
                     if cycles[ind] > max_cycles_ind:
-                        raise ValueError("The maximum number of cycles for {} is {}."
-                                         "".format(ind, max_cycles_ind))
+                        raise ValueError(
+                            "The maximum number of cycles for "
+                            "{} is {}.".format(ind, max_cycles_ind)
+                        )
                 # set index 1 and 2 to default 0 if not otherwise specified
                 else:
                     cycles[ind] = 0
 
-        self.instructions.append(IlluminaSeq(flowcell, lanes, sequencer, mode,
-                                             index, library_size, dataref, cycles))
+        return self._append_and_return(
+            IlluminaSeq(
+                flowcell, lanes, sequencer, mode,
+                index, library_size, dataref, cycles
+            )
+        )
 
+    # pylint: disable=redefined-builtin
     def sangerseq(self, cont, wells, dataref, type="standard", primer=None):
         """
-        Send the indicated wells of the container specified for Sanger sequencing.
+        Send the indicated wells of the container specified for Sanger
+        sequencing.
         The specified wells should already contain the appropriate mix for
         sequencing, including primers and DNA according to the instructions
         provided by the vendor.
@@ -2640,44 +1449,58 @@ class Protocol(object):
 
           Autoprotocol Output:
 
-          .. code-block:: json
+          .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "seq_data_022415",
-                  "object": "sample_plate",
-                  "wells": [
-                    "A1",
-                    "A2",
-                    "A3",
-                    "A4",
-                    "A5"
-                  ],
-                  "op": "sanger_sequence"
+                    "dataref": "seq_data_022415",
+                    "object": "sample_plate",
+                    "wells": [
+                        "A1",
+                        "A2",
+                        "A3",
+                        "A4",
+                        "A5"
+                    ],
+                    "op": "sanger_sequence"
                 }
-              ]
+            ]
 
 
         Parameters
         ----------
-        cont : Container, str
-          Container with well(s) that contain material to be sequenced.
-        type : str
-          Type of sequencing reaction to take place ("standard" or "rca"),
-          defaults to "standard"
-        wells : list, WellGroup, Well
+        cont : Container or str
+            Container with well(s) that contain material to be sequenced.
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        primer : container
-          Tube containing sufficient primer for all RCA reactions.  This field
-          will be ignored if you specify the sequencing type as "standard".
-          Tube containing sufficient primer for all RCA reactions
         dataref : str
-          Name of sequencing dataset that will be returned.
+            Name of sequencing dataset that will be returned.
+        type: Enum({"standard", "rca"})
+            Sanger sequencing type
+        primer : Container, optional
+            Tube containing sufficient primer for all RCA reactions.  This field
+            will be ignored if you specify the sequencing type as "standard".
+            Tube containing sufficient primer for all RCA reactions
+
+        Returns
+        -------
+        SangerSeq
+            Returns the :py:class:`autoprotocol.instruction.SangerSeq`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        RuntimeError
+            No primer location specified for rca sequencing type
+        ValueError
+            Wells belong to more than one container
+        TypeError
+            Invalid input type for wells
 
         """
-        type = type.lower()
-        if type == "rca" and not primer:
+        seq_type = type.lower()
+        if seq_type == "rca" and not primer:
             raise RuntimeError("You must specify the location of primer for "
                                "RCA sequencing reactions.")
 
@@ -2688,108 +1511,30 @@ class Protocol(object):
             container = set([w.container for w in wells])
             if len(container) > 1:
                 raise ValueError(
-                    "All wells need to be on one container for SangerSeq")
+                    "All wells need to be on one container for SangerSeq"
+                )
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. SangerSeq wells accepts either a "
-                             "Well, a WellGroup, or a list of well indices.")
-        self.instructions.append(SangerSeq(cont, wells, dataref, type, primer))
+            raise TypeError("Unknown input. SangerSeq wells accepts either a"
+                             "Well, a WellGroup, or a list of well indices")
 
-    def mix(self, well, volume="50:microliter", speed="100:microliter/second",
-            repetitions=10, one_tip=False):
-        """
-        Mix specified well using a new pipette tip
+        return self._append_and_return(
+            SangerSeq(cont, wells, dataref, type, primer))
 
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            sample_source = p.ref("sample_source",
-                                  None,
-                                  "micro-1.5",
-                                  storage="cold_20")
-
-            p.mix(sample_source.well(0), volume="200:microliter",
-                  repetitions=25)
-
-        Autoprotocol Output:
-
-        .. code-block:: json
-
-            "instructions": [
-                {
-                  "groups": [
-                    {
-                      "mix": [
-                        {
-                          "volume": "200:microliter",
-                          "well": "sample_source/0",
-                          "repetitions": 25,
-                          "speed": "100:microliter/second"
-                        }
-                      ]
-                    }
-                  ],
-                  "op": "pipette"
-                }
-              ]
-            }
-
-
-        Parameters
-        ----------
-        well : Well, WellGroup, list of Wells
-            Well(s) to be mixed. If a WellGroup is passed, each well in the
-            group will be mixed using the specified parameters.
-        volume : str, Unit, optional
-            volume of liquid to be aspirated and expelled during mixing
-        speed : str, Unit, optional
-            flowrate of liquid during mixing
-        repetitions : int, optional
-            number of times to aspirate and expell liquid during mixing
-        one_tip : bool
-            mix all wells with a single tip
-
-        """
-        # Check valid well inputs
-        if not is_valid_well(well):
-            raise TypeError("Mix well must be of type Well, list of Wells, or "
-                            "WellGroup.")
-        well = WellGroup(well)
-        if one_tip:
-            group = []
-            for w in well.wells:
-                self._remove_cover(w.container, "mix")
-                opts = {
-                    "well": w,
-                    "volume": volume,
-                    "speed": speed,
-                    "repetitions": repetitions
-                }
-                group.append(opts)
-            self._pipette([{"mix": group}])
-        else:
-            for w in well.wells:
-                self._remove_cover(w.container, "mix")
-                opts = {
-                    "well": w,
-                    "volume": volume,
-                    "speed": speed,
-                    "repetitions": repetitions
-                }
-                self._pipette([{"mix": [opts]}])
-
-    def dispense(self, ref, reagent, columns, speed_percentage=None,
-                 is_resource_id=False, step_size="5:microliter",
-                 x_cassette=None):
+    def dispense(self, ref, reagent, columns, is_resource_id=False,
+                 step_size="5:uL", flowrate=None, nozzle_position=None,
+                 pre_dispense=None, shape=None, shake_after=None):
         """
         Dispense specified reagent to specified columns.
 
         Example Usage:
 
         .. code-block:: python
+
+            from autoprotocol.liquid_handle.liquid_handle_builders import *
+            from autoprotocol.instructions import Dispense
+            from autoprotocol import Protocol
 
             p = Protocol()
             sample_plate = p.ref("sample_plate",
@@ -2799,24 +1544,34 @@ class Protocol(object):
 
             p.dispense(sample_plate,
                        "water",
-                       [{"column": 0, "volume": "10:microliter"},
-                        {"column": 1, "volume": "20:microliter"},
-                        {"column": 2, "volume": "30:microliter"},
-                        {"column": 3, "volume": "40:microliter"},
-                        {"column": 4, "volume": "50:microliter"},
-                        {"column": 5, "volume": "60:microliter"},
-                        {"column": 6, "volume": "70:microliter"},
-                        {"column": 7, "volume": "80:microliter"},
-                        {"column": 8, "volume": "90:microliter"},
-                        {"column": 9, "volume": "100:microliter"},
-                        {"column": 10, "volume": "110:microliter"},
-                        {"column": 11, "volume": "120:microliter"}
-                       ])
+                       Dispense.builders.columns(
+                           [Dispense.builders.column(0, "10:uL"),
+                            Dispense.builders.column(1, "20:uL"),
+                            Dispense.builders.column(2, "30:uL"),
+                            Dispense.builders.column(3, "40:uL"),
+                            Dispense.builders.column(4, "50:uL")
+                           ])
+                       )
 
+            p.dispense(
+                sample_plate,
+                "water",
+                Dispense.builders.columns(
+                    [Dispense.builders.column(0, "10:uL")]
+                ),
+                Dispense.builders.nozzle_position(
+                    position_x=Unit("1:mm"),
+                    position_y=Unit("2:mm"),
+                    position_z=Unit("20:mm")
+                ),
+                shape_builder(
+                    rows=8, columns=1, format="SBS96"
+                )
+            )
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
@@ -2842,196 +1597,201 @@ class Protocol(object):
                         {
                             "column": 4,
                             "volume": "50:microliter"
-                        },
-                        {
-                            "column": 5,
-                            "volume": "60:microliter"
-                        },
-                        {
-                            "column": 6,
-                            "volume": "70:microliter"
-                        },
-                        {
-                            "column": 7,
-                            "volume": "80:microliter"
-                        },
-                        {
-                            "column": 8,
-                            "volume": "90:microliter"
-                        },
-                        {
-                            "column": 9,
-                            "volume": "100:microliter"
-                        },
-                        {
-                            "column": 10,
-                            "volume": "110:microliter"
-                        },
-                        {
-                            "column": 11,
-                            "volume": "120:microliter"
                         }
                     ],
                     "op": "dispense"
-                }
+                },
+                {
+                    "reagent": "water",
+                    "object": "sample_plate",
+                    "columns": [
+                        {
+                            "column": 0,
+                            "volume": "10:microliter"
+                        }
+                    ],
+                    "nozzle_position" : {
+                        "position_x" : "1:millimeter",
+                        "position_y" : "2:millimeter",
+                        "position_z" : "20:millimeter"
+                    },
+                    "shape" : {
+                        "rows" : 8,
+                        "columns" : 1,
+                        "format" : "SBS96"
+                    }
+                    "op": "dispense"
+                },
             ]
 
         Parameters
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str, well
+        reagent : str or well
             Reagent to be dispensed. Use a string to specify the name or
             resource_id (see below) of the reagent to be dispensed.
             Alternatively, use a well to specify that the dispense operation
             must be executed using a specific aliquot as the dispense source.
-        columns : list
-            Columns to be dispensed to, in the form of a list of dicts
+        columns : list(dict("column": int, "volume": str/Unit))
+            Columns to be dispensed to, in the form of a list(dict)
             specifying the column number and the volume to be dispensed to that
             column. Columns are expressed as integers indexed from 0.
             [{"column": <column num>, "volume": <volume>}, ...]
-        speed_percentage : int, optional
-            Integer between 1 and 100 that represents the percentage of the
-            maximum speed at which liquid is dispensed from the reagent
-            dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
-        step_size : str, Unit, optional
+        step_size : str or Unit, optional
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
             multiple of the step_size. Currently, step_size must be either
             5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
-        x_cassette : str, optional
-            Specifies a specific cassette to be used with this instruction.
-            Cassette will be checked against a list of allowed values. Each
-            cassette has a pre-defined value for step_size, and certain
-            cassettes may require human execution.
+        flowrate : str or Unit, optional
+            The rate at which liquid is dispensed into the ref in units
+            of volume/time.
+        nozzle_position : dict, optional
+            A dict represent nozzle offsets from the bottom middle of the
+            plate's wells. see Dispense.builders.nozzle_position; specified as
+            {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
+        pre_dispense : str or Unit, optional
+            The volume of reagent to be dispensed per-nozzle into waste
+            immediately prior to dispensing into the ref.
+        shape: dict, optional
+            The shape of the dispensing head to be used for the dispense.
+            See liquid_handle_builders.shape_builder; specified as
+            {"rows": int, "columns": int, "format": str} with format being a
+            valid SBS format.
+        shake_after: dict, optional
+            Parameters that specify how a plate should be shaken at the very
+            end of the instruction execution. See Dispense.builders.shake_after.
+
+        Returns
+        -------
+        Dispense
+            Returns the :py:class:`autoprotocol.instruction.Dispense`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. ref is not of type Container
+        ValueError
+            Columns specified is invalid for this container type
+        ValueError
+            Invalid step-size given
+        ValueError
+            Invalid pre-dispense volume
 
         """
-        # Initialize parameters to simplify parsing
-        x_human = False
-        step_size_unit = None
+        _VALID_STEP_SIZES = [Unit(5, "uL"), Unit(0.5, "uL")]
+        _DEFAULT_NOZZLE_COUNT = 8
 
-        # Parse destination container
         if not isinstance(ref, Container):
-            raise TypeError("Ref must be of type Container.")
-        self._remove_cover(ref, "dispense to")
+            raise TypeError(
+                "ref must be a Container but it was {}.".format(type(ref)))
 
-        # Parse speed_percentage
-        if (speed_percentage is not None and
-                (speed_percentage > 100 or speed_percentage < 1)):
-            raise RuntimeError("Invalid speed percentage specified.")
+        columns = Dispense.builders.columns(columns)
 
-        # Parse columns
-        if not isinstance(columns, list):
-            raise TypeError("Columns is not of type 'list'.")
-        for c in columns:
-            wells = WellGroup(
-                ref.wells_from(
-                    c["column"],
-                    ref.container_type.row_count(),
-                    columnwise=True
-                )
-            )
-            for w in wells:
-                if w.volume:
-                    w.volume += Unit.fromstring(c["volume"]).to("ul")
-                else:
-                    w.set_volume(Unit(c["volume"]).to("ul"))
+        ref_cols = list(range(ref.container_type.col_count))
+        if not all(_["column"] in ref_cols for _ in columns):
+            raise ValueError(
+                "Specified dispense columns: {} contains a column index that "
+                "is outside of the valid columns: {} for ref: {}."
+                "".format(columns, ref_cols, ref))
 
-        # Parse reagent
+        # pre-evaluate all parameters before making any changes to the Protocol
+        if flowrate is not None:
+            flowrate = parse_unit(flowrate, "uL/s")
+        if nozzle_position is not None:
+            nozzle_position = Dispense.builders.nozzle_position(
+                **nozzle_position)
+        if pre_dispense is not None:
+            pre_dispense = parse_unit(pre_dispense, "uL")
+        if shape is not None:
+            shape = shape_builder(**shape)
+        if shake_after is not None:
+            shake_after = Dispense.builders.shake_after(**shake_after)
+
+        nozzle_count = (
+            shape["rows"] * shape["columns"] if shape else _DEFAULT_NOZZLE_COUNT
+        )
+
+        if step_size is not None:
+            step_size = parse_unit(step_size, "uL")
+            if step_size not in _VALID_STEP_SIZES:
+                raise ValueError(
+                    "specified step_size was {} but it must be in {}"
+                    "".format(step_size, _VALID_STEP_SIZES))
+
+            for c in columns:
+                if c["volume"] % step_size != Unit("0:uL"):
+                    raise ValueError(
+                        "Dispense volume must be a multiple of the step size "
+                        "{}, but column {} does not meet these requirements."
+                        "".format(step_size, c))
+
+            if pre_dispense is not None:
+                invalid_pre_dispense_range = pre_dispense < 2 * step_size
+                if invalid_pre_dispense_range and pre_dispense != Unit(0, "uL"):
+                    raise ValueError(
+                        "Dispense pre_dispense must either be 0:uL or at "
+                        "least 2 * step_size: {} but it was {}."
+                        "".format(step_size, pre_dispense))
+                if pre_dispense % step_size != Unit(0, "uL"):
+                    raise ValueError(
+                        "Dispense pre_dispense must be a multiple of "
+                        "step_size: {} but it was {}."
+                        "".format(step_size, pre_dispense))
+
+        row_count = ref.container_type.row_count()
         if isinstance(reagent, Well):
-            # x_humanize dispense step
-            x_human = True
-            # Uncover reagent source
             self._remove_cover(reagent.container, "dispense from")
-            # Volume tracking
-            total_vol_dispensed = sum([Unit(c["volume"]) for c in columns]) * ref.container_type.row_count()
+
+            # Volume accounting
+            total_vol_dispensed = (
+                sum([Unit(c["volume"]) for c in columns]) * row_count)
+            if pre_dispense is not None:
+                total_vol_dispensed += nozzle_count * pre_dispense
             if reagent.volume:
                 reagent.volume -= total_vol_dispensed
             else:
                 reagent.volume = -total_vol_dispensed
+
+            reagent, resource_id, reagent_source = None, None, reagent
         else:
             if not isinstance(reagent, basestring):
-                raise TypeError("reagent must be a Well or a string.")
+                raise TypeError(
+                    "reagent: {} must be a Well or string but it was: {}."
+                    "".format(reagent, type(reagent)))
+            if is_resource_id:
+                reagent, resource_id, reagent_source = None, reagent, None
+            else:
+                reagent, resource_id, reagent_source = reagent, None, None
 
-        # Parse step_size
-        allowed_step_sizes = {
-            0.5: {"x_human": True},
-            5.0: {"x_human": False}
-        }
+        self._remove_cover(ref, "dispense to")
 
-        if step_size:
-            # Cast step_size as a volume unit, raising an error if this fails
-            try:
-                step_size_unit = Unit(step_size).to("ul")
-            except:
-                raise TypeError("step_size must be a volume Unit object, or a string representation of a volume Unit")
+        for c in columns:
+            wells = ref.wells_from(c["column"], row_count, columnwise=True)
+            for w in wells:
+                if w.volume:
+                    w.volume += c["volume"]
+                else:
+                    w.volume = c["volume"]
 
-            # step_size must be in the allowed list of options. If not, raise an error.
-            if step_size_unit._magnitude not in allowed_step_sizes:
-                raise ValueError("step_size (in microliters) must be one of the following values: {}".format(
-                    allowed_step_sizes.keys()
-                    )
-                )
-
-            # Set parameters as required by selected step_size
-            step_size_info = allowed_step_sizes[step_size_unit._magnitude]
-            x_human = step_size_info["x_human"] or x_human
-
-            # Each dispense volume must be an integer multiple of the step_size. If not, raise an error.
-            vol_errors = []
-            for c in columns:
-                if not (Unit(c["volume"]) / step_size_unit)._magnitude.is_integer():
-                    vol_errors.append(str(Unit(c["volume"])))
-            if len(vol_errors) > 0:
-                raise RuntimeError(
-                    "Dispense volume must be a multiple of the step size. "
-                    "This is not true for the "
-                    "following volumes: {} ".format(vol_errors)
-                )
-
-        # Parse x_cassette
-        allowed_x_cassettes = {
-            "ThermoFisher #24073295": {"x_human": True, "step_size": Unit(0.5, "microliter")}
-        }
-
-        if x_cassette:
-            # x_cassette must be in the allowed list of options. If not, raise an error.
-            if x_cassette not in allowed_x_cassettes:
-                raise ValueError("x_cassette must be one of the following values: {}".format(
-                    allowed_x_cassettes.keys()
-                    )
-                )
-
-            # Set parameters as required by selected x_cassette
-            cassette_info = allowed_x_cassettes[x_cassette]
-            x_human = cassette_info["x_human"] or x_human
-            if step_size_unit != cassette_info["step_size"]:
-                raise ValueError("Step size for this cassette must be %s" % str(cassette_info["step_size"]))
-
-        # Append dispense instruction
-        self.instructions.append(
+        return self._append_and_return(
             Dispense(
-                ref,
-                reagent,
-                columns,
-                speed_percentage,
-                is_resource_id,
-                step_size_unit
+                object=ref, columns=columns, reagent=reagent,
+                resource_id=resource_id, reagent_source=reagent_source,
+                step_size=step_size, flowrate=flowrate,
+                nozzle_position=nozzle_position, pre_dispense=pre_dispense,
+                shape=shape, shake_after=shake_after
             )
         )
 
-        # Modify instruction with x_parameters, as necessary
-        if x_human:
-            self.instructions[-1].data["x_human"] = True
-        if x_cassette:
-            self.instructions[-1].data["x_cassette"] = x_cassette
-
-    def dispense_full_plate(self, ref, reagent, volume, speed_percentage=None,
-                            is_resource_id=False, step_size="5:microliter",
-                            x_cassette=None):
+    def dispense_full_plate(self, ref, reagent, volume, is_resource_id=False,
+                            step_size="5:uL", flowrate=None,
+                            nozzle_position=None, pre_dispense=None,
+                            shape=None, shake_after=None):
         """
         Dispense the specified amount of the specified reagent to every well
         of a container using a reagent dispenser.
@@ -3052,63 +1812,63 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "reagent": "water",
-                  "object": "sample_plate",
-                  "columns": [
-                    {
-                      "column": 0,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 1,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 2,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 3,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 4,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 5,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 6,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 7,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 8,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 9,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 10,
-                      "volume": "100:microliter"
-                    },
-                    {
-                      "column": 11,
-                      "volume": "100:microliter"
-                    }
-                  ],
-                  "op": "dispense"
+                    "reagent": "water",
+                    "object": "sample_plate",
+                    "columns": [
+                        {
+                            "column": 0,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 1,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 2,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 3,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 4,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 5,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 6,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 7,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 8,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 9,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 10,
+                            "volume": "100:microliter"
+                        },
+                        {
+                            "column": 11,
+                            "volume": "100:microliter"
+                        }
+                    ],
+                    "op": "dispense"
                 }
             ]
 
@@ -3118,43 +1878,54 @@ class Protocol(object):
         ----------
         ref : Container
             Container for reagent to be dispensed to.
-        reagent : str, well
+        reagent : str or Well
             Reagent to be dispensed. Use a string to specify the name or
             resource_id (see below) of the reagent to be dispensed.
             Alternatively, use a well to specify that the dispense operation
             must be executed using a specific aliquot as the dispense source.
-        volume : Unit, str
+        volume : Unit or str
             Volume of reagent to be dispensed to each well
-        speed_percentage : int, optional
-            Integer between 1 and 100 that represents the percentage of the
-            maximum speed at which liquid is dispensed from the reagent
-            dispenser.
         is_resource_id : bool, optional
             If true, interprets reagent as a resource ID
-        step_size : str, Unit, optional
+        step_size : str or Unit, optional
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
             multiple of the step_size. Currently, step_size must be either
             5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
-        x_cassette : str, optional
-            Specifies a specific cassette to be used with this instruction.
-            Cassette will be checked against a list of allowed values. Each
-            cassette has a pre-defined value for step_size, and certain
-            cassettes may require human execution.
+        flowrate : str or Unit, optional
+            The rate at which liquid is dispensed into the ref in units
+            of volume/time.
+        nozzle_position : dict, optional
+            A dict represent nozzle offsets from the bottom middle of the
+            plate's wells. see Dispense.builders.nozzle_position; specified as
+            {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
+        pre_dispense : str or Unit, optional
+            The volume of reagent to be dispensed per-nozzle into waste
+            immediately prior to dispensing into the ref.
+        shape: dict, optional
+            The shape of the dispensing head to be used for the dispense.
+            See liquid_handle_builders.shape_builder; specified as
+            {"rows": int, "columns": int, "format": str} with format being a
+            valid SBS format.
+        shake_after: dict, optional
+            Parameters that specify how a plate should be shaken at the very
+            end of the instruction execution. See Dispense.builders.shake_after.
+
+        Returns
+        -------
+        Dispense
+            Returns the :py:class:`autoprotocol.instruction.Dispense`
+            instruction created from the specified parameters
 
         """
-        if not isinstance(ref, Container):
-            raise TypeError("Ref must be of type Container.")
-        self._remove_cover(ref, "dispense to")
-        if (speed_percentage is not None and
-                (speed_percentage > 100 or speed_percentage < 1)):
-            raise RuntimeError("Invalid speed percentage specified.")
-        columns = []
-        for col in range(0, ref.container_type.col_count):
-            columns.append({"column": col, "volume": volume})
-        self.dispense(ref, reagent, columns, speed_percentage, is_resource_id,
-                      step_size, x_cassette)
+        columns = Dispense.builders.columns(
+            [{"column": col, "volume": volume}
+             for col in range(ref.container_type.col_count)])
+
+        return self.dispense(ref, reagent, columns, is_resource_id,
+                             step_size, flowrate, nozzle_position,
+                             pre_dispense, shape, shake_after)
 
     def spin(self, ref, acceleration, duration, flow_direction=None,
              spin_direction=None):
@@ -3171,23 +1942,23 @@ class Protocol(object):
                                  "96-flat",
                                  storage="warm_37")
 
-            p.spin(sample_plate, "1000:g", "20:minute", flow_direction="outward)
+            p.spin(sample_plate, "1000:g", "20:minute", flow_direction="outward")
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "acceleration": "1000:g",
-                  "duration": "20:minute",
-                  "flow_direction": "outward",
-                  "spin_direction": [
-                    "cw",
-                    "ccw"
-                  ]
-                  "object": "sample_plate",
-                  "op": "spin"
+                    "acceleration": "1000:g",
+                    "duration": "20:minute",
+                    "flow_direction": "outward",
+                    "spin_direction": [
+                        "cw",
+                        "ccw"
+                    ]
+                    "object": "sample_plate",
+                    "op": "spin"
                 }
             ]
 
@@ -3198,13 +1969,13 @@ class Protocol(object):
         acceleration: str
             Acceleration to be applied to the plate, in units of `g` or
             `meter/second^2`.
-        duration: str, Unit
+        duration: str or Unit
             Length of time that acceleration should be applied.
         flow_direction: str
             Specifies the direction contents will tend toward with respect to
             the container. Valid directions are "inward" and "outward", default
             value is "inward".
-        spin_direction: list of strings
+        spin_direction: list(str)
             A list of "cw" (clockwise), "cww" (counterclockwise). For each
             element in the list, the container will be spun in the stated
             direction for the set "acceleration" and "duration". Default values
@@ -3213,20 +1984,28 @@ class Protocol(object):
             ["cw", "ccw"]. If "flow_direction" is "inward", then
             "spin_direction" defaults to ["cw"].
 
+        Returns
+        -------
+        Spin
+            Returns the :py:class:`autoprotocol.instruction.Spin`
+            instruction created from the specified parameters
+
         Raises
         ------
-        TypeError:
+        TypeError
             If ref to spin is not of type Container.
-        TypeError:
+        TypeError
             If spin_direction or flow_direction are not properly formatted.
-        ValueError:
+        ValueError
             If spin_direction or flow_direction do not have appropriate values.
 
         """
-        if flow_direction is not None and flow_direction not in ["inward", "outward"]:
-            raise ValueError("The specified value for flow_direction was not "
-                             "valid. If specifying, please choose either "
-                             "'inward' or 'outward'")
+        if (flow_direction is not None and
+                flow_direction not in ["inward", "outward"]):
+            raise ValueError(
+                "The specified value for flow_direction was not valid. If "
+                "specifying, please choose either 'inward' or 'outward'"
+            )
 
         default_directions = {"inward": ["cw"], "outward": ["cw", "ccw"]}
         if spin_direction is None and flow_direction:
@@ -3235,17 +2014,21 @@ class Protocol(object):
         if spin_direction is not None:
             if not isinstance(spin_direction, list):
                 raise TypeError(
-                    "Spin directions must be in the form of a list.")
+                    "Spin directions must be in the form of a list."
+                )
             if len(spin_direction) is 0:
-                raise ValueError("Spin direction must be a list containing at "
-                                 "least one spin direction ('cw', 'ccw')")
+                raise ValueError(
+                    "Spin direction must be a list containing at least one "
+                    "spin direction ('cw', 'ccw')"
+                )
 
-        if spin_direction and not all(s in ["cw", "ccw"] for s in spin_direction):
+        if spin_direction and not all(
+                s in ["cw", "ccw"] for s in spin_direction):
             raise ValueError("Spin directions must be 'cw' or 'ccw'.")
 
         try:
             duration = Unit(duration)
-        except (ValueError) as e:
+        except ValueError as e:
             raise ValueError("Duration must be a unit. %s" % e)
 
         if not isinstance(ref, Container):
@@ -3255,8 +2038,10 @@ class Protocol(object):
             self._add_cover(ref, "inward spin")
         elif flow_direction == "outward":
             self._remove_cover(ref, "outward spin")
-        self.instructions.append(
-            Spin(ref, acceleration, duration, flow_direction, spin_direction))
+
+        return self._append_and_return(
+            Spin(ref, acceleration, duration, flow_direction, spin_direction)
+        )
 
     def thermocycle(self, ref, groups,
                     volume="10:microliter",
@@ -3265,27 +2050,31 @@ class Protocol(object):
                     melting_start=None,
                     melting_end=None,
                     melting_increment=None,
-                    melting_rate=None):
+                    melting_rate=None,
+                    lid_temperature=None):
         """
         Append a Thermocycle instruction to the list of instructions, with
-        groups is a list of dicts in the form of:
+        groups is a list(dict) in the form of:
 
         .. code-block:: python
 
             "groups": [{
                 "cycles": integer,
-                "steps": [{
-                  "duration": duration,
-                  "temperature": temperature,
-                  "read": boolean // optional (default false)
-                },{
-                  "duration": duration,
-                  "gradient": {
-                    "top": temperature,
-                    "bottom": temperature
-                  },
-                  "read": boolean // optional (default false)
-                }]
+                "steps": [
+                    {
+                        "duration": duration,
+                        "temperature": temperature,
+                        "read": boolean // optional (default false)
+                    },
+                    {
+                        "duration": duration,
+                        "gradient": {
+                            "top": temperature,
+                            "bottom": temperature
+                        },
+                        "read": boolean // optional (default false)
+                    }
+                ]
             }],
 
         Thermocycle can also be used for either conventional or row-wise
@@ -3302,9 +2091,14 @@ class Protocol(object):
                 * 72 degrees for 30 seconds
             * 1 cycle:
                 * 72 degrees for 10 minutes
+            * 1 cycle:
+                * 4 degrees for 30 seconds
+            * all cycles: Lid temperature at 97 degrees
 
 
         .. code-block:: python
+
+            from instruction import Thermocycle
 
             p = Protocol()
             sample_plate = p.ref("sample_plate",
@@ -3315,83 +2109,99 @@ class Protocol(object):
             # a plate must be sealed before it can be thermocycled
             p.seal(sample_plate)
 
-            p.thermocycle(sample_plate,
-                        [
-                         {"cycles": 1,
-                          "steps": [{
-                             "temperature": "95:celsius",
-                             "duration": "5:minute",
-                             }]
-                          },
-                          {"cycles": 30,
-                              "steps": [
-                                 {"temperature": "95:celsius",
-                                  "duration": "30:second"},
-                                 {"temperature": "56:celsius",
-                                  "duration": "20:second"},
-                                 {"temperature": "72:celsius",
-                                  "duration": "20:second"}
-                                 ]
-                         },
-                             {"cycles": 1,
-                                 "steps": [
-                                 {"temperature": "72:celsius", "duration":"10:minute"}]
-                             }
-                        ])
+            p.thermocycle(
+                sample_plate,
+                [
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("95:celsius", "5:minute")
+                        ]
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("95:celsius", "30:s"),
+                            Thermocycle.builders.step("56:celsius", "20:s"),
+                            Thermocycle.builders.step("72:celsius", "20:s"),
+                        ],
+                        cycles=30
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("72:celsius", "10:minute")
+                        ]
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("4:celsius", "30:s")
+                        ]
+                    )
+                ],
+                lid_temperature="97:celsius"
+            )
 
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
-            {
-              "object": "sample_plate",
-              "op": "seal"
-            },
-            {
-              "volume": "10:microliter",
-              "dataref": null,
-              "object": "sample_plate",
-              "groups": [
                 {
-                  "cycles": 1,
-                  "steps": [
-                    {
-                      "duration": "5:minute",
-                      "temperature": "95:celsius"
-                    }
-                  ]
+                    "object": "sample_plate",
+                    "op": "seal"
                 },
                 {
-                  "cycles": 30,
-                  "steps": [
-                    {
-                      "duration": "30:second",
-                      "temperature": "95:celsius"
-                    },
-                    {
-                      "duration": "20:second",
-                      "temperature": "56:celsius"
-                    },
-                    {
-                      "duration": "20:second",
-                      "temperature": "72:celsius"
-                    }
-                  ]
-                },
-                {
-                  "cycles": 1,
-                  "steps": [
-                    {
-                      "duration": "10:minute",
-                      "temperature": "72:celsius"
-                    }
-                  ]
+                    "volume": "10:microliter",
+                    "dataref": null,
+                    "object": "sample_plate",
+                    "groups": [
+                        {
+                            "cycles": 1,
+                            "steps": [
+                                {
+                                    "duration": "5:minute",
+                                    "temperature": "95:celsius"
+                                }
+                            ]
+                        },
+                        {
+                            "cycles": 30,
+                            "steps": [
+                                {
+                                    "duration": "30:second",
+                                    "temperature": "95:celsius"
+                                },
+                                {
+                                    "duration": "20:second",
+                                    "temperature": "56:celsius"
+                                },
+                                {
+                                    "duration": "20:second",
+                                    "temperature": "72:celsius"
+                                }
+                            ]
+                        },
+                        {
+                            "cycles": 1,
+                            "steps": [
+                                {
+                                    "duration": "10:minute",
+                                    "temperature": "72:celsius"
+                                }
+                            ]
+                        },
+                        {
+                            "cycles": 1,
+                            "steps": [
+                                {
+                                    "duration": "30:second",
+                                    "temperature": "4:celsius"
+                                }
+                            ]
+                        }
+                    ],
+                    "op": "thermocycle"
                 }
-              ],
-              "op": "thermocycle"
-            }]
+            ]
 
 
         To gradient thermocycle a container according to the protocol:
@@ -3402,9 +2212,9 @@ class Protocol(object):
                 * 95 degrees for 30 seconds
 
                 Top Row:
-                * 55 degrees for 20 seconds
-                Bottom Row:
                 * 65 degrees for 20 seconds
+                Bottom Row:
+                * 55 degrees for 20 seconds
 
                 * 72 degrees for 30 seconds
             * 1 cycle:
@@ -3421,37 +2231,32 @@ class Protocol(object):
             # a plate must be sealed before it can be thermocycled
             p.seal(sample_plate)
 
-            p.thermocycle(sample_plate,
-                          [
-                           {"cycles": 1,
-                            "steps": [{
-                               "temperature": "95:celsius",
-                               "duration": "5:minute",
-                               }]
-                            },
-                            {"cycles": 30,
-                                "steps": [
-                                  {
-                                    "duration": "30:second",
-                                    "temperature": "95:celsius"
-                                  },
-                                  {
-                                   "duration": "20:second",
-                                   "gradient": {
-                                      "top": "56:celsius",
-                                      "bottom": "58:celsius"
-                                    }
-                                  },
-                                  {
-                                    "duration": "20:second",
-                                    "temperature": "72:celsius"
-                                  }
-                                  ]
-                           },
-                               {"cycles": 1,
-                                    "steps": [{"temperature": "72:celsius", "duration":"10:minute"}]
-                               }
-                          ])
+            p.thermocycle(
+                sample_plate,
+                [
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("95:celsius", "5:minute")
+                        ]
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("95:celsius", "30:s"),
+                            Thermocycle.builders.step(
+                                {"top": "65:celsius", "bottom": "55:celsius"},
+                                "20:s"
+                            ),
+                            Thermocycle.builders.step("72:celsius", "20:s"),
+                        ],
+                        cycles=30
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("72:celsius", "10:minute")
+                        ]
+                    )
+                ]
+            )
 
         To conduct a qPCR, at least one dye type and the dataref field has to
         be specified.
@@ -3474,72 +2279,114 @@ class Protocol(object):
             # a plate must be sealed before it can be thermocycled
             p.seal(sample_plate)
 
-            p.thermocycle(sample_plate,
-                          [{"cycles": 1,
-                            "steps": [{
-                                "temperature": "95:celsius",
-                                "duration": "3:minute",
-                                }]
-                           },
-                           {"cycles": 40,
-                                "steps": [
-                                    {"temperature": "95:celsius",
-                                     "duration": "10:second",
-                                     "read": False},
-                                    {"temperature": "60:celsius",
-                                     "duration": "30:second",
-                                     "read": True},
-                                    ]
-                          }],
-                          dataref = "my_qpcr_data",
-                          dyes = {
-                            "SYBR": sample_plate.all_wells().indices()}
-                          )
+            p.thermocycle(
+                sample_plate,
+                [
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step("95:celsius", "3:minute")
+                        ]
+                    ),
+                    Thermocycle.builders.group(
+                        steps=[
+                            Thermocycle.builders.step(
+                                "95:celsius",
+                                "10:second",
+                                read=False
+                            ),
+                            Thermocycle.builders.step(
+                                "95:celsius",
+                                "10:second",
+                                read=True
+                            )
+                        ],
+                        cycles=40
+                    )
+                ],
+                dataref = "my_qpcr_data",
+                dyes = {"SYBR": sample_plate.all_wells().indices()}
+            )
 
         Parameters
         ----------
         ref : Container
             Container to be thermocycled.
-        groups : list of dicts
+        groups : list(dict)
             List of thermocycling instructions formatted as above
-        volume : str, Unit, optional
+        volume : str or Unit, optional
             Volume contained in wells being thermocycled
         dataref : str, optional
             Name of dataref representing read data if performing qPCR
         dyes : dict, optional
             Dictionary mapping dye types to the wells they're used in
-        melting_start: str, Unit
+        melting_start: str or Unit, optional
             Temperature at which to start the melting curve.
-        melting_end: str, Unit
+        melting_end: str or Unit, optional
             Temperature at which to end the melting curve.
-        melting_increment: str, Unit
+        melting_increment: str or Unit, optional
             Temperature by which to increment the melting curve. Accepted
             increment values are between 0.1 and 9.9 degrees celsius.
-        melting_rate: str, Unit
+        melting_rate: str or Unit, optional
             Specifies the duration of each temperature step in the melting
             curve.
+        lid_temperature: str or Unit, optional
+            Specifies the lid temperature throughout the duration of the
+            thermocycling instruction
+
+        Returns
+        -------
+        Thermocycle
+            Returns the :py:class:`autoprotocol.instruction.Thermocycle`
+            instruction created from the specified parameters
 
         Raises
         ------
-        AttributeError:
+        AttributeError
             If groups are not properly formatted
-        TypeError:
+        TypeError
             If ref to thermocycle is not of type Container.
+        ValueError
+            Container specified cannot be thermocycled
+        ValueError
+            Lid temperature is not within bounds
+
         """
         if not isinstance(groups, list):
             raise AttributeError(
                 "groups for thermocycling must be a list of cycles in the "
                 "form of [{'cycles':___, 'steps': [{'temperature':___,"
-                "'duration':___, }]}, { ... }, ...]")
+                "'duration':___, }]}, { ... }, ...]"
+            )
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         if "thermocycle" not in ref.container_type.capabilities:
-            raise RuntimeError("Container '{}' type '{}', cannot be thermocycled."
-                               "".format(ref.name, ref.container_type.shortname))
+            raise ValueError(
+                "Container '{}' type '{}', cannot be thermocycled."
+                "".format(ref.name, ref.container_type.shortname)
+            )
+
+        # Constants are currently based off the Biorad thermocyclers, and
+        # assumes that they are generally reflective of other thermocyclers
+        _MIN_LID_TEMP = Unit("30:celsius")
+        _MAX_LID_TEMP = Unit("110:celsius")
+        if lid_temperature is not None:
+            lid_temperature = parse_unit(lid_temperature)
+            if not (_MIN_LID_TEMP <= lid_temperature <= _MAX_LID_TEMP):
+                raise ValueError(
+                    "Lid temperature {} has to be within [{}, {}]".format(
+                        lid_temperature, _MIN_LID_TEMP, _MAX_LID_TEMP
+                    )
+                )
+
+        groups = [Thermocycle.builders.group(**_) for _ in groups]
+
         self._add_seal(ref, "thermocycle")
-        self.instructions.append(
-            Thermocycle(ref, groups, volume, dataref, dyes, melting_start,
-                        melting_end, melting_increment, melting_rate))
+        return self._append_and_return(
+            Thermocycle(
+                ref, groups, volume, dataref, dyes, melting_start,
+                melting_end, melting_increment, melting_rate, lid_temperature
+            )
+        )
 
     def incubate(self, ref, where, duration, shaking=False, co2=0,
                  uncovered=False, target_temperature=None,
@@ -3564,7 +2411,7 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
@@ -3584,21 +2431,38 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : Ref, str
+        ref : Ref or str
             The container to be incubated
-        where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+        where : Enum({"ambient", "warm_37", "cold_4", "cold_20", "cold_80"})
             Temperature at which to incubate specified container
-        duration : Unit, str
+        duration : Unit or str
             Length of time to incubate container
         shaking : bool, optional
-            Specify whether or not to shake container if available at the specified
-            temperature
-        target_tempterature : Unit, str, optional
+            Specify whether or not to shake container if available at the
+            specified temperature
+        co2 : int, optional
+            Carbon dioxide percentage
+        uncovered: bool, optional
+            Specify whether the container should be uncovered during incubation
+        target_temperature : Unit or str, optional
             Specify a target temperature for a device (eg. an incubating block)
             to reach during the specified duration.
         shaking_params: dict, optional
-            Specifify "path" and "frequency" of shaking parameters to be used
+            Specify "path" and "frequency" of shaking parameters to be used
             with compatible devices (eg. thermoshakes)
+
+        Returns
+        -------
+        Incubate
+            Returns the :py:class:`autoprotocol.instruction.Incubate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types given, e.g. ref is not of type Container
+        RuntimeError
+            Incubating uncovered in a location which is shaking
 
         """
         if not isinstance(ref, Container):
@@ -3609,63 +2473,19 @@ class Protocol(object):
                 "If incubating uncovered, location must be in "
                 "{} and not shaking.".format(', '.join(allowed_uncovered))
             )
-        # thermoshake validations
-        ts_loc = ["ambient"]
-        ts_temp_max = Unit(70, "celsius")
-        ts_temp_min = Unit(4, "celsius")
-        ts_freq_maximums = {
-            "cw_orbital": Unit(1700, "rpm"),
-            "ccw_orbital": Unit(1700, "rpm"),
-            "portrait_linear": Unit(400, "rpm"),
-            "landscape_linear": Unit(600, "rpm"),
-            "cw_diamond": Unit(700, "rpm"),
-            "ccw_diamond": Unit(700, "rpm")
-        }
-        ts_freq_min = Unit(100, "rpm")
+
         if target_temperature:
-            if where not in ts_loc:
-                raise AttributeError("If specifying a 'target_temperature', "
-                                     "the 'where' parameter must be 'ambient'.")
-            target_temperature = Unit.fromstring(target_temperature)
-            if not (ts_temp_min <= target_temperature <= ts_temp_max):
-                raise ValueError("The target temperature must be between "
-                                 "{} and {}, inclusive. You entered {}."
-                                 "".format(ts_temp_min, ts_temp_max,
-                                           target_temperature))
-        if shaking_params:
-            valid_shake_paths = ts_freq_maximums.keys()
-            if not isinstance(shaking_params, dict):
-                raise TypeError("'shaking_params' must be a dict "
-                                "containing keys 'frequency' and "
-                                "'path'.")
-            if not all(k in shaking_params.keys() for k in ["frequency", "path"]):
-                raise KeyError("'shaking_params' keys must contain 'frequency' "
-                               "and 'path'")
-            ts_path = shaking_params["path"]
-            if ts_path not in valid_shake_paths:
-                raise ValueError(
-                    "The valid paths for shaking are: {} . You entered {} ."
-                    "".format(valid_shake_paths, ts_path)
-                )
-            frequency = Unit.fromstring(shaking_params["frequency"])
-            try:
-                ts_freq_max = ts_freq_maximums[ts_path]
-            except KeyError:
-                raise ValueError("An appropriate maximum frequency was not "
-                                 "determined for path {}. Valid paths are: {}."
-                                 "".format(ts_path, valid_shake_paths))
-            if not (ts_freq_min <= frequency <= ts_freq_max):
-                raise ValueError("The frequency must be between "
-                                 "{} and {}, inclusive. You entered {}."
-                                 "".format(ts_freq_min, ts_freq_max, frequency))
+            target_temperature = parse_unit(target_temperature, "celsius")
+
         if not uncovered:
             self._add_cover(ref, "incubate")
-        self.instructions.append(Incubate(ref, where, duration, shaking,
-                                          co2, target_temperature,
-                                          shaking_params))
+        return self._append_and_return(Incubate(ref, where, duration, shaking,
+                                                co2, target_temperature,
+                                                shaking_params))
 
     def absorbance(self, ref, wells, wavelength, dataref, flashes=25,
-                   incubate_before=None, temperature=None):
+                   incubate_before=None, temperature=None,
+                   settle_time=None):
         """
         Read the absorbance for the indicated wavelength for the indicated
         wells. Append an Absorbance instruction to the list of instructions for
@@ -3686,57 +2506,80 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "test_reading",
-                  "object": "sample_plate",
-                  "wells": [
-                    "A1",
-                    "A2",
-                    "A3",
-                    "A4",
-                    "A5",
-                    "A6",
-                    "A7",
-                    "A8",
-                    "A9",
-                    "A10",
-                    "A11",
-                    "A12"
-                  ],
-                  "num_flashes": 50,
-                  "wavelength": "600:nanometer",
-                  "op": "absorbance"
+                    "dataref": "test_reading",
+                    "object": "sample_plate",
+                    "wells": [
+                        "A1",
+                        "A2",
+                        "A3",
+                        "A4",
+                        "A5",
+                        "A6",
+                        "A7",
+                        "A8",
+                        "A9",
+                        "A10",
+                        "A11",
+                        "A12"
+                    ],
+                    "num_flashes": 50,
+                    "wavelength": "600:nanometer",
+                    "op": "absorbance"
                 }
-              ]
+            ]
 
         Parameters
         ----------
-        ref : str, Ref
-        wells : list, WellGroup, Well
+        ref : str or Ref
+            Object to execute the absorbance read on
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        wavelength : str, Unit
+        wavelength : str or Unit
             wavelength of light absorbance to be read for the indicated wells
         dataref : str
             name of this specific dataset of measured absorbances
         flashes : int, optional
-        temperature: str, Unit, optional
+            number of flashes for the read
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
+        settle_time: Unit, optional
+            the time before the start of the measurement, defaults
+            to vendor specifications
         incubate_before: dict, optional
             incubation prior to reading if desired
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
-                  "shaking": {
-                    "amplitude": str, Unit
-                    "orbital": bool
-                    }
-                "duration": str, Unit
+                    "shaking": {
+                        "amplitude": str or Unit
+                        "orbital": bool
+                    },
+                    "duration": str or Unit
                 }
+
+        Returns
+        -------
+        Absorbance
+            Returns the :py:class:`autoprotocol.instruction.Absorbance`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time has to be greater than 0
+        UnitError
+            Settle time is not of type Unit
 
         """
         if isinstance(wells, Well):
@@ -3746,22 +2589,43 @@ class Protocol(object):
             container = set([w.container for w in wells])
             if len(container) > 1:
                 raise ValueError(
-                    "All wells need to be on one container for Absorbance")
+                    "All wells need to be on one container for Absorbance"
+                )
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. Absorbance wells accepts either a Well, "
-                             "a WellGroup, or a list of well indices")
+            raise TypeError(
+                "Unknown input. Absorbance wells accepts either a Well, "
+                "a WellGroup, or a list of well indices"
+            )
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 
-        self.instructions.append(
-            Absorbance(ref, wells, wavelength, dataref, flashes,
-                       incubate_before, temperature))
+        if settle_time:
+            try:
+                settle_time = Unit(settle_time)
+                if settle_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'settle_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'settle_time' must be of type Unit."
+                )
+
+        return self._append_and_return(
+            Absorbance(
+                ref, wells, wavelength, dataref, flashes,
+                incubate_before, temperature, settle_time
+            )
+        )
 
     def fluorescence(self, ref, wells, excitation, emission, dataref,
                      flashes=25, temperature=None, gain=None,
-                     incubate_before=None):
+                     incubate_before=None, detection_mode=None,
+                     position_z=None, settle_time=None, lag_time=None,
+                     integration_time=None):
         """
         Read the fluoresence for the indicated wavelength for the indicated
         wells.  Append a Fluorescence instruction to the list of instructions
@@ -3783,64 +2647,137 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "test_reading",
-                  "excitation": "587:nanometer",
-                  "object": "sample_plate",
-                  "emission": "610:nanometer",
-                  "wells": [
-                    "A1",
-                    "A2",
-                    "A3",
-                    "A4",
-                    "A5",
-                    "A6",
-                    "A7",
-                    "A8",
-                    "A9",
-                    "A10",
-                    "A11",
-                    "A12"
-                  ],
-                  "num_flashes": 25,
-                  "op": "fluorescence"
+                    "dataref": "test_reading",
+                    "excitation": "587:nanometer",
+                    "object": "sample_plate",
+                    "emission": "610:nanometer",
+                    "wells": [
+                        "A1",
+                        "A2",
+                        "A3",
+                        "A4",
+                        "A5",
+                        "A6",
+                        "A7",
+                        "A8",
+                        "A9",
+                        "A10",
+                        "A11",
+                        "A12"
+                    ],
+                    "num_flashes": 25,
+                    "op": "fluorescence"
                 }
-              ]
+            ]
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to plate read.
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
-        excitation : str, Unit
+        excitation : str or Unit
             Wavelength of light used to excite the wells indicated
-        emission : str, Unit
+        emission : str or Unit
             Wavelength of light to be measured for the indicated wells
         dataref : str
-            Name of this specific dataset of measured absorbances
+            Name of this specific dataset of measured fluoresence
         flashes : int, optional
             Number of flashes.
-        temperature: str, Unit, optional
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
         gain: float, optional
-            float between 0 and 1, multiplier, gain=0.2 of maximum signal amplification
+            float between 0 and 1, multiplier, gain=0.2 of maximum signal
+            amplification
         incubate_before: dict, optional
             incubation prior to reading if desired
+        detection_mode: str, optional
+            set the detection mode of the optics, ["top", "bottom"],
+            defaults to vendor specified defaults.
+        position_z: dict, optional
+            distance from the optics to the surface of the plate transport,
+            only valid for "top" detection_mode and vendor capabilities.
+            Specified as either a set distance - "manual", OR calculated from
+            a WellGroup - "calculated_from_wells".   Only one position_z
+            determination may be specified
 
-            .. code-block:: json
+            .. code-block:: none
+
+                position_z = {
+                    "manual": Unit
+                    - OR -
+                    "calculated_from_wells": []
+                }
+
+        settle_time: Unit, optional
+            the time before the start of the measurement, defaults
+            to vendor specifications
+        lag_time: Unit, optional
+            time between flashes and the start of the signal integration,
+            defaults to vendor specifications
+        integration_time: Unit, optional
+            duration of the signal recording, per Well, defaults to vendor
+            specifications
+
+            incubate_before example:
+
+            .. code-block:: none
 
                 {
-                  "shaking": {
-                    "amplitude": str, Unit
-                    "orbital": bool
-                    }
-                "duration": str, Unit
+                    "shaking": {
+                        "amplitude": str or Unit
+                        "orbital": bool
+                    },
+                    "duration": str or Unit
                 }
+
+            position_z examples:
+
+            .. code-block:: none
+
+                position_z = {
+                    "calculated_from_wells": ["plate/A1", "plate/A2"]
+                }
+
+                -OR-
+
+                position_z = {
+                    "manual": "20:micrometer"
+                }
+
+        Returns
+        -------
+        Fluorescence
+            Returns the :py:class:`autoprotocol.instruction.Fluorescence`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time, integration time or lag time has to be greater than 0
+        UnitError
+            Settle time, integration time, lag time or position z is not
+            of type Unit
+        ValueError
+            Unknown value given for `detection_mode`
+        ValueError
+            Position z specified for non-top detection mode
+        KeyError
+            For position_z, only `manual` and `calculated_from_wells`
+            is allowed
+        NotImplementedError
+            Specifying `calculated_from_wells` as that has not been
+            implemented yet
 
         """
         if isinstance(wells, Well):
@@ -3850,25 +2787,150 @@ class Protocol(object):
             container = set([w.container for w in wells])
             if len(container) > 1:
                 raise ValueError(
-                    "All wells need to be on one container for Fluorescence")
+                    "All wells need to be on one container for Fluorescence"
+                )
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. Fluorescence wells accepts either a Well, "
-                             "a WellGroup, or a list of well indices")
+            raise TypeError(
+                "Unknown input. Fluorescence wells accepts either a Well, "
+                "a WellGroup, or a list of well indices"
+            )
         if gain is not None and not (0 <= gain <= 1):
-            raise ValueError("fluoresence gain set to %s must be between "
-                             "0 and 1, inclusive" % gain)
+            raise ValueError(
+                "fluorescence gain set to %s must be between 0 and 1, "
+                "inclusive" % gain
+            )
 
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 
-        self.instructions.append(
-            Fluorescence(ref, wells, excitation, emission, dataref, flashes,
-                         incubate_before, temperature, gain))
+        valid_detection_modes = ["top", "bottom"]
+        if detection_mode and detection_mode not in valid_detection_modes:
+            raise ValueError(
+                "Unknown value for 'detection_mode'.  Must be one of {}."
+                "".format(valid_detection_modes)
+            )
+        if detection_mode == "bottom" and position_z:
+            raise ValueError(
+                "position_z is only valid for 'top' detection_mode "
+                "measurements."
+                )
+        if settle_time:
+            try:
+                settle_time = Unit(settle_time)
+                if settle_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'settle_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'settle_time' must be of type Unit."
+                )
+        if lag_time:
+            try:
+                lag_time = Unit(lag_time)
+                if lag_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'lag_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'lag_time' must be of type Unit."
+                )
+        if integration_time:
+            try:
+                integration_time = Unit(integration_time)
+                if integration_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'integration_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'integration_time' must be of type Unit."
+                )
+        if position_z:
+            valid_pos_z = ["manual", "calculated_from_wells"]
+            if not isinstance(position_z, dict):
+                raise TypeError(
+                    "'position_z' must be of type dict."
+                )
+            if len(position_z.keys()) > 1:
+                raise ValueError(
+                    "'position_z' can only have one mode of calculation "
+                    "specified: 'manual' or 'calculated_from_wells'."
+                )
+            for k in position_z.keys():
+                if k not in valid_pos_z:
+                    raise KeyError(
+                        "'position_z' keys can only be 'manual' "
+                        "or 'calculated_from_wells'. '{}' is not "
+                        "a recognized key."
+                        "".format(k)
+                    )
+            if "manual" in position_z.keys():
+                try:
+                    manual = Unit(position_z["manual"])
+                    if manual < Unit(0, "micrometer"):
+                        raise ValueError(
+                            "'manual' z_position must be a length equal "
+                            "to or greater than 0."
+                        )
+                except UnitError:
+                    raise UnitError(
+                        "'manual' position_z must be of type Unit."
+                    )
+            if "calculated_from_wells" in position_z.keys():
+                # blocking calculated_from_wells until fully implemented
+                # remove below RunTimeError to release feature
+                raise NotImplementedError(
+                    "This feature, 'calculated_from_wells', "
+                    "has not been implemented yet.  Please use "
+                    "'position_z':{'manual': 'set_value'} to "
+                    "specify a position_z.")
+
+                # pragma pylint: disable=unreachable, unused-variable
+                z_ws = position_z["calculated_from_wells"]
+                if isinstance(z_ws, Well):
+                    z_ws = [z_ws]
+                    position_z["calculated_from_wells"] = z_ws
+                elif isinstance(z_ws, list):
+                    if not all(isinstance(w, Well) for w in z_ws):
+                        raise TypeError(
+                            "All elements in list must be wells for "
+                            "position_z, 'calculated_from_wells'."
+                        )
+                else:
+                    raise TypeError(
+                        "Wells specified for 'calculated_from_wells' "
+                        "must be Well, list of wells, WellGroup."
+                        )
+                # check z_ws against container/ref for measurement
+                # if ref is Container
+                if isinstance(ref, Container):
+                    try:
+                        valid_z_ws = ref.wells(z_ws)
+                    except ValueError:
+                        raise ValueError("Well indices specified for "
+                                         "'calculated_from_wells' must "
+                                         "be valid wells of the ref'd "
+                                         "container.")
+                # pragma pylint: enable=unreachable, unused-variable
+
+        return self._append_and_return(
+            Fluorescence(
+                ref, wells, excitation, emission, dataref, flashes,
+                incubate_before, temperature, gain, detection_mode,
+                position_z, settle_time, lag_time, integration_time
+            )
+        )
 
     def luminescence(self, ref, wells, dataref, incubate_before=None,
-                     temperature=None):
+                     temperature=None, settle_time=None,
+                     integration_time=None):
         """
         Read luminescence of indicated wells.
 
@@ -3887,53 +2949,77 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "test_reading",
-                  "object": "sample_plate",
-                  "wells": [
-                    "A1",
-                    "A2",
-                    "A3",
-                    "A4",
-                    "A5",
-                    "A6",
-                    "A7",
-                    "A8",
-                    "A9",
-                    "A10",
-                    "A11",
-                    "A12"
-                  ],
-                  "op": "luminescence"
+                    "dataref": "test_reading",
+                    "object": "sample_plate",
+                    "wells": [
+                        "A1",
+                        "A2",
+                        "A3",
+                        "A4",
+                        "A5",
+                        "A6",
+                        "A7",
+                        "A8",
+                        "A9",
+                        "A10",
+                        "A11",
+                        "A12"
+                    ],
+                    "op": "luminescence"
                 }
-              ]
+            ]
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to plate read.
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
             the form of ["A1", "B1", "C5", ...]
         dataref : str
             Name of this dataset of measured luminescence readings.
-        temperature: str, Unit, optional
+        temperature: str or Unit, optional
             set temperature to heat plate reading chamber
+        settle_time: Unit, optional
+            the time before the start of the measurement, defaults
+            to vendor specifications
         incubate_before: dict, optional
             incubation prior to reading if desired
+        integration_time: Unit, optional
+            duration of the signal recording, per Well, defaults to vendor
+            specifications
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
-                  "shaking": {
-                    "amplitude": str, Unit
-                    "orbital": bool
-                    }
-                "duration": str, Unit
+                    "shaking": {
+                        "amplitude": str or Unit
+                        "orbital": bool
+                    },
+                    "duration": str or Unit
                 }
+
+        Returns
+        -------
+        Luminescence
+            Returns the :py:class:`autoprotocol.instruction.Luminescence`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Settle time or integration time has to be greater than 0
+        UnitError
+            Settle time or integration time is not of type Unit
 
         """
         if isinstance(wells, Well):
@@ -3942,17 +3028,49 @@ class Protocol(object):
             container = set([w.container for w in wells])
             if len(container) > 1:
                 raise ValueError(
-                    "All wells need to be on one container for Luminescence")
+                    "All wells need to be on one container for Luminescence"
+                )
             wells = [str(w.index) for w in wells]
 
         if not isinstance(wells, list):
-            raise ValueError("Unknown input. Luminescence wells accepts either a Well, "
-                             "a WellGroup, or a list of well indices")
+            raise TypeError(
+                "Unknown input. Luminescence wells accepts either a Well, "
+                "a WellGroup, or a list of well indices"
+            )
         if incubate_before:
             check_valid_incubate_params(incubate_before)
 
-        self.instructions.append(Luminescence(ref, wells, dataref,
-                                              incubate_before, temperature))
+        if settle_time:
+            try:
+                settle_time = Unit(settle_time)
+                if settle_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'settle_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'settle_time' must be of type Unit."
+                )
+        if integration_time:
+            try:
+                integration_time = Unit(integration_time)
+                if integration_time < Unit(0, "second"):
+                    raise ValueError(
+                        "'integration_time' must be a time equal "
+                        "to or greater than 0."
+                    )
+            except UnitError:
+                raise UnitError(
+                    "'integration_time' must be of type Unit."
+                )
+
+        return self._append_and_return(
+            Luminescence(
+                ref, wells, dataref, incubate_before, temperature,
+                settle_time, integration_time
+            )
+        )
 
     def gel_separate(self, wells, volume, matrix, ladder, duration, dataref):
         """
@@ -3974,49 +3092,65 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "dataref": "genotyping_030214",
-                  "matrix": "agarose(8,0.8%)",
-                  "volume": "10:microliter",
-                  "ladder": "ladder1",
-                  "objects": [
-                    "sample_plate/0",
-                    "sample_plate/1",
-                    "sample_plate/2",
-                    "sample_plate/3",
-                    "sample_plate/4",
-                    "sample_plate/5",
-                    "sample_plate/6",
-                    "sample_plate/7",
-                    "sample_plate/8",
-                    "sample_plate/9",
-                    "sample_plate/10",
-                    "sample_plate/11"
-                  ],
-                  "duration": "11:minute",
-                  "op": "gel_separate"
+                    "dataref": "genotyping_030214",
+                    "matrix": "agarose(8,0.8%)",
+                    "volume": "10:microliter",
+                    "ladder": "ladder1",
+                    "objects": [
+                        "sample_plate/0",
+                        "sample_plate/1",
+                        "sample_plate/2",
+                        "sample_plate/3",
+                        "sample_plate/4",
+                        "sample_plate/5",
+                        "sample_plate/6",
+                        "sample_plate/7",
+                        "sample_plate/8",
+                        "sample_plate/9",
+                        "sample_plate/10",
+                        "sample_plate/11"
+                    ],
+                    "duration": "11:minute",
+                    "op": "gel_separate"
                 }
             ]
 
         Parameters
         ----------
-        wells : list, WellGroup, Well
-            List of wella or WellGroup containing wells to be
+        wells : list(Well) or WellGroup or Well
+            List of wells or WellGroup containing wells to be
             separated on gel.
-        volume : str, Unit
+        volume : str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
         matrix : str
             Matrix (gel) in which to gel separate samples
         ladder : str
             Ladder by which to measure separated fragment size
-        duration : str, Unit
+        duration : str or Unit
             Length of time to run current through gel.
         dataref : str
             Name of this set of gel separation results.
+
+        Returns
+        -------
+        GelSeparate
+            Returns the :py:class:`autoprotocol.instruction.GelSeparate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. wells given is of type Well, WellGroup
+            or list of wells
+        ValueError
+            Specifying more wells than the number of available lanes in
+            the selected matrix
+
         """
         # Check valid well inputs
         if not is_valid_well(wells):
@@ -4028,14 +3162,12 @@ class Protocol(object):
             self._remove_cover(w.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
-            datarefs = 1
-            for x in xrange(0, len(wells), max_well):
-                self.gel_separate(wells[x:x + max_well], volume, matrix, ladder,
-                                  duration, "%s_%d" % (dataref, datarefs))
-                datarefs += 1
-        else:
-            self.instructions.append(GelSeparate(wells, volume, matrix, ladder,
-                                                 duration, dataref))
+            raise ValueError("Number of wells is greater than available"
+                             "lanes in matrix")
+
+        return self._append_and_return(
+            GelSeparate(wells, volume, matrix, ladder, duration, dataref)
+        )
 
     def gel_purify(self, extracts, volume, matrix, ladder, dataref):
         """
@@ -4080,76 +3212,78 @@ class Protocol(object):
 
         For extracts[0]
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
-              "band_list": [
-                {
-                  "band_size_range": {
-                    "max_bp": 80,
-                    "min_bp": 79
-                  },
-                  "destination": Well(Container(extract_0), 0, None),
-                  "elution_buffer": "TE",
-                  "elution_volume": "Unit(5.0, 'microliter')"
-                }
-              ],
-              "gel": None,
-              "lane": None,
-              "source": Well(Container(test_plate), 0, None)
+                "band_list": [
+                    {
+                        "band_size_range": {
+                            "max_bp": 80,
+                            "min_bp": 79
+                        },
+                        "destination": Well(Container(extract_0), 0, None),
+                        "elution_buffer": "TE",
+                        "elution_volume": "Unit(5.0, 'microliter')"
+                    }
+                ],
+                "gel": None,
+                "lane": None,
+                "source": Well(Container(test_plate), 0, None)
             }
 
 
         Parameters
         ----------
-        extracts: List of dicts
+        extracts: list(dict)
             Dictionary containing parameters for gel extraction, must be in the
             form of:
 
             .. code-block:: python
 
                 [
-                  {
-                  "band_list": [
                     {
-                      "band_size_range": {
-                        "max_bp": int,
-                        "min_bp": int
-                      },
-                      "destination": Well,
-                      "elution_buffer": str,
-                      "elution_volume": Volume
+                    "band_list": [
+                        {
+                            "band_size_range": {
+                                "max_bp": int,
+                                "min_bp": int
+                            },
+                            "destination": Well,
+                            "elution_buffer": str,
+                            "elution_volume": Volume
+                        }
+                    ],
+                    "gel": int or None,
+                    "lane": int or None,
+                    "source": Well
                     }
-                  ],
-                  "gel": int or None,
-                  "lane": int or None,
-                  "source": Well
-                  }
                 ]
 
             util.make_gel_extract_params() and util.make_band_param() can be
             used to create these dictionaries
-        band_list: list of dicts
-            List of bands to be extracted from the lane
-        band_size_range: dict
-            Dictionary for the size range of the band to be extracted
-        max_bp: int
-            Maximum size for the band
-        min_bp: int
-            Minimum size for the band
-        destination: Well
-            Well to place the extracted material
-        elution_buffer: str
-            Buffer to use to extract the band, commonly "water"
-        elution_volume: str, Unit
-            Volume of elution_buffer to extract the band into
-        gel: int
-            Integer identifier for the gel if using multiple gels
-        lane: int
-            Integer identifier for the lane of a gel to run the source
-        source: Well
-            Well from whcih to purify the material
-        volume: str, Unit
+
+            band_list: list(dict)
+                List of bands to be extracted from the lane
+            band_size_range: dict
+                Dictionary for the size range of the band to be extracted
+            max_bp: int
+                Maximum size for the band
+            min_bp: int
+                Minimum size for the band
+            destination: Well
+                Well to place the extracted material
+            elution_buffer: str
+                Buffer to use to extract the band, commonly "water"
+            elution_volume: str or Unit
+                Volume of elution_buffer to extract the band into
+            gel: int
+                Integer identifier for the gel if using multiple gels
+            lane: int
+                Integer identifier for the lane of a gel to run the source
+            source: Well
+                Well from which to purify the material
+
+        volume: str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
         matrix: str
@@ -4159,32 +3293,37 @@ class Protocol(object):
         dataref: str
             Name of this set of gel separation results.
 
+        Returns
+        -------
+        GelPurify
+            Returns the :py:class:`autoprotocol.instruction.GelPurify`
+            instruction created from the specified parameters
 
         Raises
         -------
-        RuntimeError:
+        RuntimeError
             If matrix is not properly formatted.
-        AttributeError:
+        AttributeError
             If extract parameters are not a list of dictionaries.
-        KeyError:
+        KeyError
             If extract parameters do not contain the specified parameter keys.
-        ValueError:
+        ValueError
             If min_bp is greater than max_bp.
-        ValueError:
+        ValueError
             If extract destination is not of type Well.
-        ValueError:
+        ValueError
             If extract elution volume is not of type Unit
-        ValueError:
+        ValueError
             if extract elution volume is not greater than 0.
-        RuntimeError:
+        RuntimeError
             If gel extract lanes are set for some but not all extract wells.
-        RuntimeError:
+        RuntimeError
             If all samples do not fit on single gel type.
-        TypeError:
+        TypeError
             If lane designated for gel extracts is not an integer.
-        RuntimeError:
+        RuntimeError
             If designated lane index is outside lanes within the gel.
-        RuntimeError:
+        RuntimeError
             If lanes not designated and number of extracts not equal to number
             of samples.
 
@@ -4201,7 +3340,8 @@ class Protocol(object):
         volume = Unit(volume)
         if volume <= Unit("0:microliter"):
             raise ValueError(
-                "Volume: %s, must be greater than 0:microliter" % volume)
+                "Volume: %s, must be greater than 0:microliter" % volume
+            )
 
         if not isinstance(ladder, str):
             raise TypeError("Ladder: %s, must be a string" % ladder)
@@ -4221,12 +3361,16 @@ class Protocol(object):
         if None in gel_set:
             if any(gel_set):
                 raise RuntimeError(
-                    "If one extract has gel set, all extracts must have gel set")
+                    "If one extract has gel set, all extracts must have "
+                    "gel set"
+                )
             else:
                 if None in lane_set:
                     if any(lane_set):
                         raise RuntimeError(
-                            "If one extract has lane set, all extracts must have lane set")
+                            "If one extract has lane set, all extracts must "
+                            "have lane set"
+                        )
                     else:
                         for i, e in enumerate(extracts):
                             e["gel"] = i // max_well
@@ -4239,18 +3383,24 @@ class Protocol(object):
         parsed_extracts = [list(grp) for key, grp in groupby(
             sorted(extracts, key=sort_key), key=sort_key)]
 
+        instructions = []
         for pe in parsed_extracts:
 
             lane_set = [e["lane"] for e in pe]
 
             if len(lane_set) > max_well:
-                raise RuntimeError("The gel is not large enough to accomodate all lanes: gel has %s wells, %s lanes specified" % (
-                    max_well, len(lane_set)))
+                raise RuntimeError(
+                    "The gel is not large enough to accomodate "
+                    "all lanes: gel has %s wells, %s lanes specified"
+                    "" % (max_well, len(lane_set))
+                )
 
             if None in lane_set:
                 if any(lane_set):
                     raise RuntimeError(
-                        "If one extract has lane set, all extracts must have lane set")
+                        "If one extract has lane set, all extracts must have "
+                        "lane set"
+                    )
                 else:
                     for i, e in enumerate(pe):
                         e["lane"] = i % max_well
@@ -4258,7 +3408,8 @@ class Protocol(object):
 
             if sorted(lane_set) != list(range(0, max(lane_set) + 1)):
                 raise RuntimeError(
-                    "Lanes must be contiguous, unique, and start from 0")
+                    "Lanes must be contiguous, unique, and start from 0"
+                )
 
             if len(parsed_extracts) > 1:
                 dataref_gel = "%s_%s" % (dataref, pe[0]["gel"])
@@ -4276,10 +3427,15 @@ class Protocol(object):
                     ext["lane"] = e["lane"]
                     pe_unpacked.append(ext)
 
-            self.instructions.append(
-                GelPurify(samples, volume, matrix, ladder, dataref_gel, pe_unpacked))
+            instructions.append(self._append_and_return(
+                GelPurify(
+                    samples, volume, matrix, ladder, dataref_gel, pe_unpacked
+                )
+            ))
 
-    def seal(self, ref, type=None):
+        return instructions
+
+    def seal(self, ref, type=None, mode=None, temperature=None, duration=None):
         """
         Seal indicated container using the automated plate sealer.
 
@@ -4293,53 +3449,108 @@ class Protocol(object):
                                  "96-pcr",
                                  storage="warm_37")
 
-            p.seal(sample_plate)
+            p.seal(sample_plate, mode="thermal", temperature="160:celsius")
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "object": "sample_plate",
-                  "type": "ultra-clear"
-                  "op": "seal"
+                    "object": "sample_plate",
+                    "type": "ultra-clear",
+                    "mode": "thermal",
+                    "mode_params": {
+                        "temperature": "160:celsius"
+                    }
+                    "op": "seal"
                 }
-              ]
+            ]
 
         Parameters
         ----------
         ref : Container
-          Container to be sealed
-        type : str
-          Seal type to be used, such as "ultra-clear" or "foil".
+           Container to be sealed
+        type : str, optional
+            Seal type to be used, such as "ultra-clear" or "foil".
+        mode: str, optional
+            Sealing method to be used, such as "thermal" or "adhesive". Defaults
+            to None, which is interpreted sensibly based on the execution
+            environment.
+        temperature: Unit or str, optional
+            Temperature at which to melt the sealing film onto the ref. Only
+            applicable to thermal sealing; not respected if the sealing mode
+            is adhesive. If unspecified, thermal sealing temperature defaults
+            correspond with manufacturer-recommended or internally-optimized
+            values for the target container type. Applies only to thermal
+            sealing.
+        duration: Unit or str, optional
+            Duration for which to press the (heated, if thermal) seal down on
+            the ref. Defaults to manufacturer-recommended or internally-
+            optimized seal times for the target container type. Currently
+            applies only to thermal sealing.
+
+        Returns
+        -------
+        Seal
+            Returns the :py:class:`autoprotocol.instruction.Seal`
+            instruction created from the specified parameters
 
         Raises
         ------
         TypeError
-          If ref is not of type Container.
+            If ref is not of type Container.
         RuntimeError
-          If container type does not have `seal` capability.
+            If container type does not have `seal` capability.
         RuntimeError
-          If seal is not a valid seal type.
+            If seal is not a valid seal type.
         RuntimeError
-          If container is already covered with a lid.
+            If the sealing mode is invalid, or incompatible with the given ref
+        RuntimeError
+            If thermal sealing params (temperature and/or duration) are
+            specified alongside an adhesive sealing mode.
+        RuntimeError
+            If specified thermal sealing parameters are invalid
+        RuntimeError
+            If container is already covered with a lid.
 
         """
+        SEALING_MODES = ["thermal", "adhesive"]
+
         if not isinstance(ref, Container):
             raise TypeError("Container to seal must be of type Container.")
         if "seal" not in ref.container_type.capabilities:
-            raise RuntimeError("Container '{}' type '{}', cannot be sealed."
-                               "".format(ref.name, ref.container_type.shortname))
+            raise RuntimeError(
+                "Container '{}' type '{}', cannot be sealed."
+                "".format(ref.name, ref.container_type.shortname)
+            )
         if type is None:
             type = ref.container_type.seal_types[0]
         if type not in SEAL_TYPES:
-            raise RuntimeError("%s is not a valid seal type" % type)
+            raise RuntimeError("{} is not a valid seal type".format(type))
         if ref.is_covered():
             raise RuntimeError("A container cannot be sealed over a lid.")
+        if not (mode is None or mode in SEALING_MODES):
+            raise RuntimeError("{} is not a valid sealing mode".format(mode))
+        if temperature is not None or duration is not None:
+            if mode == "adhesive":
+                raise RuntimeError(
+                    "Thermal sealing parameters `temperature` and `duration` "
+                    "are incompatible with the chosen adhesive sealing mode."
+                )
+            mode = "thermal"
+            mode_params = dict()
+
+            if temperature is not None:
+                mode_params["temperature"] = parse_unit(temperature, "celsius")
+            if duration is not None:
+                mode_params["duration"] = parse_unit(duration, "second")
+        else:
+            mode_params = None
+
         if not ref.is_sealed():
             ref.cover = type
-            self.instructions.append(Seal(ref, type))
+            return self._append_and_return(Seal(ref, type, mode, mode_params))
 
     def unseal(self, ref):
         """
@@ -4381,6 +3592,12 @@ class Protocol(object):
         ref : Container
             Container to be unsealed.
 
+        Returns
+        -------
+        Unseal
+            Returns the :py:class:`autoprotocol.instruction.Unseal`
+            instruction created from the specified parameters
+
         Raises
         ------
         TypeError
@@ -4396,9 +3613,10 @@ class Protocol(object):
                                "use the instruction uncover.")
         if ref.is_sealed():
             ref.cover = None
-            self.instructions.append(Unseal(ref))
+            unseal_inst = Unseal(ref)
+            return self._append_and_return(unseal_inst)
 
-    def cover(self, ref, lid=None):
+    def cover(self, ref, lid=None, retrieve_lid=None):
         """
         Place specified lid type on specified container
 
@@ -4415,15 +3633,15 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "lid": "universal",
-                  "object": "sample_plate",
-                  "op": "cover"
+                    "lid": "universal",
+                    "object": "sample_plate",
+                    "op": "cover"
                 }
-              ]
+            ]
 
         Parameters
         ----------
@@ -4432,35 +3650,49 @@ class Protocol(object):
         lid : str, optional
             Type of lid to cover the container. Must be a valid lid type for
             the container type.
+        retrieve_lid: bool, optional
+            Flag to retrieve lid from previously stored location (see uncover).
+
+        Returns
+        -------
+        Cover
+            Returns the :py:class:`autoprotocol.instruction.Cover`
+            instruction created from the specified parameters
 
         Raises
         ------
         TypeError
-          If ref is not of type Container.
+            If ref is not of type Container.
         RuntimeError
-          If container type does not have `cover` capability.
+            If container type does not have `cover` capability.
         RuntimeError
-          If lid is not a valid lid type.
+            If lid is not a valid lid type.
         RuntimeError
-          If container is already sealed with a seal.
+            If container is already sealed with a seal.
+        TypeError
+            If retrieve_lid is not a boolean.
 
         """
         if not isinstance(ref, Container):
             raise TypeError("Container to cover must be of type Container.")
         if "cover" not in ref.container_type.capabilities:
-            raise RuntimeError("Container '{}' type '{}', cannot be covered."
-                               "".format(ref.name, ref.container_type.shortname))
+            raise RuntimeError(
+                "Container '{}' type '{}', cannot be covered."
+                "".format(ref.name, ref.container_type.shortname)
+            )
         if lid is None:
             lid = ref.container_type.cover_types[0]
         if lid not in COVER_TYPES:
             raise RuntimeError("%s is not a valid lid type" % lid)
         if ref.is_sealed():
             raise RuntimeError("A container cannot be covered over a seal.")
+        if retrieve_lid is not None and not isinstance(retrieve_lid, bool):
+            raise TypeError("Cover: retrieve_lid must be of type bool")
         if not ref.is_covered():
             ref.cover = lid
-            self.instructions.append(Cover(ref, lid))
+            return self._append_and_return(Cover(ref, lid, retrieve_lid))
 
-    def uncover(self, ref):
+    def uncover(self, ref, store_lid=None):
         """
         Remove lid from specified container
 
@@ -4480,17 +3712,17 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "lid": "universal",
-                  "object": "sample_plate",
-                  "op": "cover"
+                    "lid": "universal",
+                    "object": "sample_plate",
+                    "op": "cover"
                 },
                 {
-                  "object": "sample_plate",
-                  "op": "uncover"
+                    "object": "sample_plate",
+                    "op": "uncover"
                 }
               ]
 
@@ -4498,13 +3730,23 @@ class Protocol(object):
         ----------
         ref : Container
             Container to remove lid.
+        store_lid: bool, optional
+            Flag to store the uncovered lid.
+
+        Returns
+        -------
+        Uncover
+            Returns the :py:class:`autoprotocol.instruction.Uncover`
+            instruction created from the specified parameters
 
         Raises
         ------
         TypeError
-          If ref is not of type Container.
+            If ref is not of type Container.
         RuntimeError
-          If container is sealed with a seal not covered with a lid.
+            If container is sealed with a seal not covered with a lid.
+        TypeError
+            If store_lid is not a boolean.
 
         """
         if not isinstance(ref, Container):
@@ -4512,9 +3754,11 @@ class Protocol(object):
         if ref.is_sealed():
             raise RuntimeError("A container with a seal cannot be uncovered, "
                                "use the instruction unseal.")
+        if store_lid is not None and not isinstance(store_lid, bool):
+            raise TypeError("Uncover: store_lid must be of type bool")
         if ref.is_covered():
             ref.cover = None
-            self.instructions.append(Uncover(ref))
+            return self._append_and_return(Uncover(ref))
 
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
@@ -4552,7 +3796,12 @@ class Protocol(object):
             neg_controls = {"well": "well0", "volume": "100:microliter",
                             "captured_events": 5, "channel": "channel0"}
             samples = [
-                {"well": "well0", "volume": "100:microliter", "captured_events": 9}]
+                {
+                    "well": "well0",
+                    "volume": "100:microliter",
+                    "captured_events": 9
+                }
+            ]
 
             p.flow_analyze(dataref, FSC, SSC, neg_controls,
                            samples, colors=None, pos_controls=None)
@@ -4563,41 +3812,41 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "channels": {
-                "FSC": {
-                  "voltage_range": {
-                    "high": "280:volt",
-                    "low": "230:volt"
-                  },
-                  "area": true,
-                  "height": true,
-                  "weight": false
+                "channels": {
+                    "FSC": {
+                        "voltage_range": {
+                            "high": "280:volt",
+                            "low": "230:volt"
+                        },
+                        "area": true,
+                        "height": true,
+                        "weight": false
+                    },
+                    "SSC": {
+                        "voltage_range": {
+                            "high": "280:volt",
+                            "low": "230:volt"
+                        },
+                        "area": true,
+                        "height": true,
+                        "weight": false
+                    }
                 },
-                "SSC": {
-                  "voltage_range": {
-                    "high": "280:volt",
-                    "low": "230:volt"
-                  },
-                  "area": true,
-                  "height": true,
-                  "weight": false
-                }
-              },
-              "op": "flow_analyze",
-              "negative_controls": {
-                "channel": "channel0",
-                "well": "well0",
-                "volume": "100:microliter",
-                "captured_events": 5
-              },
-              "dataref": "test_ref",
-              "samples": [
-                {
-                  "well": "well0",
-                  "volume": "100:microliter",
-                  "captured_events": 9
-                }
-              ]
+                "op": "flow_analyze",
+                "negative_controls": {
+                    "channel": "channel0",
+                    "well": "well0",
+                    "volume": "100:microliter",
+                    "captured_events": 5
+                },
+                "dataref": "test_ref",
+                "samples": [
+                    {
+                        "well": "well0",
+                        "volume": "100:microliter",
+                        "captured_events": 9
+                    }
+                ]
             }
 
         Parameters
@@ -4607,50 +3856,50 @@ class Protocol(object):
         FSC : dict
             Dictionary containing FSC channel parameters in the form of:
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
-                  "voltage_range": {
-                    "low": "230:volt",
-                    "high": "280:volt"
+                    "voltage_range": {
+                        "low": "230:volt",
+                        "high": "280:volt"
                     },
-                  "area": true,             //default: true
-                  "height": true,           //default: true
-                  "weight": false           //default: false
+                    "area": true,             //default: true
+                    "height": true,           //default: true
+                    "weight": false           //default: false
                 }
 
         SSC : dict
             Dictionary of SSC channel parameters in the form of:
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
-                  "voltage_range": {
-                    "low": <voltage>,
-                    "high": <voltage>"
+                    "voltage_range": {
+                        "low": <voltage>,
+                        "high": <voltage>"
                     },
-                  "area": true,             //default: true
-                  "height": true,           //default: false
-                  "weight": false           //default: false
+                    "area": true,             //default: true
+                    "height": true,           //default: false
+                    "weight": false           //default: false
                 }
 
-        neg_controls : list of dicts
+        neg_controls : list(dict)
             List of negative control wells in the form of:
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
                     "well": well,
                     "volume": volume,
-                    "captured_events": integer,     // optional, default infinity
+                    "captured_events": integer,    // optional, default infinity
                     "channel": [channel_name]
                 }
 
             at least one negative control is required.
-        samples : list of dicts
+        samples : list(dict)
             List of samples in the form of:
 
-            .. code-block:: json
+            .. code-block:: none
 
                 {
                     "well": well,
@@ -4659,39 +3908,48 @@ class Protocol(object):
                 }
 
             at least one sample is required
-        colors : list of dicts, optional
+        colors : list(dict), optional
             Optional list of colors in the form of:
 
-            .. code-block:: json
+            .. code-block:: none
 
-              [{
-                "name": "FitC",
-                "emission_wavelength": "495:nanometer",
-                "excitation_wavelength": "519:nanometer",
-                "voltage_range": {
-                  "low": <voltage>,
-                  "high": <voltage>
-                },
-                "area": true,             //default: true
-                "height": false,          //default: false
-                "weight": false           //default: false
-              }, ... ]
-
-        pos_controls : list of dicts, optional
-            Optional list of positive control wells in the form of:
-
-            .. code-block:: json
-
-                [{
-                    "well": well,
-                    "volume": volume,
-                    "captured_events": integer,     // optional, default infinity
-                    "channel": [channel_name],
-                    "minimize_bleed": [{            // optional
-                      "from": color,
-                      "to": [color]
+                [
+                    {
+                        "name": "FitC",
+                        "emission_wavelength": "495:nanometer",
+                        "excitation_wavelength": "519:nanometer",
+                        "voltage_range": {
+                            "low": <voltage>,
+                            "high": <voltage>
+                        },
+                        "area": true,             //default: true
+                        "height": false,          //default: false
+                        "weight": false           //default: false
                     }, ...
                 ]
+
+        pos_controls : list(dict), optional
+            Optional list of positive control wells in the form of:
+
+            .. code-block:: none
+
+                [
+                    {
+                        "well": well,
+                        "volume": volume,
+                        "captured_events": integer,      // default: infinity
+                        "channel": [channel_name],
+                        "minimize_bleed": [{             // optional
+                          "from": color,
+                          "to": [color]
+                    }, ...
+                ]
+
+        Returns
+        -------
+        FlowAnalyze
+            Returns the :py:class:`autoprotocol.instruction.FlowAnalyze`
+            instruction created from the specified parameters
 
         Raises
         ------
@@ -4724,8 +3982,8 @@ class Protocol(object):
 
         for s in sources:
             if not isinstance(s.get("well"), Well):
-                    raise TypeError("The well for each sample or control must "
-                                    "be of type Well.")
+                raise TypeError("The well for each sample or control must "
+                                "be of type Well.")
             try:
                 Unit(s.get("volume"))
             except (ValueError, TypeError) as e:
@@ -4794,13 +4052,13 @@ class Protocol(object):
                         raise TypeError("Colors must contain elements of "
                                         "type dict.")
                     else:
-                        if not c.get("name") or not \
-                          isinstance(c.get("name"), str):
+                        if (not c.get("name") or not
+                                isinstance(c.get("name"), str)):
                             raise TypeError("Each color must have a `name` "
                                             "that is of type string.")
                         if c.get("emission_wavelength"):
                             try:
-                                Unit.fromstring(c.get("emission_wavelength"))
+                                Unit(c.get("emission_wavelength"))
                             except (UnitError):
                                 raise UnitError("Each `emission_wavelength` "
                                                 "must be of type unit.")
@@ -4809,7 +4067,7 @@ class Protocol(object):
                                              "`emission_wavelength`.")
                         if c.get("excitation_wavelength"):
                             try:
-                                Unit.fromstring(c.get("excitation_wavelength"))
+                                Unit(c.get("excitation_wavelength"))
                             except (UnitError):
                                 raise UnitError("Each `excitation_wavelength` "
                                                 "must be of type unit.")
@@ -4817,9 +4075,14 @@ class Protocol(object):
                             raise ValueError("Each color must have an "
                                              "`excitation_wavelength`.")
 
-        [self._remove_cover(s["well"].container, "flow_analyze") for s in sources]
-        self.instructions.append(FlowAnalyze(dataref, FSC, SSC, neg_controls,
-                                             samples, colors, pos_controls))
+        for s in sources:
+            self._remove_cover(s["well"].container, "flow_analyze")
+
+        return self._append_and_return(
+            FlowAnalyze(
+                dataref, FSC, SSC, neg_controls, samples, colors, pos_controls
+            )
+        )
 
     def oligosynthesize(self, oligos):
         """
@@ -4839,120 +4102,59 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "oligos": [
-                    {
-                      "destination": "oligo_1/0",
-                      "sequence": "CATGGTCCCCTGCACAGG",
-                      "scale": "25nm",
-                      "purification": "standard"
-                    }
-                  ],
-                  "op": "oligosynthesize"
+                    "oligos": [
+                        {
+                            "destination": "oligo_1/0",
+                            "sequence": "CATGGTCCCCTGCACAGG",
+                            "scale": "25nm",
+                            "purification": "standard"
+                        }
+                    ],
+                    "op": "oligosynthesize"
                 }
-              ]
+            ]
 
         Parameters
         ----------
-        oligos : list of dicts
+        oligos : list(dict)
             List of oligonucleotides to synthesize.  Each dictionary should
             contain the oligo's sequence, destination, scale and purification
 
-            .. code-block:: json
+            .. code-block:: none
 
                 [
                     {
-                      "destination": "my_plate/A1",
-                      "sequence": "GATCRYMKSWHBVDN",
+                        "destination": "my_plate/A1",
+                        "sequence": "GATCRYMKSWHBVDN",
                         // - standard IUPAC base codes
                         // - IDT also allows rX (RNA), mX (2' O-methyl RNA), and
                         //   X*/rX*/mX* (phosphorothioated)
-                        // - they also allow inline annotations for modifications,
-                        //   eg "GCGACTC/3Phos/" for a 3' phosphorylation
-                        //   eg "aggg/iAzideN/cgcgc" for an internal modification
-                      "scale": "25nm" | "100nm" | "250nm" | "1um",
-                      "purification": "standard" | "page" | "hplc",
+                        // - they also allow inline annotations for
+                        //   modifications,
+                        //   e.g. "GCGACTC/3Phos/" for a 3' phosphorylation
+                        //   e.g. "aggg/iAzideN/cgcgc" for an
+                        //   internal modification
+                        "scale": "25nm" | "100nm" | "250nm" | "1um",
+                        "purification": "standard" | "page" | "hplc",
                         // default: standard
-                    },
-                    ...
+                    }, ...
                 ]
-        """
-        self.instructions.append(Oligosynthesize(oligos))
 
-    def spread(self, source, dest, volume):
-        """
-        Spread the specified volume of the source aliquot across the surface of
-        the agar contained in the object container
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-
-            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
-            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
-
-            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
-
-
-        Autoprotocol Output:
-
-        .. code-block:: json
-
-            {
-              "refs": {
-                "bacteria": {
-                  "new": "micro-1.5",
-                  "discard": true
-                },
-                "agar_plate": {
-                  "new": "1-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                {
-                  "volume": "55.0:microliter",
-                  "to": "agar_plate/0",
-                  "from": "bacteria/0",
-                  "op": "spread"
-                }
-              ]
-            }
-
-
-        Parameters
-        ----------
-        source : Well
-            Source of material to spread on agar
-        dest : Well
-            Reference to destination location (plate containing agar)
-        volume : str, Unit
-            Volume of source material to spread on agar
+        Returns
+        -------
+        Oligosynthesize
+            Returns the :py:class:`autoprotocol.instruction.Oligosynthesize`
+            instruction created from the specified parameters
 
         """
-        # Check validity of Well inputs
-        if not isinstance(source, Well):
-            raise TypeError("Source must be of type Well.")
-        if not isinstance(dest, Well):
-            raise TypeError("Destination, (dest), must be of type Well.")
-        self._remove_cover(source.container, "spread")
-        self._remove_cover(dest.container, "spread")
-        volume = Unit.fromstring(volume)
-        if dest.volume:
-            dest.volume += volume
-        else:
-            dest.volume = volume
-        if source.volume:
-            source.volume -= volume
-        self.instructions.append(Spread(source, dest, volume))
+        return self._append_and_return(Oligosynthesize(oligos))
 
-    def autopick(self, sources, dests, min_abort=0, criteria={},
-                 dataref="autopick", newpick=False):
+    def autopick(self, sources, dests, min_abort=0, criteria=None,
+                 dataref="autopick"):
         """
 
         Pick colonies from the agar-containing location(s) specified in
@@ -4968,15 +4170,30 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : Well, WellGroup, list of Wells
+        sources : Well or WellGroup or list(Well)
             Reference wells containing agar and colonies to pick
-        dests : Well, WellGroup, list of Wells
+        dests : Well or WellGroup or list(Well)
             List of destination(s) for picked colonies
         criteria : dict
             Dictionary of autopicking criteria.
         min_abort : int, optional
             Total number of colonies that must be detected in the aggregate
             list of `from` wells to avoid aborting the entire run.
+        dataref: str
+            Name of dataset to save the picked colonies to
+
+        Returns
+        -------
+        Autopick
+            Returns the :py:class:`autoprotocol.instruction.Autopick`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types for sources and dests
+        ValueError
+            Source wells are not all from the same container
 
         """
         # Check valid well inputs
@@ -4991,7 +4208,7 @@ class Protocol(object):
         sources = WellGroup(sources)
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
-            raise RuntimeError("All source wells for autopick must exist "
+            raise ValueError("All source wells for autopick must exist "
                                "on the same container")
         dests = WellGroup(dests)
         pick["to"] = dests
@@ -4999,18 +4216,14 @@ class Protocol(object):
 
         group = [pick]
 
-        [self._remove_cover(s.container, "autopick") for s in pick["from"]]
-        [self._remove_cover(d.container, "autopick") for d in pick["to"]]
+        for s in pick["from"]:
+            self._remove_cover(s.container, "autopick")
+        for d in pick["to"]:
+            self._remove_cover(d.container, "autopick")
 
-        if (not newpick and self.instructions and
-                self.instructions[-1].op == "autopick" and
-                self.instructions[-1].dataref == dataref and
-                self.instructions[-1].criteria == criteria and
-                self.instructions[-1].groups[0]['from'][0].container ==
-                sources[0].container):
-            self.instructions[-1].groups.extend(group)
-        else:
-            self.instructions.append(Autopick(group, criteria, dataref))
+        criteria = {} if criteria is None else criteria
+
+        return self._append_and_return(Autopick(group, criteria, dataref))
 
     def mag_dry(self, head, container, duration, new_tip=False,
                 new_instruction=False):
@@ -5031,7 +4244,7 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
@@ -5056,27 +4269,28 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to dry beads above
-        duration : str, Unit
+        duration : str or Unit
             Time for drying
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
-        """
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
 
+        """
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ["duration"]:
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_dry")
-        self._add_mag(mag, head, new_tip, new_instruction, "dry")
+        return self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
     def mag_incubate(self, head, container, duration, magnetize=False,
                      tip_position=1.5, temperature=None, new_tip=False,
@@ -5097,27 +4311,27 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "groups": [
-                    [
-                      {
-                        "incubate": {
-                          "duration": "30:minute",
-                          "tip_position": 1.5,
-                          "object": "plate_0",
-                          "magnetize": false,
-                          "temperature": null
-                        }
-                      }
-                    ]
-                  ],
-                  "magnetic_head": "96-pcr",
-                  "op": "magnetic_transfer"
+                    "groups": [
+                        [
+                            {
+                                "incubate": {
+                                    "duration": "30:minute",
+                                    "tip_position": 1.5,
+                                    "object": "plate_0",
+                                    "magnetize": false,
+                                    "temperature": null
+                                }
+                            }
+                        ]
+                    ],
+                    "magnetic_head": "96-pcr",
+                    "op": "magnetic_transfer"
                 }
-              ]
+            ]
 
         Parameters
         ----------
@@ -5125,33 +4339,39 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Time for incubation
         magnetize : bool
             Specify whether to magnetize the tips
         tip_position : float
             Position relative to well height that tips are held
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ("duration", "magnetize", "tip_position", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["magnetize"] = magnetize
+        mag["tip_position"] = tip_position
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_incubate")
-        self._add_mag(mag, head, new_tip, new_instruction, "incubate")
+        return self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def mag_collect(self, head, container, cycles, pause_duration,
                     bottom_position=0.0, temperature=None, new_tip=False,
@@ -5174,27 +4394,27 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "groups": [
-                    [
-                      {
-                        "collect": {
-                          "bottom_position": 0.0,
-                          "object": "plate_0",
-                          "temperature": null,
-                          "cycles": 5,
-                          "pause_duration": "30:second"
-                        }
-                      }
-                    ]
-                  ],
-                  "magnetic_head": "96-pcr",
-                  "op": "magnetic_transfer"
+                    "groups": [
+                        [
+                            {
+                                "collect": {
+                                    "bottom_position": 0,
+                                    "object": "plate_0",
+                                    "temperature": null,
+                                    "cycles": 5,
+                                    "pause_duration": "30:second"
+                                }
+                            }
+                        ]
+                    ],
+                    "magnetic_head": "96-pcr",
+                    "op": "magnetic_transfer"
                 }
-              ]
+            ]
 
         Parameters
         ----------
@@ -5204,31 +4424,37 @@ class Protocol(object):
             Container to incubate beads
         cycles: int
             Number of cycles to raise and lower tips
-        pause_duration : str, Unit
+        pause_duration : str or Unit
             Time tips are paused in bottom position each cycle
         bottom_position : float
             Position relative to well height that tips are held during pause
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ("cycles", "pause_duration", "bottom_position", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["cycles"] = cycles
+        mag["pause_duration"] = parse_unit(pause_duration, "second")
+        mag["bottom_position"] = bottom_position
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_collect")
-        self._add_mag(mag, head, new_tip, new_instruction, "collect")
+        return self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
     def mag_release(self, head, container, duration, frequency, center=0.5,
                     amplitude=0.5, temperature=None, new_tip=False,
@@ -5251,28 +4477,28 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "groups": [
-                    [
-                      {
-                        "release": {
-                          "center": 0.75,
-                          "object": "plate_0",
-                          "frequency": "2:hertz",
-                          "amplitude": 0.25,
-                          "duration": "30:second",
-                          "temperature": null
-                        }
-                      }
-                    ]
-                  ],
-                  "magnetic_head": "96-pcr",
-                  "op": "magnetic_transfer"
+                    "groups": [
+                        [
+                            {
+                                "release": {
+                                    "center": 0.75,
+                                    "object": "plate_0",
+                                    "frequency": "2:hertz",
+                                    "amplitude": 0.25,
+                                    "duration": "30:second",
+                                    "temperature": null
+                                }
+                            }
+                        ]
+                    ],
+                    "magnetic_head": "96-pcr",
+                    "op": "magnetic_transfer"
                 }
-              ]
+            ]
 
         Parameters
         ----------
@@ -5280,35 +4506,42 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Total time for this sub-operation
-        frequency : str, Unit
+        frequency : str or Unit
             Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
         amplitude : float
             Distance relative to well height to oscillate around "center"
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ("duration", "frequency", "center", "amplitude", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["frequency"] = parse_unit(frequency, "hertz")
+        mag["center"] = center
+        mag["amplitude"] = amplitude
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_release")
-        self._add_mag(mag, head, new_tip, new_instruction, "release")
+        return self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(self, head, container, duration, frequency, center=0.5,
                 amplitude=0.5, magnetize=False, temperature=None,
@@ -5331,29 +4564,29 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             "instructions": [
                 {
-                  "groups": [
-                    [
-                      {
-                        "mix": {
-                          "center": 0.75,
-                          "object": "plate_0",
-                          "frequency": "2:hertz",
-                          "amplitude": 0.25,
-                          "duration": "30:second",
-                          "magnetize": true,
-                          "temperature": null
-                        }
-                      }
-                    ]
-                  ],
-                  "magnetic_head": "96-pcr",
-                  "op": "magnetic_transfer"
+                    "groups": [
+                        [
+                            {
+                                "mix": {
+                                    "center": 0.75,
+                                    "object": "plate_0",
+                                    "frequency": "2:hertz",
+                                    "amplitude": 0.25,
+                                    "duration": "30:second",
+                                    "magnetize": true,
+                                    "temperature": null
+                                }
+                            }
+                        ]
+                    ],
+                    "magnetic_head": "96-pcr",
+                    "op": "magnetic_transfer"
                 }
-              ]
+            ]
 
         Parameters
         ----------
@@ -5361,9 +4594,9 @@ class Protocol(object):
             Magnetic head to use for the magnetic bead transfers
         container : Container
             Container to incubate beads
-        duration : str, Unit
+        duration : str or Unit
             Total time for this sub-operation
-        frequency : str, Unit
+        frequency : str or Unit
             Cycles per second (hertz) that tips are raised and lowered
         center : float
             Position relative to well height where oscillation is centered
@@ -5371,28 +4604,35 @@ class Protocol(object):
             Distance relative to well height to oscillate around "center"
         magnetize : bool
             Specify whether to magnetize the tips
-        temperature: str, Unit
+        temperature: str or Unit
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
         new_instruction: bool
             Specify whether to create a new magnetic_transfer instruction
 
+        Returns
+        -------
+        MagneticTransfer
+            Returns the :py:class:`autoprotocol.instruction.MagneticTransfer`
+            instruction created from the specified parameters
+
         """
 
         check_valid_mag(container, head)
-        mag = {}
+        mag = dict()
         mag["object"] = container
-        for kw in ("duration", "frequency", "center", "amplitude",
-                   "magnetize", "temperature"):
-            val = locals()[kw]
-            if isinstance(val, str) and ":" in val:
-                val = Unit(val)
-            mag[kw] = val
+        mag["duration"] = parse_unit(duration, "second")
+        mag["frequency"] = parse_unit(frequency, "hertz")
+        mag["center"] = center
+        mag["amplitude"] = amplitude
+        mag["magnetize"] = magnetize
+        if temperature is not None:
+            mag["temperature"] = parse_unit(temperature, "celsius")
 
         check_valid_mag_params(mag)
         self._remove_cover(container, "mag_mix")
-        self._add_mag(mag, head, new_tip, new_instruction, "mix")
+        return self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
         """
@@ -5454,15 +4694,21 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str, Container
+        ref : str or Container
             Container to take image of
         mode : str
             Imaging mode (currently supported: "top")
         dataref : str
             Name of data reference of resulting image
 
+        Returns
+        -------
+        ImagePlate
+            Returns the :py:class:`autoprotocol.instruction.ImagePlate`
+            instruction created from the specified parameters
+
         """
-        self.instructions.append(ImagePlate(ref, mode, dataref))
+        return self._append_and_return(ImagePlate(ref, mode, dataref))
 
     def provision(self, resource_id, dests, volumes):
         """
@@ -5474,9 +4720,9 @@ class Protocol(object):
         ----------
         resource_id : str
           Resource ID from catalog.
-        dests : Well, WellGroup, list of Wells
+        dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
-        volumes : str, Unit, list of str, list of Unit
+        volumes : str or Unit or list(str) or list(Unit)
           Volume(s) to transfer of the resource to each destination well.  If
           one volume of specified, each destination well recieve that volume of
           the resource.  If destinations should recieve different volumes, each
@@ -5486,12 +4732,20 @@ class Protocol(object):
         Raises
         ------
         TypeError
-          If resource_id is not a string.
+            If resource_id is not a string.
         RuntimeError
-          If length of the list of volumes specified does not match the number
-          of destination wells specified.
+            If length of the list of volumes specified does not match the number
+            of destination wells specified.
         TypeError
-          If volume is not specified as a string or Unit (or a list of either)
+            If volume is not specified as a string or Unit (or a list of either)
+        ValueError
+            Volume to provision exceeds max capacity of well
+
+        Returns
+        -------
+        Provision
+            Returns the :py:class:`autoprotocol.instruction.Provision`
+            instruction created from the specified parameters
 
         """
         # Check valid well inputs
@@ -5502,18 +4756,23 @@ class Protocol(object):
         if not isinstance(resource_id, basestring):
             raise TypeError("Resource ID must be a string.")
         if not isinstance(volumes, list):
-            volumes = [Unit.fromstring(volumes)] * len(dests)
+            volumes = [Unit(volumes)] * len(dests)
         else:
             if len(volumes) != len(dests):
                 raise RuntimeError("To provision a resource into multiple "
                                    "destinations with multiple volumes, the  "
                                    "list of volumes must correspond with the "
                                    "destinations in length and in order.")
-            volumes = [Unit.fromstring(v) for v in volumes]
+            volumes = [Unit(v) for v in volumes]
         for v in volumes:
             if not isinstance(v, (basestring, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
+            d_max_vol = d.container.container_type.true_max_vol_ul
+            if v > d_max_vol:
+                raise ValueError("The volume you are trying to provision ({}) "
+                                 "exceeds the maximum capacity of this well "
+                                 "({}).".format(v, d_max_vol))
             self._remove_cover(d.container, "provision")
             dest_group = []
             if v > Unit(900, "microliter"):
@@ -5534,12 +4793,15 @@ class Protocol(object):
                 d.set_volume(v)
             dest_group.append(xfer)
 
-            if (self.instructions and self.instructions[-1].op == "provision" and
+            if (self.instructions and
+                    self.instructions[-1].op == "provision" and
                     self.instructions[-1].resource_id == resource_id and
-                    self.instructions[-1].to[-1]["well"].container == d.container):
+                    self.instructions[-1].to[-1]["well"].container ==
+                    d.container):
                 self.instructions[-1].to.append(xfer)
             else:
-                self.instructions.append(Provision(resource_id, dest_group))
+                return self._append_and_return(Provision(resource_id,
+                                                         dest_group))
 
     def flash_freeze(self, container, duration):
         """
@@ -5579,14 +4841,19 @@ class Protocol(object):
 
         Parameters
         ----------
-        container : Container, str
+        container : Container or str
           Container to be flash frozen.
-        duration : str, Unit
+        duration : str or Unit
           Duration to submerge specified container in liquid nitrogen.
 
+        Returns
+        -------
+        FlashFreeze
+            Returns the :py:class:`autoprotocol.instruction.FlashFreeze`
+            instruction created from the specified parameters
         """
 
-        self.instructions.append(FlashFreeze(container, duration))
+        return self._append_and_return(FlashFreeze(container, duration))
 
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
@@ -5596,89 +4863,6 @@ class Protocol(object):
             v = self.refs[k]
             if v.container is container:
                 return k
-
-    @staticmethod
-    def fill_wells(dst_group, src_group, volume, distribute_target=None, dispense_speed=None):
-        """
-        Distribute liquid to a WellGroup, sourcing the liquid from a group
-        of wells all containing the same substance.
-
-        Parameters
-        ----------
-        dst_group : WellGroup
-            WellGroup to distribute liquid to
-        src_group : WellGroup
-            WellGroup containing the substance to be distributed
-        volume : str, Unit
-            volume of liquid to be distributed to each destination well
-
-        Returns
-        -------
-        distributes : list
-            List of distribute groups
-
-        Raises
-        ------
-        RuntimeError
-            if source wells run out of liquid before distributing to all
-            designated destination wells
-        RuntimeError
-            if length of list of volumes does not match the number of
-            destination wells to be distributed to
-
-        """
-
-        src = None
-        distributes = []
-        src_group = WellGroup(src_group)
-        dst_group = WellGroup(dst_group)
-        if isinstance(volume, list):
-            if len(volume) != len(dst_group.wells):
-                raise RuntimeError("List length of volumes provided for "
-                                   "distribution does not match the number of "
-                                   " destination wells")
-            volume = [Unit.fromstring(x) for x in volume]
-        else:
-            volume = [Unit.fromstring(volume)] * len(dst_group.wells)
-        for d, v in list(zip(dst_group.wells, volume)):
-            v = v.to("ul")
-            if len(distributes) == 0 or src.volume < v:
-                # find a src well with enough volume
-                src = next(
-                    (w for w in src_group.wells if w.volume >= v), None)
-                if src is None:
-                    raise RuntimeError(
-                        "no well in source group has more than %s %s(s)" %
-                        (str(v).rsplit(":")[0], str(v).rsplit(":")[1]))
-                distributes.append({
-                    "from": src,
-                    "to": []
-                })
-            opts = {
-                "well": d,
-                "volume": v
-            }
-            if distribute_target:
-                opts["x_dispense_target"] = distribute_target
-            if dispense_speed:
-                opts["dispense_speed"] = dispense_speed
-            distributes[-1]["to"].append(opts)
-            src.volume -= v
-            if d.volume:
-                d.volume += v
-            else:
-                d.volume = v
-        return distributes
-
-    def _pipette(self, groups):
-        """Append given pipette groups to the protocol
-
-        """
-        if len(self.instructions) > 0 and \
-                self.instructions[-1].op == 'pipette':
-            self.instructions[-1].groups += groups
-        else:
-            self.instructions.append(Pipette(groups))
 
     def _remove_cover(self, container, action):
         if not container.container_type.is_tube:
@@ -5748,7 +4932,8 @@ class Protocol(object):
                                    "magnetic transfer instruction. Please "
                                    "specify a new instruction")
         else:
-            self.instructions.append(MagneticTransfer([[{name: mag}]], head))
+            return self._append_and_return(MagneticTransfer([[{name: mag}]],
+                                                            head))
 
     def _count_mag_containers(self, mag, new_tip):
         """
@@ -5775,13 +4960,15 @@ class Protocol(object):
         Unpacks protocol objects into Autoprotocol compliant ones
 
         Used by as_dict().
+
         Parameters
         ----------
         op_data: any protocol object
 
         Returns
         -------
-        Autoprotocol compliant objects
+        dict or str or list or any
+            Autoprotocol compliant objects
 
         """
         if type(op_data) is dict:
@@ -5837,17 +5024,27 @@ class Protocol(object):
                 },
                 "mastermix_loc": protocol.refs["sample_plate"].well("A1"),
                 "samples": WellGroup([
-                        protocol.refs["sample_plate"].well("B1"),
-                        protocol.refs["sample_plate"].well("B2"),
-                        protocol.refs["sample_plate"].well("B3"),
-                        protocol.refs["sample_plate"].well("B4")
-                    ])
+                    protocol.refs["sample_plate"].well("B1"),
+                    protocol.refs["sample_plate"].well("B2"),
+                    protocol.refs["sample_plate"].well("B3"),
+                    protocol.refs["sample_plate"].well("B4")
+                ])
             }
 
         Parameters
         ----------
         params : dict
             A dictionary of parameters to be passed to a protocol.
+
+        Returns
+        -------
+        dict
+            Dictionary of containers and wells
+
+        Raises
+        ------
+        RuntimeError
+            Invalid parameters
 
         """
         parameters = {}
@@ -5894,7 +5091,8 @@ class Protocol(object):
                     raise RuntimeError(
                         "Parameters contain well references to "
                         "a container that isn't referenced in this protocol: "
-                        "'%s'." % ref_name)
+                        "'%s'." % ref_name
+                    )
 
                 if v.rsplit("/")[1] == "all_wells":
                     parameters[str(k)] = self.refs[
@@ -5930,37 +5128,36 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: json
+        .. code-block:: none
 
             {
-              "refs": {
-                "test_plate": {
-                  "new": "96-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                 {
-                    "volume": "2.0:microliter",
-                    "dataref": "mc_test",
-                    "object": [
-                        "test_plate/0",
-                        "test_plate/1",
-                        "test_plate/2"
-                    ],
-                    "op": "measure_concentration",
-                    "measurement": "DNA"
+                "refs": {
+                    "test_plate": {
+                        "new": "96-flat",
+                        "discard": true
+                    }
                 },
-                ...
-              ]
+                "instructions": [
+                    {
+                        "volume": "2.0:microliter",
+                        "dataref": "mc_test",
+                        "object": [
+                            "test_plate/0",
+                            "test_plate/1",
+                            "test_plate/2"
+                        ],
+                        "op": "measure_concentration",
+                        "measurement": "DNA"
+                    }, ...
+                ]
             }
 
 
         Parameters
         ----------
-        wells : list, WellGroup, Well
+        wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured
-        volume : str, Unit
+        volume : str or Unit
             Volume of sample required for analysis
         dataref : str
             Name of this specific dataset of measurements
@@ -5968,17 +5165,31 @@ class Protocol(object):
             Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
             "protein"].
 
+        Returns
+        -------
+        MeasureConcentration
+            Returns the
+            :py:class:`autoprotocol.instruction.MeasureConcentration`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
+
         """
         if not is_valid_well(wells):
-            raise TypeError("Wells must be of type Well, list of Wells, or "
-                            "WellGroup.")
+            raise TypeError(
+                "Wells must be of type Well, list of Wells, or WellGroup."
+            )
         wells = WellGroup(wells)
-        self.instructions.append(MeasureConcentration(wells, volume, dataref,
-                                                      measurement))
+        return self._append_and_return(
+            MeasureConcentration(wells, volume, dataref, measurement)
+        )
 
-    def measure_mass(self, containers, dataref):
+    def measure_mass(self, container, dataref):
         """
-        Measure the mass of a list of containers.
+        Measure the mass of a container.
 
         Example Usage:
 
@@ -5988,7 +5199,7 @@ class Protocol(object):
 
             test_plate = p.ref("test_plate", id=None, cont_type="96-flat",
                 storage=None, discard=True)
-            p.measure_mass([test_plate], "test_data")
+            p.measure_mass(test_plate, "test_data")
 
 
         Autoprotocol Output:
@@ -5996,43 +5207,47 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "refs": {
-                "test_plate": {
-                  "new": "96-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                 {
-                    "dataref": "test_data",
-                    "object": [
-                        "test_plate
-                    ],
-                    "op": "measure_mass"
-                  }
-              ]
+                "refs": {
+                    "test_plate": {
+                        "new": "96-flat",
+                        "discard": true
+                    }
+                },
+                "instructions": [
+                    {
+                        "dataref": "test_data",
+                        "object": [
+                            "test_plate"
+                        ],
+                        "op": "measure_mass"
+                    }
+                ]
             }
 
 
         Parameters
         ----------
-        containers : list, Container
-            list of containers to be measured
+        container : Container
+            container to be measured
         dataref : str
             Name of this specific dataset of measurements
 
+        Returns
+        -------
+        MeasureMass
+            Returns the :py:class:`autoprotocol.instruction.MeasureMass`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Input given is not of type Container
+
         """
+        if not isinstance(container, Container):
+            raise TypeError("{} has to be of type Container".format(container))
 
-        if isinstance(containers, Container):
-            containers = [containers]
-        elif isinstance(containers, list):
-            for container in containers:
-                if not isinstance(container, Container):
-                    raise TypeError("Only list of Container allowed")
-        else:
-            raise TypeError("Only Container or list of Container allowed")
-
-        self.instructions.append(MeasureMass(containers, dataref))
+        return self._append_and_return(MeasureMass(container, dataref))
 
     def measure_volume(self, wells, dataref):
         """
@@ -6054,35 +5269,397 @@ class Protocol(object):
         .. code-block:: json
 
             {
-              "refs": {
-                "test_plate": {
-                  "new": "96-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                 {
-                    "dataref": "test_data",
-                    "object": [
-                        "test_plate/0",
-                        "test_plate/1"
-                    ],
-                    "op": "measure_volume"
-                  }
-              ]
+                "refs": {
+                    "test_plate": {
+                        "new": "96-flat",
+                        "discard": true
+                    }
+                },
+                "instructions": [
+                    {
+                        "dataref": "test_data",
+                        "object": [
+                            "test_plate/0",
+                            "test_plate/1"
+                        ],
+                        "op": "measure_volume"
+                    }
+                ]
             }
 
 
         Parameters
         ----------
-        wells : list, well, WellGroup
+        wells : list(Well) or WellGroup or Well
             list of wells to be measured
         dataref : str
             Name of this specific dataset of measurements
 
+        Returns
+        -------
+        MeasureVolume
+            Returns the :py:class:`autoprotocol.instruction.MeasureVolume`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
+
         """
         if not is_valid_well(wells):
-            raise TypeError("Wells must be of type Well, list of Wells, or "
-                            "WellGroup.")
+            raise TypeError(
+                "Wells must be of type Well, list of Wells, or WellGroup."
+            )
         wells = WellGroup(wells)
-        self.instructions.append(MeasureVolume(wells, dataref))
+        return self._append_and_return(MeasureVolume(wells, dataref))
+
+    def count_cells(self, wells, volume, dataref, labels=None):
+        """
+        Count the number of cells in a sample that are positive/negative
+        for a given set of labels.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            cell_suspension = p.ref(
+                "cells_with_trypan_blue",
+                id=None,
+                cont_type="micro-1.5",
+                discard=True
+            )
+            p.count_cells(
+                cell_suspension.well(0),
+                "10:microliter",
+                "my_cell_count",
+                ["trypan_blue"]
+            )
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+                "refs": {
+                    "cells_with_trypan_blue": {
+                        "new": "micro-1.5",
+                        "discard": true
+                    }
+                },
+                "instructions": [
+                    {
+                        "dataref": "my_cell_count",
+                        "volume": "10:microliter",
+                        "wells": [
+                            "cells_with_trypan_blue/0"
+                        ],
+                        "labels": [
+                            "trypan_blue"
+                        ],
+                        "op": "count_cells"
+                    }
+                ]
+            }
+
+
+        Parameters
+        ----------
+        wells: Well or list(Well) or WellGroup
+            List of wells that will be used for cell counting.
+        volume: Unit
+            Volume that should be consumed from each well for the purpose
+            of cell counting.
+        dataref: str
+            Name of dataset that will be returned.
+        labels: list(string), optional
+            Cells will be scored for presence or absence of each label
+            in this list. If staining is required to visualize these labels,
+            they must be added before execution of this instruction.
+
+        Returns
+        -------
+        CountCells
+            Returns the :py:class:`autoprotocol.instruction.CountCells`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            `wells` specified is not of a valid input type
+
+        """
+        # Check valid well inputs
+        if not is_valid_well(wells):
+            raise TypeError(
+                "Wells must be of type Well, list of Wells, or WellGroup.")
+        wells = WellGroup(wells)
+
+        # Parse volume
+        parsed_volume = parse_unit(volume, "microliter")
+
+        # Eliminate duplicates from labels
+        parsed_labels = list(set(labels))
+
+        return self._append_and_return(CountCells(wells, parsed_volume, dataref,
+                                                  parsed_labels))
+
+    def spectrophotometry(self, dataref, obj, groups, interval=None,
+                          num_intervals=None, temperature=None,
+                          shake_before=None):
+        """
+        Generates an instruction with one or more plate reading steps
+        executed on a single plate with the same device. This could be
+        executed once, or at a defined interval, across some total duration.
+
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            read_plate = p.ref("read plate", cont_type="96-flat", discard=True)
+
+            groups = Spectrophotometry.builders.groups(
+                [
+                    Spectrophotometry.builders.group(
+                        "absorbance",
+                        Spectrophotometry.builders.absorbance_mode_params(
+                            wells=read_plate.wells(0, 1),
+                            wavelength=["100:nanometer", "200:nanometer"],
+                            num_flashes=15,
+                            settle_time="1:second"
+                        )
+                    ),
+                    Spectrophotometry.builders.group(
+                        "fluorescence",
+                        Spectrophotometry.builders.fluorescence_mode_params(
+                            wells=read_plate.wells(0, 1),
+                            excitation=[
+                                Spectrophotometry.builders.wavelength_selection(
+                                    ideal="650:nanometer"
+                                )
+                            ],
+                            emission=[
+                                Spectrophotometry.builders.wavelength_selection(
+                                    shortpass="600:nanometer",
+                                    longpass="700:nanometer"
+                                )
+                            ],
+                            num_flashes=15,
+                            settle_time="1:second",
+                            lag_time="9:second",
+                            integration_time="2:second",
+                            gain=0.3,
+                            read_position="top"
+                        )
+                    ),
+                    Spectrophotometry.builders.group(
+                        "luminescence",
+                        Spectrophotometry.builders.luminescence_mode_params(
+                            wells=read_plate.wells(0, 1),
+                            num_flashes=15,
+                            settle_time="1:second",
+                            integration_time="2:second",
+                            gain=0.3
+                        )
+                    ),
+                    Spectrophotometry.builders.group(
+                        "shake",
+                        Spectrophotometry.builders.shake_mode_params(
+                            duration="1:second",
+                            frequency="9:hertz",
+                            path="ccw_orbital",
+                            amplitude="1:mm"
+                        )
+                    ),
+                ]
+            )
+
+            shake_before = Spectrophotometry.builders.shake_before(
+                duration="10:minute",
+                frequency="5:hertz",
+                path="ccw_orbital",
+                amplitude="1:mm"
+            )
+
+            p.spectrophotometry(
+                dataref="test data",
+                obj=read_plate,
+                groups=groups,
+                interval="10:minute",
+                num_intervals=2,
+                temperature="37:celsius",
+                shake_before=shake_before
+            )
+
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "op": "spectrophotometry",
+              "dataref": "test data",
+              "object": "read plate",
+              "groups": [
+                {
+                  "mode": "absorbance",
+                  "mode_params": {
+                    "wells": [
+                      "read plate/0",
+                      "read plate/1"
+                    ],
+                    "wavelength": [
+                      "100:nanometer",
+                      "200:nanometer"
+                    ],
+                    "num_flashes": 15,
+                    "settle_time": "1:second"
+                  }
+                },
+                {
+                  "mode": "fluorescence",
+                  "mode_params": {
+                    "wells": [
+                      "read plate/0",
+                      "read plate/1"
+                    ],
+                    "excitation": [
+                      {
+                        "ideal": "650:nanometer"
+                      }
+                    ],
+                    "emission": [
+                      {
+                        "shortpass": "600:nanometer",
+                        "longpass": "700:nanometer"
+                      }
+                    ],
+                    "num_flashes": 15,
+                    "settle_time": "1:second",
+                    "lag_time": "9:second",
+                    "integration_time": "2:second",
+                    "gain": 0.3,
+                    "read_position": "top"
+                  }
+                },
+                {
+                  "mode": "luminescence",
+                  "mode_params": {
+                    "wells": [
+                      "read plate/0",
+                      "read plate/1"
+                    ],
+                    "num_flashes": 15,
+                    "settle_time": "1:second",
+                    "integration_time": "2:second",
+                    "gain": 0.3
+                  }
+                },
+                {
+                  "mode": "shake",
+                  "mode_params": {
+                    "duration": "1:second",
+                    "frequency": "9:hertz",
+                    "path": "ccw_orbital",
+                    "amplitude": "1:millimeter"
+                  }
+                }
+              ],
+              "interval": "10:minute",
+              "num_intervals": 2,
+              "temperature": "37:celsius",
+              "shake_before": {
+                "duration": "10:minute",
+                "frequency": "5:hertz",
+                "path": "ccw_orbital",
+                "amplitude": "1:millimeter"
+              }
+            }
+
+
+        Parameters
+        ----------
+        dataref : str
+            Name of the resultant dataset to be returned.
+        obj : Container or str
+            Container to be read.
+        groups : list
+            A list of groups generated by SpectrophotometryBuilders groups
+            builders, any of absorbance_mode_params, fluorescence_mode_params,
+            luminescence_mode_params, or shake_mode_params.
+        interval : Unit or str, optional
+            The time between each of the read intervals.
+        num_intervals : int, optional
+            The number of times that the groups should be executed.
+        temperature : Unit or str, optional
+            The temperature that the entire instruction should be executed at.
+        shake_before : dict, optional
+            A dict of params generated by SpectrophotometryBuilders.shake_before
+            that dictates how the obj should be incubated with shaking before
+            any of the groups are executed.
+
+        Returns
+        -------
+        Spectrophotometry
+            Returns the :py:class:`autoprotocol.instruction.Spectrophotometry`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid num_intervals specified, must be an int
+        ValueError
+            No interval specified but shake groups specified with no duration
+
+        """
+
+        groups = Spectrophotometry.builders.groups(groups)
+
+        if interval is not None:
+            interval = parse_unit(interval, "seconds")
+
+        if num_intervals and not isinstance(num_intervals, int):
+            raise TypeError(
+                "Invalid num_intervals {}, must be an int."
+                "".format(num_intervals)
+            )
+
+        if temperature is not None:
+            temperature = parse_unit(temperature, "celsius")
+
+        if shake_before is not None:
+            shake_before = Spectrophotometry.builders.shake_before(
+                **shake_before
+            )
+
+        shake_groups = [
+            _ for _ in groups if _["mode"] == "shake"
+        ]
+
+        any_shake_duration_undefined = any(
+            _["mode_params"].get("duration") is None
+            for _ in shake_groups
+        )
+
+        if any_shake_duration_undefined and interval is None:
+            raise ValueError(
+                "If no interval is specified, then every shake group must "
+                "include a defined duration."
+            )
+
+        return self._append_and_return(
+            Spectrophotometry(
+                dataref=dataref,
+                object=obj,
+                groups=groups,
+                interval=interval,
+                num_intervals=num_intervals,
+                temperature=temperature,
+                shake_before=shake_before
+            )
+        )

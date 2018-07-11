@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-spread(source=${1:Well source}, dest=${2:Well dest}, volume="${3:Str volume}")
-]]></content>
-    <tabTrigger>spread</tabTrigger>
-    <scope>source.python</scope>
-    <description>Spread liquid on agar in container</description>
-</snippet>

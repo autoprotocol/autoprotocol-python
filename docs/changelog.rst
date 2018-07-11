@@ -2,6 +2,31 @@
 Changelog
 =========
 
+* :feature:`-` deprecate support for `p.append` in favor of `p._append_and_return`
+* :feature:`-` deprecate support for generating multiple GelSeparate instructions using `p.gel_separate`
+* :feature:`-` deprecate `newpick` in `p.autopick`
+* :feature:`-` deprecate `util.make_dottable_dict` and `util.deep_merge_params`
+* :feature:`-` converted all Unit internals to use Decimals in place of other Numbers
+* :support:`-` cleaned up references of `Unit.fromstring` and `Unit._magnitude`
+* :feature:`-` added builtin support for `ceil` and `floor` and changed py2 compatibility `Unit.floor` and `Unit.ceil` methods to use them
+* :feature:`-` add `spectrophotometry` instruction (ASC-038)
+* :feature:`-` add `count_cells` instruction (ASC-033)
+* :feature:`-` change `measure_mass` instruction to take in a single container instead (ASC-030)
+* :feature:`-` add `store_lid` to `p.uncover` (ASC-040)
+* :feature:`-` add `retrieve_lid` to `p.cover` (ASC-040)
+* :feature:`-` add parameters to `p.seal`, including `mode`, `temperature`, `duration` (ASC-034)
+* :feature:`-` add parameters to `p.luminescence`, including `settle_time`, `integration_time` (ASC-026)
+* :feature:`-` add parameters to `p.fluorescence`, including `detection_mode`, `position_z`, `settle_time`, `lag_time`, `integration_time` (ASC-026)
+* :feature:`-` add `settle_time` to `p.absorbance` (ASC-026)
+* :feature:`-` add `lid_temperature` to `p.thermocycle` (ASC-035)
+* :feature:`-` add parameters to `p.dispense`, including `flowrate`, `nozzle_position`, `step_size`, `reagent_source`, `dispense_speed`, `pre_dispense`, `shape`, `shake_after` options (ASC-027, ASC-029, ASC-036, ASC-039)
+* :feature:`-` all protocol methods now return the Instruction
+* :feature:`-` add `util.check_unit`, a helper for checking the units in bounds
+* :feature:`-` add `util.parse_unit`, a helper for parsing and checking an unit input
+* :feature:`-` modify `acoustic_transfer` to no longer proactively group consecutive instructions. Please use `WellGroup` explicitly instead
+* :feature:`-` add `batch_containers`, for controlling containers entering/exiting together
+* :feature:`-` add ideal time constraints which can be specified by `add_time_constraint` (ASC-037)
+* :feature:`-` shift `op` as an official attribute of Instruction
 * :support:`-` change default linter to pylint and update tox
 
 * :release:`4.0.0 <2017-11-22>`

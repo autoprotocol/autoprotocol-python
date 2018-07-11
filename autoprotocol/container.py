@@ -1,20 +1,22 @@
-from __future__ import print_function
-from .unit import Unit
-from .util import quad_ind_to_num
-import sys
-
-if sys.version_info[0] >= 3:
-    xrange = range
-    basestring = str
-
 """
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+Container, Well, WellGroup objects and associated functions
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
-SEAL_TYPES = ["ultra-clear", "foil"]
+from __future__ import print_function
+from .unit import Unit
+from .util import quad_ind_to_num
+import sys
+
+if sys.version_info.major == 3:
+    xrange = range  # pylint: disable=invalid-name
+    basestring = str  # pylint: disable=invalid-name
+
+SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
@@ -29,12 +31,8 @@ class Well(object):
     ----------
     container : Container
         The Container this well belongs to.
-    index : integer
+    index : int
         The index of this well within the container.
-    volume : Unit
-        Theoretical volume of this well.
-    properties : dict
-        Additional properties of this well represented as a dictionary.
 
     """
 
@@ -44,6 +42,23 @@ class Well(object):
         self.volume = None
         self.name = None
         self.properties = {}
+
+    @staticmethod
+    def validate_properties(properties):
+        if not isinstance(properties, dict):
+            raise TypeError(
+                "Aliquot properties {} are of type {}, "
+                "they should be a `dict`.".format(
+                    properties, type(properties)))
+        for key, value in properties.items():
+            if not isinstance(key, basestring):
+                raise TypeError(
+                    "Aliquot property {} : {} has a key of type {}, "
+                    "it should be a 'str'.".format(key, value, type(key)))
+            if not isinstance(value, basestring):
+                raise TypeError(
+                    "Aliquot property {} : {} has a value of type {}, "
+                    "it should be a 'str'.".format(key, value, type(value)))
 
     def set_properties(self, properties):
         """
@@ -55,10 +70,13 @@ class Well(object):
         properties : dict
             Custom properties for a Well in dictionary form.
 
+        Returns
+        -------
+        Well
+            Well with modified properties
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties is not of type 'dict'.")
-        self.properties = {key: value for key, value in properties.items()}
+        self.validate_properties(properties)
+        self.properties = properties.copy()
         return self
 
     def add_properties(self, properties):
@@ -73,9 +91,12 @@ class Well(object):
         properties : dict
             Dictionary of properties to add to a Well.
 
+        Returns
+        -------
+        Well
+            Well with modified properties
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties given is not of type 'dict'.")
+        self.validate_properties(properties)
         for key, value in properties.items():
             self.properties[key] = value
         return self
@@ -89,14 +110,28 @@ class Well(object):
         vol : str, Unit
             Theoretical volume to indicate for a Well.
 
+        Returns
+        -------
+        Well
+            Well with modified volume
+
+        Raises
+        ------
+        TypeError
+            Incorrect input-type given
+        ValueError
+            Volume set exceeds maximum well volume
         """
         if not isinstance(vol, basestring) and not isinstance(vol, Unit):
-            raise TypeError("Volume given is not of type str or "
-                            "Unit. %s" % type(vol))
-        v = Unit.fromstring(vol)
-        if v > self.container.container_type.true_max_vol_ul:
-            raise ValueError("Theoretical volume you are trying to set "
-                             "exceeds the maximum volume of this well.")
+            raise TypeError(
+                "Volume {} is of type {}, it should be either 'str' or 'Unit'."
+                "".format(vol, type(vol)))
+        v = Unit(vol)
+        max_vol = self.container.container_type.true_max_vol_ul
+        if v > max_vol:
+            raise ValueError(
+                "Theoretical volume {} to be set exceeds "
+                "maximum well volume {}.".format(v, max_vol))
         self.volume = v
         return self
 
@@ -110,6 +145,10 @@ class Well(object):
         name : str
             Well name.
 
+        Returns
+        -------
+        Well
+            Well with modified name
         """
         self.name = name
         return self
@@ -122,6 +161,10 @@ class Well(object):
         Uses the humanize function from the ContainerType class. Refer to
         `ContainerType.humanize()` for more information.
 
+        Returns
+        -------
+        str
+            Index of well in Container (in human readable form)
         """
         return self.container.humanize(self.index)
 
@@ -130,9 +173,18 @@ class Well(object):
         Returns the available volume of a Well.
         This is calculated as nominal volume - container_type dead volume
 
+        Returns
+        -------
+        Unit(volume)
+            Volume in well
+
+        Raises
+        ------
+        RuntimeError
+            Well has no volume
         """
         if self.volume is None:
-            raise RuntimeError("Well {} has no volume".format(self))
+            raise RuntimeError("well {} has no volume".format(self))
         return self.volume - self.container.container_type.dead_volume_ul
 
     def __repr__(self):
@@ -154,6 +206,11 @@ class WellGroup(object):
     ----------
     wells : list
         List of Well objects contained in this WellGroup.
+
+    Raises
+    ------
+    TypeError
+        Wells is not of the right input type
 
     """
 
@@ -180,11 +237,33 @@ class WellGroup(object):
         properties : dict
             Dictionary of properties to set on Well(s).
 
+        Returns
+        -------
+        WellGroup
+            WellGroup with modified properties
+
         """
-        if not isinstance(properties, dict):
-            raise TypeError("Properties given is not of type 'dict'.")
         for w in self.wells:
             w.set_properties(properties)
+        return self
+
+    def add_properties(self, properties):
+        """
+        Add the same properties for each Well in a WellGroup.
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to set on Well(s).
+
+        Returns
+        -------
+        WellGroup
+            WellGroup with modified properties
+
+        """
+        for w in self.wells:
+            w.add_properties(properties)
         return self
 
     def set_volume(self, vol):
@@ -196,9 +275,12 @@ class WellGroup(object):
         vol : Unit, str
             Theoretical volume of each well in the WellGroup.
 
+        Returns
+        -------
+        WellGroup
+            WellGroup with modified volume
+
         """
-        if not isinstance(vol, (Unit, basestring)):
-            raise TypeError("Volume given is not of type Unit or 'str'.")
         for w in self.wells:
             w.set_volume(vol)
         return self
@@ -208,6 +290,10 @@ class WellGroup(object):
         Return the indices of the wells in the group in human-readable form,
         given that all of the wells belong to the same container.
 
+        Returns
+        -------
+        list(str)
+            List of humanized indices from this WellGroup
         """
         indices = []
         for w in self.wells:
@@ -227,6 +313,16 @@ class WellGroup(object):
         other : Well
             Well to append to this WellGroup.
 
+        Returns
+        -------
+        WellGroup
+            WellGroup with appended well
+
+        Raises
+        ------
+        TypeError
+            other is not of type Well
+
         """
         if not isinstance(other, Well):
             raise TypeError("Input given is not of type 'Well'.")
@@ -241,6 +337,16 @@ class WellGroup(object):
         ----------
         other : WellGroup or list of Wells
             WellGroup to extend this WellGroup.
+
+        Returns
+        -------
+        WellGroup
+            WellGroup extended with specified WellGroup
+
+        Raises
+        ------
+        TypeError
+            Input WellGroup is not of the right type
 
         """
         if not isinstance(other, (WellGroup, list)):
@@ -259,6 +365,11 @@ class WellGroup(object):
         ----------
         name: str
             WellGroup name
+
+        Returns
+        -------
+        str
+            Name of wellgroup
         """
         self.name = name
         return self
@@ -271,11 +382,24 @@ class WellGroup(object):
         ----------
         prop: str
             the property you are searching for
-        val: str
+        val: str, optional
             the value assigned to the property
+
+        Returns
+        -------
+        WellGroup
+            WellGroup with modified properties
+
+        Raises
+        ------
+        TypeError
+            property or value defined does not have right input type
+
         """
-        assert type(prop) is str, "property is not a string: %r" % prop
-        assert type(val) is None or str, "value is not a string: %r" % val
+        if not isinstance(prop, str):
+            raise TypeError("property is not a string: %r" % prop)
+        if val is not None and not isinstance(val, str):
+            raise TypeError("value is not a string: %r" % val)
         if val:
             return WellGroup([w for w in self.wells if prop in w.properties and
                              w.properties[prop] is val])
@@ -291,8 +415,14 @@ class WellGroup(object):
 
         Parameters
         ----------
-        index: int
+        index: int, optional
             the index of the well you want to remove and return
+
+        Returns
+        -------
+        Well
+            Well with selected index from WellGroup
+
         """
         return self.wells.pop(index)
 
@@ -306,13 +436,28 @@ class WellGroup(object):
             index to insert the well at
         well : Well
             insert this well at the index
+
+        Returns
+        -------
+        WellGroup
+            WellGroup with inserted wells
+
+        Raises
+        ------
+        TypeError
+            index or well defined does not have right input type
+
         """
-        assert type(i) is int, "Input given is not of type 'Int'"
-        assert type(well) is Well, "Input given is not of type 'Well'"
+        if not isinstance(i, int):
+            raise TypeError("Input given is not of type 'Int'")
+        if not isinstance(well, Well):
+            raise TypeError("Input given is not of type 'Well'")
+
         if i >= len(self.wells):
             return self.wells.append(well)
         else:
             self.wells = self.wells[:i] + [well] + self.wells[i:]
+            return self.wells
 
     def __setitem__(self, key, item):
         """
@@ -324,8 +469,14 @@ class WellGroup(object):
             Position in a WellGroup in robotized form.
         item: Well
             Well or WellGroup to be added
+
+        Raises
+        ------
+        TypeError
+            Item specified is not of type `Well`
         """
-        assert type(item) is Well, "Input given is not of type 'Well'."
+        if not isinstance(item, Well):
+            raise TypeError("Input given is not of type 'Well'.")
         self.wells[key] = item
 
     def __getitem__(self, key):
@@ -337,6 +488,10 @@ class WellGroup(object):
         key : int
             Position in a WellGroup in robotized form.
 
+        Returns
+        -------
+        Well
+            Specified well from given key
         """
         return self.wells[key]
 
@@ -362,6 +517,16 @@ class WellGroup(object):
         ----------
         other : Well, WellGroup.
 
+        Returns
+        -------
+        WellGroup
+            WellGroup with appended wells
+
+        Raises
+        ------
+        TypeError
+            Input given is not of type Well or WellGroup
+
         """
         if not isinstance(other, (Well, WellGroup)):
             raise TypeError("You can only add a Well or WellGroups "
@@ -372,6 +537,7 @@ class WellGroup(object):
             return WellGroup(self.wells + other.wells)
 
 
+# pylint: disable=redefined-builtin
 class Container(object):
     """
     A reference to a specific physical container (e.g. a tube or 96-well
@@ -388,12 +554,21 @@ class Container(object):
 
     Parameters
     ----------
-    name : str
-        name of the container/ref being created.
-    id : string
+    id : str
         Alphanumerical identifier for a Container.
     container_type : ContainerType
         ContainerType associated with a Container.
+    name : str, optional
+        name of the container/ref being created.
+    storage : str, optional
+        name of the storage condition.
+    cover : str, optional
+        name of the cover on the container.
+
+    Raises
+    ------
+    AttributeError
+        Invalid cover-type given
 
     """
 
@@ -421,6 +596,15 @@ class Container(object):
             Well reference in the form of an integer (ex: 0) or human-readable
             string (ex: "A1").
 
+        Returns
+        -------
+        Well
+            Well for given reference
+
+        Raises
+        ------
+        TypeError
+            index given is not of the right type
         """
         if not isinstance(i, (int, basestring)):
             raise TypeError("Well reference given is not of type 'int' or "
@@ -429,16 +613,17 @@ class Container(object):
 
     def tube(self):
         """
-        Checks if container is tube and returns a Well respresenting the zeroth
+        Checks if container is tube and returns a Well representing the zeroth
         well.
 
         Returns
         -------
         Well
+            Zeroth well of tube
 
         Raises
         -------
-        AttributeError :
+        AttributeError
             If container is not tube
 
         """
@@ -459,6 +644,15 @@ class Container(object):
             Reference or list of references to a well index either as an
             integer or a string.
 
+        Returns
+        -------
+        WellGroup
+            Wells from specified references
+
+        Raises
+        ------
+        TypeError
+            Well reference is not of a valid input type
         """
         if isinstance(args[0], list):
             wells = args[0]
@@ -528,6 +722,11 @@ class Container(object):
             returns the WellGroup columnwise instead of rowwise (ordered by
             well index).
 
+        Returns
+        -------
+        WellGroup
+            WellGroup of all Wells in Container
+
         """
         if columnwise:
             num_cols = self.container_type.col_count
@@ -549,6 +748,11 @@ class Container(object):
             returns the WellGroup columnwise instead of rowwise (ordered by
             well index).
 
+        Returns
+        -------
+        WellGroup
+            WellGroup of inner wells
+
         """
         num_cols = self.container_type.col_count
         num_rows = self.container_type.row_count()
@@ -561,7 +765,7 @@ class Container(object):
                 inner_wells.extend(wells)
         else:
             well = num_cols
-            for i in xrange(1, num_rows - 1):
+            for _ in xrange(1, num_rows - 1):
                 inner_wells.extend(xrange(well + 1, well + (num_cols - 1)))
                 well += num_cols
         inner_wells = [self._wells[x] for x in inner_wells]
@@ -576,7 +780,7 @@ class Container(object):
 
         Parameters
         ----------
-        start : Well, int, str
+        start : Well or int or str
             Starting well specified as a Well object, a human-readable well
             index or an integer well index.
         num : int
@@ -585,11 +789,20 @@ class Container(object):
             Specifies whether the wells included should be counted columnwise
             instead of the default rowwise.
 
+        Returns
+        -------
+        WellGroup
+            WellGroup of selected wells
+
+        Raises
+        ------
+        TypeError
+            Incorrect input types, e.g. `num` has to be of type int
         """
         if not isinstance(start, (basestring, int, Well)):
             raise TypeError("Well reference given is not of type 'str',"
                             "'int', or 'Well'.")
-        if not isinstance(num, (int)):
+        if not isinstance(num, int):
             raise TypeError("Number of wells given is not of type 'int'.")
 
         start = self.robotize(start)
@@ -622,6 +835,16 @@ class Container(object):
         ----------
         quad : int
             Specifies the quadrant number of the well (ex. 2)
+
+        Returns
+        -------
+        WellGroup
+            WellGroup of wells for the specified quadrant
+
+        Raises
+        ------
+        ValueError
+            Invalid quadrant specified for this Container type
 
         """
         # TODO(Define what each quadrant number corresponds toL)
@@ -667,9 +890,14 @@ class Container(object):
         storage : str
             Storage condition.
 
+        Returns
+        -------
+        Container
+            Container with modified storage condition
+
         Raises
         ----------
-        TypeError :
+        TypeError
             If storage condition not of type str.
 
         """

@@ -1,16 +1,16 @@
-# pragma pylint: disable=too-few-public-methods
-import json
-from .pipette_tools import assign
-from .container import Well
-from functools import reduce
-
-
 """
-    :copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+Contains all the Autoprotocol Instruction objects
+
+    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
+
+# pragma pylint: disable=too-few-public-methods, redefined-builtin
+import json
+from .builders import *  # pylint: disable=unused-wildcard-import
+from functools import reduce
 
 
 class Instruction(object):
@@ -18,55 +18,51 @@ class Instruction(object):
 
     """
 
-    def __init__(self, data):
+    def __init__(self, op, data):
         super(Instruction, self).__init__()
-        self.data = data
-        self.__dict__.update(data)
+        self.op = op
+        self.data = self._remove_empty_fields(data)
+        self.__dict__.update(self.data)
 
     def json(self):
         """Return instruction object properly encoded as JSON for Autoprotocol.
 
         """
-        return json.dumps(self.data, indent=2)
+        return json.dumps(dict(op=self.op, **self.data), indent=2)
 
+    @staticmethod
+    def _remove_empty_fields(data):
+        """
+        Helper function to recursively search through and pop items containing
+        empty dictionaries/lists or dictionaries containing fields with None
+        values
 
-class Pipette(Instruction):
-    """
-    A pipette instruction is constructed as a list of groups, executed in
-    order, where each group is a transfer, distribute or mix group.  One
-    disposable tip is used for each group.
+        Parameters
+        ----------
+        data : dict or list
+            Data dictionary or list to remove empty fields from
 
-    Parameters
-    ----------
-    transfer:
-        For each element in the transfer list, in order, aspirates the specifed
-        volume from the source well and dispenses the same volume into the
-        target well.
-    distribute:
-        Aspirates sufficient volume from the source well, then dispenses into
-        each target well the volume requested, in the order specified.
-        If the total volume to be dispensed exceeds the maximum tip volume
-        (900 uL), you must either specify allow_carryover to allow the pipette
-        to return to the source and aspirate another load, or break your group
-        up into multiple distributes each of less than the maximum tip volume.
-        Specifying allow_carryover means that the source well could become
-        contaminated with material from the target wells, so take care to use it
-        only when you're sure that contamination won't be an issue=for example,
-        if the target plate is empty.
-    mix:
-        Mixes the specified wells, in order, by repeated aspiration and
-        dispensing of the specified volume. The default mixing speed is
-        50 uL/second, but you may specify a slower or faster speed.
+        Returns
+        -------
+        dict or list
+            Dictionary or list without fields with None values
 
-    Well positions are given using the format :ref/:index
+        """
+        # We're not checking against the generic not since there are values
+        # such as `0` or False which are valid.
+        def filter_criteria(item):
+            # Workaround for Unit equality comparison issues
+            if isinstance(item, Unit):
+                return False
+            return item is None or item == [] or item == {}
 
-    """
-
-    def __init__(self, groups):
-        super(Pipette, self).__init__({
-            "op": "pipette",
-            "groups": groups
-        })
+        if isinstance(data, dict):
+            return {k: Instruction._remove_empty_fields(v) for k, v in
+                    data.items() if not filter_criteria(v)}
+        if isinstance(data, list):
+            return [Instruction._remove_empty_fields(_) for _ in data
+                    if not filter_criteria(_)]
+        return data
 
 
 class MagneticTransfer(Instruction):
@@ -79,83 +75,114 @@ class MagneticTransfer(Instruction):
 
     Parameters
     ----------
-    collect:
-        Collects beads from the specified "object" by raising and lowering
-        magnetized tips repeatedly with an optional pause at well bottom.
-    release:
-        Release beads from unmagnetized tips by oscillating the tips
-        vertically into and out of the "object".
-    dry:
-        Dry beads on magnetized tips above and outside the "object".
-    incubate:
-        Incubate the "object".
-    mix:
-        Oscillate the tips into and out of the "object"
+    groups: list(dict)
+        dict in the groups should belong to one of the following categories:
+
+        collect:
+            Collects beads from the specified "object" by raising and lowering
+            magnetized tips repeatedly with an optional pause at well bottom.
+        release:
+            Release beads from unmagnetized tips by oscillating the tips
+            vertically into and out of the "object".
+        dry:
+            Dry beads on magnetized tips above and outside the "object".
+        incubate:
+            Incubate the "object".
+        mix:
+            Oscillate the tips into and out of the "object"
+    head_type: str
+        Head-type used for this instruction
 
     """
-
     HEAD_TYPE = ["96-deep", "96-pcr"]
 
     def __init__(self, groups, head_type):
         if head_type not in self.HEAD_TYPE:
             raise ValueError(
                 "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
-        super(MagneticTransfer, self).__init__({
-            "op": "magnetic_transfer",
-            "groups": groups,
-            "magnetic_head": head_type
-        })
+        super(MagneticTransfer, self).__init__(
+            op="magnetic_transfer",
+            data={"groups": groups, "magnetic_head": head_type}
+        )
 
 
 class Dispense(Instruction):
+
     """
-    Dispense specified reagent to specified columns.
+    Dispense specified reagent to specified columns. Only one of reagent,
+    resource_id, and reagent_source can be specified for a given instruction.
 
     Parameters
     ----------
-    ref : Ref, str
+    object : Container or str
         Container for reagent to be dispensed to.
-    reagent : str, well
-        Reagent to be dispensed. Use a string to specify the name or
-        resource_id (see below) of the reagent to be dispensed.
-        Alternatively, use a well to specify that the dispense operation
-        must be executed using a specific aliquot as the dispense source.
     columns : list
         Columns to be dispensed to, in the form of a list of dicts specifying
         the column number and the volume to be dispensed to that column.
         Columns are indexed from 0.
         [{"column": <column num>, "volume": <volume>}, ...]
-    speed : int, optional
-        Integer between 1 and 100 that represents the percentage of the
-        maximum speed at which liquid is dispensed from the reagent
-        dispenser.
-    is_resource_id : bool, optional
-        If true, interprets reagent as a resource ID
-    step_size : str, Unit, optional
+    reagent : str, optional
+        Reagent to be dispensed.
+    resource_id : str, optional
+        Resource to be dispensed.
+    reagent_source : Well, optional
+        Aliquot to be dispensed from.
+    step_size : str or Unit, optional
         Specifies that the dispense operation must be executed
-        using a peristaltic pump with the given step size.
-
+        using a pump that has a dispensing resolution of step_size.
+    flowrate : str or Unit, optional
+        The rate at which the peristaltic pump should dispense in Units of
+        flow rate, e.g. microliter/second.
+    nozzle_position : dict, optional
+        A dict represent nozzle offsets from the center of the bottom of the
+        plate's well. see Dispense.builders.nozzle_position; specified as
+        {"position_x": Unit, "position_y": Unit, "position_z": Unit}.
+    pre_dispense : str or Unit, optional
+        The volume of reagent to be dispensed per-nozzle into waste
+        immediately prior to dispensing into the ref.
+    shape: dict, optional
+        The shape of the dispensing head to be used for the dispense.
+        See liquid_handle_builders.shape_builder; specified as
+        {"rows": int, "columns": int, "format": str} with format being a
+        valid SBS format.
+    shake_after: dict, optional
+        Parameters that specify how a plate should be shaken at the very end
+        of the instruction execution.
+        {"duration": Unit, "frequency": Unit, "path": str, "amplitude": Unit}
     """
 
-    def __init__(self, ref, reagent, columns, speed,
-                 is_resource_id, step_size=None):
-        disp = {
-            "op": "dispense",
-            "object": ref,
-            "columns": columns
-        }
-        if isinstance(reagent, Well):
-            disp["reagent_source"] = reagent
-        else:
-            if is_resource_id:
-                disp["resource_id"] = reagent
-            else:
-                disp["reagent"] = reagent
-        if step_size:
-            disp["step_size"] = step_size
-        assign(disp, "x_speed_percentage", speed)
+    builders = DispenseBuilders()
 
-        super(Dispense, self).__init__(disp)
+    def __init__(self, object, columns, reagent=None, resource_id=None,
+                 reagent_source=None, step_size=None, flowrate=None,
+                 nozzle_position=None, pre_dispense=None, shape=None,
+                 shake_after=None):
+
+        disp = {
+            "object": object,
+            "columns": columns,
+            "reagent": reagent,
+            "resource_id": resource_id,
+            "reagent_source": reagent_source,
+            "step_size": step_size,
+            "pre_dispense": pre_dispense,
+            "flowrate": flowrate,
+            "nozzle_position": nozzle_position,
+            "shape": shape,
+            "shake_after": shake_after
+        }
+
+        source_fields = ["reagent", "resource_id", "reagent_source"]
+        sources = {_: disp[_] for _ in source_fields}
+        if sum([_ is not None for _ in sources.values()]) != 1:
+            raise ValueError(
+                "Exactly one of `reagent`, `resource_id`, and "
+                "`reagent_source` must be specified for Dispense, "
+                "but got {}.".format(sources))
+
+        disp = {k: v for k, v in disp.items() if v is not None}
+
+        super(Dispense, self).__init__(op="dispense", data=disp)
 
 
 class AcousticTransfer(Instruction):
@@ -180,18 +207,19 @@ class AcousticTransfer(Instruction):
             ]
         }
 
-    droplet_size : str, Unit
+    droplet_size : str or Unit
         Volume representing a droplet_size.  The volume of each transfer should
         be a multiple of this volume.
 
     """
 
-    def __init__(self, transfers, droplet_size):
-        super(AcousticTransfer, self).__init__({
-            "op": "acoustic_transfer",
-            "groups": [{"transfer": transfers}],
-            "droplet_size": droplet_size
-        })
+    def __init__(self, groups, droplet_size):
+        super(AcousticTransfer, self).__init__(
+            op="acoustic_transfer",
+            data={
+                "groups": groups,
+                "droplet_size": droplet_size
+            })
 
 
 class Spin(Instruction):
@@ -200,18 +228,18 @@ class Spin(Instruction):
 
     Parameters
     ----------
-    ref : Ref, str
+    object : Ref or str
         Container to be centrifuged.
     acceleration : str
         Amount of acceleration to be applied to the container, expressed in
         units of "g" or "meter/second^2"
-    duration : str, Unit
+    duration : str or Unit
         Amount of time to apply acceleration.
-    flow_direction: str
+    flow_direction : str
         Specifies the direction contents will tend toward with respect to
         the container. Valid directions are "inward" and "outward", default
         value is "inward".
-    spin_direction: list of strings
+    spin_direction : list(str)
         A list of "cw" (clockwise), "cww" (counterclockwise). For each
         element in the list, the container will be spun in the stated
         direction for the set "acceleration" and "duration". Default values
@@ -222,23 +250,21 @@ class Spin(Instruction):
 
     """
 
-    def __init__(self, ref, acceleration, duration, flow_direction=None,
+    def __init__(self, object, acceleration, duration, flow_direction=None,
                  spin_direction=None):
         spin_json = {
-            "op": "spin",
-            "object": ref,
+            "object": object,
             "acceleration": acceleration,
-            "duration": duration
+            "duration": duration,
+            "flow_direction": flow_direction,
+            "spin_direction": spin_direction
         }
-        if flow_direction is not None:
-            spin_json["flow_direction"] = flow_direction
-        if spin_direction is not None:
-            spin_json["spin_direction"] = spin_direction
 
-        super(Spin, self).__init__(spin_json)
+        super(Spin, self).__init__(op="spin", data=spin_json)
 
 
 class Thermocycle(Instruction):
+
     """
     Append a Thermocycle instruction to the list of instructions, with
     groups being a list of dicts in the form of:
@@ -266,25 +292,27 @@ class Thermocycle(Instruction):
 
     Parameters
     ----------
-    ref : str, Ref
+    object : str or Ref
         Container to be thermocycled
-    groups : list of dicts
+    groups : list(dict)
         List of thermocycling instructions formatted as above
-    volume : str, Unit, optional
+    volume : str or Unit, optional
         Volume contained in wells being thermocycled
     dataref : str, optional
         Name of dataref representing read data if performing qPCR
     dyes : dict, optional
         Dictionary mapping dye types to the wells they're used in
-    melting_start: str, Unit
+    melting_start: str or Unit
         Temperature at which to start the melting curve.
-    melting_end: str, Unit
+    melting_end: str or Unit
         Temperature at which to end the melting curve.
-    melting_increment: str, Unit
+    melting_increment: str or Unit
         Temperature by which to increment the melting curve. Accepted increment
         values are between 0.1 and 9.9 degrees celsius.
-    melting_rate: str, Unit
+    melting_rate: str or Unit
         Specifies the duration of each temperature step in the melting curve.
+    lid_temperature: str or Unit
+        Specifies the lid temperature throughout the duration of the instruction
 
     Raises
     ------
@@ -299,7 +327,6 @@ class Thermocycle(Instruction):
         If invalid dyes are supplied.
 
     """
-
     CHANNEL1_DYES = ["FAM", "SYBR"]
     CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
     CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
@@ -311,12 +338,14 @@ class Thermocycle(Instruction):
     AVAILABLE_DYES = [
         dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
 
-    def __init__(self, ref, groups, volume="25:microliter", dataref=None,
+    builders = ThermocycleBuilders()
+
+    def __init__(self, object, groups, volume="25:microliter", dataref=None,
                  dyes=None, melting_start=None, melting_end=None,
-                 melting_increment=None, melting_rate=None):
+                 melting_increment=None, melting_rate=None,
+                 lid_temperature=None):
         instruction = {
-            "op": "thermocycle",
-            "object": ref,
+            "object": object,
             "groups": groups,
             "volume": volume
         }
@@ -352,7 +381,8 @@ class Thermocycle(Instruction):
                 instruction["dyes"] = dyes
 
         instruction["dataref"] = dataref
-        super(Thermocycle, self).__init__(instruction)
+        instruction['lid_temperature'] = lid_temperature
+        super(Thermocycle, self).__init__(op="thermocycle", data=instruction)
 
     @staticmethod
     def find_invalid_dyes(dyes):
@@ -361,6 +391,7 @@ class Thermocycle(Instruction):
 
         dyes - [list or set]
         """
+
         return set(dyes).difference(set(Thermocycle.AVAILABLE_DYES))
 
     @staticmethod
@@ -371,12 +402,14 @@ class Thermocycle(Instruction):
 
         well_map - [{well:str}]
         """
+
         dye_names = reduce(lambda x, y: x.union(y),
                            [set(well_map[k]) for k in well_map])
         if Thermocycle.find_invalid_dyes(dye_names):
             invalid_dyes = ", ".join(Thermocycle.find_invalid_dyes(dye_names))
-            raise ValueError("thermocycle instruction supplied the following "
-                             "invalid dyes: {}".format(invalid_dyes))
+            raise ValueError(
+                "thermocycle instruction supplied the following invalid dyes: "
+                "{}".format(invalid_dyes))
 
         dye_map = {dye: [] for dye in dye_names}
         for well in well_map:
@@ -395,27 +428,29 @@ class Incubate(Instruction):
 
     Parameters
     ----------
-    ref : Ref, str
+    object : Ref or str
         The container to be incubated
-    where : {"ambient", "warm_37", "cold_4", "cold_20", "cold_80"}
+    where : Enum({"ambient", "warm_37", "cold_4", "cold_20", "cold_80"})
         Temperature at which to incubate specified container
-    duration : Unit, str
+    duration : Unit or str
         Length of time to incubate container
     shaking : bool, optional
         Specify whether or not to shake container if available at the specified
         temperature
-    target_tempterature : Unit, str, optional
+    target_temperature : Unit or str, optional
         Specify a target temperature for a device (eg. an incubating block)
         to reach during the specified duration.
     shaking_params: dict, optional
-        Specifify "path" and "frequency" of shaking parameters to be used
+        Specify "path" and "frequency" of shaking parameters to be used
         with compatible devices (eg. thermoshakes)
+    co2 : int, optional
+        Carbon dioxide percentage
 
     """
     WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
 
-    def __init__(self, ref, where, duration, shaking=False, co2=0,
-                 target_tempterature=None, shaking_params=None):
+    def __init__(self, object, where, duration, shaking=False, co2=0,
+                 target_temperature=None, shaking_params=None):
         if where not in self.WHERE:
             raise ValueError("Specified `where` not contained in: %s" % ", "
                              "".join(self.WHERE))
@@ -424,18 +459,17 @@ class Incubate(Instruction):
                              "if 'shaking_params' are specified.")
 
         incubate_json = {
-            "op": "incubate",
-            "object": ref,
+            "object": object,
             "where": where,
             "duration": duration,
             "shaking": shaking,
             "co2_percent": co2
         }
-        if target_tempterature:
-            incubate_json["target_temperature"] = target_tempterature
+        if target_temperature:
+            incubate_json["target_temperature"] = target_temperature
         if shaking_params:
             incubate_json["shaking_params"] = shaking_params
-        super(Incubate, self).__init__(incubate_json)
+        super(Incubate, self).__init__(op="incubate", data=incubate_json)
 
 
 class IlluminaSeq(Instruction):
@@ -449,7 +483,7 @@ class IlluminaSeq(Instruction):
     ----------
     flowcell : str
       Flowcell designation: "SR" or " "PE"
-    lanes : list of dicts
+    lanes : list(dict)
 
         .. code-block:: json
 
@@ -468,25 +502,27 @@ class IlluminaSeq(Instruction):
     library_size: integer
         Library size expressed as an integer of basepairs
     dataref : str
-      Name of sequencing dataset that will be returned.
+        Name of sequencing dataset that will be returned.
+    cycles : Enum({"read_1", "read_2", "index_1", "index_2"})
+        Parameter specific to Illuminaseq read-length or number of
+        sequenced bases. Refer to the ASC for more details
 
     """
 
     def __init__(self, flowcell, lanes, sequencer, mode, index, library_size,
                  dataref, cycles):
         seq = {
-            "op": "illumina_sequence",
             "flowcell": flowcell,
             "lanes": lanes,
             "sequencer": sequencer,
             "mode": mode,
             "index": index,
             "library_size": library_size,
-            "dataref": dataref
+            "dataref": dataref,
+            "cycles": cycles
         }
-        if cycles:
-            seq["cycles"] = cycles
-        super(IlluminaSeq, self).__init__(seq)
+
+        super(IlluminaSeq, self).__init__(op="illumina_sequence", data=seq)
 
 
 class SangerSeq(Instruction):
@@ -498,27 +534,32 @@ class SangerSeq(Instruction):
 
     Parameters
     ----------
-    cont : Container, str
+    object : Container or str
       Container with well(s) that contain material to be sequenced.
-    wells : list of str
+    wells : list(str)
       Well indices of the container that contain appropriate materials to be
       sent for sequencing.
     dataref : str
       Name of sequencing dataset that will be returned.
+    type: Enum({"standard", "rca"})
+        Sanger sequencing type
+    primer : Container, optional
+        Tube containing sufficient primer for all RCA reactions.  This field
+        will be ignored if you specify the sequencing type as "standard".
+        Tube containing sufficient primer for all RCA reactions
 
     """
 
-    def __init__(self, obj, wells, dataref, type, primer):
+    def __init__(self, object, wells, dataref, type, primer=None):
         seq = {
-            "op": "sanger_sequence",
             "type": type,
-            "object": obj,
+            "object": object,
             "wells": wells,
             "dataref": dataref
         }
         if primer and type == "rca":
             seq["primer"] = primer
-        super(SangerSeq, self).__init__(seq)
+        super(SangerSeq, self).__init__(op="sanger_sequence", data=seq)
 
 
 class GelSeparate(Instruction):
@@ -527,23 +568,26 @@ class GelSeparate(Instruction):
 
     Parameters
     ----------
-    ref : Ref, str
-        Container containing samples to gel Separate
+    objects: list or WellGroup or Well
+        List of wells or WellGroup containing wells to be
+        separated on gel.
+    volume : str or Unit
+        Volume of liquid to be transferred from each well specified to a
+        lane of the gel.
     matrix : str
-        Agarose concentration and number of wells on gel used for separation
+        Matrix (gel) in which to gel separate samples
     ladder : str
-        Size range of ladder to be used to compare band size to
-    duration : Unit, str
-        Length of time to run gel separation
+        Ladder by which to measure separated fragment size
+    duration : str or Unit
+        Length of time to run current through gel.
     dataref : str
-        Name of dataset containing fragment sizes returned
+        Name of this set of gel separation results.
 
     """
 
-    def __init__(self, wells, volume, matrix, ladder, duration, dataref):
-        super(GelSeparate, self).__init__({
-            "op": "gel_separate",
-            "objects": wells,
+    def __init__(self, objects, volume, matrix, ladder, duration, dataref):
+        super(GelSeparate, self).__init__(op="gel_separate", data={
+            "objects": objects,
             "volume": volume,
             "matrix": matrix,
             "ladder": ladder,
@@ -553,14 +597,15 @@ class GelSeparate(Instruction):
 
 
 class GelPurify(Instruction):
+
     """
     Separate nucleic acids on an agarose gel and purify.
 
     Parameters
     ----------
-    wells : list, WellGroup
+    objects: list or WellGroup
         WellGroup of wells to be purified
-    volume : str, Unit
+    volume : str or Unit
         Volume of sample required for analysis
     dataref : str
         Name of this specific dataset of measurements
@@ -570,7 +615,7 @@ class GelPurify(Instruction):
         Size range of ladder to be used to compare band size to
     dataref : str
         Name of dataset containing fragment sizes returned
-    extract: list of Dictionary
+    extract: list(dict)
 
         .. code-block:: json
 
@@ -588,10 +633,9 @@ class GelPurify(Instruction):
 
     """
 
-    def __init__(self, wells, volume, matrix, ladder, dataref, extract):
-        super(GelPurify, self).__init__({
-            "op": "gel_purify",
-            "objects": wells,
+    def __init__(self, objects, volume, matrix, ladder, dataref, extract):
+        super(GelPurify, self).__init__(op="gel_purify", data={
+            "objects": objects,
             "volume": volume,
             "matrix": matrix,
             "ladder": ladder,
@@ -601,6 +645,7 @@ class GelPurify(Instruction):
 
 
 class Absorbance(Instruction):
+
     """
     Read the absorbance for the indicated wavelength for the indicated
     wells. Append an Absorbance instruction to the list of instructions for
@@ -608,47 +653,51 @@ class Absorbance(Instruction):
 
     Parameters
     ----------
-    ref : str, Ref
-    wells : list, WellGroup
+    object : str or Ref
+        Object to execute the absorbance read on
+    wells : list(Well) or WellGroup
         WellGroup of wells to be measured or a list of well references in
         the form of ["A1", "B1", "C5", ...]
-    wavelength : str, Unit
+    wavelength : str or Unit
         wavelength of light absorbance to be read for the indicated wells
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+        number of flashes for the read
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
+    settle_time: str or Unit, optional
+        time to pause before each well read
 
     """
 
-    def __init__(self, ref, wells, wavelength, dataref, flashes=25,
-                 incubate_before=None, temperature=None):
-        json_dict = {"op": "absorbance",
-                     "object": ref,
+    def __init__(self, object, wells, wavelength, dataref, flashes=25,
+                 incubate_before=None, temperature=None,
+                 settle_time=None):
+        json_dict = {"object": object,
                      "wells": wells,
                      "wavelength": wavelength,
                      "num_flashes": flashes,
-                     "dataref": dataref}
-        if incubate_before:
-            json_dict["incubate_before"] = incubate_before
-        if temperature:
-            json_dict["temperature"] = temperature
+                     "dataref": dataref,
+                     "incubate_before": incubate_before,
+                     "temperature": temperature,
+                     "settle_time": settle_time}
 
-        super(Absorbance, self).__init__(json_dict)
+        super(Absorbance, self).__init__(op="absorbance", data=json_dict)
 
 
 class Fluorescence(Instruction):
+
     """
     Read the fluoresence for the indicated wavelength for the indicated
     wells.  Append a Fluorescence instruction to the list of instructions
@@ -656,112 +705,169 @@ class Fluorescence(Instruction):
 
     Parameters
     ----------
-    ref : str, Container
-    wells : list, WellGroup
+    object : str or Container
+        object to execute the fluorescence read on
+    wells : list(Well) or WellGroup
         WellGroup of wells to be measured or a list of well references in
         the form of ["A1", "B1", "C5", ...]
-    excitation : str, Unit
+    excitation : str or Unit
         wavelength of light used to excite the wells indicated
-    emission : str, Unit
+    emission : str or Unit
         wavelength of light to be measured for the indicated wells
     dataref : str
         name of this specific dataset of measured absorbances
     flashes : int, optional
+        number of flashes for this read
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
     gain: float, optional
             float between 0 and 1, multiplier of maximum signal amplification
+    detection_mode: str, optional
+        set the detection mode of the optics, ["top", "bottom"],
+        defaults to vendor specified defaults.
+    position_z: dict, optional
+        distance from the optics to the surface of the plate transport,
+        only valid for "top" detection_mode and vendor capabilities.
+        Specified as either a set distance - "manual", OR calculated from
+        a WellGroup - "calculated_from_wells".   Only one position_z
+        determination may be specified
+        position_z = {
+            "manual": Unit
+            - OR -
+            "calculated_from_wells": []
+        }
+    manual: str, Unit, optional
+        parameter available within "position_z" to set the distance from
+        the optics to the plate transport.
+    calculated_from_wells: list, WellGroup, Well, optional
+        parameter available within "position_z" to set the distance from
+        the optics to the plate transport.  If specified, the average
+        optimal (maximal signal) distance will be chosen from the list
+        of wells and applied to all measurements.
+    settle_time: Unit, optional
+        the time before the start of the measurement, defaults
+        to vendor specifications
+    lag_time: Unit, optional
+        time between flashes and the start of the signal integration,
+        defaults to vendor specifications
+    integration_time: Unit, optional
+        duration of the signal recording, per Well, defaults to vendor
+        specifications
 
     """
 
-    def __init__(self, ref, wells, excitation, emission, dataref, flashes=25,
-                 incubate_before=None, temperature=None, gain=None):
+    def __init__(self, object, wells, excitation, emission, dataref, flashes=25,
+                 incubate_before=None, temperature=None, gain=None,
+                 detection_mode=None, position_z=None, settle_time=None,
+                 lag_time=None, integration_time=None):
         json_dict = {
-            "op": "fluorescence",
-            "object": ref,
+            "object": object,
             "wells": wells,
             "excitation": excitation,
             "emission": emission,
             "num_flashes": flashes,
-            "dataref": dataref}
-        if incubate_before:
-            json_dict["incubate_before"] = incubate_before
-        if temperature:
-            json_dict["temperature"] = temperature
-        if gain is not None:
-            json_dict["gain"] = gain
+            "dataref": dataref,
+            "incubate_before": incubate_before,
+            "temperature": temperature,
+            "gain": gain,
+            "settle_time": settle_time,
+            "lag_time": lag_time,
+            "integration_time": integration_time,
+            "detection_mode": detection_mode,
+            "position_z": position_z
+        }
 
-        super(Fluorescence, self).__init__(json_dict)
+        super(Fluorescence, self).__init__(op="fluorescence", data=json_dict)
 
 
 class Luminescence(Instruction):
+
     """
     Read luminesence of indicated wells
 
     Parameters
     ----------
-    ref : str, Container
-    wells : list, WellGroup
+    object: str or Container
+        object to execute the luminescence read on
+    wells : list or WellGroup
         WellGroup or list of wells to be measured
     dataref : str
+        name which dataset will be saved under
     incubate_before: dict, optional
         incubation prior to reading if desired
         shaking: dict, optional
             shake parameters if desired
-                amplitude: str, Unit
+                amplitude: str or Unit
                     amplitude of shaking between 1 and 6:millimeter
                 orbital: bool
                     True for oribital and False for linear shaking
         duration: str, Unit, optional
             time prior to plate reading
-    temperature: str, Unit, optional
+    temperature: str or Unit, optional
         set temperature to heat plate reading chamber
+    settle_time: str or Unit, optional
+        time to pause before each well read
+    integration_time: Unit, optional
+        duration of the signal recording, per Well, defaults to vendor
+        specifications
 
     """
 
-    def __init__(self, ref, wells, dataref, incubate_before=None,
-                 temperature=None):
+    def __init__(self, object, wells, dataref, incubate_before=None,
+                 temperature=None, settle_time=None, integration_time=None):
         json_dict = {
-            "op": "luminescence",
-            "object": ref,
+            "object": object,
             "wells": wells,
-            "dataref": dataref
+            "dataref": dataref,
+            "incubate_before": incubate_before,
+            "temperature": temperature,
+            "settle_time": settle_time,
+            "integration_time": integration_time
         }
-        if incubate_before:
-            json_dict["incubate_before"] = incubate_before
-        if temperature:
-            json_dict["temperature"] = temperature
 
-        super(Luminescence, self).__init__(json_dict)
+        super(Luminescence, self).__init__(op="luminescence", data=json_dict)
 
 
 class Seal(Instruction):
+
     """
     Seal indicated container using the automated plate sealer.
 
     Parameters
     ----------
-    ref : Ref, str
+    object : Ref or str
         Container to be sealed
-
+    type : str, optional
+        Seal type to be used (optional)
+    mode : str, optional
+        Method used to seal plate (optional). "thermal" or "adhesive"
+    mode_params : dict, optional
+        Thermal sealing parameters
+        temperature : str, optional
+            Temperature to seal plate at
+        duration : str, optional
+            Duration for which to apply heated sealing plate onto ref
     """
 
-    def __init__(self, ref, type="ultra-clear"):
-        super(Seal, self).__init__({
-            "op": "seal",
-            "object": ref,
-            "type": type
-        })
+    def __init__(self, object, type="ultra-clear", mode=None, mode_params=None):
+        seal_dict = {
+            "object": object,
+            "type": type,
+            "mode": mode,
+            "mode_params": mode_params
+        }
+
+        super(Seal, self).__init__(op="seal", data=seal_dict)
 
 
 class Unseal(Instruction):
@@ -770,41 +876,42 @@ class Unseal(Instruction):
 
     Parameters
     ----------
-    ref : Ref, str
+    object : Ref or str
         Container to be unsealed
 
     """
 
-    def __init__(self, ref):
-        super(Unseal, self).__init__({
-            "op": "unseal",
-            "object": ref
-        })
+    def __init__(self, object):
+        super(Unseal, self).__init__(op="unseal", data={"object": object})
 
 
 class Cover(Instruction):
+
     """
     Place specified lid type on specified container
 
     Parameters
     ----------
-    ref : str
-        Container to be convered
-    lid : {"standard", "universal", "low_evaporation"}, optional
+    object : str
+        Container to be covered
+    lid : Enum({'standard', 'universal', 'low_evaporation'}), optional
         Type of lid to cover container with
+    retrieve_lid : bool
+        Flag to retrieve lid from stored location
 
     """
-
     LIDS = ["standard", "universal", "low_evaporation"]
 
-    def __init__(self, ref, lid="standard"):
+    def __init__(self, object, lid="standard", retrieve_lid=None):
         if lid and lid not in self.LIDS:
             raise ValueError("%s is not a valid lid type" % lid)
-        super(Cover, self).__init__({
-            "op": "cover",
-            "object": ref,
-            "lid": lid
-        })
+        cover = {
+            "object": object,
+            "lid": lid,
+            "retrieve_lid": retrieve_lid
+        }
+
+        super(Cover, self).__init__(op='cover', data=cover)
 
 
 class Uncover(Instruction):
@@ -813,19 +920,25 @@ class Uncover(Instruction):
 
     Parameters
     ----------
-    ref : str
+    object : str
         Container to remove lid from
+    store_lid : bool
+        Flag to store the uncovered lid
 
     """
 
-    def __init__(self, ref):
-        super(Uncover, self).__init__({
-            "op": "uncover",
-            "object": ref
-        })
+    def __init__(self, object, store_lid=None):
+        super(Uncover, self).__init__(
+            op="uncover",
+            data={
+                "object": object,
+                "store_lid": store_lid
+            }
+        )
 
 
 class FlowAnalyze(Instruction):
+
     """
     Perform flow cytometry.The instruction will be executed within the voltage
     range specified for each channel, optimized for the best sample
@@ -884,7 +997,7 @@ class FlowAnalyze(Instruction):
               "weight": false           //default: false
             }
 
-    neg_controls : list of dicts
+    negative_controls : list(dict)
         List of negative control wells in the form of:
 
         .. code-block:: json
@@ -897,7 +1010,7 @@ class FlowAnalyze(Instruction):
             }
 
         at least one negative control is required.
-    samples : list of dicts
+    samples : list(dict)
         List of samples in the form of:
 
         .. code-block:: json
@@ -909,7 +1022,7 @@ class FlowAnalyze(Instruction):
             }
 
         at least one sample is required
-    colors : list of dicts, optional
+    colors : list(dict), optional
         Optional list of colors in the form of:
 
         .. code-block:: json
@@ -928,7 +1041,7 @@ class FlowAnalyze(Instruction):
         }, ... ]
 
 
-    pos_controls : list of dicts, optional
+    positive_controls : list(dict), optional
         Optional list of positive control wells in the form of:
 
         .. code-block:: json
@@ -950,25 +1063,21 @@ class FlowAnalyze(Instruction):
                  dataref,
                  FSC,
                  SSC,
-                 neg_controls,
+                 negative_controls,
                  samples,
                  colors=None,
-                 pos_controls=None):
-        flow_instr = {
-            "op": "flow_analyze",
-            "dataref": dataref,
-            "channels": {}
-        }
+                 positive_controls=None):
+        flow_instr = {"dataref": dataref, "channels": {}}
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
-        flow_instr["negative_controls"] = neg_controls
+        flow_instr["negative_controls"] = negative_controls
         flow_instr["samples"] = samples
         if colors:
             flow_instr["channels"]["colors"] = colors
-        if pos_controls:
-            flow_instr["positive_controls"] = pos_controls
+        if positive_controls:
+            flow_instr["positive_controls"] = positive_controls
 
-        super(FlowAnalyze, self).__init__(flow_instr)
+        super(FlowAnalyze, self).__init__(op="flow_analyze", data=flow_instr)
 
 
 class Oligosynthesize(Instruction):
@@ -1000,34 +1109,8 @@ class Oligosynthesize(Instruction):
     """
 
     def __init__(self, oligos):
-        super(Oligosynthesize, self).__init__({
-            "op": "oligosynthesize",
+        super(Oligosynthesize, self).__init__(op="oligosynthesize", data={
             "oligos": oligos
-        })
-
-
-class Spread(Instruction):
-    """
-    Spread the specified volume of the source aliquot across the surace of the
-    agar contained in the object container
-
-    Parameters
-    ----------
-    source : str, Well
-        Source of material to spread on agar
-    dest : str, Well
-        Reference to destination location (plate containing agar)
-    volume : str, Unit
-        Volume of source material to spread on agar
-
-    """
-
-    def __init__(self, source, dest, volume):
-        super(Spread, self).__init__({
-            "op": "spread",
-            "from": source,
-            "to": dest,
-            "volume": volume
         })
 
 
@@ -1039,33 +1122,25 @@ class Autopick(Instruction):
     pickable colonies have been identified from the location(s) specified in
     `sources`, the run will stop and no further instructions will be executed.
 
-    Example Usage:
-
-    Autoprotocol Output:
-
     Parameters
     ----------
-    sources : list of str, list of Wells
-      Reference to wells containing agar and colonies to pick
-    dests : list of str, list of Wells
-      List of destination(s) for picked colonies
+    groups : list(dict)
+        Groups of colonies to pick and where to transport them to
     criteria : dict
-      Dictionary of autopicking criteria.
-    min_abort : int, optional
-      Total number of colonies that must be detected in the aggregate
-      list of `from` wells to avoid aborting the entire run.
+        Dictionary of autopicking criteria.
+    dataref: str
+        Name of dataset to save the picked colonies to
 
     """
 
     def __init__(self, groups, criteria, dataref):
         pick = {
-            "op": "autopick",
             "groups": groups,
             "dataref": dataref,
             "criteria": criteria
         }
 
-        super(Autopick, self).__init__(pick)
+        super(Autopick, self).__init__(op="autopick", data=pick)
 
 
 class ImagePlate(Instruction):
@@ -1074,7 +1149,7 @@ class ImagePlate(Instruction):
 
     Parameters
     ----------
-    ref : str
+    object : str
         Container to take image of
     mode : str
         Imaging mode (currently supported: "top")
@@ -1083,10 +1158,9 @@ class ImagePlate(Instruction):
 
     """
 
-    def __init__(self, ref, mode, dataref):
-        super(ImagePlate, self).__init__({
-            "op": "image_plate",
-            "object": ref,
+    def __init__(self, object, mode, dataref):
+        super(ImagePlate, self).__init__(op="image_plate", data={
+            "object": object,
             "mode": mode,
             "dataref": dataref
         })
@@ -1102,14 +1176,8 @@ class Provision(Instruction):
     ----------
     resource_id : str
       Resource ID from catalog.
-    dests : Well, WellGroup
-      Destination(s) for specified resource.
-    volumes : str, Unit, list of str, list of Unit
-      Volume(s) to transfer of the resource to each destination well.  If
-      one volume of specified, each destination well recieve that volume of
-      the resource.  If destinations should recieve different volumes, each
-      one should be specified explicitly in a list matching the order of the
-      specified destinations.
+    dests : list(dict)
+      Destination(s) for specified resource, together with volume information
 
     Raises
     ------
@@ -1124,11 +1192,10 @@ class Provision(Instruction):
     """
 
     def __init__(self, resource_id, dests):
-        super(Provision, self).__init__({
-            "op": "provision",
-            "resource_id": resource_id,
-            "to": dests
-        })
+        super(Provision, self).__init__(
+            op="provision",
+            data={"resource_id": resource_id, "to": dests}
+        )
 
 
 class FlashFreeze(Instruction):
@@ -1138,38 +1205,17 @@ class FlashFreeze(Instruction):
 
     Parameters
     ----------
-    container : Container, str
+    object : Container or str
         Container to be flash frozen.
-    duration : str, Unit
+    duration : str or Unit
         Duration to submerge specified container in liquid nitrogen.
 
     """
 
-    def __init__(self, container, duration):
-        super(FlashFreeze, self).__init__({
-            "op": "flash_freeze",
-            "object": container,
+    def __init__(self, object, duration):
+        super(FlashFreeze, self).__init__(op="flash_freeze", data={
+            "object": object,
             "duration": duration
-        })
-
-
-class Stamp(Instruction):
-    """
-    A stamp instruction is constructed as a list of groups, executed in order,
-    where each group is a transfer. The same disposable tips, shape and
-    tip_layout will be used within a transfer group.
-
-    transfer:
-
-        For each element in the transfer list, in order, aspirates the specifed
-        volume from the source well and dispenses the same volume into the
-        target well.
-    """
-
-    def __init__(self, groups):
-        super(Stamp, self).__init__({
-            "op": "stamp",
-            "groups": groups
         })
 
 
@@ -1180,9 +1226,9 @@ class MeasureConcentration(Instruction):
 
     Parameters
     ----------
-    wells : list, WellGroup
+    object : list or WellGroup
         WellGroup of wells to be measured
-    volume : str, Unit
+    volume : str or Unit
         Volume of sample required for analysis
     dataref : str
         Name of this specific dataset of measurements
@@ -1192,13 +1238,13 @@ class MeasureConcentration(Instruction):
 
     """
 
-    def __init__(self, wells, volume, dataref, measurement):
-        json_dict = {"op": "measure_concentration",
-                     "object": wells,
+    def __init__(self, object, volume, dataref, measurement):
+        json_dict = {"object": object,
                      "volume": volume,
                      "dataref": dataref,
                      "measurement": measurement}
-        super(MeasureConcentration, self).__init__(json_dict)
+        super(MeasureConcentration, self).__init__(op="measure_concentration",
+                                                   data=json_dict)
 
 
 class MeasureMass(Instruction):
@@ -1207,17 +1253,15 @@ class MeasureMass(Instruction):
 
     Parameters
     ----------
-    refs : list of containers
-        list of containers
+    object : Container
+        Container ref
     dataref: str
         Name of the data for the measurement
     """
 
-    def __init__(self, refs, dataref):
-        json_dict = {"op": "measure_mass",
-                     "object": refs,
-                     "dataref": dataref}
-        super(MeasureMass, self).__init__(json_dict)
+    def __init__(self, object, dataref):
+        json_dict = {"object": object, "dataref": dataref}
+        super(MeasureMass, self).__init__(op="measure_mass", data=json_dict)
 
 
 class MeasureVolume(Instruction):
@@ -1226,14 +1270,87 @@ class MeasureVolume(Instruction):
 
     Parameters
     ----------
-    refs : list of containers
+    object: list(Container)
         list of containers
     dataref: str
         Name of the data for the measurement
     """
 
-    def __init__(self, wells, dataref):
-        json_dict = {"op": "measure_volume",
-                     "object": wells,
-                     "dataref": dataref}
-        super(MeasureVolume, self).__init__(json_dict)
+    def __init__(self, object, dataref):
+        json_dict = {"object": object, "dataref": dataref}
+        super(MeasureVolume, self).__init__(op="measure_volume", data=json_dict)
+
+
+class CountCells(Instruction):
+    """
+    Count the number of cells in a sample that are positive/negative
+    for a given set of labels.
+
+    Parameters
+    ----------
+    wells: WellGroup
+        List of wells that will be used for cell counting.
+    volume: Unit
+        Volume that should be consumed from each well for the purpose
+        of cell counting.
+    dataref: str
+        Name of dataset that will be returned.
+    labels: list(string), optional
+        Cells will be scored for presence or absence of each label
+        in this list. If staining is required to visualize these labels,
+        they must be added before execution of this instruction.
+
+    """
+
+    def __init__(self, wells, volume, dataref, labels=None):
+        json_dict = {
+            "wells": wells,
+            "volume": volume,
+            "dataref": dataref,
+            "labels": labels
+        }
+
+        super(CountCells, self).__init__(op="count_cells", data=json_dict)
+
+
+class Spectrophotometry(Instruction):
+    """
+    Execute a Spectrophotometry plate read on the obj.
+
+    Parameters
+    ----------
+    dataref : str
+        Name of the resultant dataset to be returned.
+    object : Container or str
+        Container to be read.
+    groups : list
+        A list of groups generated by SpectrophotometryBuilders groups builders,
+        any of absorbance_mode_params, fluorescence_mode_params,
+        luminescence_mode_params, or shake_mode_params.
+    interval : Unit or str, optional
+        The time between each of the read intervals.
+    num_intervals : int, optional
+        The number of times that the groups should be executed.
+    temperature : Unit or str, optional
+        The temperature that the entire instruction should be executed at.
+    shake_before : dict, optional
+        A dict of params generated by SpectrophotometryBuilders.shake_before
+        that dictates how the obj should be incubated with shaking before any of
+        the groups are executed.
+    """
+    builders = SpectrophotometryBuilders()
+
+    def __init__(self, dataref, object, groups, interval=None,
+                 num_intervals=None, temperature=None, shake_before=None):
+        spec = {
+            "dataref": dataref,
+            "object": object,
+            "groups": groups,
+            "interval": interval,
+            "num_intervals": num_intervals,
+            "temperature": temperature,
+            "shake_before": shake_before
+        }
+
+        super(Spectrophotometry, self).__init__(op="spectrophotometry",
+                                                data=spec)

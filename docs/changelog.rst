@@ -28,7 +28,7 @@ Changelog
 * :feature:`161` add `batch_containers`, for controlling containers entering/exiting together
 * :feature:`161` add ideal time constraints which can be specified by `add_time_constraint` (ASC-037)
 * :feature:`161` shift `op` as an official attribute of Instruction
-* :support:`161` change default linter to pylint and update tox
+* :support:`160` change default linter to pylint and update tox
 
 * :release:`4.0.0 <2017-11-22>`
 * :feature:`-` add `ceil` and `floor` methods to `Unit`

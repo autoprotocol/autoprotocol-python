@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :support:`-` fix docstrings so that we're able to build fine now
+* :support:`-` fix and update docstrings so that sphinx can be executed with no warnings
 * :feature:`161` deprecate support for `p.append` in favor of `p._append_and_return`
 * :feature:`161` deprecate support for generating multiple GelSeparate instructions using `p.gel_separate`
 * :feature:`161` deprecate `newpick` in `p.autopick`
@@ -37,7 +37,7 @@ Changelog
 * :feature:`-` add ability to specify a well as reagent source for dispense and dispense_full_plate methods
 * :feature:`-` add ability to specify `x_cassette` for dispense and dispense_full_plate methods
 * :feature:`-` add support for `more_than` in `add_time_constraint`
-* :feature:`-` add PerkinElmer 384-well optiplate to container_type (cat# 6007299), :ref:`container-type-384-flat-white-white-optiplate`
+* :feature:`-` add PerkinElmer 384-well optiplate to container_type (cat# 6007299), `container-type-384-flat-white-white-optiplate`
 * :feature:`-` allow breathable seals on 96-deep and 24-deep
 * :feature:`-` add prioritize_seal_or_cover allow priority selection
 * :support:`-` docstring cleanup, linting
@@ -48,7 +48,7 @@ Changelog
 * :release:`3.10.1 <2017-05-25>`
 * :bug:`-` update pint requirements, update error handling on UnitError
 * :support:`- major` fix documentation typos
-* :bug:`-` update default lid types for :ref:`container-type-384-echo`, :ref:`container-type-96-flat`, :ref:`container-type-96-flat-uv`, and :ref:`container-type-96-flat-clear-clear-tc`
+* :bug:`-` update default lid types for `container-type-384-echo`, `container-type-96-flat`, `container-type-96-flat-uv`, and `container-type-96-flat-clear-clear-tc`
 
 * :release:`3.10.0 <2016-10-25>`
 * :support:`-` add functions and tests to enable use of `--dye_test` flag

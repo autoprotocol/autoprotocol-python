@@ -5,6 +5,7 @@
   :hidden:
 
   AP Protocol <protocol>
+  AP Instruction <instruction>
   AP Container <container>
   AP Container Type <container_type>
   AP Other <autoprotocol>
@@ -184,8 +185,7 @@ The easiest way to contribute is to fork this repository and submit a pull
 request.  You can also write an email to us if you want to discuss ideas or
 bugs.
 
-- Vanessa Biggers: vanessa@transcriptic.com
-- Max Hodak: max@transcriptic.com
+- Autoprotocol Curators: autoprotocol-curators@transcriptic.com
 
 autoprotocol-python is BSD licensed (see LICENSE). Before we can accept your
 pull request, we require that you sign a CLA (Contributor License Agreement)
@@ -199,7 +199,7 @@ Search the Docs
 * :ref:`genindex`
 * :ref:`search`
 
-:copyright: 2017 by The Autoprotocol Development Team, see AUTHORS
+:copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
     for more details.
 :license: BSD, see LICENSE for more details
 

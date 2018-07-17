@@ -8,7 +8,7 @@ Autoprotocol-Python is currently maintained by:
 - Yang Choo - `yangchoo <https://github.com/yangchoo>`_ - yang@transcriptic.com
 - Jim Culver - `drjimmypants <https://github.com/drjimmypants>`_ - jim@transcriptic.com
 - Donald Dalton - `dbdalton2000 <https://github.com/dbdalton2000>`_ - donald@transcriptic.com
-- Varun Kanwar - `VarunKanwar<https://github.com/VarunKanwar>`_ - varun@transcriptic.com
+- Varun Kanwar - `VarunKanwar <https://github.com/VarunKanwar>`_ - varun@transcriptic.com
 - Peter Lee - `pleaderlee <https://github.com/pleaderlee>`_ - peter@transcriptic.com
 - Rhys Ormond - `rhysormond <https://github.com/rhysormond>`_ - rhys@transcriptic.com
 

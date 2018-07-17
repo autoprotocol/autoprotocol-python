@@ -173,6 +173,7 @@ class Unit(_Quantity):
     -------
     Unit
         unit object
+
         .. code-block:: none
 
             10000010.0:microliter

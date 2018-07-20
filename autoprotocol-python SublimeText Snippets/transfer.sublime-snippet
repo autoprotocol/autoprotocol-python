@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-transfer(source=${1:WellGroup source}, dest=${2:WellGroup destination}, volume="${3:Str volume}")
-]]></content>
-    <tabTrigger>transfer</tabTrigger>
-    <scope>source.python</scope>
-    <description>Transfer liquid between wells</description>
-</snippet>

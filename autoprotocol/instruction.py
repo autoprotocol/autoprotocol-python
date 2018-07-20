@@ -9,8 +9,8 @@ Contains all the Autoprotocol Instruction objects
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 import json
-from .builders import *  # pylint: disable=unused-wildcard-import
 from functools import reduce
+from .builders import *  # pylint: disable=unused-wildcard-import
 
 
 class Instruction(object):
@@ -1374,3 +1374,39 @@ class Spectrophotometry(Instruction):
 
         super(Spectrophotometry, self).__init__(op="spectrophotometry",
                                                 data=spec)
+
+
+class LiquidHandle(Instruction):
+    """Manipulates liquids within locations
+
+    A liquid handle instruction is constructed as a list of locations, where
+    each location consists of the well location and the tip transports carried
+    out within the well.
+
+    Each liquid handle instruction corresponds to a single tip or set of tips.
+
+    Parameters
+    ----------
+    locations : list(dict)
+        See Also LiquidHandle.builders.location
+    shape : dict, optional
+        See Also LiquidHandle.builders.shape
+    mode : str, optional
+        the liquid handling mode
+    mode_params : dict, optional
+        See Also LiquidHandle.builders.instruction_mode_params
+    """
+    builders = LiquidHandleBuilders()
+
+    def __init__(self, locations, shape=None, mode=None, mode_params=None):
+        data = {
+            "locations": locations,
+            "shape": shape,
+            "mode": mode,
+            "mode_params": mode_params
+        }
+
+        super(LiquidHandle, self).__init__(
+            op="liquid_handle",
+            data=data
+        )

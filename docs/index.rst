@@ -8,6 +8,8 @@
   AP Instruction <instruction>
   AP Container <container>
   AP Container Type <container_type>
+  AP Builders <builders>
+  AP LiquidHandle <liquid_handle>
   AP Other <autoprotocol>
   Changelog <changelog>
   AUTHORS

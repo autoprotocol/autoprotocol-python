@@ -14,7 +14,6 @@ from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .util import *  # pylint: disable=unused-wildcard-import
-from .delete_me import shape_builder
 
 from builtins import round  # pylint: disable=redefined-builtin
 import sys
@@ -1710,7 +1709,7 @@ class Protocol(object):
         if pre_dispense is not None:
             pre_dispense = parse_unit(pre_dispense, "uL")
         if shape is not None:
-            shape = shape_builder(**shape)
+            shape = Dispense.builders.shape(**shape)
         if shake_after is not None:
             shake_after = Dispense.builders.shake_after(**shake_after)
 

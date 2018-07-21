@@ -5718,7 +5718,9 @@ class Protocol(object):
         Examples
         --------
         Transfer between two single wells
+
         .. code-block:: python
+
             from autoprotocol import Protocol, Unit
 
             p = Protocol()
@@ -5729,14 +5731,18 @@ class Protocol(object):
             p.transfer(source.well(0), destination.well(1), "5:ul")
 
         Sequential transfers between two groups of wells
+
         .. code-block:: python
+
             sources = source.wells_from(0, 8, columnwise=True)
             dests = destination.wells_from(1, 8, columnwise=True)
             volumes = [Unit(x, "ul") for x in range(1, 9)]
             p.transfer(sources, dests, volumes)
 
         Concurrent transfers between two groups of wells
+
         .. code-block:: python
+
             # single-column concurrent transfer
             p.transfer(
                 source.well(0), destination.well(1), "5:ul", rows=8
@@ -5753,7 +5759,9 @@ class Protocol(object):
             )
 
         Transfer with extra parameters
+
         .. code-block:: python
+
             from autoprotocol.liquid_handle import Transfer
             from autoprotocol.instruction import LiquidHandle
 
@@ -5768,7 +5776,9 @@ class Protocol(object):
             )
 
         Transfer using other built in Transfer methods
+
         .. code-block:: python
+
             from autoprotocol.liquid_handle import DryWellTransfer
 
             p.transfer(
@@ -6003,7 +6013,9 @@ class Protocol(object):
         Examples
         --------
         Mix within a single well
+
         .. code-block:: python
+
             from autoprotocol import Protocol, Unit
 
             p = Protocol()
@@ -6012,14 +6024,18 @@ class Protocol(object):
             p.mix(plate.well(0), "5:ul")
 
         Sequential mixes within multiple wells
+
         .. code-block:: python
+
             wells = plate.wells_from(0, 8, columnwise=True)
             volumes = [Unit(x, "ul") for x in range(1, 9)]
             p.mix(wells, volumes)
 
 
         Concurrent mixes within multiple wells
+
         .. code-block:: python
+
             # single-column concurrent mix
             p.mix(plate.well(0), "5:ul", rows=8)
 
@@ -6033,7 +6049,9 @@ class Protocol(object):
             p.mix(plate.well(0), "5:ul", rows=16, columns=24)
 
         Mix with extra parameters
+
         .. code-block:: python
+
             from autoprotocol.liquid_handle import Mix
             from autoprotocol.instruction import LiquidHandle
 

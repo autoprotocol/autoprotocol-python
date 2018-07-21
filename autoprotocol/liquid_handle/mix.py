@@ -42,7 +42,7 @@ class Mix(LiquidHandleMethod):
             this generates two operations, an initial air aspiration before
             entering any wells, and a corresponding final air dispense
             after the last operation that involves liquid
-            see LiquidHandle.builders.blowout
+            See Also LiquidHandle.builders.blowout
         repetitions : int
             the number of times the mix should be repeated
         position_z : dict
@@ -158,6 +158,7 @@ class Mix(LiquidHandleMethod):
             liquid_class=self._liquid.name
         )
 
+    # pylint: disable=unused-argument
     def default_repetitions(self, volume):
         """Default mix repetitions
 
@@ -177,6 +178,7 @@ class Mix(LiquidHandleMethod):
         """
         return 10
 
+    # pylint: disable=unused-argument
     def default_position_z(self, volume):
         """Default position_z
 

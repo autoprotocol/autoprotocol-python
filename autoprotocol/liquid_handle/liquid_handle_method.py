@@ -42,16 +42,17 @@ class LiquidHandleMethod(object):
     complex set of liquid handling behavior into smaller, discrete steps.
 
     For step `x` (aspirate, dispense, mix) and parameter `y` (e.g. blowout):
-        - Protocol methods calls LiquidHandleMethod._`x`_transports
-        - _`x`_transports:
+        - Protocol method:
+            - calls LiquidHandleMethod._`x`_transports
+        - LiquidHandleMethod._`x`_transports method:
             - clears the _transports list
             - walks through all _transport methods including _transport_`y`
             - returns the _transports lists
-        - _transport_`y`:
+        - LiquidHandleMethod._transport_`y` method:
             - checks parameter `y` in addition to the default_`y` method
             - possibly generates a series of transports based on the two values
             - calls lower level helper methods
-        - lower level helper methods:
+        - LiquidHandleMethod lower level helper methods:
             - generate transports and append them to _transports
 
     Examples
@@ -61,6 +62,7 @@ class LiquidHandleMethod(object):
     LiquidHandleMethod.
 
     .. code-block:: python
+
         from autoprotocol import Unit
         from autoprotocol.instruction import LiquidHandle
         from autoprotocol.liquid_handle import LiquidHandleMethod
@@ -73,6 +75,7 @@ class LiquidHandleMethod(object):
     new behavior you can define your own LiquidHandleMethod.
 
     .. code-block:: python
+
         from autoprotocol import Unit
         from autoprotocol.instruction import LiquidHandle
         from autoprotocol.liquid_handle import LiquidHandleMethod
@@ -106,7 +109,7 @@ class LiquidHandleMethod(object):
             this generates two operations, an initial air aspiration before
             entering any wells, and a corresponding final air dispense
             after the last operation that involves liquid
-            see LiquidHandle.builders.blowout
+            See Also LiquidHandle.builders.blowout
         """
         self.tip_type = tip_type
         self.blowout = blowout

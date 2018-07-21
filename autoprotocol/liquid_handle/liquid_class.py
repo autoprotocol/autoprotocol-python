@@ -44,6 +44,7 @@ class LiquidClass(object):
     volume to be transferred.
 
     .. code-block:: python
+
         from autoprotocol import Unit
         from autoprotocol.instruction import LiquidHandle
         from autoprotocol.liquid_handle import LiquidClass
@@ -59,6 +60,7 @@ class LiquidClass(object):
     LiquidClass.
 
     .. code-block:: python
+
         from autoprotocol import Unit
         from autoprotocol.instruction import LiquidHandle
         from autoprotocol.liquid_handle.liquid_class import (
@@ -145,8 +147,7 @@ class LiquidClass(object):
         self._safe_volume_multiplier = 1.1
 
     def _has_calibration(self):
-        """
-        Checks whether any calibration attributes are specified
+        """Checks whether any calibration attributes are specified
 
         Returns
         -------
@@ -163,8 +164,7 @@ class LiquidClass(object):
         ])
 
     def _get_calibrated_volume(self, volume, tip_type):
-        """
-        Calculates the calibrated volume for a given volume and tip_type
+        """Calculates the calibrated volume for a given volume and tip_type
 
         Parameters
         ----------
@@ -192,8 +192,7 @@ class LiquidClass(object):
         return calibrated_volume
 
     def _get_aspirate_flowrate(self, volume, tip_type):
-        """
-        Returns recommended aspiration flowrate based on transfer volume
+        """Returns recommended aspiration flowrate based on transfer volume
 
         Parameters
         ----------
@@ -218,8 +217,7 @@ class LiquidClass(object):
         return flowrate
 
     def _get_dispense_flowrate(self, volume, tip_type):
-        """
-        Returns recommended aspiration flowrate based on transfer volume
+        """Returns recommended aspiration flowrate based on transfer volume
 
         Parameters
         ----------
@@ -246,7 +244,7 @@ class LiquidClass(object):
 
 class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
                                       ["slope", "intercept"])):
-    """
+    """Wrapper for slope and intercept parameters for linear fitting
     Holds information required to calibrate a volume for liquid handle step
     assuming a linear relationship between volume and calibrated volume.
     """
@@ -275,11 +273,10 @@ class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
         return super(VolumeCalibrationBin, cls).__new__(cls, slope, intercept)
 
     def calibrate_volume(self, volume):
-        """
-        Calibrates the volume using slope and intercept
+        """Calibrates the volume using slope and intercept
 
-        Params
-        ------
+        Parameters
+        ----------
         volume : Unit
             the volume to be calibrated
 
@@ -293,7 +290,7 @@ class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
 
 # pylint: disable=too-few-public-methods
 class VolumeCalibration(object):
-    """
+    """Wrapper for a volume-binned calibration curve
     A data structure that represents a calibration curve for either volumes
     or flowrates that are binned by upper bounded volume ranges.
     """
@@ -326,12 +323,12 @@ class VolumeCalibration(object):
         self.calibration_curve = sorted_curve
 
     def binned_calibration_for_volume(self, volume):
-        """
+        """Gets the smallest suitable bin in the calibration curve
         Finds the smallest point on the calibration curve that has a bin
         that's greater than or equal to the size of the specified value.
 
-        Params
-        ------
+        Parameters
+        ----------
         volume: Unit or int or float
             the value to be binned
 

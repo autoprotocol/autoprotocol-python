@@ -65,6 +65,7 @@ class TestProtocolAppendReturn(object):
         # assert empty list of instructions
         assert (len(p.instructions) == 0)
 
+        # pylint: disable=protected-access
         inst = p._append_and_return(Spin("dummy_ref", "100:meter/second^2",
                                          "60:second"))
         assert (len(p.instructions) == 1)
@@ -74,6 +75,7 @@ class TestProtocolAppendReturn(object):
     def test_protocol_append_return_multiple(self, dummy_protocol):
         p = dummy_protocol
 
+        # pylint: disable=protected-access
         insts = p._append_and_return([
             Incubate("dummy_ref", "ambient", "30:second"),
             Spin("dummy_ref", "2000:rpm", "120:second")

@@ -47,7 +47,7 @@ class Transfer(LiquidHandleMethod):
             this generates a pair of operations: an initial air aspiration
             before entering any wells and a corresponding air dispense after the
             last operation that involves liquid
-            see LiquidHandle.builders.blowout
+            See Also LiquidHandle.builders.blowout
         prime : bool or Unit, optional
             whether to execute a prime step or the parameters for one.
             this generates a pair of aspirate/dispense operations around the
@@ -62,22 +62,22 @@ class Transfer(LiquidHandleMethod):
             whether to execute a mix_before step or the parameters for one.
             this generates a series of aspirate and dispense steps within the
             source location before aspirating the target volume
-            see LiquidHandle.builders.mix
+            See Also LiquidHandle.builders.mix
         mix_after : bool or dict, optional
             whether to execute a mix_after step or the parameters for one.
             this generates a series of aspirate and dispense steps within the
             destination location after dispensing the target volume
-            see LiquidHandle.builders.mix
+            See Also LiquidHandle.builders.mix
         aspirate_z : dict, optional
             the position that the tip should move to prior to aspirating, if the
             position references the `liquid_surface` then aspirate movements
             will track the surface with the defined offset.
-            see LiquidHandle.builders.position_z
+            See Also LiquidHandle.builders.position_z
         dispense_z : dict, optional
             the position that the tip should move to prior to dispensing, if the
             position references the `liquid_surface` then dispense
             will track the surface with the defined offset.
-            see LiquidHandle.builders.position_z
+            See Also LiquidHandle.builders.position_z
         """
         super(Transfer, self).__init__(tip_type=tip_type, blowout=blowout)
 
@@ -268,7 +268,7 @@ class Transfer(LiquidHandleMethod):
         Returns
         -------
         dict
-            mix_ before params
+            mix_before params
 
         See Also
         --------

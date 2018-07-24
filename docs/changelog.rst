@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data
+* :feature:`165` deprecate `Instruction.json` method for now as most instructions contain non-JSON-serializable objects
 * :bug:`167` properly handle `transfer` with tip_type and no volume calibration
 * :feature:`166` add 384-well flat-bottom polystyrene plate containerType
 * :feature:`168` improved pruning of empty data structures from 'Instruction.data' field

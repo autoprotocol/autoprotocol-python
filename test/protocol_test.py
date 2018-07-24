@@ -303,7 +303,7 @@ class TestRefify(object):
         # refify Instruction
         p.cover(refs["plate"])
         assert (p._refify(p.instructions[0]) == p._refify(
-            p.instructions[0].data))
+            p.instructions[0].__dict__))
 
         # refify Ref
         assert (p._refify(p.refs["test"]) == p.refs["test"].opts)

@@ -4985,7 +4985,7 @@ class Protocol(object):
         elif isinstance(op_data, Unit):
             return str(op_data)
         elif isinstance(op_data, Instruction):
-            return self._refify(op_data.data)
+            return self._refify(op_data.__dict__)
         elif isinstance(op_data, Ref):
             return op_data.opts
         else:

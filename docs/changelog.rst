@@ -2,7 +2,13 @@
 Changelog
 =========
 
-* :support:`-` fix and update docstrings so that sphinx can be executed with no warnings
+* :feature:`163` add liquid_handle instruction (ASC-032)
+* :feature:`163` add LiquidHandleMethods and corresponding protocol methods to represent generic liquid handling abstractions
+* :feature:`163` replaced `p.stamp` & `p.transfer` with a new implementation of `p.transfer` that generates a liquid_handle instruction
+* :feature:`163` replaced the internals of `p.spread` with a new implementation that generates a liquid_handle instruction
+* :feature:`163` deprecated the `p.consolidate` and `p.distribute` protocol methods
+* :feature:`163` deprecated Pipette, Stamp, Consolidate, Distribute, and Spread instructions
+* :support:`162` fix and update docstrings so that sphinx can be executed with no warnings
 * :feature:`161` deprecate support for `p.append` in favor of `p._append_and_return`
 * :feature:`161` deprecate support for generating multiple GelSeparate instructions using `p.gel_separate`
 * :feature:`161` deprecate `newpick` in `p.autopick`

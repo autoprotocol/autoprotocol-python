@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-stamp(source_origin=${1:WellGroup source}, dest_origin=${2:WellGroup dest}, volume="${3:Str volume}")
-]]></content>
-    <tabTrigger>stamp</tabTrigger>
-    <scope>source.python</scope>
-    <description>List of transfers</description>
-</snippet>

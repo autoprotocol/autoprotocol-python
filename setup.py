@@ -29,6 +29,7 @@ setup(
         ]
     },
     packages=[
-        'autoprotocol'
+        'autoprotocol',
+        'autoprotocol.liquid_handle'
     ]
 )

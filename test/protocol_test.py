@@ -1,5 +1,5 @@
 import pytest
-from autoprotocol.container import Container
+from autoprotocol.container import Container, WellGroup
 from autoprotocol.instruction import Thermocycle, Incubate, Spin, Dispense
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
@@ -20,7 +20,44 @@ class TestProtocolMultipleExist(object):
         assert (len(p1.instructions) == 2)
 
 
-# pylint: disable=protected-access
+class TestProtocolBasic(object):
+    def test_basic_protocol(self, dummy_protocol):
+        protocol = dummy_protocol
+        resource = protocol.ref("resource", None, "96-flat", discard=True)
+        pcr = protocol.ref("pcr", None, "96-flat", discard=True)
+        bacteria = protocol.ref("bacteria", None, "96-flat", discard=True)
+        # Test for correct number of refs
+        assert (len(protocol.as_dict()['refs']) == 3)
+        assert (protocol.as_dict()['refs']['resource'] ==
+                {"new": "96-flat", "discard": True})
+
+        bacteria_wells = WellGroup([bacteria.well("B1"), bacteria.well("C5"),
+                                    bacteria.well("A5"), bacteria.well("A1")])
+
+        protocol.transfer(
+            resource.well("A1").set_volume("40:microliter"),
+            pcr.wells_from('A1', 5),
+            "5:microliter",
+            one_tip=True
+        )
+        protocol.transfer(
+            resource.well("A1").set_volume("40:microliter"),
+            bacteria_wells,
+            "5:microliter",
+            one_tip=True
+        )
+
+        assert len(protocol.instructions) == 2
+        assert protocol.instructions[0].op == "liquid_handle"
+
+        protocol.incubate(bacteria, "warm_37", "30:minute")
+
+        assert len(protocol.instructions) == 4
+        assert protocol.instructions[2].op == "cover"
+        assert protocol.instructions[3].op == "incubate"
+        assert protocol.instructions[3].duration == "30:minute"
+
+
 class TestProtocolAppendReturn(object):
 
     def test_protocol_append_return(self, dummy_protocol):
@@ -28,6 +65,7 @@ class TestProtocolAppendReturn(object):
         # assert empty list of instructions
         assert (len(p.instructions) == 0)
 
+        # pylint: disable=protected-access
         inst = p._append_and_return(Spin("dummy_ref", "100:meter/second^2",
                                          "60:second"))
         assert (len(p.instructions) == 1)
@@ -37,6 +75,7 @@ class TestProtocolAppendReturn(object):
     def test_protocol_append_return_multiple(self, dummy_protocol):
         p = dummy_protocol
 
+        # pylint: disable=protected-access
         insts = p._append_and_return([
             Incubate("dummy_ref", "ambient", "30:second"),
             Spin("dummy_ref", "2000:rpm", "120:second")
@@ -1578,6 +1617,24 @@ class TestIlluminaSeq(object):
 
 
 class TestCoverStatus(object):
+
+    def test_implicit_unseal(self, dummy_protocol):
+        p = dummy_protocol
+        cont = p.ref("cont", None, "96-pcr", discard=True)
+        assert not cont.cover
+        p.seal(cont)
+        assert cont.cover
+        p.mix(cont.well(0), "5:microliter")
+        assert not cont.cover
+
+    def test_implicit_uncover(self, dummy_protocol):
+        p = dummy_protocol
+        cont = p.ref("cont", None, "96-flat", discard=True)
+        assert not cont.cover
+        p.cover(cont)
+        assert cont.cover
+        p.mix(cont.well(0), "5:microliter")
+        assert not cont.cover
 
     def test_ref_cover_status(self, dummy_protocol):
         p = dummy_protocol

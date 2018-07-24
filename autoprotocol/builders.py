@@ -1,19 +1,111 @@
-"""
+"""Builders
 Module containing builders, which help build inputs for Instruction parameters
 
     :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
+Summary
+-------
+These builder methods are used to generate and validate complex data
+structures used in Autoprotocol specification. Each of them is capable of
+using their own output as input. Therefore these builders are also used as
+inline checks in Protocol methods.
+
+Notes
+-----
+Generally these builders should not be called from this file directly.
+They're more easily accessible by referencing a specific Instruction's
+builders attribute (e.g. `Spectrophotometry.Builders.mode_params`).
+
+See Also
+--------
+Instruction
+    Instructions corresponding to each of the builders
 """
 
+from collections import Iterable
+from .constants import SBS_FORMAT_SHAPES
 from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well
 from .unit import Unit
 
 
+class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
+    """General builders that apply to multiple instructions
+    """
+    def __init__(self):
+        self.sbs_shapes = ["SBS96", "SBS384"]
+
+    # pylint: disable=redefined-builtin
+    def shape(self, rows=1, columns=1, format=None):
+        """
+        Helper function for building a shape dictionary
+
+        Parameters
+        ----------
+        rows : int, optional
+            Number of rows to be concurrently transferred
+        columns : int, optional
+            Number of columns to be concurrently transferred
+        format : str, optional
+            Plate format in String form. e.g. "SBS96" or "SBS384"
+
+        Returns
+        -------
+        dict
+            shape parameters
+
+        Raises
+        ------
+        TypeError
+            If rows/columns aren't ints
+        ValueError
+            If an invalid row/column count is given
+        ValueError
+            If an invalid shape is given
+        ValueError
+            If rows/columns are greater than what is allowed for the format
+        """
+        if not isinstance(rows, int) or not isinstance(columns, int):
+            raise TypeError("Rows/columns have to be of type integer")
+
+        if format is None:
+            for shape in self.sbs_shapes:
+                valid_rows = rows <= SBS_FORMAT_SHAPES[shape]["rows"]
+                valid_columns = columns <= SBS_FORMAT_SHAPES[shape]["columns"]
+                if valid_rows and valid_columns:
+                    format = shape
+                    break
+
+            if not format:
+                raise ValueError(
+                    "Invalid number of rows and/or columns specified")
+
+        if format not in self.sbs_shapes:
+            raise ValueError(
+                "Invalid shape format; format has to be in {}".format(
+                    self.sbs_shapes
+                )
+            )
+
+        valid_rows = rows <= SBS_FORMAT_SHAPES[format]["rows"]
+        valid_columns = columns <= SBS_FORMAT_SHAPES[format]["columns"]
+        if not (valid_rows and valid_columns):
+            raise ValueError(
+                "rows: {} and columns: {} are not possible with format: {}."
+                "".format(rows, columns, format)
+            )
+
+        return {
+            "rows": rows,
+            "columns": columns,
+            "format": format
+        }
+
+
 # pylint: disable=no-init
-class ThermocycleBuilders(object):
+class ThermocycleBuilders(InstructionBuilders):
     """
     These builders are meant for helping to construct the `groups`
     argument in the `Protocol.thermocycle` method
@@ -136,12 +228,13 @@ class ThermocycleBuilders(object):
         return step_dict
 
 
-class DispenseBuilders(object):
+class DispenseBuilders(InstructionBuilders):
     """
     These builders are meant for helping to construct arguments in the
     `Protocol.dispense` method.
     """
     def __init__(self):
+        super(DispenseBuilders, self).__init__()
         self.SHAKE_PATHS = [
             "landscape_linear"
         ]
@@ -265,8 +358,13 @@ class DispenseBuilders(object):
         return {k: v for k, v in shake_after.items() if v is not None}
 
 
-class SpectrophotometryBuilders(object):
+class SpectrophotometryBuilders(InstructionBuilders):
+    """
+    These builders are meant for helping to construct arguments for the
+    `Spectrophotometry` instruction.
+    """
     def __init__(self):
+        super(SpectrophotometryBuilders, self).__init__()
         self.MODES = {
             "absorbance": self.absorbance_mode_params,
             "fluorescence": self.fluorescence_mode_params,
@@ -359,7 +457,8 @@ class SpectrophotometryBuilders(object):
             "mode_params": self.MODES[mode](**mode_params)
         }
 
-    def absorbance_mode_params(self, wells, wavelength, num_flashes=None,
+    @staticmethod
+    def absorbance_mode_params(wells, wavelength, num_flashes=None,
                                settle_time=None):
         """
         Parameters
@@ -529,7 +628,8 @@ class SpectrophotometryBuilders(object):
 
         return mode_params
 
-    def luminescence_mode_params(self, wells, num_flashes=None,
+    @staticmethod
+    def luminescence_mode_params(wells, num_flashes=None,
                                  settle_time=None, integration_time=None,
                                  gain=None):
         """
@@ -688,3 +788,515 @@ class SpectrophotometryBuilders(object):
         params = {k: v for k, v in params.items() if v is not None}
 
         return params
+
+
+class LiquidHandleBuilders(InstructionBuilders):
+    """Builders for LiquidHandle Instructions
+    """
+    def __init__(self):
+        super(LiquidHandleBuilders, self).__init__()
+        self.liquid_classes = ["air", "default"]
+        self.xy_max = 1
+        self.z_references = [
+            "well_top", "well_bottom", "liquid_surface", "preceding_position"
+        ]
+        self.z_detection_methods = ["capacitance", "pressure", "tracked"]
+
+    def location(self, location=None, transports=None):
+        """Helper for building locations
+
+        Parameters
+        ----------
+        location : Well or str, optional
+            Location refers to the well location where the transports will be
+            carried out
+        transports : list(dict), optional
+            Transports refer to the list of transports that will be carried out
+            in the specified location
+            See Also LiquidHandle.builders.transport
+
+        Returns
+        -------
+        dict
+            location parameters for a LiquidHandle instruction
+
+        Raises
+        ------
+        TypeError
+            If locations aren't str/well
+        ValueError
+            If transports are specified, but empty
+        """
+        if not (location is None or isinstance(location, (Well, str))):
+            raise TypeError(
+                "Location {} is not of type str or Well".format(location)
+            )
+
+        if transports is not None:
+            if not isinstance(transports, Iterable):
+                raise ValueError(
+                    "Transports: {} is not iterable".format(transports)
+                )
+            transports = [self.transport(**_) for _ in transports]
+            if len(transports) < 1:
+                raise ValueError(
+                    "transports {} must be nonempty if specified"
+                    "".format(transports)
+                )
+
+        return {
+            "location": location,
+            "transports": transports
+        }
+
+    def transport(self, volume=None, pump_override_volume=None,
+                  flowrate=None, delay_time=None, mode_params=None):
+        """Helper for building transports
+
+        Parameters
+        ----------
+        volume : Unit or str, optional
+            Volume to be aspirated/dispensed. Positive volume -> Dispense.
+            Negative -> Aspirate
+        pump_override_volume : Unit or str, optional
+            Calibrated volume, volume which the pump will move
+        flowrate : dict, optional
+            Flowrate parameters
+            See Also LiquidHandle.builders.flowrate
+        delay_time : Unit or str, optional
+            Time spent waiting after executing mandrel and pump movement
+        mode_params : dict, optional
+            Mode parameters
+            See Also LiquidHandle.builders.mode_params
+
+
+        Returns
+        -------
+        dict
+            transport parameters for a LiquidHandle instruction
+        """
+        if volume is not None:
+            volume = parse_unit(volume, "ul")
+        if pump_override_volume is not None:
+            pump_override_volume = parse_unit(pump_override_volume, "ul")
+        if flowrate is not None:
+            flowrate = self.flowrate(**flowrate)
+        if delay_time is not None:
+            delay_time = parse_unit(delay_time, "s")
+        if mode_params is not None:
+            mode_params = self.mode_params(**mode_params)
+
+        return {
+            "volume": volume,
+            "pump_override_volume": pump_override_volume,
+            "flowrate": flowrate,
+            "delay_time": delay_time,
+            "mode_params": mode_params
+        }
+
+    @staticmethod
+    def flowrate(target, initial=None, cutoff=None, acceleration=None,
+                 deceleration=None):
+        """Helper for building flowrates
+
+        Parameters
+        ----------
+        target : Unit or str
+            Target flowrate
+        initial : Unit or str, optional
+            Initial flowrate
+        cutoff : Unit or str, optional
+            Cutoff flowrate
+        acceleration : Unit or str, optional
+            Volumetric acceleration for initial to target (in ul/s^2)
+        deceleration : Unit or str, optional
+            Volumetric deceleration for target to cutoff (in ul/s^2)
+
+        Returns
+        -------
+        dict
+            flowrate parameters for a LiquidHandle instruction
+        """
+        target = parse_unit(target, "ul/s")
+        if initial is not None:
+            initial = parse_unit(initial, "ul/s")
+        if cutoff is not None:
+            cutoff = parse_unit(cutoff, "ul/s")
+        if acceleration is not None:
+            acceleration = parse_unit(acceleration, "ul/s/s")
+        if deceleration is not None:
+            deceleration = parse_unit(deceleration, "ul/s/s")
+
+        return {
+            "target": target,
+            "initial": initial,
+            "cutoff": cutoff,
+            "acceleration": acceleration,
+            "deceleration": deceleration
+        }
+
+    def mode_params(self, liquid_class=None, position_x=None, position_y=None,
+                    position_z=None, tip_position=None):
+        """Helper for building transport mode_params
+
+        Mode params contain information about tip positioning and the
+        liquid being manipulated
+
+        Parameters
+        ----------
+        liquid_class : Enum({"default", "air"}), optional
+            The name of the liquid class to be handled. This affects how
+            vendors handle populating liquid handling defaults.
+        position_x : dict, optional
+            Target relative x-position of tip in well.
+            See Also LiquidHandle.builders.position_xy
+        position_y : dict, optional
+            Target relative y-position of tip in well.
+            See Also LiquidHandle.builders.position_xy
+        position_z : dict, optional
+            Target relative z-position of tip in well.
+            See Also LiquidHandle.builders.position_z
+        tip_position : dict, optional
+            A dict of positions x, y, and z. Should only be specified if none of
+            the other tip position parameters have been specified.
+
+        Returns
+        -------
+        dict
+            mode_params for a LiquidHandle instruction
+
+        Raises
+        ------
+        ValueError
+            If liquid_class is not in the allowed list
+        ValueError
+            If both position_x|y|z and tip_position are specified
+        """
+        if liquid_class is not None and liquid_class not in self.liquid_classes:
+            raise ValueError(
+                "liquid_class must be one of {} but {} was specified"
+                "".format(self.liquid_classes, liquid_class)
+            )
+
+        xyz_specified = any(
+            [_ is not None for _ in (position_x, position_y, position_z)]
+        )
+
+        if xyz_specified and tip_position is not None:
+            raise ValueError(
+                "tip_position {} was specified in addition to at least one "
+                "of position_(x/y/z). Only one of the two methods of "
+                "specifying tip position is allowed".format(tip_position)
+            )
+
+        if tip_position is not None:
+            position_x = tip_position.get("position_x")
+            position_y = tip_position.get("position_y")
+            position_z = tip_position.get("position_z")
+
+        if position_x is not None:
+            position_x = self.position_xy(**position_x)
+        if position_y is not None:
+            position_y = self.position_xy(**position_y)
+        if position_z is not None:
+            position_z = self.position_z(**position_z)
+
+        return {
+            "liquid_class": liquid_class,
+            "tip_position": {
+                "position_x": position_x,
+                "position_y": position_y,
+                "position_z": position_z
+            }
+        }
+
+    @staticmethod
+    def move_rate(target=None, acceleration=None):
+        """Helper for building move_rates
+
+        Parameters
+        ----------
+        target : Unit or str, optional
+            Target velocity. Must be in units of
+        acceleration : Unit or str, optional
+            Acceleration. Must be in units of
+
+        Returns
+        -------
+        dict
+            move_rate parameters for a LiquidHandle instruction
+        """
+        if target is not None:
+            target = parse_unit(target, "mm/s")
+        if acceleration is not None:
+            acceleration = parse_unit(acceleration, "mm/s/s")
+
+        return {
+            "target": target,
+            "acceleration": acceleration
+        }
+
+    def position_xy(self, position=None, move_rate=None):
+        """Helper for building position_x and position_y parameters
+
+        Parameters
+        ----------
+        position : Numeric, optional
+            Target relative x/y-position of tip in well in unit square
+            coordinates.
+        move_rate : dict, optional
+            The rate at which the tip moves in the well
+            See Also LiquidHandle.builders.move_rate
+
+        Returns
+        -------
+        dict
+            position_xy parameters for a LiquidHandle instruction
+
+        Raises
+        ------
+        TypeError
+            If position is non-numeric
+        ValueError
+            If position is not in range
+        """
+        if not (position is None or isinstance(position, (float, int))):
+            raise TypeError(
+                "position {} is not of type float/int".format(position)
+            )
+        if not (position is None or -self.xy_max <= position <= self.xy_max):
+            raise ValueError(
+                "position {} was not in range {} - {}"
+                "".format(position, -self.xy_max, self.xy_max)
+            )
+
+        if move_rate is not None:
+            move_rate = self.move_rate(**move_rate)
+
+        return {
+            "position": position,
+            "move_rate": move_rate
+        }
+
+    def position_z(self, reference=None, offset=None, move_rate=None,
+                   detection_method=None, detection_threshold=None,
+                   detection_duration=None, detection_fallback=None,
+                   detection=None):
+        """Helper for building position_z parameters
+
+        Parameters
+        ----------
+        reference : str, optional
+            Must be one of "well_top", "well_bottom", "liquid_surface",
+             "preceding_position"
+        offset : Unit or str, optional
+            Offset from reference position
+        move_rate : dict, optional
+            Controls the rate at which the tip moves in the well
+            See Also LiquidHandle.builders.move_rate
+        detection_method : str, optional
+            Must be one of "tracked", "pressure", "capacitance"
+        detection_threshold : Unit or str, optional
+            The threshold which must be crossed before a positive reading is
+            registered. This is applicable for capacitance and pressure
+            detection methods
+        detection_duration : Unit or str, optional
+            The contiguous duration where the threshold must be crossed before a
+            positive reading is registered.
+            This is applicable for pressure detection methods
+        detection_fallback : dict, optional
+            Fallback option which will be used if sensing fails
+            See Also LiquidHandle.builders.position_z
+        detection : dict, optional
+            A dict of detection parameters. Should only be specified if none of
+            the other detection parameters have been specified.
+
+        Returns
+        -------
+        dict
+            position_z parameters for a LiquidHandle instruction
+
+        Raises
+        ------
+        ValueError
+            If reference was not in the allowed list
+        ValueError
+            If both detection_method|duration|threshold|fallback and
+            detection are specified
+        ValueError
+            If detection_method is not in the allowed list
+        ValueError
+            If detection parameters were specified, but the reference
+            position doesn't support detection
+        """
+        if reference is not None and reference not in self.z_references:
+            raise ValueError(
+                "reference must be one of {} but {} was specified"
+                "".format(self.z_references, reference)
+            )
+        if offset is not None:
+            offset = parse_unit(offset, "mm")
+        if move_rate is not None:
+            move_rate = self.move_rate(**move_rate)
+
+        detection_params_specified = any(
+            [
+                _ is not None for _
+                in (detection_method, detection_duration,
+                    detection_threshold, detection_fallback)
+            ]
+        )
+
+        if detection_params_specified and detection is not None:
+            raise ValueError(
+                "tip_position {} was specified in addition to at least one "
+                "of position_(x/y/z). Only one of the two methods of "
+                "specifying tip position is allowed".format(detection)
+            )
+
+        if detection is not None:
+            detection_method = detection.get("method")
+            detection_duration = detection.get("duration")
+            detection_threshold = detection.get("threshold")
+            detection_fallback = detection.get("fallback")
+
+        if (detection_method is not None and
+                detection_method not in self.z_detection_methods):
+            raise ValueError(
+                "detection_method must be one of {} but {} was specified"
+                "".format(self.z_detection_methods, detection_method)
+            )
+
+        if detection_duration is not None:
+            detection_duration = parse_unit(detection_duration, "s")
+
+        if detection_threshold is not None:
+            detection_threshold = parse_unit(
+                detection_threshold, ["pascal", "farad"]
+            )
+
+        if detection_fallback is not None:
+            detection_fallback = self.position_z(**detection_fallback)
+
+        detection_params = {
+            "method": detection_method,
+            "threshold": detection_threshold,
+            "duration": detection_duration,
+            "fallback": detection_fallback
+        }
+
+        # ensure that detection params are only allowed for surface references
+        detection_specified = any(
+            _ is not None
+            for _ in detection_params.values()
+        )
+        detectable_reference = reference == "liquid_surface"
+        if detection_specified and not detectable_reference:
+            raise ValueError(
+                "detection parameters were specified, but reference {} does "
+                "not support detection".format(reference)
+            )
+
+        return {
+            "reference": reference,
+            "offset": offset,
+            "move_rate": move_rate,
+            "detection": detection_params
+        }
+
+    @staticmethod
+    def instruction_mode_params(tip_type=None):
+        """Helper for building instruction mode_params
+
+        Parameters
+        ----------
+        tip_type : str, optional
+            the string representation ofa tip_type
+            See Also tip_type.py
+
+        Returns
+        -------
+        dict
+            mode_params for a LiquidHandle instruction
+        """
+
+        return {
+            "tip_type": tip_type
+        }
+
+    def mix(self, volume, repetitions, initial_z,
+            asp_flowrate=None, dsp_flowrate=None):
+        """Helper for building mix params for Transfer LiquidHandleMethods
+
+        Parameters
+        ----------
+        volume : Unit or str
+            the volume of the mix step
+        repetitions : int
+            the number of times that the mix should be repeated
+        initial_z : dict
+            the position that the tip should move to prior to mixing
+            See Also LiquidHandle.builders.position_z
+        asp_flowrate : dict, optional
+            the flowrate of the aspiration portions of the mix
+            See Also LiquidHandle.builders.flowrate
+        dsp_flowrate : dict, optional
+            the flowrate of the dispense portions of the mix
+            See Also LiquidHandle.builders.flowrate
+
+        Returns
+        -------
+        dict
+            mix parameters for a LiquidHandleMethod
+
+        Raises
+        ------
+        TypeError
+            If repetitions is not an int
+        """
+        volume = parse_unit(volume, "ul")
+        if not isinstance(repetitions, int):
+            raise TypeError("repetitions {} is not an int".format(repetitions))
+        initial_z = self.position_z(**initial_z)
+        if asp_flowrate is not None:
+            asp_flowrate = self.flowrate(**asp_flowrate)
+        if dsp_flowrate is not None:
+            dsp_flowrate = self.flowrate(**dsp_flowrate)
+
+        return {
+            "volume": volume,
+            "repetitions": repetitions,
+            "initial_z": initial_z,
+            "asp_flowrate": asp_flowrate,
+            "dsp_flowrate": dsp_flowrate
+        }
+
+    def blowout(self, volume, initial_z, flowrate=None):
+        """Helper for building blowout params for LiquidHandleMethods
+
+        Parameters
+        ----------
+        volume : Unit or str
+            the volume of the blowout step
+        initial_z : dict
+            the position that the tip should move to prior to blowing out
+            See Also LiquidHandle.builders.position_z
+        flowrate : dict, optional
+            the flowrate of the blowout
+            See Also LiquidHandle.builders.flowrate
+
+        Returns
+        -------
+        dict
+            blowout params for a LiquidHandleMethod
+        """
+        volume = parse_unit(volume, "ul")
+        initial_z = self.position_z(**initial_z)
+        if flowrate is not None:
+            flowrate = self.flowrate(**flowrate)
+
+        return {
+            "volume": volume,
+            "initial_z": initial_z,
+            "flowrate": flowrate
+        }

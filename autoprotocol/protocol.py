@@ -9,10 +9,11 @@ Module containing the main `Protocol` object and associated functions
 
 from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
+from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
+from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .util import *  # pylint: disable=unused-wildcard-import
-from .delete_me import shape_builder
 
 from builtins import round  # pylint: disable=redefined-builtin
 import sys
@@ -670,12 +671,12 @@ class Protocol(object):
 
         Parameters
         ----------
-        instructions : Instruction
+        instructions : Instruction or list(Instruction)
             Instruction object(s) to be appended.
 
         Returns
         -------
-        Instruction
+        Instruction or list(Instruction)
             Instruction object(s) to be appended and returned
 
         """
@@ -1708,7 +1709,7 @@ class Protocol(object):
         if pre_dispense is not None:
             pre_dispense = parse_unit(pre_dispense, "uL")
         if shape is not None:
-            shape = shape_builder(**shape)
+            shape = Dispense.builders.shape(**shape)
         if shake_after is not None:
             shake_after = Dispense.builders.shake_after(**shake_after)
 
@@ -5663,3 +5664,672 @@ class Protocol(object):
                 shake_before=shake_before
             )
         )
+
+    # pylint: disable=protected-access
+    def transfer(self, source, destination, volume, rows=1, columns=1,
+                 source_liquid=LiquidClass,
+                 destination_liquid=LiquidClass,
+                 method=Transfer, one_tip=False):
+        """Generates LiquidHandle instructions between wells
+
+        Transfer liquid between specified pairs of source & destination wells.
+
+        Parameters
+        ----------
+        source : Well or WellGroup or list(Well)
+            Well(s) to transfer liquid from.
+        destination : Well or WellGroup or list(Well)
+            Well(s) to transfer liquid to.
+        volume : str or Unit or list(str) or list(Unit)
+            Volume(s) of liquid to be transferred from source wells to
+            destination wells. The number of volumes specified must
+            correspond to the number of destination wells.
+        rows : int, optional
+            Number of rows to be concurrently transferred
+        columns : int, optional
+            Number of columns to be concurrently transferred
+        source_liquid : LiquidClass or list(LiquidClass), optional
+            Type(s) of liquid contained in the source Well. This affects the
+            aspirate and dispense behavior including the flowrates,
+            liquid level detection thresholds, and physical movements.
+        destination_liquid : LiquidClass or list(LiquidClass), optional
+            Type(s) of liquid contained in the destination Well. This affects
+            liquid level detection thresholds.
+        method : Transfer or list(Transfer), optional
+            Integrates with the specified source_liquid and destination_liquid
+            to define a set of physical movements.
+        one_tip : bool, optional
+            If True then a single tip will be used for all operations
+
+        Returns
+        -------
+        list(LiquidHandle)
+            Returns a list of :py:class:`autoprotocol.instruction.LiquidHandle`
+            instructions created from the specified parameters
+
+        Raises
+        ------
+        ValueError
+            if the specified parameters can't be interpreted as lists of
+            equal length
+        ValueError
+            if one_tip is true, but not all transfer methods have a tip_type
+
+        Examples
+        --------
+        Transfer between two single wells
+
+        .. code-block:: python
+
+            from autoprotocol import Protocol, Unit
+
+            p = Protocol()
+            source = p.ref("source", cont_type="384-flat", discard=True)
+            destination = p.ref(
+                "destination", cont_type="394-pcr", discard=True
+            )
+            p.transfer(source.well(0), destination.well(1), "5:ul")
+
+        Sequential transfers between two groups of wells
+
+        .. code-block:: python
+
+            sources = source.wells_from(0, 8, columnwise=True)
+            dests = destination.wells_from(1, 8, columnwise=True)
+            volumes = [Unit(x, "ul") for x in range(1, 9)]
+            p.transfer(sources, dests, volumes)
+
+        Concurrent transfers between two groups of wells
+
+        .. code-block:: python
+
+            # single-column concurrent transfer
+            p.transfer(
+                source.well(0), destination.well(1), "5:ul", rows=8
+            )
+
+            # 96-well concurrent transfer from the A1 to B2 quadrants
+            p.transfer(
+                source.well(0), destination.well(13), "5:ul", rows=8, columns=12
+            )
+
+            # 384-well concurrent transfer
+            p.transfer(
+                source.well(0), destination.well(0), "5:ul", rows=16, columns=24
+            )
+
+        Transfer with extra parameters
+
+        .. code-block:: python
+
+            from autoprotocol.liquid_handle import Transfer
+            from autoprotocol.instruction import LiquidHandle
+
+            p.transfer(
+                source.well(0), destination.well(0), "5:ul",
+                method=Transfer(
+                    mix_before=True,
+                    dispense_z=LiquidHandle.builders.position_z(
+                       reference="well_top"
+                    )
+                )
+            )
+
+        Transfer using other built in Transfer methods
+
+        .. code-block:: python
+
+            from autoprotocol.liquid_handle import DryWellTransfer
+
+            p.transfer(
+                source.well(0), destination.well(1), "5:ul",
+                method=DryWellTransfer
+            )
+
+        For examples of other more complicated behavior, see the
+        documentation for LiquidHandleMethod.
+
+        See Also
+        --------
+        Transfer : base LiquidHandleMethod for transfer operations
+        """
+        def location_helper(source, destination, volume, method):
+            """Generates LiquidHandle transfer locations
+
+            Parameters
+            ----------
+            source : Well
+                Well to transfer liquid from.
+            destination : Well
+                Well to transfer liquid to.
+            volume : Unit
+                The volume of liquid to be transferred from source well to
+                destination well.
+            method : Transfer
+                Integrates the two input liquid classes and defines a set of
+                transfers based on their attributes and methods.
+
+            Returns
+            -------
+            list(dict)
+                LiquidHandle locations
+            """
+            self._remove_cover(source.container, "liquid_handle from")
+            self._remove_cover(destination.container, "liquid_handle into")
+
+            # update volumes
+            for well in get_wells(source, method._shape):
+                if well.volume:
+                    well.volume -= volume
+            for well in get_wells(destination, method._shape):
+                if well.volume:
+                    well.volume += volume
+                else:
+                    well.volume = volume
+
+            return [
+                LiquidHandle.builders.location(
+                    location=source,
+                    # pylint: disable=protected-access
+                    transports=method._aspirate_transports(volume)
+                ),
+                LiquidHandle.builders.location(
+                    location=destination,
+                    # pylint: disable=protected-access
+                    transports=method._dispense_transports(volume)
+                )
+            ]
+
+        # validate parameter types
+        source = WellGroup(source)
+        destination = WellGroup(destination)
+        count = max((len(source), len(destination)))
+
+        if len(source) == 1:
+            source = WellGroup([source[0]] * count)
+
+        if len(destination) == 1:
+            destination = WellGroup([destination[0]] * count)
+
+        if not isinstance(volume, list):
+            volume = [volume] * count
+        volume = [
+            parse_unit(_, "uL")
+            for _ in volume
+        ]
+
+        if not isinstance(source_liquid, list):
+            source_liquid = [source_liquid] * count
+        source_liquid = [
+            validate_as_instance(_, LiquidClass)
+            for _ in source_liquid
+        ]
+
+        if not isinstance(destination_liquid, list):
+            destination_liquid = [destination_liquid] * count
+        destination_liquid = [
+            validate_as_instance(_, LiquidClass)
+            for _ in destination_liquid
+        ]
+
+        if not isinstance(method, list):
+            method = [method] * count
+        method = [
+            validate_as_instance(_, Transfer)
+            for _ in method
+        ]
+
+        # validate parameter counts
+        countable_parameters = (
+            source, destination, volume, source_liquid, destination_liquid,
+            method
+        )
+        correct_parameter_counts = all(
+            len(_) == count
+            for _ in countable_parameters
+        )
+        if not correct_parameter_counts:
+            raise ValueError(
+                "Specified parameters {} could not all be interpreted as "
+                "the same length {}."
+                "".format(countable_parameters, correct_parameter_counts)
+            )
+
+        # format shape
+        shape = LiquidHandle.builders.shape(rows, columns, None)
+
+        # validate all containers against the shape
+        for aliquot in sum(source, destination):
+            container_type = aliquot.container.container_type
+            check_container_type_with_shape(container_type, shape)
+
+        # apply liquid classes to transfer methods
+        for src, des, met in zip(
+                source_liquid, destination_liquid, method):
+            met._shape = LiquidHandle.builders.shape(**shape)
+            met._source_liquid = src
+            met._destination_liquid = des
+
+        # apply tip types to transfer methods
+        for vol, met in zip(volume, method):
+            if met._has_calibration() and not met.tip_type:
+                met.tip_type = met._rec_tip_type(vol)
+
+        # if one tip is true then all methods need to have the same tip_type
+        if one_tip is True:
+            tip_types = [_.tip_type for _ in method]
+            if not all(_ == tip_types[0] for _ in tip_types):
+                raise ValueError(
+                    "If one_tip is true and any tip_type is set, then all "
+                    "tip types must be the same but {} was specified."
+                    "".format(tip_types)
+                )
+
+        # generate either a LiquidHandle location or instruction list
+        locations, instructions = [], []
+        for src, des, vol, met in zip(source, destination, volume, method):
+            max_tip_capacity = met._tip_capacity()
+
+            remaining_vol = vol
+            while remaining_vol > Unit(0, "ul"):
+                transfer_vol = min(remaining_vol, max_tip_capacity)
+                if one_tip is True:
+                    locations += location_helper(src, des, transfer_vol, met)
+                else:
+                    instructions.append(
+                        LiquidHandle(
+                            location_helper(src, des, transfer_vol, met),
+                            shape=met._shape,
+                            mode="air_displacement",
+                            mode_params=(
+                                LiquidHandle.builders.instruction_mode_params(
+                                    tip_type=met.tip_type
+                                )
+                            )
+                        )
+                    )
+                remaining_vol -= transfer_vol
+
+        # if one tip is true then there's a locations list
+        if locations:
+            instructions.append(
+                LiquidHandle(
+                    locations,
+                    shape=shape,
+                    mode="air_displacement",
+                    mode_params=LiquidHandle.builders.instruction_mode_params(
+                        tip_type=method[0].tip_type
+                    )
+                )
+            )
+        return self._append_and_return(instructions)
+
+    # pylint: disable=protected-access
+    def mix(self, well, volume, rows=1, columns=1,
+            liquid=LiquidClass, method=Mix, one_tip=False):
+        """Generates LiquidHandle instructions within wells
+
+        Mix liquid in specified wells.
+
+        Parameters
+        ----------
+        well : Well or WellGroup or list(Well)
+            Well(s) to be mixed.
+        volume : str or Unit or list(str) or list(Unit)
+            Volume(s) of liquid to be mixed within the specified well(s).
+            The number of volume(s) specified must correspond with the number
+            of well(s).
+        rows : int, optional
+            Number of rows to be concurrently mixed
+        columns : int, optional
+            Number of columns to be concurrently mixed
+        liquid : LiquidClass or list(LiquidClass), optional
+            Type(s) of liquid contained in the Well(s). This affects the
+            aspirate and dispense behavior including the flowrates,
+            liquid level detection thresholds, and physical movements.
+        method : Mix or list(Mix), optional
+            Method(s) with which Integrates with the specified liquid to
+            define a set of physical movements.
+        one_tip : bool, optional
+            If True then a single tip will be used for all operations
+
+        Returns
+        -------
+        list(LiquidHandle)
+            Returns a list of :py:class:`autoprotocol.instruction.LiquidHandle`
+            instructions created from the specified parameters
+
+        Raises
+        ------
+        ValueError
+            if the specified parameters can't be interpreted as lists of
+            equal length
+        ValueError
+            if one_tip is true, but not all mix methods have a tip_type
+        ValueError
+            if the specified volume is larger than the maximum tip capacity
+            of the available liquid_handling devices for a given mix
+
+        Examples
+        --------
+        Mix within a single well
+
+        .. code-block:: python
+
+            from autoprotocol import Protocol, Unit
+
+            p = Protocol()
+            plate = p.ref("example_plate", cont_type="384-flat", discard=True)
+
+            p.mix(plate.well(0), "5:ul")
+
+        Sequential mixes within multiple wells
+
+        .. code-block:: python
+
+            wells = plate.wells_from(0, 8, columnwise=True)
+            volumes = [Unit(x, "ul") for x in range(1, 9)]
+            p.mix(wells, volumes)
+
+
+        Concurrent mixes within multiple wells
+
+        .. code-block:: python
+
+            # single-column concurrent mix
+            p.mix(plate.well(0), "5:ul", rows=8)
+
+            # 96-well concurrent mix in the A1 quadrant
+            p.mix(plate.well(0), "5:ul", rows=8, columns=12)
+
+            # 96-well concurrent mix in the A2 quadrant
+            p.mix(plate.well(1), "5:ul", rows=8, columns=12)
+
+            # 384-well concurrent mix
+            p.mix(plate.well(0), "5:ul", rows=16, columns=24)
+
+        Mix with extra parameters
+
+        .. code-block:: python
+
+            from autoprotocol.liquid_handle import Mix
+            from autoprotocol.instruction import LiquidHandle
+
+            p.mix(
+                plate.well(0), "5:ul", rows=8,
+                method=Mix(
+                    mix_params=LiquidHandle.builders.mix(
+
+                    )
+                )
+            )
+
+        See Also
+        --------
+        Mix : base LiquidHandleMethod for mix operations
+        """
+        def location_helper(aliquot, volume, method):
+            """Generates LiquidHandle mix locations
+
+            Parameters
+            ----------
+            aliquot : Well
+                Wells to transfer mix liquid in.
+            volume : Unit
+                The volume of liquid to be transferred within the aliquot.
+            method : Mix
+                Integrates the input liquid class and defines a set of
+                transfers based on its attributes and methods.
+
+            Returns
+            -------
+            list(dict)
+                LiquidHandle locations
+            """
+            self._remove_cover(aliquot.container, "liquid_handle in")
+
+            return [
+                LiquidHandle.builders.location(
+                    location=aliquot,
+                    transports=method._mix_transports(volume)
+                )
+            ]
+
+        # validate parameter types
+        well = WellGroup(well)
+        count = len(well)
+
+        if not isinstance(volume, list):
+            volume = [volume] * count
+        volume = [parse_unit(_, "uL") for _ in volume]
+
+        if not isinstance(liquid, list):
+            liquid = [liquid] * count
+        liquid = [
+            validate_as_instance(_, LiquidClass)
+            for _ in liquid
+        ]
+
+        if not isinstance(method, list):
+            method = [method] * count
+        method = [
+            validate_as_instance(_, Mix)
+            for _ in method
+        ]
+
+        # validate parameter counts
+        countable_parameters = (well, volume, liquid, method)
+        correct_parameter_counts = all(
+            len(_) == count
+            for _ in countable_parameters
+        )
+        if not correct_parameter_counts:
+            raise ValueError(
+                "Specified parameters {} could not all be interpreted as "
+                "the same length {}."
+                "".format(countable_parameters, correct_parameter_counts)
+            )
+
+        # format shape
+        shape = LiquidHandle.builders.shape(rows, columns, None)
+
+        # validate all containers against the shape
+        for aliquot in well:
+            container_type = aliquot.container.container_type
+            check_container_type_with_shape(container_type, shape)
+
+        # apply liquid classes to mix methods
+        for liq, met in zip(liquid, method):
+            met._shape = LiquidHandle.builders.shape(**shape)
+            met._liquid = liq
+
+        # apply tip types to mix methods
+        for vol, met in zip(volume, method):
+            if met._has_calibration() and not met.tip_type:
+                met.tip_type = met._rec_tip_type(vol)
+
+        # if one tip is true then all methods need to have the same tip_type
+        if one_tip is True:
+            tip_types = [_.tip_type for _ in method]
+            if not all(_ == tip_types[0] for _ in tip_types):
+                raise ValueError(
+                    "If one_tip is true and any tip_type is set, then all "
+                    "tip types must be the same but {} was specified."
+                    "".format(tip_types)
+                )
+
+        # generate either a LiquidHandle location or instruction list
+        locations, instructions = [], []
+        for wel, vol, met in zip(well, volume, method):
+            max_tip_capacity = met._tip_capacity()
+
+            if vol > max_tip_capacity:
+                raise ValueError(
+                    "Attempted mix volume {} is larger than the maximum "
+                    "capacity of {} for transfer shape {}."
+                    "".format(vol, max_tip_capacity, vol.shape))
+
+            self._remove_cover(wel.container, "liquid_handle mix")
+            if one_tip is True:
+                locations += location_helper(wel, vol, met)
+            else:
+                instructions.append(
+                    LiquidHandle(
+                        location_helper(wel, vol, met),
+                        shape=met._shape,
+                        mode="air_displacement",
+                        mode_params=(
+                            LiquidHandle.builders.instruction_mode_params(
+                                tip_type=met.tip_type
+                            )
+                        )
+                    )
+                )
+
+        # if one tip is true then there's a locations list
+        if locations:
+            instructions.append(
+                LiquidHandle(
+                    locations,
+                    shape=shape,
+                    mode="air_displacement",
+                    mode_params=LiquidHandle.builders.instruction_mode_params(
+                        tip_type=method[0].tip_type
+                    )
+                )
+            )
+        return self._append_and_return(instructions)
+
+    def spread(self, source, dest, volume="50:microliter",
+               dispense_speed="20:microliter/second"):
+        """
+        Spread the specified volume of the source aliquot across the surface of
+        the agar contained in the object container.
+
+        Uses a spiral pattern generated by a set of liquid_handle instructions.
+
+        Example Usage:
+        .. code-block:: python
+
+            p = Protocol()
+
+            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
+            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
+
+            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
+
+        Parameters
+        ----------
+        source : Well
+            Source of material to spread on agar
+        dest : Well
+            Reference to destination location (plate containing agar)
+        volume : str or Unit, optional
+            Volume of source material to spread on agar
+        dispense_speed : str or Unit, optional
+            Speed at which to dispense source aliquot across agar surface
+
+        Returns
+        -------
+        LiquidHandle
+            Returns a :py:class:`autoprotocol.instruction.LiquidHandle`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            If specified source is not of type Well
+        TypeError
+            If specified destination is not of type Well
+        """
+        # Check validity of Well inputs
+        if not isinstance(source, Well):
+            raise TypeError("Source must be of type Well.")
+        if not isinstance(dest, Well):
+            raise TypeError("Destination, (dest), must be of type Well.")
+        self._remove_cover(source.container, "spread")
+        self._remove_cover(dest.container, "spread")
+
+        volume = Unit(volume)
+        if dest.volume:
+            dest.volume += volume
+        else:
+            dest.volume = volume
+        if source.volume:
+            source.volume -= volume
+
+        aspirate_transport_list = [
+            LiquidHandle.builders.transport(
+                mode_params=LiquidHandle.builders.mode_params(
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="liquid_surface",
+                        offset=Unit("-1:mm"),
+                        detection_method="capacitance",
+                        detection_threshold=AGAR_CLLD_THRESHOLD
+                    )
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=-volume,
+                mode_params=LiquidHandle.builders.mode_params(
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="liquid_surface",
+                        detection_method="tracked",
+                        offset=Unit("-1.0:mm")
+                    )
+                )
+            )
+        ]
+
+        dispense_transport_list = [
+            LiquidHandle.builders.transport(
+                mode_params=LiquidHandle.builders.mode_params(
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="liquid_surface",
+                        detection_method="capacitance",
+                        detection_threshold=AGAR_CLLD_THRESHOLD
+                    )
+                )
+            )
+        ]
+
+        distances = [
+            euclidean_distance(first, second)
+            for first, second in zip(SPREAD_PATH, SPREAD_PATH[1:])
+        ]
+        distance_total = sum(distances)
+        distance_ratios = [dist / distance_total for dist in distances]
+
+        for ratio, position in zip(distance_ratios, SPREAD_PATH[1:]):
+            dispense_transport_list += [
+                LiquidHandle.builders.transport(
+                    volume=volume * ratio,
+                    flowrate=LiquidHandle.builders.flowrate(dispense_speed),
+                    mode_params=LiquidHandle.builders.mode_params(
+                        position_x=LiquidHandle.builders.position_xy(
+                            position[0]
+                        ),
+                        position_y=LiquidHandle.builders.position_xy(
+                            position[1]
+                        ),
+                        position_z=LiquidHandle.builders.position_z(
+                            reference="liquid_surface",
+                            detection_method="tracked",
+                            offset=Unit("0.5:mm")
+                        )
+                    )
+                )
+            ]
+
+        location = [
+            LiquidHandle.builders.location(
+                location=source,
+                transports=aspirate_transport_list
+            ),
+            LiquidHandle.builders.location(
+                location=dest,
+                transports=dispense_transport_list
+            )
+        ]
+
+        return self._append_and_return(LiquidHandle(location))

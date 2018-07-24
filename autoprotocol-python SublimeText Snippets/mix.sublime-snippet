@@ -1,8 +1,0 @@
-<snippet>
-    <content><![CDATA[
-mix(well=${1:WellGroup well})
-]]></content>
-    <tabTrigger>mix</tabTrigger>
-    <scope>source.python</scope>
-    <description>Mix specified well(s)</description>
-</snippet>

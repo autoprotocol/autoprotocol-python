@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`164` update `docs/requirements.txt` for rtd to build properly
 * :feature:`163` add liquid_handle instruction (ASC-032)
 * :feature:`163` add LiquidHandleMethods and corresponding protocol methods to represent generic liquid handling abstractions
 * :feature:`163` replaced `p.stamp` & `p.transfer` with a new implementation of `p.transfer` that generates a liquid_handle instruction

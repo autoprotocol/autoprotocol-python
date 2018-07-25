@@ -1306,10 +1306,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 class FlowCytometryBuilders(InstructionBuilders):
     """
     Builders for FlowCytometry instructions.
-
     """
-    def __init__(self):
-        super(FlowCytometryBuilders, self).__init__()
 
     def laser(self, excitation, channels, power=None, area_scaling_factor=None):
         """
@@ -1364,7 +1361,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     def channel(self, emission_filter, detector_gain, measurements=None,
-                trigger_threshold=None, trigger_logic="and"):
+                trigger_threshold=None, trigger_logic=None):
         """
         Generates a dict of channel parameters.
 
@@ -1419,7 +1416,8 @@ class FlowCytometryBuilders(InstructionBuilders):
             "trigger_logic": trigger_logic
         }
 
-    def emission_filter(self, channel_name, shortpass=None, longpass=None):
+    @staticmethod
+    def emission_filter(channel_name, shortpass=None, longpass=None):
         """
         Generates a dict of emission_filter parameters.
 
@@ -1449,6 +1447,12 @@ class FlowCytometryBuilders(InstructionBuilders):
                              "if channel_name is one {}"
                              .format(gating_modes))
 
+        if shortpass is not None:
+            shortpass = parse_unit(shortpass, "nanometers")
+
+        if longpass is not None:
+            longpass = parse_unit(longpass, "nanometers")
+
         return {
             "channel_name": channel_name,
             "shortpass": shortpass,
@@ -1456,7 +1460,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     @staticmethod
-    def measurements(area=True, height=True, width=True):
+    def measurements(area=None, height=None, width=None):
         """
         Generates a dict of measurements parameters.
 
@@ -1471,7 +1475,7 @@ class FlowCytometryBuilders(InstructionBuilders):
 
         Raises
         ------
-        ValueError
+        TypeError
             If any of `area` | `height` | `width` are not of type bool.
 
         Returns
@@ -1479,7 +1483,8 @@ class FlowCytometryBuilders(InstructionBuilders):
         dict
             A dict of measurements params.
         """
-        if any([not isinstance(_, bool) for _ in [area, height, width]]):
+
+        if any(not isinstance(_, (bool, type(None))) for _ in(area, height, width)):
             raise TypeError("area, height, and width must be of type bool.")
 
         return {
@@ -1508,7 +1513,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             Mixing volume.
         rinse_cycles : int
             Number of rinsing cycles.
-        stop_criteria : dict
+        stop_criteria : dict, optional
             See FlowCytometryBuilders.stop_criteria.
 
         Raises
@@ -1523,10 +1528,10 @@ class FlowCytometryBuilders(InstructionBuilders):
         dict
             A dict of collection_condition parameters.
         """
-        if rinse_cycles is not None and not isinstance(rinse_cycles, int):
+        if not isinstance(rinse_cycles, int):
             raise TypeError("rinse_cycles must be of type int.")
 
-        if mix_cycles is not None and not isinstance(mix_cycles, int):
+        if not isinstance(mix_cycles, int):
             raise TypeError("mix_cycles must be of type int.")
 
         acquisition_volume = parse_unit(acquisition_volume, "ul")
@@ -1560,7 +1565,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             Stopping volume.
         events : int, optional
             Number of events to trigger stop.
-        time
+        time : Unit or str, optional
             Stopping time.
 
         Raises

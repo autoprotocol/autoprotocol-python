@@ -78,6 +78,7 @@ class Instruction(object):
         if isinstance(data, list):
             return [Instruction._remove_empty_fields(_) for _ in data
                     if not filter_criteria(_)]
+
         return data
 
 
@@ -995,7 +996,7 @@ class FlowCytometry(Instruction):
 
     def __init__(self, dataref, samples, lasers, collection_conditions,
                  width_threshold=None, window_extension=None,
-                 remove_coincident_events=False):
+                 remove_coincident_events=None):
 
         instruction = {
             "dataref": dataref,
@@ -1007,7 +1008,7 @@ class FlowCytometry(Instruction):
             "remove_coincident_events": remove_coincident_events
         }
 
-        super(FlowCytometry, self).__init__(op="flow",
+        super(FlowCytometry, self).__init__(op="flow_cytometry",
                                             data=instruction)
 
 

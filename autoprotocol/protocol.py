@@ -3769,7 +3769,7 @@ class Protocol(object):
 
     def flow_cytometry(self, dataref, samples, lasers,
                        collection_conditions, width_threshold=None,
-                       window_extension=None, remove_coincident_events=False):
+                       window_extension=None, remove_coincident_events=None):
         """
         A non-ambiguous set of parameters for the performance of flow cytometry.
 
@@ -3816,6 +3816,7 @@ class Protocol(object):
         .. code-block:: python
 
             from autoprotocol import Protocol, Unit
+            from autoprotocol.instruction import FlowCytometry
 
             p = Protocol()
             plate = p.ref("sample-plate", cont_type="384-flat", discard=True)
@@ -3832,7 +3833,7 @@ class Protocol(object):
                 ]
             )]
 
-            collection_conditions = FlowCytometry.builders.collection_conditions(
+            collection_conds = FlowCytometry.builders.collection_conditions(
                 acquisition_volume="10:ul",
                 flowrate="10:ul/s",
                 wait_time="10:seconds",
@@ -3842,7 +3843,7 @@ class Protocol(object):
             )
 
             p.flow_cytometry("flow-1234", plate.wells_from(0, 3), lasers,
-                             collection_conditions)
+                             collection_conds)
 
         Autoprotocol Output:
 
@@ -3868,8 +3869,7 @@ class Protocol(object):
                         "area": true,
                         "height": true,
                         "width": true
-                      },
-                      "trigger_logic": "and"
+                      }
                     }
                   ]
                 }
@@ -3884,8 +3884,7 @@ class Protocol(object):
                 "mix_cycles": 10,
                 "mix_volume": "10:microliter",
                 "rinse_cycles": 10
-              },
-              "remove_coincident_events": false
+              }
             }
 
         """

@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`167` properly handle `transfer` with tip_type and no volume calibration
 * :support:`164` update `docs/requirements.txt` for rtd to build properly
 * :feature:`163` add liquid_handle instruction (ASC-032)
 * :feature:`163` add LiquidHandleMethods and corresponding protocol methods to represent generic liquid handling abstractions

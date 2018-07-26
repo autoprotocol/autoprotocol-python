@@ -328,6 +328,16 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         )
         assert estimated_calibrated_volume == target_volume * volume_multiplier
 
+    def test_estimate_calibrated_volume_with_tip_but_not_calibration(self):
+        target_volume = Unit(1, "uL")
+        volume_multiplier = LiquidClass()._safe_volume_multiplier
+        estimated_calibrated_volume = self.lhm._estimate_calibrated_volume(
+            volume=target_volume,
+            liquid=LiquidClass(),
+            tip_type="generic_96_180"
+        )
+        assert estimated_calibrated_volume == target_volume * volume_multiplier
+
 
 class TransferMethodTester(object):
     single_shape = LiquidHandle.builders.shape(1, 1, "SBS96")

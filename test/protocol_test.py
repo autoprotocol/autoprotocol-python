@@ -303,7 +303,7 @@ class TestRefify(object):
         # refify Instruction
         p.cover(refs["plate"])
         assert (p._refify(p.instructions[0]) == p._refify(
-            p.instructions[0].__dict__))
+            p.instructions[0]._as_AST()))
 
         # refify Ref
         assert (p._refify(p.refs["test"]) == p.refs["test"].opts)
@@ -313,7 +313,51 @@ class TestRefify(object):
         i = 24
         assert ("randomstring" == p._refify(s))
         assert (24 == p._refify(i))
+
     # pragma pylint: enable=protected-access
+    def test_serialization(self, dummy_protocol):
+        expected = {
+            "instructions": [
+                {
+                    "op": "cover",
+                    "object": "test",
+                    "lid": "low_evaporation"
+                },
+                {
+                    "op": "incubate",
+                    "object": "test",
+                    "where": "ambient",
+                    "duration": "5:minute",
+                    "shaking": False,
+                    "co2_percent": 0
+                }
+            ],
+            "refs": {
+                "test": {
+                    "new": "96-flat",
+                    "discard": True
+                }
+            },
+            'time_constraints': [
+                {
+                    'from': {'instruction_end': 0},
+                    'to': {'instruction_start': 1},
+                    'ideal': {
+                        'optimization_cost': 'linear',
+                        'value': '5:second'
+                    }
+                }
+            ]
+        }
+
+        a = dummy_protocol.ref("test", cont_type="96-flat", discard=True)
+        dummy_protocol.incubate(a, "ambient", "5:minute")
+        dummy_protocol.add_time_constraint(
+            {"mark": 0, "state": "end"},
+            {"mark": 1, "state": "start"},
+            ideal="5:second"
+        )
+        assert dummy_protocol.as_dict() == expected
 
 
 class TestOuts(object):

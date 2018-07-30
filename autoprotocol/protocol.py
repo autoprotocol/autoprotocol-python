@@ -36,6 +36,9 @@ class Ref(object):
         self.opts = opts
         self.container = container
 
+    def __repr__(self):
+        return "Ref({}, {}, {})".format(self.name, self.container, self.opts)
+
 
 class Protocol(object):
 
@@ -122,6 +125,9 @@ class Protocol(object):
         super(Protocol, self).__init__()
         self.refs = refs or {}
         self.instructions = instructions or []
+
+    def __repr__(self):
+        return "Protocol({})".format(self.__dict__)
 
     def container_type(self, shortname):
         """
@@ -4956,6 +4962,7 @@ class Protocol(object):
 
         return num_containers
 
+    # pylint: disable=protected-access
     def _refify(self, op_data):
         """
         Unpacks protocol objects into Autoprotocol compliant ones
@@ -4985,7 +4992,7 @@ class Protocol(object):
         elif isinstance(op_data, Unit):
             return str(op_data)
         elif isinstance(op_data, Instruction):
-            return self._refify(op_data.__dict__)
+            return self._refify(op_data._as_AST())
         elif isinstance(op_data, Ref):
             return op_data.opts
         else:

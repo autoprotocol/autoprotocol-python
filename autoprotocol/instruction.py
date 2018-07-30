@@ -8,7 +8,6 @@ Contains all the Autoprotocol Instruction objects
 """
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
-import json
 from functools import reduce
 from .builders import *  # pylint: disable=unused-wildcard-import
 
@@ -24,15 +23,18 @@ class Instruction(object):
         self.data = self._remove_empty_fields(self._remove_empty_fields(data))
         self.__dict__.update(self.data)
 
-    def json(self):
-        """Return instruction object properly encoded as JSON for Autoprotocol.
+    def __repr__(self):
+        return "Instruction({}, {})".format(self.op, self.data)
 
+    def _as_AST(self):
+        """generates a JSON serializable representation of the Instruction
         Returns
         -------
-        str
-            Instruction object encoded as json string
+        dict
+            A JSON serializable representation of the Instruction
+
         """
-        return json.dumps(dict(op=self.op, **self.data), indent=2)
+        return dict(op=self.op, **self.data)
 
     @staticmethod
     def _remove_empty_fields(data):

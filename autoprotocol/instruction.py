@@ -21,7 +21,7 @@ class Instruction(object):
     def __init__(self, op, data):
         super(Instruction, self).__init__()
         self.op = op
-        self.data = self._remove_empty_fields(data)
+        self.data = self._remove_empty_fields(self._remove_empty_fields(data))
         self.__dict__.update(self.data)
 
     def json(self):

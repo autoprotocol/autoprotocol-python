@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`165` improved pruning of empty data structures from 'Instruction.data' field
+* :feature:`168` improved pruning of empty data structures from 'Instruction.data' field
 * :support:`164` update `docs/requirements.txt` for rtd to build properly
 * :feature:`163` add liquid_handle instruction (ASC-032)
 * :feature:`163` add LiquidHandleMethods and corresponding protocol methods to represent generic liquid handling abstractions

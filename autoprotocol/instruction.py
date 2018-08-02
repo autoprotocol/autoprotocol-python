@@ -27,11 +27,21 @@ class Instruction(object):
         return "Instruction({}, {})".format(self.op, self.data)
 
     def _as_AST(self):
-        """generates a JSON serializable representation of the Instruction
+        """generates a Python object representation of Autoprotocol JSON
+
         Returns
         -------
         dict
-            A JSON serializable representation of the Instruction
+            a dict of python objects that have the same structure as the
+            Autoprotocol JSON for the Instruction
+
+        Notes
+        -----
+        Used downstream for JSON serialization of the Instruction
+
+        See Also
+        --------
+        Protocol._refify : Protocol serialization method
 
         """
         return dict(op=self.op, **self.data)

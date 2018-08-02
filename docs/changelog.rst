@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`165` add __repr__ methods to Autoprotocol Python objects
 * :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data
 * :feature:`165` deprecate `Instruction.json` method for now as most instructions contain non-JSON-serializable objects
 * :bug:`167` properly handle `transfer` with tip_type and no volume calibration

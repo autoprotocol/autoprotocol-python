@@ -49,6 +49,20 @@ class TestBaseInstruction(object):
                Instruction._remove_empty_fields(
                    [dict(some_bool=True, empty=[])])
 
+        assert Instruction(op="some instruction",
+                           data={
+                               "not_empty": {"foo": "bar"},
+                               "empty": {
+                                   "foo": None, "bar": None
+                               }
+                           }).data == {"not_empty": {"foo": "bar"}}
+
+        assert Instruction(op="some instruction",
+                           data={
+                               "not_empty": ["foo", "bar"],
+                               "empty": [None, None]
+                           }).data == {"not_empty": ["foo", "bar"]}
+
     @staticmethod
     def test_op(test_instruction):
         assert test_instruction.op == "test_instruction"

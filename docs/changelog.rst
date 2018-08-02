@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`167` properly handle `transfer` with tip_type and no volume calibration
 * :feature:`166` add 384-well flat-bottom polystyrene plate containerType
 * :feature:`168` improved pruning of empty data structures from 'Instruction.data' field
 * :support:`164` update `docs/requirements.txt` for rtd to build properly

@@ -280,10 +280,12 @@ class LiquidHandleMethod(object):
         LiquidClass._safe_volume_multiplier : used if no tip_type is specified
         """
 
+        estimated = liquid._safe_volume_multiplier * volume
         if tip_type:
-            cal_vol = liquid._get_calibrated_volume(volume, tip_type)
+            calculated = liquid._get_calibrated_volume(volume, tip_type)
+            cal_vol = calculated if calculated is not None else estimated
         else:
-            cal_vol = liquid._safe_volume_multiplier * volume
+            cal_vol = estimated
 
         return cal_vol
 

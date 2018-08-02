@@ -887,6 +887,30 @@ ECHO384LDVPLUS = ContainerType(
     cat_no="LPL-0200"
 )
 
+#:
+FLAT384WHITECLEAR = ContainerType(
+    name="384-well flat-bottom polystyrene plate",
+    well_count=384,
+    well_depth_mm=None,
+    well_volume_ul=Unit(90.0, "microliter"),
+    well_coating=None,
+    sterile=False,
+    is_tube=False,
+    cover_types=["standard", "universal"],
+    seal_types=None,
+    capabilities=["liquid_handle", "spin", "absorbance",
+                  "fluorescence", "luminescence",
+                  "incubate", "gel_separate",
+                  "gel_purify", "cover",
+                  "dispense"],
+    shortname="384-flat-white-clear",
+    col_count=24,
+    dead_volume_ul=Unit(7, "microliter"),
+    safe_min_volume_ul=Unit(15, "microliter"),
+    vendor="Corning",
+    cat_no="3763"
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -914,5 +938,6 @@ _CONTAINER_TYPES = {
     "384-round-clear-clear": ROUND384CLEAR,
     "res-sw384-lp": RESSW384LP,
     "384-echo-ldv": ECHO384LDV,
-    "384-echo-ldv-plus": ECHO384LDVPLUS
+    "384-echo-ldv-plus": ECHO384LDVPLUS,
+    "384-flat-white-clear": FLAT384WHITECLEAR
 }

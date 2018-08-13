@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :support:`-` add CONTRIBUTING.rst, cleaned up README.md, and ported it to rst
+* :support:`169` add CONTRIBUTING.rst, cleaned up README.md, and ported it to rst
 * :feature:`165` add __repr__ methods to Autoprotocol Python objects
 * :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data
 * :feature:`165` deprecate `Instruction.json` method for now as most instructions contain non-JSON-serializable objects

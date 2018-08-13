@@ -6,7 +6,7 @@ Licensing
 ---------
 Autoprotocol-Python is BSD licensed (see LICENSE_).
 Before we can accept your pull request, we require that you sign a CLA (Contributor License Agreement) allowing us to distribute your work under the BSD license.
-Email one of the AUTHORS_ and support@transcriptic.com for more details.
+Email one of the AUTHORS_ or support@transcriptic.com for more details.
 
 Features and Bugs
 -----------------

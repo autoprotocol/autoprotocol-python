@@ -8,7 +8,6 @@ Contains all the Autoprotocol Instruction objects
 """
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
-from functools import reduce
 from .builders import *  # pylint: disable=unused-wildcard-import
 
 
@@ -16,6 +15,7 @@ class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON.
 
     """
+    builders = InstructionBuilders()
 
     def __init__(self, op, data):
         super(Instruction, self).__init__()

@@ -7,108 +7,14 @@ Module containing utility functions
 
 """
 
-from math import ceil, floor, sqrt
+from math import ceil, floor
 from itertools import repeat
 from .constants import SBS_FORMAT_SHAPES
 from .unit import Unit, UnitStringError, UnitValueError
 
 
-def quad_ind_to_num(q):
-    """
-    Convert a 384-well plate quadrant well index into its corresponding
-    integer form.
-
-    "A1" -> 0
-    "A2" -> 1
-    "B1" -> 2
-    "B2" -> 3
-
-    Parameters
-    ----------
-    q : int, str
-        A string or integer representing a well index that corresponds to a
-        quadrant on a 384-well plate.
-
-    Returns
-    -------
-    int
-        Integer form for well index
-
-    Raises
-    ------
-    ValueError
-        Invalid index given
-
-    """
-    if isinstance(q, str):
-        q = q.lower()
-    if q in ["a1", 0]:
-        return 0
-    elif q in ["a2", 1]:
-        return 1
-    elif q in ["b1", 24]:
-        return 2
-    elif q in ["b2", 25]:
-        return 3
-    else:
-        raise ValueError("Invalid quadrant index.")
-
-
-def quad_num_to_ind(q, human=False):
-    """
-    Convert a 384-well plate quadrant integer into its corresponding well
-    index.
-
-    0 -> "A1" or 0
-    1 -> "A2" or 1
-    2 -> "B1" or 24
-    3 -> "B2" or 25
-
-    Parameters
-    ----------
-    q : int
-        An integer representing a quadrant number of a 384-well plate.
-    human : bool, optional
-        Return the corresponding well index in human readable form instead of
-        as an integer if True.
-
-    Returns
-    -------
-    str or int
-        String or int well-index for given quadrant
-
-    Raises
-    ------
-    ValueError
-        Invalid quadrant number
-
-    """
-    if q == 0:
-        if human:
-            return "A1"
-        else:
-            return 0
-    elif q == 1:
-        if human:
-            return "A2"
-        else:
-            return 1
-    elif q == 2:
-        if human:
-            return "B1"
-        else:
-            return 24
-    elif q == 3:
-        if human:
-            return "B2"
-        else:
-            return 25
-    else:
-        raise ValueError("Invalid quadrant number.")
-
-
-def is_valid_well(param):
-    """Checks if an input is of type Well, Wellgroup or list of type Well.
+def is_valid_well(well):
+    """Checks if an input is of type Well, WellGroup or list of type Well.
 
     Example Usage:
 
@@ -120,7 +26,7 @@ def is_valid_well(param):
 
     Parameters
     ----------
-    param : Well or WellGroup or list(Well)
+    well : Well or WellGroup or list(Well)
         Parameter to validate is type Well, WellGroup, list of Wells.
 
     Returns
@@ -129,10 +35,10 @@ def is_valid_well(param):
         Returns True if param is of type Well, WellGroup or list of type Well.
     """
     from autoprotocol.container import Well, WellGroup
-    if not isinstance(param, (Well, WellGroup, list)):
+    if not isinstance(well, (Well, WellGroup, list)):
         return False
-    if isinstance(param, list):
-        if not all(isinstance(well, Well) for well in param):
+    if isinstance(well, list):
+        if not all(isinstance(well, Well) for well in well):
             return False
     return True
 
@@ -196,26 +102,6 @@ def parse_unit(unit, accepted_unit=None):
     return unit
 
 
-def euclidean_distance(point_a, point_b):
-    """
-    Calculate the euclidean distance (2D) between a pair of xy coordinates
-
-    Parameters
-    ----------
-    point_a: Iterable
-        First point
-    point_b: Iterable
-        Second point
-    Returns
-    -------
-    float
-        The distance between the two points
-    """
-    x_distance = abs(point_a[0] - point_b[0])
-    y_distance = abs(point_a[1] - point_b[1])
-    return sqrt(x_distance ** 2 + y_distance ** 2)
-
-
 def _validate_as_instance(item, target_type):
     """
     Validates that the item is an instance of the target_type and if not,
@@ -246,7 +132,7 @@ def _validate_as_instance(item, target_type):
     return item
 
 
-def get_wells(origin, shape):
+def _get_wells(origin, shape):
     """
     Returns the wells interacted with by a transfer depending on its origin
     and its shape

@@ -9,7 +9,6 @@ Container, Well, WellGroup objects and associated functions
 
 from __future__ import print_function
 from .unit import Unit
-from .util import quad_ind_to_num
 import sys
 
 if sys.version_info.major == 3:
@@ -829,11 +828,9 @@ class Container(object):
         Return a WellGroup of Wells corresponding to the selected quadrant of
         this Container.
 
-        This is only applicable to 384-well plates.
-
         Parameters
         ----------
-        quad : int
+        quad : int or str
             Specifies the quadrant number of the well (ex. 2)
 
         Returns
@@ -849,7 +846,17 @@ class Container(object):
         """
         # TODO(Define what each quadrant number corresponds toL)
         if isinstance(quad, str):
-            quad = quad_ind_to_num(quad)
+            quad = quad.lower()
+            if quad == "a1":
+                quad = 0
+            elif quad == "a2":
+                quad = 1
+            elif quad == "b1":
+                quad = 2
+            elif quad == "b2":
+                quad = 3
+            else:
+                raise ValueError("Invalid quadrant index.")
 
         # n_wells: n_cols
         allowed_layouts = {96: 12, 384: 24}

@@ -1218,55 +1218,126 @@ class TestMagneticTransfer(object):
     def test_center_valid(self, dummy_protocol):
         pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
-        for i in range(0, 200):
-            dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                      center=float(i) / 100, amplitude=0)
-            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 1
-            dummy_protocol.mag_collect("96-pcr", pcr, 5, "30:second",
-                          bottom_position=float(i) / 100)
-            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 2
-            dummy_protocol.mag_incubate("96-pcr", pcr, "30:minute",
-                           tip_position=float(i) / 100)
-            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 3
-            dummy_protocol.mag_release("96-pcr", pcr, "30:second", "1:hertz",
-                          center=float(i) / 100, amplitude=0)
-            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 4
+        common_params = {
+            "head": "96-pcr",
+            "container": pcr
+        }
 
-        for i in range(-1, 3, 4):
-            with pytest.raises(ValueError):
-                dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                          center=i, amplitude=0)
-            with pytest.raises(ValueError):
-                dummy_protocol.mag_collect(
-                    "96-pcr", pcr, 5, "30:second", bottom_position=i)
-            with pytest.raises(ValueError):
-                dummy_protocol.mag_incubate(
-                    "96-pcr", pcr, "30:minute", tip_position=i)
-            with pytest.raises(ValueError):
-                dummy_protocol.mag_release(
-                    "96-pcr", pcr, "30:second", "1:hertz", center=i, amplitude=0
-                )
+        for index, position in enumerate([0, 0.5, 1]):
+            dummy_protocol.mag_mix(
+                duration="30:second",
+                frequency="60:hertz",
+                center=position,
+                amplitude=0,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 4 + 1
+            )
+            dummy_protocol.mag_collect(
+                cycles=5,
+                pause_duration="30:second",
+                bottom_position=position,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 4 + 2
+            )
+            dummy_protocol.mag_incubate(
+                duration="30:minute",
+                tip_position=position,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 4 + 3
+            )
+            dummy_protocol.mag_release(
+                duration="30:second",
+                frequency="1:hertz",
+                center=position,
+                amplitude=0,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 4 + 4
+            )
+
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_mix(
+                duration="30:second",
+                frequency="60:hertz",
+                amplitude=0,
+                center=-1,
+                **common_params
+            )
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_collect(
+                cycles=5,
+                pause_duration="30:second",
+                bottom_position=-1,
+                **common_params
+            )
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_incubate(
+                duration="30:minute",
+                tip_position=-1,
+                **common_params
+            )
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_release(
+                duration="30:second",
+                frequency="1:hertz",
+                amplitude=0,
+                center=-1,
+                **common_params
+            )
 
     def test_amplitude_valid(self, dummy_protocol):
-        p = dummy_protocol
+        pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
-        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+        common_params = {
+            "head": "96-pcr",
+            "container": pcr
+        }
 
-        for i in range(0, 100):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                      center=1, amplitude=float(i) / 100)
-            assert len(p.instructions[-1].groups[0]) == i * 2 + 1
-            p.mag_release("96-pcr", pcr, "30:second", "1:hertz",
-                          center=1, amplitude=float(i) / 100)
-            assert len(p.instructions[-1].groups[0]) == i * 2 + 2
+        for index, position in enumerate([0, 0.5, 1]):
+            dummy_protocol.mag_mix(
+                duration="30:second",
+                frequency="60:hertz",
+                center=position,
+                amplitude=0,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 2 + 1
+            )
+            dummy_protocol.mag_release(
+                duration="30:second",
+                frequency="1:hertz",
+                center=position,
+                amplitude=0,
+                **common_params
+            )
+            assert (
+                len(dummy_protocol.instructions[-1].groups[0]) == index * 2 + 2
+            )
 
-        for i in range(2, 3):
-            with pytest.raises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                          center=1, amplitude=i)
-            with pytest.raises(ValueError):
-                p.mag_release("96-pcr", pcr, "30:second", "1:hertz",
-                              center=1, amplitude=i)
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_mix(
+                duration="30:second",
+                frequency="60:hertz",
+                amplitude=2,
+                center=1,
+                **common_params
+            )
+        with pytest.raises(ValueError):
+            dummy_protocol.mag_release(
+                duration="30:second",
+                frequency="1:hertz",
+                amplitude=2,
+                center=1,
+                **common_params
+            )
 
     def test_mag_append(self, dummy_protocol):
         p = dummy_protocol

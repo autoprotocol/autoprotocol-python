@@ -13,8 +13,7 @@ from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
 from .util import (
-    get_wells, euclidean_distance,
-    _validate_as_instance, _check_container_type_with_shape
+    _get_wells, _validate_as_instance, _check_container_type_with_shape
 )
 from .instruction import *  # pylint: disable=unused-wildcard-import
 
@@ -5705,10 +5704,10 @@ class Protocol(object):
             self._remove_cover(destination.container, "liquid_handle into")
 
             # update volumes
-            for well in get_wells(source, method._shape):
+            for well in _get_wells(source, method._shape):
                 if well.volume:
                     well.volume -= volume
-            for well in get_wells(destination, method._shape):
+            for well in _get_wells(destination, method._shape):
                 if well.volume:
                     well.volume += volume
                 else:
@@ -6129,6 +6128,26 @@ class Protocol(object):
         TypeError
             If specified destination is not of type Well
         """
+        def euclidean_distance(point_a, point_b):
+            """
+            Calculate the euclidean distance between a pair of xy coordinates
+
+            Parameters
+            ----------
+            point_a: Iterable
+                First point
+            point_b: Iterable
+                Second point
+            Returns
+            -------
+            float
+                The distance between the two points
+            """
+            from math import sqrt
+            x_distance = abs(point_a[0] - point_b[0])
+            y_distance = abs(point_a[1] - point_b[1])
+            return sqrt(x_distance ** 2 + y_distance ** 2)
+
         # Check validity of Well inputs
         if not isinstance(source, Well):
             raise TypeError("Source must be of type Well.")

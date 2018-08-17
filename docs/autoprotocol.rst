@@ -16,17 +16,13 @@ unit.Unit
 autoprotocol.util
 -----------------
 
-util.incubate_params()
-~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: autoprotocol.util.incubate_params
-
-util.make_band_param()
-~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: autoprotocol.util.make_band_param
-
-util.make_gel_extract_params()
+util.is_valid_well()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autofunction:: autoprotocol.util.make_gel_extract_params
+.. autofunction:: autoprotocol.util.is_valid_well
+
+util.parse_unit()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autofunction:: autoprotocol.util.parse_unit
 
 .. _harness-harness:
 

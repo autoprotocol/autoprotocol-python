@@ -7,13 +7,16 @@ Module containing the main `Protocol` object and associated functions
 
 """
 
-from .container import Container, Well, WellGroup, SEAL_TYPES, COVER_TYPES
+from .container import Container, Well, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
+from .util import (
+    _validate_as_instance, get_wells, check_container_type_with_shape,
+    euclidean_distance
+)
 from .instruction import *  # pylint: disable=unused-wildcard-import
-from .util import *  # pylint: disable=unused-wildcard-import
 
 from builtins import round  # pylint: disable=redefined-builtin
 import sys
@@ -2358,12 +2361,6 @@ class Protocol(object):
             Lid temperature is not within bounds
 
         """
-        if not isinstance(groups, list):
-            raise AttributeError(
-                "groups for thermocycling must be a list of cycles in the "
-                "form of [{'cycles':___, 'steps': [{'temperature':___,"
-                "'duration':___, }]}, { ... }, ...]"
-            )
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
         if "thermocycle" not in ref.container_type.capabilities:
@@ -2371,6 +2368,13 @@ class Protocol(object):
                 "Container '{}' type '{}', cannot be thermocycled."
                 "".format(ref.name, ref.container_type.shortname)
             )
+
+        groups = [Thermocycle.builders.group(**_) for _ in groups]
+
+        dyes = Thermocycle.builders.dyes(**(dyes or {}))
+        melting = Thermocycle.builders.melting(
+            melting_start, melting_end, melting_increment, melting_rate
+        )
 
         # Constants are currently based off the Biorad thermocyclers, and
         # assumes that they are generally reflective of other thermocyclers
@@ -2385,13 +2389,11 @@ class Protocol(object):
                     )
                 )
 
-        groups = [Thermocycle.builders.group(**_) for _ in groups]
-
         self._add_seal(ref, "thermocycle")
         return self._append_and_return(
             Thermocycle(
-                ref, groups, volume, dataref, dyes, melting_start,
-                melting_end, melting_increment, melting_rate, lid_temperature
+                object=ref, groups=groups, volume=volume, dataref=dataref,
+                dyes=dyes, melting=melting, lid_temperature=lid_temperature
             )
         )
 
@@ -2541,7 +2543,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        ref : str or Ref
+        ref : str or Container
             Object to execute the absorbance read on
         wells : list(Well) or WellGroup or Well
             WellGroup of wells to be measured or a list of well references in
@@ -2558,17 +2560,8 @@ class Protocol(object):
             the time before the start of the measurement, defaults
             to vendor specifications
         incubate_before: dict, optional
-            incubation prior to reading if desired
-
-            .. code-block:: none
-
-                {
-                    "shaking": {
-                        "amplitude": str or Unit
-                        "orbital": bool
-                    },
-                    "duration": str or Unit
-                }
+            parameters for incubation before executing the plate read
+            See Also :meth:Absorbance.builders.incubate_params
 
         Returns
         -------
@@ -2589,24 +2582,16 @@ class Protocol(object):
             Settle time is not of type Unit
 
         """
-        if isinstance(wells, Well):
-            wells = WellGroup(wells)
-
-        if isinstance(wells, WellGroup):
-            container = set([w.container for w in wells])
-            if len(container) > 1:
-                raise ValueError(
-                    "All wells need to be on one container for Absorbance"
-                )
-            wells = [str(w.index) for w in wells]
-
-        if not isinstance(wells, list):
-            raise TypeError(
-                "Unknown input. Absorbance wells accepts either a Well, "
-                "a WellGroup, or a list of well indices"
+        wells = WellGroup(wells)
+        container = set([w.container for w in wells])
+        if len(container) > 1:
+            raise ValueError(
+                "All wells need to be on the same container for Absorbance"
             )
+        wells = [str(w.index) for w in wells]
+
         if incubate_before:
-            check_valid_incubate_params(incubate_before)
+            Absorbance.builders.incubate_params(**incubate_before)
 
         if settle_time:
             try:
@@ -2702,7 +2687,8 @@ class Protocol(object):
             float between 0 and 1, multiplier, gain=0.2 of maximum signal
             amplification
         incubate_before: dict, optional
-            incubation prior to reading if desired
+            parameters for incubation before executing the plate read
+            See Also :meth:Fluorescence.builders.incubate_params
         detection_mode: str, optional
             set the detection mode of the optics, ["top", "bottom"],
             defaults to vendor specified defaults.
@@ -2731,19 +2717,9 @@ class Protocol(object):
             duration of the signal recording, per Well, defaults to vendor
             specifications
 
-            incubate_before example:
-
-            .. code-block:: none
-
-                {
-                    "shaking": {
-                        "amplitude": str or Unit
-                        "orbital": bool
-                    },
-                    "duration": str or Unit
-                }
-
-            position_z examples:
+        Examples
+        --------
+        position_z:
 
             .. code-block:: none
 
@@ -2787,22 +2763,14 @@ class Protocol(object):
             implemented yet
 
         """
-        if isinstance(wells, Well):
-            wells = WellGroup(wells)
-
-        if isinstance(wells, WellGroup):
-            container = set([w.container for w in wells])
-            if len(container) > 1:
-                raise ValueError(
-                    "All wells need to be on one container for Fluorescence"
-                )
-            wells = [str(w.index) for w in wells]
-
-        if not isinstance(wells, list):
-            raise TypeError(
-                "Unknown input. Fluorescence wells accepts either a Well, "
-                "a WellGroup, or a list of well indices"
+        wells = WellGroup(wells)
+        container = set([w.container for w in wells])
+        if len(container) > 1:
+            raise ValueError(
+                "All wells need to be on the same container for Fluorescence"
             )
+        wells = [str(w.index) for w in wells]
+
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError(
                 "fluorescence gain set to %s must be between 0 and 1, "
@@ -2810,7 +2778,7 @@ class Protocol(object):
             )
 
         if incubate_before:
-            check_valid_incubate_params(incubate_before)
+            Fluorescence.builders.incubate_params(**incubate_before)
 
         valid_detection_modes = ["top", "bottom"]
         if detection_mode and detection_mode not in valid_detection_modes:
@@ -2822,7 +2790,7 @@ class Protocol(object):
             raise ValueError(
                 "position_z is only valid for 'top' detection_mode "
                 "measurements."
-                )
+            )
         if settle_time:
             try:
                 settle_time = Unit(settle_time)
@@ -2914,7 +2882,7 @@ class Protocol(object):
                     raise TypeError(
                         "Wells specified for 'calculated_from_wells' "
                         "must be Well, list of wells, WellGroup."
-                        )
+                    )
                 # check z_ws against container/ref for measurement
                 # if ref is Container
                 if isinstance(ref, Container):
@@ -2995,20 +2963,11 @@ class Protocol(object):
             the time before the start of the measurement, defaults
             to vendor specifications
         incubate_before: dict, optional
-            incubation prior to reading if desired
+            parameters for incubation before executing the plate read
+            See Also :meth:Absorbance.builders.incubate_params
         integration_time: Unit, optional
             duration of the signal recording, per Well, defaults to vendor
             specifications
-
-            .. code-block:: none
-
-                {
-                    "shaking": {
-                        "amplitude": str or Unit
-                        "orbital": bool
-                    },
-                    "duration": str or Unit
-                }
 
         Returns
         -------
@@ -3029,23 +2988,16 @@ class Protocol(object):
             Settle time or integration time is not of type Unit
 
         """
-        if isinstance(wells, Well):
-            wells = WellGroup(wells)
-        if isinstance(wells, WellGroup):
-            container = set([w.container for w in wells])
-            if len(container) > 1:
-                raise ValueError(
-                    "All wells need to be on one container for Luminescence"
-                )
-            wells = [str(w.index) for w in wells]
-
-        if not isinstance(wells, list):
-            raise TypeError(
-                "Unknown input. Luminescence wells accepts either a Well, "
-                "a WellGroup, or a list of well indices"
+        wells = WellGroup(wells)
+        container = set([w.container for w in wells])
+        if len(container) > 1:
+            raise ValueError(
+                "All wells need to be on the same container for Luminescence"
             )
+        wells = [str(w.index) for w in wells]
+
         if incubate_before:
-            check_valid_incubate_params(incubate_before)
+            Luminescence.builders.incubate_params(**incubate_before)
 
         if settle_time:
             try:
@@ -3242,54 +3194,8 @@ class Protocol(object):
         Parameters
         ----------
         extracts: list(dict)
-            Dictionary containing parameters for gel extraction, must be in the
-            form of:
-
-            .. code-block:: python
-
-                [
-                    {
-                    "band_list": [
-                        {
-                            "band_size_range": {
-                                "max_bp": int,
-                                "min_bp": int
-                            },
-                            "destination": Well,
-                            "elution_buffer": str,
-                            "elution_volume": Volume
-                        }
-                    ],
-                    "gel": int or None,
-                    "lane": int or None,
-                    "source": Well
-                    }
-                ]
-
-            util.make_gel_extract_params() and util.make_band_param() can be
-            used to create these dictionaries
-
-            band_list: list(dict)
-                List of bands to be extracted from the lane
-            band_size_range: dict
-                Dictionary for the size range of the band to be extracted
-            max_bp: int
-                Maximum size for the band
-            min_bp: int
-                Minimum size for the band
-            destination: Well
-                Well to place the extracted material
-            elution_buffer: str
-                Buffer to use to extract the band, commonly "water"
-            elution_volume: str or Unit
-                Volume of elution_buffer to extract the band into
-            gel: int
-                Integer identifier for the gel if using multiple gels
-            lane: int
-                Integer identifier for the lane of a gel to run the source
-            source: Well
-                Well from which to purify the material
-
+            List of gel extraction parameters
+            See Also :meth:GelPurify.builders.extract
         volume: str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.
@@ -3359,8 +3265,7 @@ class Protocol(object):
         if not isinstance(extracts, list):
             extracts = [extracts]
 
-        for e in extracts:
-            check_valid_gel_purify_extract(e)
+        extracts = [GelPurify.builders.extract(**_) for _ in extracts]
 
         gel_set = [e["gel"] for e in extracts]
         lane_set = [e["lane"] for e in extracts]
@@ -4290,12 +4195,10 @@ class Protocol(object):
             instruction created from the specified parameters
 
         """
-        check_valid_mag(container, head)
-        mag = dict()
-        mag["object"] = container
-        mag["duration"] = parse_unit(duration, "second")
-
-        check_valid_mag_params(mag)
+        mag = MagneticTransfer.builders.mag_dry(
+            object=container,
+            duration=duration
+        )
         self._remove_cover(container, "mag_dry")
         return self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
@@ -4352,7 +4255,7 @@ class Protocol(object):
             Specify whether to magnetize the tips
         tip_position : float
             Position relative to well height that tips are held
-        temperature: str or Unit
+        temperature: str or Unit, optional
             Temperature heat block is set at
         new_tip : bool
             Specify whether to use a new tip to complete the step
@@ -4366,17 +4269,13 @@ class Protocol(object):
             instruction created from the specified parameters
 
         """
-
-        check_valid_mag(container, head)
-        mag = dict()
-        mag["object"] = container
-        mag["duration"] = parse_unit(duration, "second")
-        mag["magnetize"] = magnetize
-        mag["tip_position"] = tip_position
-        if temperature is not None:
-            mag["temperature"] = parse_unit(temperature, "celsius")
-
-        check_valid_mag_params(mag)
+        mag = MagneticTransfer.builders.mag_incubate(
+            object=container,
+            duration=duration,
+            magnetize=magnetize,
+            tip_position=tip_position,
+            temperature=temperature
+        )
         self._remove_cover(container, "mag_incubate")
         return self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
@@ -4450,16 +4349,13 @@ class Protocol(object):
 
         """
 
-        check_valid_mag(container, head)
-        mag = dict()
-        mag["object"] = container
-        mag["cycles"] = cycles
-        mag["pause_duration"] = parse_unit(pause_duration, "second")
-        mag["bottom_position"] = bottom_position
-        if temperature is not None:
-            mag["temperature"] = parse_unit(temperature, "celsius")
-
-        check_valid_mag_params(mag)
+        mag = MagneticTransfer.builders.mag_collect(
+            object=container,
+            cycles=cycles,
+            pause_duration=pause_duration,
+            bottom_position=bottom_position,
+            temperature=temperature
+        )
         self._remove_cover(container, "mag_collect")
         return self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
@@ -4536,17 +4432,14 @@ class Protocol(object):
 
         """
 
-        check_valid_mag(container, head)
-        mag = dict()
-        mag["object"] = container
-        mag["duration"] = parse_unit(duration, "second")
-        mag["frequency"] = parse_unit(frequency, "hertz")
-        mag["center"] = center
-        mag["amplitude"] = amplitude
-        if temperature is not None:
-            mag["temperature"] = parse_unit(temperature, "celsius")
-
-        check_valid_mag_params(mag)
+        mag = MagneticTransfer.builders.mag_release(
+            object=container,
+            duration=duration,
+            frequency=frequency,
+            center=center,
+            amplitude=amplitude,
+            temperature=temperature
+        )
         self._remove_cover(container, "mag_release")
         return self._add_mag(mag, head, new_tip, new_instruction, "release")
 
@@ -4626,18 +4519,15 @@ class Protocol(object):
 
         """
 
-        check_valid_mag(container, head)
-        mag = dict()
-        mag["object"] = container
-        mag["duration"] = parse_unit(duration, "second")
-        mag["frequency"] = parse_unit(frequency, "hertz")
-        mag["center"] = center
-        mag["amplitude"] = amplitude
-        mag["magnetize"] = magnetize
-        if temperature is not None:
-            mag["temperature"] = parse_unit(temperature, "celsius")
-
-        check_valid_mag_params(mag)
+        mag = MagneticTransfer.builders.mag_mix(
+            object=container,
+            duration=duration,
+            frequency=frequency,
+            center=center,
+            amplitude=amplitude,
+            magnetize=magnetize,
+            temperature=temperature
+        )
         self._remove_cover(container, "mag_mix")
         return self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
@@ -4918,49 +4808,39 @@ class Protocol(object):
                                    "".format(action,
                                              container.container_type.name))
 
-    def _add_mag(self, mag, head, new_tip, new_instruction, name):
+    def _add_mag(self, sub_op, head, new_tip, new_instruction, sub_op_name):
         """
         Append given magnetic_transfer groups to protocol
         """
-
-        max_containers = 8
-
-        if (not new_instruction and self.instructions and
-                self.instructions[-1].op == "magnetic_transfer" and
-                self.instructions[-1].magnetic_head == head):
-            if self._count_mag_containers(mag, new_tip) <= max_containers:
-                if not new_tip:
-                    self.instructions[-1].groups[-1].append({name: mag})
-                elif new_tip:
-                    self.instructions[-1].groups.append([{name: mag}])
-            elif self._count_mag_containers(mag, new_tip) > max_containers:
-                raise RuntimeError("Error with magnetic_transfer: Only 8 "
-                                   "containers and tips are allowed per "
-                                   "magnetic transfer instruction. Please "
-                                   "specify a new instruction")
+        last_instruction = self.instructions[-1] if self.instructions else None
+        maybe_same_instruction = (
+            new_instruction is False and
+            last_instruction and
+            isinstance(last_instruction, MagneticTransfer) and
+            last_instruction.data.get("magnetic_head") == head
+        )
+        # Overwriting __dict__ since that's edited on __init__ and we use it
+        # for downstream checks
+        if maybe_same_instruction and new_tip is True:
+            new_groups = last_instruction.data.get("groups")
+            new_groups.append([{sub_op_name: sub_op}])
+            last_instruction.__dict__ = MagneticTransfer(
+                groups=new_groups, magnetic_head=head
+            ).__dict__
+            return last_instruction
+        elif maybe_same_instruction and new_tip is False:
+            new_groups = last_instruction.data.get("groups")
+            new_groups[-1].append({sub_op_name: sub_op})
+            last_instruction.__dict__ = MagneticTransfer(
+                groups=new_groups, magnetic_head=head
+            ).__dict__
+            return last_instruction
         else:
-            return self._append_and_return(MagneticTransfer([[{name: mag}]],
-                                                            head))
-
-    def _count_mag_containers(self, mag, new_tip):
-        """
-        Count the number of containers and tip protectors used in a
-        magnetic_transfer instruction
-        """
-
-        num_groups = len(self.instructions[-1].groups)
-
-        containers = [list(g.values())[0]["object"]
-                      for group in self.instructions[-1].groups for g in group]
-        containers.append(mag["object"])
-        containers = list(set(containers))
-        num_containers = len(containers)
-        num_containers += num_groups
-
-        if new_tip:
-            num_containers += 1
-
-        return num_containers
+            return self._append_and_return(
+                MagneticTransfer(
+                    groups=[[{sub_op_name: sub_op}]], magnetic_head=head
+                )
+            )
 
     # pylint: disable=protected-access
     def _refify(self, op_data):
@@ -5868,21 +5748,21 @@ class Protocol(object):
         if not isinstance(source_liquid, list):
             source_liquid = [source_liquid] * count
         source_liquid = [
-            validate_as_instance(_, LiquidClass)
+            _validate_as_instance(_, LiquidClass)
             for _ in source_liquid
         ]
 
         if not isinstance(destination_liquid, list):
             destination_liquid = [destination_liquid] * count
         destination_liquid = [
-            validate_as_instance(_, LiquidClass)
+            _validate_as_instance(_, LiquidClass)
             for _ in destination_liquid
         ]
 
         if not isinstance(method, list):
             method = [method] * count
         method = [
-            validate_as_instance(_, Transfer)
+            _validate_as_instance(_, Transfer)
             for _ in method
         ]
 
@@ -6113,14 +5993,14 @@ class Protocol(object):
         if not isinstance(liquid, list):
             liquid = [liquid] * count
         liquid = [
-            validate_as_instance(_, LiquidClass)
+            _validate_as_instance(_, LiquidClass)
             for _ in liquid
         ]
 
         if not isinstance(method, list):
             method = [method] * count
         method = [
-            validate_as_instance(_, Mix)
+            _validate_as_instance(_, Mix)
             for _ in method
         ]
 

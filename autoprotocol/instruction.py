@@ -41,7 +41,7 @@ class Instruction(object):
 
         See Also
         --------
-        Protocol._refify : Protocol serialization method
+        :meth:Protocol._refify : Protocol serialization method
 
         """
         return dict(op=self.op, **self.data)
@@ -91,7 +91,7 @@ class MagneticTransfer(Instruction):
 
     Parameters
     ----------
-    groups: list(dict)
+    groups: list(list(dict))
         dict in the groups should belong to one of the following categories:
 
         collect:
@@ -106,19 +106,57 @@ class MagneticTransfer(Instruction):
             Incubate the "object".
         mix:
             Oscillate the tips into and out of the "object"
-    head_type: str
+    magnetic_head: str
         Head-type used for this instruction
-
     """
-    HEAD_TYPE = ["96-deep", "96-pcr"]
+    builders = MagneticTransferBuilders()
 
-    def __init__(self, groups, head_type):
-        if head_type not in self.HEAD_TYPE:
+    max_objects = 8
+    heads = {
+        "96-deep": ["96-v-kf", "96-deep-kf", "96-deep"],
+        "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]
+    }
+
+    def __init__(self, groups, magnetic_head):
+        sub_ops = [subgroup for group in groups for subgroup in group]
+
+        if not all(len(_) == 1 for _ in sub_ops):
             raise ValueError(
-                "Specified `head_type` not: %s" % ", ".join(self.HEAD_TYPE))
+                "Not all sub-operations in groups {} contain a single "
+                "sub-operation.".format(groups)
+            )
+
+        containers = {list(_.values()).pop()["object"] for _ in sub_ops}
+        valid_container_types = all(
+            _.container_type.shortname in self.heads[magnetic_head]
+            for _ in containers
+        )
+        if not valid_container_types:
+            raise ValueError(
+                "Not all containers: {} are in the allowed container_types: {} "
+                "for head_type: {}"
+                "".format(containers, self.heads[magnetic_head], magnetic_head)
+            )
+
+        # a new tip is used for each group
+        if len(groups) + len(containers) > self.max_objects:
+            raise RuntimeError(
+                "Only {} total objects can be used within the same instruction "
+                "and {} containers: {} were specified in addition to {} groups "
+                "where each group requires a new tip object."
+                "".format(
+                    self.max_objects, len(containers), containers, len(groups)
+                )
+            )
+
+        magnetic_transfer = {
+            "groups": groups,
+            "magnetic_head": magnetic_head
+        }
+
         super(MagneticTransfer, self).__init__(
             op="magnetic_transfer",
-            data={"groups": groups, "magnetic_head": head_type}
+            data=magnetic_transfer
         )
 
 
@@ -318,121 +356,47 @@ class Thermocycle(Instruction):
         Name of dataref representing read data if performing qPCR
     dyes : dict, optional
         Dictionary mapping dye types to the wells they're used in
-    melting_start: str or Unit
-        Temperature at which to start the melting curve.
-    melting_end: str or Unit
-        Temperature at which to end the melting curve.
-    melting_increment: str or Unit
-        Temperature by which to increment the melting curve. Accepted increment
-        values are between 0.1 and 9.9 degrees celsius.
-    melting_rate: str or Unit
-        Specifies the duration of each temperature step in the melting curve.
+    melting : dict
+        Melting parameters
+        See Also :meth:Thermocycle.builders.melting
     lid_temperature: str or Unit
         Specifies the lid temperature throughout the duration of the instruction
 
     Raises
     ------
     ValueError
-        If one of dataref and dyes is specified but the other isn't.
+        If one of dataref and dyes is specified but the other isn't
     ValueError
-        If all melting curve-related parameters are specified but dyes isn't.
-    ValueError
-        If some melting curve-related parameteres are specified but not all of
-        them.
-    ValueError
-        If invalid dyes are supplied.
-
+        If melting curve parameters are specified but dyes isn't
     """
-    CHANNEL1_DYES = ["FAM", "SYBR"]
-    CHANNEL2_DYES = ["VIC", "HEX", "TET", "CALGOLD540"]
-    CHANNEL3_DYES = ["ROX", "TXR", "CALRED610"]
-    CHANNEL4_DYES = ["CY5", "QUASAR670"]
-    CHANNEL5_DYES = ["QUASAR705"]
-    CHANNEL6_DYES = ["FRET"]
-    CHANNEL_DYES = [CHANNEL1_DYES, CHANNEL2_DYES,
-                    CHANNEL3_DYES, CHANNEL4_DYES, CHANNEL5_DYES, CHANNEL6_DYES]
-    AVAILABLE_DYES = [
-        dye for channel_dye in CHANNEL_DYES for dye in channel_dye]
-
     builders = ThermocycleBuilders()
 
     def __init__(self, object, groups, volume="25:microliter", dataref=None,
-                 dyes=None, melting_start=None, melting_end=None,
-                 melting_increment=None, melting_rate=None,
-                 lid_temperature=None):
-        instruction = {
+                 dyes=None, melting=None, lid_temperature=None):
+
+        qpcr_params = [dyes, dataref]
+        if any(qpcr_params) and not all(qpcr_params):
+            raise ValueError(
+                "either dyes {} or dataref {} was specified, but both are "
+                "required for qPCR".format(dyes, dataref)
+            )
+
+        if melting and any(melting.values()) and not dyes:
+            raise ValueError(
+                "melting: {} was specified, but dyes was not".format(melting)
+            )
+
+        thermocycle = {
             "object": object,
             "groups": groups,
-            "volume": volume
+            "volume": volume,
+            "dataref": dataref,
+            "dyes": dyes,
+            "melting": melting,
+            "lid_temperature": lid_temperature
         }
 
-        melting_params = [melting_start, melting_end, melting_increment,
-                          melting_rate]
-        melting = sum([1 for m in melting_params if not m])
-
-        if (dyes and not dataref) or (dataref and not dyes):
-            raise ValueError("You must specify both a dataref name and the dyes"
-                             " to use for qPCR")
-        if melting == 0:
-            if not dyes:
-                raise ValueError("A melting step requires a valid dyes object")
-            instruction["melting"] = {
-                "start": melting_start,
-                "end": melting_end,
-                "increment": melting_increment,
-                "rate": melting_rate
-            }
-        elif melting < 4 and melting >= 1:
-            raise ValueError('To specify a melt curve, you must specify values '
-                             'for melting_start, melting_end, '
-                             'melting_increment and melting_rate')
-        else:
-            pass
-
-        if dyes:
-            keys = dyes.keys()
-            if Thermocycle.find_invalid_dyes(keys):
-                dyes = Thermocycle.convert_well_map_to_dye_map(dyes)
-            else:
-                instruction["dyes"] = dyes
-
-        instruction["dataref"] = dataref
-        instruction['lid_temperature'] = lid_temperature
-        super(Thermocycle, self).__init__(op="thermocycle", data=instruction)
-
-    @staticmethod
-    def find_invalid_dyes(dyes):
-        """
-        Take a set or list of dye names and returns the set that are not valid.
-
-        dyes - [list or set]
-        """
-
-        return set(dyes).difference(set(Thermocycle.AVAILABLE_DYES))
-
-    @staticmethod
-    def convert_well_map_to_dye_map(well_map):
-        """
-        Take a map of wells to the dyes it contains and returns a map of dyes to
-        the list of wells that contain it.
-
-        well_map - [{well:str}]
-        """
-
-        dye_names = reduce(lambda x, y: x.union(y),
-                           [set(well_map[k]) for k in well_map])
-        if Thermocycle.find_invalid_dyes(dye_names):
-            invalid_dyes = ", ".join(Thermocycle.find_invalid_dyes(dye_names))
-            raise ValueError(
-                "thermocycle instruction supplied the following invalid dyes: "
-                "{}".format(invalid_dyes))
-
-        dye_map = {dye: [] for dye in dye_names}
-        for well in well_map:
-            dyes = well_map[well]
-            for dye in dyes:
-                dye_map[dye] += [well]
-        return dye_map
+        super(Thermocycle, self).__init__(op="thermocycle", data=thermocycle)
 
 
 class Incubate(Instruction):
@@ -648,6 +612,7 @@ class GelPurify(Instruction):
               {...}]
 
     """
+    builders = GelPurifyBuilders()
 
     def __init__(self, objects, volume, matrix, ladder, dataref, extract):
         super(GelPurify, self).__init__(op="gel_purify", data={
@@ -699,6 +664,7 @@ class Absorbance(Instruction):
         time to pause before each well read
 
     """
+    builders = PlateReaderBuilders()
 
     def __init__(self, object, wells, wavelength, dataref, flashes=25,
                  incubate_before=None, temperature=None,
@@ -791,6 +757,7 @@ class Fluorescence(Instruction):
         specifications
 
     """
+    builders = PlateReaderBuilders()
 
     def __init__(self, object, wells, excitation, emission, dataref, flashes=25,
                  incubate_before=None, temperature=None, gain=None,
@@ -851,6 +818,7 @@ class Luminescence(Instruction):
         specifications
 
     """
+    builders = PlateReaderBuilders()
 
     def __init__(self, object, wells, dataref, incubate_before=None,
                  temperature=None, settle_time=None, integration_time=None):
@@ -1400,13 +1368,13 @@ class LiquidHandle(Instruction):
     Parameters
     ----------
     locations : list(dict)
-        See Also LiquidHandle.builders.location
+        See Also :meth:LiquidHandle.builders.location
     shape : dict, optional
-        See Also LiquidHandle.builders.shape
+        See Also :meth:LiquidHandle.builders.shape
     mode : str, optional
         the liquid handling mode
     mode_params : dict, optional
-        See Also LiquidHandle.builders.instruction_mode_params
+        See Also :meth:LiquidHandle.builders.instruction_mode_params
     """
     builders = LiquidHandleBuilders()
 

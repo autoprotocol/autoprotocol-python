@@ -24,10 +24,11 @@ Instruction
     Instructions corresponding to each of the builders
 """
 
-from collections import Iterable
+from collections import Iterable, defaultdict
+from functools import reduce
 from .constants import SBS_FORMAT_SHAPES
 from .util import parse_unit, is_valid_well
-from .container import WellGroup, Well
+from .container import WellGroup, Well, Container
 from .unit import Unit
 
 
@@ -36,6 +37,51 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
     """
     def __init__(self):
         self.sbs_shapes = ["SBS96", "SBS384"]
+
+    @staticmethod
+    def _merge_param_dicts(left=None, right=None):
+        """Finds the union of two dicts of params and checks for duplicates
+
+        Parameters
+        ----------
+        left : dict or None
+            Parameters to be merged
+        right : dict or None
+            Parameters to be merged
+
+        Returns
+        -------
+        dict
+            A merged set of parameters from the left and right dicts
+
+        Raises
+        ------
+        ValueError
+            if multiple values are specified for the same parameter
+
+        """
+        left = left or dict()
+        right = right or dict()
+
+        union = defaultdict(list)
+        for params in (left, right):
+            for key, value in params.items():
+                if value is not None:
+                    union[key].append(value)
+
+        unique = dict()
+        for key, value in union.items():
+            if len(value) is 1:
+                unique[key] = value[0]
+            else:
+                raise ValueError(
+                    "Parameter: {} had multiple values: {} specified.".format(
+                        key, value,
+                    )
+                )
+
+        return unique
+
 
     # pylint: disable=redefined-builtin
     def shape(self, rows=1, columns=1, format=None):
@@ -104,12 +150,135 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
         }
 
 
-# pylint: disable=no-init
 class ThermocycleBuilders(InstructionBuilders):
     """
     These builders are meant for helping to construct the `groups`
     argument in the `Protocol.thermocycle` method
     """
+    def __init__(self):
+        super(ThermocycleBuilders, self).__init__()
+        self.valid_dyes = {
+            "FAM", "SYBR",  # channel 1
+            "VIC", "HEX", "TET", "CALGOLD540",  # channel 2
+            "ROX", "TXR", "CALRED610",  # channel 3
+            "CY5", "QUASAR670",  # channel 4
+            "QUASAR705",  # channel 5
+            "FRET"  # channel 6
+        }
+
+    def dyes(self, **kwargs):
+        """Helper function for creating a dye parameter
+
+        Parameters
+        ----------
+        **kwargs : Well or WellGroup
+            A mapping from a dye (str) to a Well or WellGroup
+
+        Returns
+        -------
+        dict
+            A thermocycling dye to well mapping
+
+        Raises
+        ------
+        ValueError
+            If any of the specified dyes are not valid
+
+        """
+        dyes = {dye: WellGroup(wells) for dye, wells in kwargs.items()}
+        if not all(_ in self.valid_dyes for _ in dyes.keys()):
+            raise ValueError(
+                "dyes: {} was specified but contains a keys that are not in "
+                "the set of accepted dyes: {}".format(dyes, self.valid_dyes)
+            )
+        return dyes
+
+    def dyes_from_well_map(self, well_map):
+        """Helper function for creating a dye parameter from a well_map
+
+        Take a map of wells to the dyes it contains and returns a map of dyes to
+        the list of wells that contain it.
+
+        Parameters
+        ----------
+        well_map : dict(well, str)
+            A thermocycling well to dye mapping
+
+        Returns
+        -------
+        dict
+            A thermocycling dye to well mapping
+
+        See Also
+        --------
+        Thermocycle.Builders.dyes : standard constructor for the dyes parameter
+
+        """
+        dyes = reduce(
+            lambda x, y: x.union(y),
+            [set(well_map[k]) for k in well_map]
+        )
+
+        dye_map = {dye: [] for dye in dyes}
+        for well in well_map:
+            dyes = well_map[well]
+            for dye in dyes:
+                dye_map[dye] += [well]
+
+        return self.dyes(**dyes)
+
+    @staticmethod
+    def melting(start=None, end=None, increment=None, rate=None):
+        """Helper function for creating melting parameters
+
+        Generates melt curve parameters for Thermocycle Instructions.
+
+        Parameters
+        ----------
+        start : str or Unit
+            The starting temperature for the melt curve
+        end : str or Unit
+            The ending temperature for the melt curve
+        increment : str or Unit
+            The temperature increment of the melt curve
+        rate : str or Unit
+            The duration the individual increments
+
+        Returns
+        -------
+        dict
+            A thermocycling melt curve specification
+
+        Raises
+        ------
+        ValueError
+            If some, but not all melt curve parameters are specified
+
+        """
+        melting_params = [start, end, increment, rate]
+
+        if any(melting_params) and not all(melting_params):
+            raise ValueError(
+                "To specify a melt curve, you must specify values for "
+                "start, end, increment, and rate"
+            )
+
+        if start:
+            start = parse_unit(start, "celsius")
+        if end:
+            end = parse_unit(end, "celsius")
+        if increment:
+            increment = parse_unit(increment, "celsius")
+        if rate:
+            rate = parse_unit(rate, "second")
+
+        return {
+            "start": start,
+            "end": end,
+            "increment": increment,
+            "rate": rate
+        }
+
     def group(self, steps, cycles=1):
         """
         Helper function for creating a thermocycle group, which is a series of
@@ -978,26 +1147,24 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "".format(self.liquid_classes, liquid_class)
             )
 
-        xyz_specified = any(
-            [_ is not None for _ in (position_x, position_y, position_z)]
+        tip_position = self._merge_param_dicts(
+            dict(
+                position_x=position_x,
+                position_y=position_y,
+                position_z=position_z
+            ),
+            tip_position
         )
-
-        if xyz_specified and tip_position is not None:
-            raise ValueError(
-                "tip_position {} was specified in addition to at least one "
-                "of position_(x/y/z). Only one of the two methods of "
-                "specifying tip position is allowed".format(tip_position)
-            )
-
-        if tip_position is not None:
-            position_x = tip_position.get("position_x")
-            position_y = tip_position.get("position_y")
-            position_z = tip_position.get("position_z")
+        position_x = tip_position.get("position_x")
+        position_y = tip_position.get("position_y")
+        position_z = tip_position.get("position_z")
 
         if position_x is not None:
             position_x = self.position_xy(**position_x)
+
         if position_y is not None:
             position_y = self.position_xy(**position_y)
+
         if position_z is not None:
             position_z = self.position_z(**position_z)
 
@@ -1139,69 +1306,52 @@ class LiquidHandleBuilders(InstructionBuilders):
         if move_rate is not None:
             move_rate = self.move_rate(**move_rate)
 
-        detection_params_specified = any(
-            [
-                _ is not None for _
-                in (detection_method, detection_duration,
-                    detection_threshold, detection_fallback)
-            ]
+        detection = self._merge_param_dicts(
+            dict(
+                method=detection_method,
+                threshold=detection_threshold,
+                duration=detection_duration,
+                fallback=detection_fallback
+            ),
+            detection
         )
 
-        if detection_params_specified and detection is not None:
-            raise ValueError(
-                "tip_position {} was specified in addition to at least one "
-                "of position_(x/y/z). Only one of the two methods of "
-                "specifying tip position is allowed".format(detection)
-            )
-
-        if detection is not None:
-            detection_method = detection.get("method")
-            detection_duration = detection.get("duration")
-            detection_threshold = detection.get("threshold")
-            detection_fallback = detection.get("fallback")
-
-        if (detection_method is not None and
-                detection_method not in self.z_detection_methods):
-            raise ValueError(
-                "detection_method must be one of {} but {} was specified"
-                "".format(self.z_detection_methods, detection_method)
-            )
-
-        if detection_duration is not None:
-            detection_duration = parse_unit(detection_duration, "s")
-
-        if detection_threshold is not None:
-            detection_threshold = parse_unit(
-                detection_threshold, ["pascal", "farad"]
-            )
-
-        if detection_fallback is not None:
-            detection_fallback = self.position_z(**detection_fallback)
-
-        detection_params = {
-            "method": detection_method,
-            "threshold": detection_threshold,
-            "duration": detection_duration,
-            "fallback": detection_fallback
-        }
-
-        # ensure that detection params are only allowed for surface references
-        detection_specified = any(
-            _ is not None
-            for _ in detection_params.values()
-        )
-        detectable_reference = reference == "liquid_surface"
-        if detection_specified and not detectable_reference:
+        if any(detection.values()) and not reference == "liquid_surface":
             raise ValueError(
                 "detection parameters were specified, but reference {} does "
                 "not support detection".format(reference)
             )
 
+        method = detection.get("method")
+        duration = detection.get("duration")
+        threshold = detection.get("threshold")
+        fallback = detection.get("fallback")
+
+        if method is not None and method not in self.z_detection_methods:
+            raise ValueError(
+                "detection_method must be one of {} but {} was specified"
+                "".format(self.z_detection_methods, method)
+            )
+
+        if duration is not None:
+            duration = parse_unit(duration, "s")
+
+        if threshold is not None:
+            threshold = parse_unit(threshold, ["pascal", "farad"])
+
+        if fallback is not None:
+            fallback = self.position_z(**fallback)
+
         return {
             "reference": reference,
             "offset": offset,
             "move_rate": move_rate,
-            "detection": detection_params
+            "detection": {
+                "method": method,
+                "duration": duration,
+                "threshold": threshold,
+                "fallback": fallback
+            }
         }
 
     @staticmethod
@@ -1299,4 +1449,490 @@ class LiquidHandleBuilders(InstructionBuilders):
             "volume": volume,
             "initial_z": initial_z,
             "flowrate": flowrate
+        }
+
+
+class PlateReaderBuilders(InstructionBuilders):
+    """Helpers for building parameters for plate reading instructions
+    """
+    def incubate_params(self, duration, shake_amplitude=None,
+                        shake_orbital=None, shaking=None):
+        """
+        Create a dictionary with incubation parameters which can be used as
+        input for instructions. Currently supports plate reader instructions and
+        could be extended for use with other instructions.
+
+        Parameters
+        ----------
+        duration: str or Unit
+            the duration to shake the plate for
+        shake_amplitude: str or Unit, optional
+            amplitude of shaking between 1 and 6:millimeter
+        shake_orbital: bool, optional
+            True for orbital and False for linear shaking
+        shaking : dict, optional
+            A dict of amplitude and orbital: should only be specified if none of
+            the other tip shake parameters have been specified.
+            Dictionary of incubate parameters
+
+        Returns
+        -------
+        dict
+            plate reader incubate_params
+
+        Raises
+        ------
+        ValueError
+            if shake `duration` is not positive
+        ValueError
+            if only one of shake_amplitude or shake_orbital is set
+        TypeError
+            if `shake_orbital` is not a bool
+        ValueError
+            if `shake_amplitude` is not positive
+
+        """
+        duration = parse_unit(duration, "second")
+        if duration <= Unit(0, "second"):
+            raise ValueError("duration: {} is not positive".format(duration))
+
+        shaking = self._merge_param_dicts(
+            dict(amplitude=shake_amplitude, orbital=shake_orbital),
+            shaking
+        )
+        amplitude = shaking.get("amplitude")
+        orbital = shaking.get("orbital")
+
+        if (amplitude is not None) and (orbital is not None):
+            amplitude = parse_unit(amplitude, "millimeter")
+            if amplitude <= Unit(0, "millimeter"):
+                raise ValueError(
+                    "shake_amplitude: {} is not positive".format(amplitude)
+                )
+            if not isinstance(orbital, bool):
+                raise TypeError(
+                    "shake_orbital: {} is not a bool".format(orbital)
+                )
+        elif (amplitude is not None) ^ (orbital is not None):
+            raise ValueError(
+                "shake_amplitude: {} and shake_orbital: {} must both be "
+                "specified to shake".format(amplitude, orbital)
+            )
+
+        return {
+            "duration": duration,
+            "shaking": {
+                "amplitude": amplitude,
+                "orbital": orbital
+            }
+        }
+
+
+class GelPurifyBuilders(InstructionBuilders):
+    """Helpers for building GelPurify instructions
+    """
+    def extract(self, source, band_list, lane=None, gel=None):
+        """Helper for building extract params for gel_purify
+
+        Parameters
+        ----------
+        source : Well
+            The Well that contains the sample be purified
+        band_list : list(dict)
+            A list of bands to be extracted from the source sample
+        lane : int, optional
+            The gel lane for the source sample to be run on
+        gel : int, optional
+            The number of the gel if using multiple gels
+
+        Returns
+        -------
+        dict
+            gel_purify extract parameters
+
+        Raises
+        ------
+        TypeError
+            If source is not a Well
+
+        """
+        if not isinstance(source, Well):
+            raise TypeError("source: {} is not a Well".format(source))
+
+        if not isinstance(band_list, list):
+            band_list = [band_list]
+
+        band_list = [self.band(**_) for _ in band_list]
+
+        return {
+            "source": source,
+            "band_list": band_list,
+            "lane": lane,
+            "gel": gel
+        }
+
+    def band(self, elution_buffer, elution_volume, destination,
+             min_bp=None, max_bp=None, band_size_range=None):
+        """Helper for building band params for gel_purify
+
+        Parameters
+        ----------
+        elution_buffer : str
+            The type of elution buffer to be used
+        elution_volume : str or Unit
+            The volume of sample to be eluted
+        destination : Well
+            The Well the extracted samples should be eluted into
+        min_bp : int, optional
+            The minimum size sample to be removed.
+        max_bp : int, optional
+            The maximum size sample to be removed.
+        band_size_range : dict, optional
+            A dict of band size parameters. Should only be specified if none of
+            the other band size parameters have been specified.
+
+        Returns
+        -------
+        dict
+            gel_purify band parameters
+
+        Raises
+        ------
+        TypeError
+            If destination is not a Well
+        TypeError
+            If `min_bp` is not an int
+        TypeError
+            If `max_bp` is not an int
+        ValueError
+            If `min_bp` is not less than `max_bp`
+
+        """
+        elution_buffer = str(elution_buffer)
+        elution_volume = parse_unit(elution_volume, "microliter")
+        if not isinstance(destination, Well):
+            raise TypeError("destination: {} is not a Well".format(destination))
+
+        band_size_range = self._merge_param_dicts(
+            dict(min_bp=min_bp, max_bp=max_bp),
+            band_size_range
+        )
+        min_bp = band_size_range.get("min_bp")
+        max_bp = band_size_range.get("max_bp")
+
+        if not isinstance(min_bp, int):
+            raise TypeError("min_bp {} was not an int".format(min_bp))
+
+        if not isinstance(max_bp, int):
+            raise TypeError("max_bp {} was not an int".format(max_bp))
+
+        if not min_bp < max_bp:
+            raise ValueError(
+                "min_bp: {} is not less than max_bp: {}".format(min_bp, max_bp)
+            )
+
+        return {
+            "destination": destination,
+            "elution_volume": elution_volume,
+            "elution_buffer": elution_buffer,
+            "band_size_range": {
+                "min_bp": min_bp,
+                "max_bp": max_bp
+            }
+        }
+
+
+# pylint: disable=redefined-builtin
+class MagneticTransferBuilders(InstructionBuilders):
+    """Helpers for building MagneticTransfer instruction parameters
+    """
+    @staticmethod
+    def mag_dry(object, duration):
+        """Helper for building mag_dry sub operations for MagneticTransfer
+
+        Parameters
+        ----------
+        object : Container
+            The Container to be operated on
+        duration : str or Unit
+            The duration of the operation
+
+        Returns
+        -------
+        dict
+            mag_dry parameters
+
+        Raises
+        ------
+        TypeError
+            If `object` is not a Container
+
+        See Also
+        --------
+        Protocol.mag_dry
+
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+        duration = parse_unit(duration, "seconds")
+        return {
+            "object": object,
+            "duration": duration
+        }
+
+    @staticmethod
+    def mag_incubate(object, duration, magnetize, tip_position,
+                     temperature=None):
+        """Helper for building mag_incubate sub operations for MagneticTransfer
+
+        Parameters
+        ----------
+        object : Container
+            The Container to be operated on
+        duration : str or Unit
+            The duration of the operation
+        magnetize : bool
+            Whether the magnetic head should be engaged during the operation
+        tip_position : float
+            Position relative to well height that magnetic head is held
+        temperature : str or Unit, optional
+            The temperature of the operation
+
+        Returns
+        -------
+        dict
+            mag_incubate parameters
+
+        Raises
+        ------
+        TypeError
+            If `object` is not a Container
+        TypeError
+            If `magnetize` is not a bool
+        ValueError
+            If `tip_position` is not a positive number
+
+        See Also
+        --------
+        Protocol.mag_incubate
+
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+        duration = parse_unit(duration, "seconds")
+        if not isinstance(magnetize, bool):
+            raise TypeError("magnetize: {} is not a bool".format(magnetize))
+        tip_position = float(tip_position)
+        if tip_position < 0:
+            raise ValueError(
+                "tip_position: {} must be >= 0".format(tip_position)
+            )
+        if temperature is not None:
+            parse_unit(temperature, "celsius")
+        return {
+            "object": object,
+            "duration": duration,
+            "magnetize": magnetize,
+            "tip_position": tip_position,
+            "temperature": temperature
+        }
+
+    @staticmethod
+    def mag_collect(object, cycles, pause_duration, bottom_position=None,
+                    temperature=None):
+        """Helper for building mag_collect sub operations for MagneticTransfer
+
+        Parameters
+        ----------
+        object : Container
+            The Container to be operated on
+        cycles : int
+            The number of times the operation should be repeated
+        pause_duration : str or Unit
+            The delay time between each repetition of the operation
+        bottom_position : float, optional
+            Position relative to well height where the magnetic head pauses
+        temperature : str or Unit, optional
+            The temperature of the operation
+
+        Returns
+        -------
+        dict
+            mag_collect parameters
+
+        Raises
+        ------
+        TypeError
+            If `object` is not a Container
+        TypeError
+            If `cycles` is not an int
+        ValueError
+            If `bottom_position` is not a positive number
+
+        See Also
+        --------
+        Protocol.mag_collect
+
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+        if not isinstance(cycles, int):
+            raise TypeError("cycles: {} is not an int".format(cycles))
+        pause_duration = parse_unit(pause_duration, "seconds")
+        bottom_position = float(bottom_position)
+        if bottom_position < 0:
+            raise ValueError(
+                "bottom_position: {} must be >= 0".format(bottom_position)
+            )
+        if temperature is not None:
+            parse_unit(temperature, "celsius")
+        return {
+            "object": object,
+            "cycles": cycles,
+            "pause_duration": pause_duration,
+            "bottom_position": bottom_position,
+            "temperature": temperature
+        }
+
+    @staticmethod
+    def mag_release(object, duration, frequency, center=None, amplitude=None,
+                    temperature=None):
+        """Helper for building mag_release sub operations for MagneticTransfer
+
+        Parameters
+        ----------
+        object : Container
+            The Container to be operated on
+        duration : str or Unit
+            The duration of the operation
+        frequency : str or Unit
+            The frequency of the magnetic head during the operation
+        center : float, optional
+            Position relative to well height where oscillation is centered
+        amplitude : float, optional
+            Distance relative to well height to oscillate around `center`
+        temperature : str or Unit, optional
+            The temperature of the operation
+
+        Returns
+        -------
+        dict
+            mag_release parameters
+
+        Raises
+        ------
+        TypeError
+            If `object` is not a Container
+        ValueError
+            If `center` is less than 0
+        ValueError
+            If `amplitude` is greater than center
+
+        See Also
+        --------
+        Protocol.mag_release
+
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+        duration = parse_unit(duration, "seconds")
+        frequency = parse_unit(frequency, "hertz")
+        if center is not None:
+            center = float(center)
+            if center < 0:
+                raise ValueError(
+                    "center: {} must be >= 0".format(center)
+                )
+        if amplitude is not None:
+            amplitude = float(amplitude)
+        if center is not None and amplitude is not None and amplitude > center:
+            raise ValueError(
+                "center: {} must be greater than or equal to amplitude: {}"
+                "".format(center, amplitude)
+            )
+        if temperature is not None:
+            parse_unit(temperature, "celsius")
+        return {
+            "object": object,
+            "duration": duration,
+            "frequency": frequency,
+            "center": center,
+            "amplitude": amplitude,
+            "temperature": temperature
+        }
+
+    @staticmethod
+    def mag_mix(object, duration, frequency, center=None, amplitude=None,
+                magnetize=None, temperature=None):
+        """Helper for building mag_mix sub operations for MagneticTransfer
+
+        Parameters
+        ----------
+        object : Container
+            The Container to be operated on
+        duration : str or Unit
+            The duration of the operation
+        frequency : str or Unit, optional
+            The frequency of the magnetic head during the operation
+        center : float, optional
+            Position relative to well height where oscillation is centered
+        amplitude : float, optional
+            Distance relative to well height to oscillate around `center`
+        magnetize : bool, optional
+            Whether the magnetic head should be engaged during the operation
+        temperature : str or Unit, optional
+            The temperature of the operation
+
+        Returns
+        -------
+        dict
+            mag_mix parameters
+
+        Raises
+        ------
+        TypeError
+            If `object` is not a Container
+        ValueError
+            If `center` is less than 0
+        ValueError
+            If `amplitude` is greater than center
+        TypeError
+            If `magnetize` is not a bool
+
+
+        See Also
+        --------
+        Protocol.mag_mix
+
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+        duration = parse_unit(duration, "seconds")
+        frequency = parse_unit(frequency, "hertz")
+        if center is not None:
+            center = float(center)
+            if center < 0:
+                raise ValueError(
+                    "center: {} must be >= 0".format(center)
+                )
+        if amplitude is not None:
+            amplitude = float(amplitude)
+        if center is not None and amplitude is not None and amplitude > center:
+            raise ValueError(
+                "center: {} must be greater than or equal to amplitude: {}"
+                "".format(center, amplitude)
+            )
+        if magnetize is not None and not isinstance(magnetize, bool):
+            raise TypeError("magnetize: {} is not a bool".format(magnetize))
+        if temperature is not None:
+            parse_unit(temperature, "celsius")
+
+        return {
+            "object": object,
+            "duration": duration,
+            "frequency": frequency,
+            "center": center,
+            "amplitude": amplitude,
+            "magnetize": magnetize,
+            "temperature": temperature
         }

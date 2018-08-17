@@ -78,7 +78,8 @@ class TestLiquidHandleBuilder(object):
 
         with pytest.raises(ValueError):
             LiquidHandle.builders.mode_params(
-                tip_position={}, **flat_mode_params
+                tip_position={"position_x": flat_mode_params["position_x"]},
+                **flat_mode_params
             )
 
     def test_position_xy_builder(self):
@@ -128,7 +129,8 @@ class TestLiquidHandleBuilder(object):
 
         with pytest.raises(ValueError):
             LiquidHandle.builders.position_z(
-                detection={}, **flat_position_z
+                detection={"method": flat_position_z["detection_method"]},
+                **flat_position_z
             )
 
     def test_move_rate_builder(self):

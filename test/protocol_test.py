@@ -1,6 +1,9 @@
 import pytest
 from autoprotocol.container import Container, WellGroup
-from autoprotocol.instruction import Thermocycle, Incubate, Spin, Dispense
+from autoprotocol.instruction import (
+    Thermocycle, Incubate, Spin, Dispense, GelPurify,
+    Fluorescence, Absorbance, Luminescence
+)
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
 from autoprotocol.harness import _add_dye_to_preview_refs, \
@@ -170,29 +173,36 @@ class TestThermocycle(object):
                       dyes={"ThisDyeIsInvalid": ["A1"]})
 
     def test_thermocycle_melting(self):
-        pytest.raises(ValueError,
-                      Thermocycle,
-                      "plate",
-                      [{"cycles": 1,
-                        "steps": [{
-                            "temperature": "50: celsius",
-                            "duration": "20:minute"
-                        }]
-                        }],
-                      melting_start="50:celsius")
-        pytest.raises(ValueError,
-                      Thermocycle,
-                      "plate",
-                      [{"cycles": 1,
-                        "steps": [{
-                            "temperature": "50: celsius",
-                            "duration": "20:minute"
-                        }]
-                        }],
-                      melting_start="50:celsius",
-                      melting_end="60:celsius",
-                      melting_increment="1:celsius",
-                      melting_rate="2:minute")
+        pytest.raises(
+            ValueError,
+            Thermocycle,
+            "plate",
+            [{
+                "cycles": 1,
+                "steps": [{
+                    "temperature": "50: celsius",
+                    "duration": "20:minute"
+                }]
+            }],
+            melting={"start": "50:celsius"})
+        pytest.raises(
+            ValueError,
+            Thermocycle,
+            "plate",
+            [{
+                "cycles": 1,
+                "steps": [{
+                    "temperature": "50: celsius",
+                    "duration": "20:minute"
+                }]
+            }],
+            melting={
+                "start": "50:celsius",
+                "end": "60:celsius",
+                "increment": "1:celsius",
+                "rate": "2:minute"
+            }
+        )
 
     def test_thermocycle_lid_temperature(self):
         groups = [
@@ -569,81 +579,102 @@ class TestAbsorbance(object):
                          "test_reading", settle_time="-1:microsecond")
 
     def test_incubate(self):
-        from autoprotocol.util import incubate_params
-
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
-        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                     "test_reading",
-                     incubate_before=incubate_params(
-                         "10:second",
-                         "3:millimeter",
-                         True)
-                     )
+        p.absorbance(
+            test_plate, test_plate.well(0), "475:nanometer",
+            "test_reading",
+            incubate_before=Absorbance.builders.incubate_params(
+                "10:second",
+                "3:millimeter",
+                True
+            )
+        )
 
-        assert (p.instructions[0].incubate_before["shaking"]["orbital"])
-        assert (p.instructions[0].incubate_before["shaking"][
-                    "amplitude"] == "3:millimeter")
-        assert (p.instructions[0].incubate_before["duration"] == "10:second")
+        assert p.instructions[0].incubate_before["shaking"]["orbital"]
+        assert (
+            p.instructions[0].incubate_before["shaking"]["amplitude"] ==
+            Unit("3:millimeter")
+        )
+        assert (
+            p.instructions[0].incubate_before["duration"] == Unit("10:second")
+        )
 
-        p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                     "test_reading",
-                     incubate_before=incubate_params("10:second"))
+        p.absorbance(
+            test_plate, test_plate.well(0), "475:nanometer",
+            "test_reading",
+            incubate_before=Absorbance.builders.incubate_params("10:second")
+        )
 
-        assert ("shaking" not in p.instructions[1].incubate_before)
-        assert (p.instructions[1].incubate_before["duration"] == "10:second")
-
-        with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                         "test_reading",
-                         incubate_before=incubate_params("10:second",
-                                                         "-3:millimeter", True))
-
-        with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                         "test_reading",
-                         incubate_before=incubate_params("10:second",
-                                                         "3:millimeter", "foo"))
+        assert "shaking" not in p.instructions[1].incubate_before
+        assert (
+            p.instructions[1].incubate_before["duration"] == Unit("10:second")
+        )
 
         with pytest.raises(ValueError):
-            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                         "test_reading",
-                         incubate_before=incubate_params("-10:second",
-                                                         "3:millimeter", True))
+            p.absorbance(
+                test_plate, test_plate.well(0), "475:nanometer",
+                "test_reading",
+                incubate_before=Absorbance.builders.incubate_params(
+                    "10:second",
+                    "-3:millimeter", True
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.absorbance(test_plate, test_plate.well(
-                0), "475:nanometer", "test_reading",
-                         incubate_before=incubate_params("10:second",
-                                                         "3:millimeter"))
+        with pytest.raises(TypeError):
+            p.absorbance(
+                test_plate, test_plate.well(0), "475:nanometer",
+                "test_reading",
+                incubate_before=Absorbance.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter", "foo"
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
-                         "test_reading",
-                         incubate_before=incubate_params("10:second",
-                                                         shake_orbital=True))
+        with pytest.raises(ValueError):
+            p.absorbance(
+                test_plate, test_plate.well(0), "475:nanometer",
+                "test_reading",
+                incubate_before=Absorbance.builders.incubate_params(
+                    "-10:second",
+                    "3:millimeter", True
+                )
+            )
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
+            p.absorbance(
+                test_plate, test_plate.well(0), "475:nanometer", "test_reading",
+                incubate_before=Absorbance.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter"
+                )
+            )
+
+        with pytest.raises(ValueError):
+            p.absorbance(
+                test_plate, test_plate.well(0), "475:nanometer",
+                "test_reading",
+                incubate_before=Absorbance.builders.incubate_params(
+                    "10:second",
+                    shake_orbital=True
+                )
+            )
+
+        with pytest.raises(TypeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
                     'shaking': {'amplitude': '3:mm', 'orbital': True}})
 
-        with pytest.raises(RuntimeError):
-            p.absorbance(test_plate, test_plate.well(
-                0), "475:nanometer", "test_reading",
-                         incubate_before={'duration': '10:minute',
-                                          'shaking': {}})
-
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
                     'duration': '10:minute', 'shaking': {'orbital': True}})
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
                     'duration': '10:minute', 'shaking': {'amplitude': '3:mm'}})
-        with pytest.raises(KeyError):
+        with pytest.raises(TypeError):
             p.absorbance(test_plate, test_plate.well(0), "475:nanometer",
                          "test_reading", incubate_before={
                     'duration': '10:minute',
@@ -686,93 +717,110 @@ class TestFluorescence(object):
                                dataref="test_reading", gain=i)
 
     def test_incubate(self):
-        from autoprotocol.util import incubate_params
-
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
         p.fluorescence(test_plate, test_plate.well(0),
                        excitation="587:nanometer", emission="610:nanometer",
                        dataref="test_reading",
-                       incubate_before=incubate_params("10:second",
-                                                       "3:millimeter",
-                                                       True))
+                       incubate_before=Fluorescence.builders.incubate_params(
+                           "10:second",
+                           "3:millimeter",
+                           True
+                       ))
 
+        assert p.instructions[0].incubate_before["shaking"]["orbital"]
         assert (
-            p.instructions[0].incubate_before["shaking"]["orbital"])
+            p.instructions[0].incubate_before["shaking"]["amplitude"] ==
+            Unit("3:millimeter")
+        )
         assert (
-                p.instructions[0].incubate_before["shaking"][
-                    "amplitude"] == "3:millimeter")
-        assert (
-                p.instructions[0].incubate_before["duration"] == "10:second")
+            p.instructions[0].incubate_before["duration"] == Unit("10:second")
+        )
 
-        p.fluorescence(test_plate, test_plate.well(0),
-                       excitation="587:nanometer", emission="610:nanometer",
-                       dataref="test_reading",
-                       incubate_before=incubate_params("10:second"))
+        p.fluorescence(
+            test_plate, test_plate.well(0),
+            excitation="587:nanometer", emission="610:nanometer",
+            dataref="test_reading",
+            incubate_before=Fluorescence.builders.incubate_params("10:second")
+        )
 
-        assert ("shaking" not in p.instructions[1].incubate_before)
+        assert "shaking" not in  p.instructions[1].incubate_before
         assert (
-                p.instructions[1].incubate_before["duration"] == "10:second")
+            p.instructions[1].incubate_before["duration"] == Unit("10:second")
+        )
 
         with pytest.raises(ValueError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "-3:millimeter",
-                                                           True))
+            p.fluorescence(
+                test_plate, test_plate.well(0),
+                excitation="587:nanometer", emission="610:nanometer",
+                dataref="test_reading",
+                incubate_before=Fluorescence.builders.incubate_params(
+                    "10:second",
+                    "-3:millimeter",
+                    True
+                )
+            )
+
+        with pytest.raises(TypeError):
+            p.fluorescence(
+                test_plate, test_plate.well(0),
+                excitation="587:nanometer", emission="610:nanometer",
+                dataref="test_reading",
+                incubate_before=Fluorescence.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter",
+                    "foo"
+                )
+            )
 
         with pytest.raises(ValueError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "3:millimeter",
-                                                           "foo"))
+            p.fluorescence(
+                test_plate, test_plate.well(0),
+                excitation="587:nanometer", emission="610:nanometer",
+                dataref="test_reading",
+                incubate_before=Fluorescence.builders.incubate_params(
+                    "-10:second",
+                    "3:millimeter",
+                    True
+                )
+            )
 
         with pytest.raises(ValueError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before=incubate_params("-10:second",
-                                                           "3:millimeter",
-                                                           True))
+            p.fluorescence(
+                test_plate, test_plate.well(0),
+                excitation="587:nanometer", emission="610:nanometer",
+                dataref="test_reading",
+                incubate_before=Fluorescence.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter"
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "3:millimeter"))
+        with pytest.raises(ValueError):
+            p.fluorescence(
+                test_plate, test_plate.well(0),
+                excitation="587:nanometer", emission="610:nanometer",
+                dataref="test_reading",
+                incubate_before=Fluorescence.builders.incubate_params(
+                    "10:second",
+                    shake_orbital=True
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           shake_orbital=True))
-
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             p.fluorescence(test_plate, test_plate.well(0),
                            excitation="587:nanometer", emission="610:nanometer",
                            dataref="test_reading", incubate_before={
                     'shaking': {'amplitude': '3:mm', 'orbital': True}})
 
-        with pytest.raises(RuntimeError):
-            p.fluorescence(test_plate, test_plate.well(0),
-                           excitation="587:nanometer", emission="610:nanometer",
-                           dataref="test_reading",
-                           incubate_before={'duration': '10:minute',
-                                            'shaking': {}})
-
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.fluorescence(test_plate, test_plate.well(0),
                            excitation="587:nanometer", emission="610:nanometer",
                            dataref="test_reading",
                            incubate_before={'duration': '10:minute',
                                             'shaking': {'orbital': True}})
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.fluorescence(test_plate, test_plate.well(0),
                            excitation="587:nanometer", emission="610:nanometer",
                            dataref="test_reading",
@@ -919,76 +967,98 @@ class TestLuminescence(object):
                            integration_time="-1:microsecond")
 
     def test_incubate(self):
-        from autoprotocol.util import incubate_params
-
         p = Protocol()
         test_plate = p.ref("test", None, "96-flat", discard=True)
-        p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                       incubate_before=incubate_params("10:second",
-                                                       "3:millimeter",
-                                                       True))
+        p.luminescence(
+            test_plate, test_plate.well(0), "test_reading",
+            incubate_before=Luminescence.builders.incubate_params(
+                "10:second",
+                "3:millimeter",
+                True
+            )
+        )
 
+        assert p.instructions[0].incubate_before["shaking"]["orbital"]
         assert (
-            p.instructions[0].incubate_before["shaking"]["orbital"])
+            p.instructions[0].incubate_before["shaking"]["amplitude"] ==
+            Unit("3:millimeter")
+        )
         assert (
-                p.instructions[0].incubate_before["shaking"][
-                    "amplitude"] == "3:millimeter")
-        assert (
-                p.instructions[0].incubate_before["duration"] == "10:second")
+            p.instructions[0].incubate_before["duration"] ==
+            Unit("10:second")
+        )
 
-        p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                       incubate_before=incubate_params("10:second"))
+        p.luminescence(
+            test_plate, test_plate.well(0), "test_reading",
+            incubate_before=Luminescence.builders.incubate_params("10:second")
+        )
 
-        assert ("shaking" not in p.instructions[1].incubate_before)
+        assert not p.instructions[1].incubate_before.get("shaking")
         assert (
-                p.instructions[1].incubate_before["duration"] == "10:second")
+            p.instructions[1].incubate_before["duration"] == Unit("10:second")
+        )
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "-3:millimeter",
-                                                           True))
+            p.luminescence(
+                test_plate, test_plate.well(0), "test_reading",
+                incubate_before=Luminescence.builders.incubate_params(
+                    "10:second",
+                    "-3:millimeter",
+                    True
+                )
+            )
+
+        with pytest.raises(TypeError):
+            p.luminescence(
+                test_plate, test_plate.well(0), "test_reading",
+                incubate_before=Luminescence.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter",
+                    "foo"
+                )
+            )
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "3:millimeter",
-                                                           "foo"))
+            p.luminescence(
+                test_plate, test_plate.well(0), "test_reading",
+                incubate_before=Luminescence.builders.incubate_params(
+                    "-10:second",
+                    "3:millimeter",
+                    True
+                )
+            )
 
         with pytest.raises(ValueError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before=incubate_params("-10:second",
-                                                           "3:millimeter",
-                                                           True))
+            p.luminescence(
+                test_plate, test_plate.well(0), "test_reading",
+                incubate_before=Luminescence.builders.incubate_params(
+                    "10:second",
+                    "3:millimeter"
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           "3:millimeter"))
+        with pytest.raises(ValueError):
+            p.luminescence(
+                test_plate, test_plate.well(0), "test_reading",
+                incubate_before=Luminescence.builders.incubate_params(
+                    "10:second",
+                    shake_orbital=True
+                )
+            )
 
-        with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before=incubate_params("10:second",
-                                                           shake_orbital=True))
-
-        with pytest.raises(RuntimeError):
+        with pytest.raises(TypeError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
                                'shaking': {'amplitude': '3:mm',
                                            'orbital': True}})
 
-        with pytest.raises(RuntimeError):
-            p.luminescence(test_plate, test_plate.well(0), "test_reading",
-                           incubate_before={'duration': '10:minute',
-                                            'shaking': {}})
-
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
                                'duration': '10:minute',
                                'shaking': {'orbital': True}})
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             p.luminescence(test_plate, test_plate.well(0), "test_reading",
                            incubate_before={
                                'duration': '10:minute',
@@ -1048,12 +1118,12 @@ class TestMagneticTransfer(object):
         p = dummy_protocol
         pcr = p.ref("pcr", None, "96-pcr", discard=True)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(KeyError):
             p.mag_dry("96-flat", pcr, "30:minute", new_tip=False,
                       new_instruction=False)
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False,
                   new_instruction=False)
-        assert (len(p.instructions) == 1)
+        assert len(p.instructions) == 1
 
     def test_head_compatibility(self, dummy_protocol):
         p = dummy_protocol
@@ -1066,7 +1136,7 @@ class TestMagneticTransfer(object):
         for i, pcr in enumerate(pcrs):
             p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False,
                       new_instruction=False)
-            assert (len(p.instructions[-1].groups[0]) == i + 1)
+            assert len(p.instructions[-1].groups[0]) == i + 1
 
         for i, deep in enumerate(deeps):
             if i == 0:
@@ -1075,7 +1145,7 @@ class TestMagneticTransfer(object):
                 n_i = False
             p.mag_dry("96-deep", deep, "30:minute", new_tip=False,
                       new_instruction=n_i)
-            assert (len(p.instructions[-1].groups[0]) == i + 1)
+            assert len(p.instructions[-1].groups[0]) == i + 1
 
         bad_pcrs = [p.ref("bad_pcr_%s" % cont_type, None,
                           cont_type, discard=True) for cont_type in ["96-pcr"]]
@@ -1106,7 +1176,7 @@ class TestMagneticTransfer(object):
                     'frequency': Unit(5.0, 'hertz'),
                     'magnetize': True}
         for k, v in out_dict.items():
-            assert (p.instructions[-1].groups[0][0]["mix"][k] == v)
+            assert p.instructions[-1].groups[0][0]["mix"][k] == v
 
     def test_temperature_valid(self, dummy_protocol):
         p = dummy_protocol
@@ -1116,75 +1186,66 @@ class TestMagneticTransfer(object):
         for i in range(27, 96):
             p.mag_incubate(
                 "96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
-            assert (len(p.instructions[-1].groups[0]) == i - 26)
-
-        for i in range(-300, -290):
-            with pytest.raises(ValueError):
-                p.mag_incubate(
-                    "96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
+            assert len(p.instructions[-1].groups[0]) == i - 26
 
     def test_frequency_valid(self, dummy_protocol):
-        p = dummy_protocol
+        pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
-        pcr = p.ref("pcr", None, "96-pcr", discard=True)
-
-        for i in range(27, 96):
-            p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" %
-                      i, center=1, amplitude=0)
-            assert (len(p.instructions[-1].groups[0]) == i - 26)
-
-        for i in range(-10, -5):
-            with pytest.raises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "%s:hertz" %
-                          i, center=1, amplitude=0)
+        frequencies = ["{}:hertz".format(_) for _ in range(27, 96)]
+        for index, frequency in enumerate(frequencies):
+            dummy_protocol.mag_mix(
+                "96-pcr", pcr, "30:second", frequency, center=1, amplitude=0
+            )
+            assert len(dummy_protocol.instructions[-1].groups[0]) == index + 1
 
     def test_magnetize_valid(self, dummy_protocol):
-        p = dummy_protocol
+        pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
-        pcr = p.ref("pcr", None, "96-pcr", discard=True)
-
-        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
+        dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                   center=1, amplitude=0, magnetize=True)
-        assert (len(p.instructions[-1].groups[0]) == 1)
+        assert len(dummy_protocol.instructions[-1].groups[0]) == 1
 
-        p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
+        dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                   center=1, amplitude=0, magnetize=False)
-        assert (len(p.instructions[-1].groups[0]) == 2)
+        assert len(dummy_protocol.instructions[-1].groups[0]) == 2
 
-        with pytest.raises(ValueError):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
-                      center=1, amplitude=0, magnetize="Foo")
+        with pytest.raises(TypeError):
+            dummy_protocol.mag_mix(
+                "96-pcr", pcr, "30:second", "60:hertz",
+                center=1, amplitude=0, magnetize="Foo"
+            )
 
     def test_center_valid(self, dummy_protocol):
-        p = dummy_protocol
-
-        pcr = p.ref("pcr", None, "96-pcr", discard=True)
+        pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
         for i in range(0, 200):
-            p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
+            dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                       center=float(i) / 100, amplitude=0)
-            assert (len(p.instructions[-1].groups[0]) == i * 4 + 1)
-            p.mag_collect("96-pcr", pcr, 5, "30:second",
+            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 1
+            dummy_protocol.mag_collect("96-pcr", pcr, 5, "30:second",
                           bottom_position=float(i) / 100)
-            assert (len(p.instructions[-1].groups[0]) == i * 4 + 2)
-            p.mag_incubate("96-pcr", pcr, "30:minute",
+            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 2
+            dummy_protocol.mag_incubate("96-pcr", pcr, "30:minute",
                            tip_position=float(i) / 100)
-            assert (len(p.instructions[-1].groups[0]) == i * 4 + 3)
-            p.mag_release("96-pcr", pcr, "30:second", "1:hertz",
+            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 3
+            dummy_protocol.mag_release("96-pcr", pcr, "30:second", "1:hertz",
                           center=float(i) / 100, amplitude=0)
-            assert (len(p.instructions[-1].groups[0]) == i * 4 + 4)
+            assert len(dummy_protocol.instructions[-1].groups[0]) == i * 4 + 4
 
         for i in range(-1, 3, 4):
             with pytest.raises(ValueError):
-                p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
+                dummy_protocol.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                           center=i, amplitude=0)
             with pytest.raises(ValueError):
-                p.mag_collect("96-pcr", pcr, 5, "30:second", bottom_position=i)
+                dummy_protocol.mag_collect(
+                    "96-pcr", pcr, 5, "30:second", bottom_position=i)
             with pytest.raises(ValueError):
-                p.mag_incubate("96-pcr", pcr, "30:minute", tip_position=i)
+                dummy_protocol.mag_incubate(
+                    "96-pcr", pcr, "30:minute", tip_position=i)
             with pytest.raises(ValueError):
-                p.mag_release("96-pcr", pcr, "30:second", "1:hertz",
-                              center=i, amplitude=0)
+                dummy_protocol.mag_release(
+                    "96-pcr", pcr, "30:second", "1:hertz", center=i, amplitude=0
+                )
 
     def test_amplitude_valid(self, dummy_protocol):
         p = dummy_protocol
@@ -1194,12 +1255,12 @@ class TestMagneticTransfer(object):
         for i in range(0, 100):
             p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                       center=1, amplitude=float(i) / 100)
-            assert (len(p.instructions[-1].groups[0]) == i * 2 + 1)
+            assert len(p.instructions[-1].groups[0]) == i * 2 + 1
             p.mag_release("96-pcr", pcr, "30:second", "1:hertz",
                           center=1, amplitude=float(i) / 100)
-            assert (len(p.instructions[-1].groups[0]) == i * 2 + 2)
+            assert len(p.instructions[-1].groups[0]) == i * 2 + 2
 
-        for i in range(-1, 2, 3):
+        for i in range(2, 3):
             with pytest.raises(ValueError):
                 p.mag_mix("96-pcr", pcr, "30:second", "60:hertz",
                           center=1, amplitude=i)
@@ -1217,22 +1278,22 @@ class TestMagneticTransfer(object):
 
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=False,
                   new_instruction=False)
-        assert (len(p.instructions[-1].groups[0]) == 1)
-        assert (len(p.instructions[-1].groups) == 1)
+        assert len(p.instructions[-1].groups[0]) == 1
+        assert len(p.instructions[-1].groups) == 1
 
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True,
                   new_instruction=False)
-        assert (len(p.instructions[-1].groups) == 2)
-        assert (len(p.instructions) == 1)
+        assert len(p.instructions[-1].groups) == 2
+        assert len(p.instructions) == 1
 
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True,
                   new_instruction=True)
-        assert (len(p.instructions) == 2)
+        assert len(p.instructions) == 2
 
         for plate in pcrs:
             p.mag_dry("96-pcr", plate, "30:minute", new_tip=False,
                       new_instruction=False)
-            assert (len(p.instructions) == 2)
+            assert len(p.instructions) == 2
 
         with pytest.raises(RuntimeError):
             pcr_too_many = p.ref("pcr_7", None, "96-pcr", discard=True)
@@ -1241,11 +1302,11 @@ class TestMagneticTransfer(object):
 
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True,
                   new_instruction=True)
-        assert (len(p.instructions) == 3)
+        assert len(p.instructions) == 3
 
         p.mag_dry("96-pcr", pcr, "30:minute", new_tip=True,
                   new_instruction=False)
-        assert (len(p.instructions[-1].groups) == 2)
+        assert len(p.instructions[-1].groups) == 2
 
         with pytest.raises(RuntimeError):
             for plate in pcrs:
@@ -1447,7 +1508,7 @@ class TestGelPurify(object):
         p.gel_purify(extract, "10:microliter",
                      "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         assert (len(p.instructions) == 1)
-        with pytest.raises(KeyError):
+        with pytest.raises(TypeError):
             p.gel_purify({"broken": "extract"}, "10:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         extract[2]["band_list"][0]["band_size_range"]["min_bp"] = 20
@@ -1455,7 +1516,7 @@ class TestGelPurify(object):
             p.gel_purify(extract, "10:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         del extract[2]["band_list"][0]["band_size_range"]
-        with pytest.raises(KeyError):
+        with pytest.raises(TypeError):
             p.gel_purify(extract, "10:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
 
@@ -1515,19 +1576,25 @@ class TestGelPurify(object):
         assert (p.instructions[0].extract[7]["lane"] == 7)
 
     def test_make_gel_extract_params(self, dummy_protocol):
-        from autoprotocol.util import make_gel_extract_params
-        from autoprotocol.util import make_band_param
-
         p = dummy_protocol
-        sample_wells = p.ref("test_plate", None, "96-pcr",
-                             discard=True).wells_from(0, 8)
-        extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5",
-                               storage="cold_4").well(0) for i in sample_wells]
+        sample_wells = p.ref(
+            "test_plate", None, "96-pcr", discard=True
+        ).wells_from(0, 8)
+        extract_wells = [
+            p.ref(
+                "extract_" + str(i), None, "micro-1.5", storage="cold_4"
+            ).well(0)
+            for i in sample_wells
+        ]
         extracts = [
-            make_gel_extract_params(w, make_band_param("TE",
-                                                       "5:microliter", 80, 79,
-                                                       extract_wells[i]))
-            for i, w in enumerate(sample_wells)]
+            GelPurify.builders.extract(
+                w,
+                GelPurify.builders.band(
+                    "TE", "5:microliter", extract_wells[i], 79, 80
+                )
+            )
+            for i, w in enumerate(sample_wells)
+        ]
         with pytest.raises(RuntimeError):
             p.gel_purify(extracts, "10:microliter", "bad_gel",
                          "ladder1", "gel_purify_test")
@@ -1539,25 +1606,25 @@ class TestGelPurify(object):
         assert (p.instructions[-1].extract[1]["lane"] == 1)
 
     def test_gel_purify_extract_param_checker(self, dummy_protocol):
-        from autoprotocol.util import make_gel_extract_params
-        from autoprotocol.util import make_band_param
-
         p = dummy_protocol
         sample_wells = p.ref("test_plate", None, "96-pcr",
                              discard=True).wells_from(0, 8)
         extract_wells = [p.ref("extract_" + str(i), None, "micro-1.5",
                                storage="cold_4").well(0) for i in sample_wells]
         extracts = [
-            make_gel_extract_params(w, make_band_param("TE",
-                                                       "5:microliter", 80, 79,
-                                                       extract_wells[i]))
+            GelPurify.builders.extract(
+                w,
+                GelPurify.builders.band(
+                    "TE", "5:microliter", extract_wells[i], 79, 80
+                )
+            )
             for i, w in enumerate(sample_wells)]
         extracts[7]["band_list"][0]["elution_volume"] = "not_a_unit"
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             p.gel_purify(extracts, "5:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
         extracts[3]["band_list"][0]["destination"] = "not_a_well"
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             p.gel_purify(extracts[:4], "5:microliter",
                          "size_select(8,0.8%)", "ladder1", "gel_purify_test")
 

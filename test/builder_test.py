@@ -2,8 +2,38 @@
 
 import pytest
 from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
+from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
+
+
+# pylint: disable=protected-access
+class TestInstructionBuilders(object):
+    builders = InstructionBuilders()
+
+    def test_merge_param_dicts_without_overlap(self):
+        left, right = {1: "a"}, {2: "b"}
+        union = self.builders._merge_param_dicts(left, right)
+
+        expected = left
+        expected.update(right)
+
+        assert union == expected
+
+    def test_merge_param_dicts_with_none(self):
+        left, right = {1: "a"}, {2: None}
+        union = self.builders._merge_param_dicts(left, right)
+        assert union == left
+
+    def test_merge_param_dicts_with_overlap(self):
+        left, right = {1: "a"}, {1: "b"}
+        with pytest.raises(ValueError):
+            self.builders._merge_param_dicts(left, right)
+
+    def test_merge_param_dicts_with_missing_dict(self):
+        left, right = {1: "a"}, None
+        union = self.builders._merge_param_dicts(left, right)
+        assert union == left
 
 
 class TestDispenseBuilders(object):

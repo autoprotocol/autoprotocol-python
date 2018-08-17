@@ -1307,6 +1307,9 @@ class FlowCytometryBuilders(InstructionBuilders):
     """
     Builders for FlowCytometry instructions.
     """
+    def __init__(self):
+        super(FlowCytometryBuilders, self).__init__()
+        self.excitation = None
 
     def laser(self, excitation, channels, power=None, area_scaling_factor=None):
         """
@@ -1317,7 +1320,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         excitation : Unit or str
             Excitation wavelength.
         channels : list(dict)
-            See FlowCytometryBuilders.channel.
+            See :meth:`FlowCytometryBuilders.channel`.
         power : Unit or str, optional
             Laser power.
         area_scaling_factor : Number, optional
@@ -1326,11 +1329,11 @@ class FlowCytometryBuilders(InstructionBuilders):
         Raises
         ------
         TypeError
-            If channels is not a list of dict.
+            If `channels` is not a list of dict.
         TypeError
-            If channels is not a list of dict.
+            If `channels` is not a list of dict.
         TypeError
-            If area_scaling_factor is not a number.
+            If `area_scaling_factor` is not a number.
 
         Returns
         -------
@@ -1350,11 +1353,14 @@ class FlowCytometryBuilders(InstructionBuilders):
         if power is not None:
             power = parse_unit(power, "milliwatts")
 
-        excitation = parse_unit(excitation, "nanometers")
+        if excitation is not None:
+            excitation = parse_unit(excitation, "nanometers")
+
+        self.excitation = excitation
         channels = [self.channel(**_) for _ in channels]
 
         return {
-            "excitation": excitation,
+            "excitation": self.excitation,
             "power": power,
             "area_scaling_factor": area_scaling_factor,
             "channels": channels,
@@ -1368,23 +1374,23 @@ class FlowCytometryBuilders(InstructionBuilders):
         Parameters
         ----------
         emission_filter : dict
-            See FlowCytometryBuilders.emission_filter.
+            See :meth:`FlowCytometryBuilders.emission_filter`.
         detector_gain : Unit or str
             Detector gain.
         measurements : dict, optional
-            Pulse properties to record. See FlowCytometryBuilders.measurements.
+            Pulse properties to record. See
+            :meth:`FlowCytometryBuilders.measurements`.
         trigger_threshold : int, optional
             Channel intensity threshold. Events below this threshold.
-        trigger_logic : Enum(str), optional
-            Operator used to combine threshold. One of {"and", "or"}.
-            Defaults to "and".
+        trigger_logic : Enum({"and", "or"}), optional
+            Operator used to combine threshold.
 
         Raises
         ------
         TypeError
-            If trigger_threshold is not of type int.
+            If `trigger_threshold` is not of type int.
         ValueError
-            If trigger_logic is not one of {"and", "or"}.
+            If `trigger_logic` is not one of {"and", "or"}.
 
         Returns
         -------
@@ -1416,10 +1422,9 @@ class FlowCytometryBuilders(InstructionBuilders):
             "trigger_logic": trigger_logic
         }
 
-    @staticmethod
-    def emission_filter(channel_name, shortpass=None, longpass=None):
+    def emission_filter(self, channel_name, shortpass=None, longpass=None):
         """
-        Generates a dict of emission_filter parameters.
+        Generates a dict of emission filter parameters.
 
         Parameters
         ----------
@@ -1442,9 +1447,10 @@ class FlowCytometryBuilders(InstructionBuilders):
             A dict of emission_filter params.
         """
         gating_modes = ("FSC", "SSC")
-        if channel_name in gating_modes and shortpass or longpass:
-            raise ValueError("Cannot specify shortpass/longpass parameters if"
-                             "if channel_name is one {}"
+        if channel_name in gating_modes and (shortpass or longpass or
+                                             self.excitation):
+            raise ValueError("Cannot specify shortpass/longpass/excitation "
+                             "parameters if channel_name is one {}"
                              .format(gating_modes))
 
         if shortpass is not None:
@@ -1467,11 +1473,11 @@ class FlowCytometryBuilders(InstructionBuilders):
         Parameters
         ----------
         area : bool, optional
-            Area measurement. Default true.
+            Area measurement.
         height : bool, optional
-            Height measurement. Default true.
+            Height measurement.
         width : bool, optional
-            Width measurement. Default true.
+            Width measurement.
 
         Raises
         ------
@@ -1484,7 +1490,8 @@ class FlowCytometryBuilders(InstructionBuilders):
             A dict of measurements params.
         """
 
-        if any(not isinstance(_, (bool, type(None))) for _ in(area, height, width)):
+        if any(not isinstance(_, (bool, type(None)))
+               for _ in(area, height, width)):
             raise TypeError("area, height, and width must be of type bool.")
 
         return {
@@ -1493,7 +1500,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "width": width
         }
 
-    def collection_conditions(self, acquisition_volume, flowrate, wait_time,
+    def collection_conditions(self, acquisition_volume, flow_rate, wait_time,
                               mix_cycles, mix_volume, rinse_cycles,
                               stop_criteria=None):
         """
@@ -1503,8 +1510,8 @@ class FlowCytometryBuilders(InstructionBuilders):
         ----------
         acquisition_volume : Unit or str
             Acquisition volume.
-        flowrate : Unit or str
-            Flowrate.
+        flow_rate : Unit or str
+            Flow rate.
         wait_time : Unit or str
             Waiting time.
         mix_cycles : int
@@ -1514,7 +1521,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         rinse_cycles : int
             Number of rinsing cycles.
         stop_criteria : dict, optional
-            See FlowCytometryBuilders.stop_criteria.
+            See :meth:`FlowCytometryBuilders.stop_criteria`.
 
         Raises
         ------
@@ -1526,7 +1533,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         Returns
         -------
         dict
-            A dict of collection_condition parameters.
+            A dict of `collection_condition` parameters.
         """
         if not isinstance(rinse_cycles, int):
             raise TypeError("rinse_cycles must be of type int.")
@@ -1537,7 +1544,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         acquisition_volume = parse_unit(acquisition_volume, "ul")
         wait_time = parse_unit(wait_time, "s")
         mix_volume = parse_unit(mix_volume, "ul")
-        flowrate = parse_unit(flowrate, "ul/min")
+        flow_rate = parse_unit(flow_rate, "ul/min")
 
         if stop_criteria is None:
             stop_criteria = self.stop_criteria(volume=acquisition_volume)
@@ -1546,7 +1553,7 @@ class FlowCytometryBuilders(InstructionBuilders):
 
         return {
             "acquisition_volume": acquisition_volume,
-            "flowrate": flowrate,
+            "flow_rate": flow_rate,
             "stop_criteria": stop_criteria,
             "wait_time": wait_time,
             "mix_cycles": mix_cycles,
@@ -1576,7 +1583,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         Returns
         -------
         dict
-            A dict of stop_criteria params.
+            A dict of `stop_criteria` params.
         """
         if events is not None and not isinstance(events, int):
             raise TypeError("events must be of type int.")

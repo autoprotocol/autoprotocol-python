@@ -3771,7 +3771,7 @@ class Protocol(object):
                        collection_conditions, width_threshold=None,
                        window_extension=None, remove_coincident_events=None):
         """
-        A non-ambiguous set of parameters for the performance of flow cytometry.
+        A non-ambiguous set of parameters for performing flow cytometry.
 
         Parameters
         ----------
@@ -3788,7 +3788,7 @@ class Protocol(object):
         window_extension : int or float, optional
             Front and rear window extension.
         remove_coincident_events : bool, optional
-            Remove coincident events. Defaults to false.
+            Remove coincident events.
 
         Returns
         -------
@@ -3799,15 +3799,15 @@ class Protocol(object):
         Raises
         ------
         TypeError
-            If lasers is not of type list.
+            If `lasers` is not of type list.
         TypeError
-            If samples is not of type Well, list of Well, or WellGroup.
+            If `samples` is not of type Well, list of Well, or WellGroup.
         TypeError
-            If width_threshold is not a number.
+            If `width_threshold` is not a number.
         TypeError
-            If window_extension is not a number.
+            If `window_extension` is not a number.
         TypeError
-            If remove_coincident_events is not of type bool.
+            If `remove_coincident_events` is not of type bool.
 
         Examples
         --------
@@ -3815,27 +3815,26 @@ class Protocol(object):
 
         .. code-block:: python
 
-            from autoprotocol import Protocol, Unit
-            from autoprotocol.instruction import FlowCytometry
-
             p = Protocol()
             plate = p.ref("sample-plate", cont_type="384-flat", discard=True)
 
             lasers = [FlowCytometry.builders.laser(
-                excitation="10:nanometers",
+                excitation="405:nanometers",
                 channels=[
                     FlowCytometry.builders.channel(
                         emission_filter=FlowCytometry.builders.emission_filter(
-                            channel_name="FSC"
+                            channel_name="VL1",
+                            shortpass="415:nanometers",
+                            longpass="465:nanometers"
                         ),
-                        detector_gain="10:millivolt"
+                        detector_gain="10:millivolts"
                     )
                 ]
             )]
 
             collection_conds = FlowCytometry.builders.collection_conditions(
-                acquisition_volume="10:ul",
-                flowrate="10:ul/s",
+                acquisition_volume="5.0:ul",
+                flow_rate="12.5:ul/min",
                 wait_time="10:seconds",
                 mix_cycles=10,
                 mix_volume="10:ul",
@@ -3850,6 +3849,7 @@ class Protocol(object):
         .. code-block:: json
 
             {
+              "op": "flow_cytometry",
               "dataref": "flow-1234",
               "samples": [
                 "sample-plate/0",
@@ -3858,27 +3858,24 @@ class Protocol(object):
               ],
               "lasers": [
                 {
-                  "excitation": "10:nanometer",
+                  "excitation": "405:nanometer",
                   "channels": [
                     {
                       "emission_filter": {
-                        "channel_name": "FSC"
+                        "channel_name": "VL1",
+                        "shortpass": "415:nanometer",
+                        "longpass": "465:nanometer"
                       },
-                      "detector_gain": "10:millivolt",
-                      "measurements": {
-                        "area": true,
-                        "height": true,
-                        "width": true
-                      }
+                      "detector_gain": "10:millivolt"
                     }
                   ]
                 }
               ],
               "collection_conditions": {
-                "acquisition_volume": "10:microliter",
-                "flowrate": "10:microliter/second",
+                "acquisition_volume": "5:microliter",
+                "flow_rate": "12.5:microliter/minute",
                 "stop_criteria": {
-                  "volume": "10:microliter"
+                  "volume": "5:microliter"
                 },
                 "wait_time": "10:second",
                 "mix_cycles": 10,

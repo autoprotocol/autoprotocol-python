@@ -340,7 +340,7 @@ def get_wells(origin, shape):
     return repeated_wells
 
 
-def check_container_type_with_shape(container_type, shape):
+def _check_container_type_with_shape(container_type, shape):
     """
     Checks whether the selected origin and shape pair are valid
 

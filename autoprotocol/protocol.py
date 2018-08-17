@@ -13,8 +13,8 @@ from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
 from .util import (
-    _validate_as_instance, get_wells, check_container_type_with_shape,
-    euclidean_distance
+    get_wells, euclidean_distance,
+    _validate_as_instance, _check_container_type_with_shape
 )
 from .instruction import *  # pylint: disable=unused-wildcard-import
 
@@ -5788,7 +5788,7 @@ class Protocol(object):
         # validate all containers against the shape
         for aliquot in sum(source, destination):
             container_type = aliquot.container.container_type
-            check_container_type_with_shape(container_type, shape)
+            _check_container_type_with_shape(container_type, shape)
 
         # apply liquid classes to transfer methods
         for src, des, met in zip(
@@ -6023,7 +6023,7 @@ class Protocol(object):
         # validate all containers against the shape
         for aliquot in well:
             container_type = aliquot.container.container_type
-            check_container_type_with_shape(container_type, shape)
+            _check_container_type_with_shape(container_type, shape)
 
         # apply liquid classes to mix methods
         for liq, met in zip(liquid, method):

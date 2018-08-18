@@ -41,7 +41,7 @@ class Instruction(object):
 
         See Also
         --------
-        :meth:Protocol._refify : Protocol serialization method
+        :meth:`Protocol._refify` : Protocol serialization method
 
         """
         return dict(op=self.op, **self.data)
@@ -358,7 +358,7 @@ class Thermocycle(Instruction):
         Dictionary mapping dye types to the wells they're used in
     melting : dict
         Melting parameters
-        See Also :meth:Thermocycle.builders.melting
+        See Also :meth:`Thermocycle.builders.melting`
     lid_temperature: str or Unit
         Specifies the lid temperature throughout the duration of the instruction
 
@@ -1368,13 +1368,13 @@ class LiquidHandle(Instruction):
     Parameters
     ----------
     locations : list(dict)
-        See Also :meth:LiquidHandle.builders.location
+        See Also :meth:`LiquidHandle.builders.location`
     shape : dict, optional
-        See Also :meth:LiquidHandle.builders.shape
+        See Also :meth:`LiquidHandle.builders.shape`
     mode : str, optional
         the liquid handling mode
     mode_params : dict, optional
-        See Also :meth:LiquidHandle.builders.instruction_mode_params
+        See Also :meth:`LiquidHandle.builders.instruction_mode_params`
     """
     builders = LiquidHandleBuilders()
 

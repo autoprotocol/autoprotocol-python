@@ -2560,7 +2560,7 @@ class Protocol(object):
             to vendor specifications
         incubate_before: dict, optional
             parameters for incubation before executing the plate read
-            See Also :meth:Absorbance.builders.incubate_params
+            See Also :meth:`Absorbance.builders.incubate_params`
 
         Returns
         -------
@@ -2687,7 +2687,7 @@ class Protocol(object):
             amplification
         incubate_before: dict, optional
             parameters for incubation before executing the plate read
-            See Also :meth:Fluorescence.builders.incubate_params
+            See Also :meth:`Fluorescence.builders.incubate_params`
         detection_mode: str, optional
             set the detection mode of the optics, ["top", "bottom"],
             defaults to vendor specified defaults.
@@ -2963,7 +2963,7 @@ class Protocol(object):
             to vendor specifications
         incubate_before: dict, optional
             parameters for incubation before executing the plate read
-            See Also :meth:Absorbance.builders.incubate_params
+            See Also :meth:`Absorbance.builders.incubate_params`
         integration_time: Unit, optional
             duration of the signal recording, per Well, defaults to vendor
             specifications
@@ -3194,7 +3194,7 @@ class Protocol(object):
         ----------
         extracts: list(dict)
             List of gel extraction parameters
-            See Also :meth:GelPurify.builders.extract
+            See Also :meth:`GelPurify.builders.extract`
         volume: str or Unit
             Volume of liquid to be transferred from each well specified to a
             lane of the gel.

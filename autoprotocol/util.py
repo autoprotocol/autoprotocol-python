@@ -60,10 +60,14 @@ def parse_unit(unit, accepted_unit=None):
         Input to be checked
     accepted_unit: Unit or str or list(Unit) or list(str), optional
         Dimensionality of unit should match against the accepted unit(s).
-        Examples:
-            parse_unit("1:ul", "1:ml")
-            parse_unit("1:ul", "ml")
-            parse_unit("1:ul", ["ml", "kg"])
+
+    Examples
+    --------
+    .. code-block:: python
+
+        parse_unit("1:ul", "1:ml")
+        parse_unit("1:ul", "ml")
+        parse_unit("1:ul", ["ml", "kg"])
 
     Returns
     -------

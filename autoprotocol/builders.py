@@ -25,6 +25,7 @@ Instruction
 """
 
 from collections import Iterable
+from numbers import Number
 from .constants import SBS_FORMAT_SHAPES
 from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well
@@ -1299,4 +1300,302 @@ class LiquidHandleBuilders(InstructionBuilders):
             "volume": volume,
             "initial_z": initial_z,
             "flowrate": flowrate
+        }
+
+
+class FlowCytometryBuilders(InstructionBuilders):
+    """
+    Builders for FlowCytometry instructions.
+    """
+    def __init__(self):
+        super(FlowCytometryBuilders, self).__init__()
+        self.excitation = None
+
+    def laser(self, excitation, channels, power=None, area_scaling_factor=None):
+        """
+        Generates a dict of laser parameters.
+
+        Parameters
+        ----------
+        excitation : Unit or str
+            Excitation wavelength.
+        channels : list(dict)
+            See :meth:`FlowCytometryBuilders.channel`.
+        power : Unit or str, optional
+            Laser power.
+        area_scaling_factor : Number, optional
+            Value to scale height and area equivalently.
+
+        Raises
+        ------
+        TypeError
+            If `channels` is not a list of dict.
+        TypeError
+            If `channels` is not a list of dict.
+        TypeError
+            If `area_scaling_factor` is not a number.
+
+        Returns
+        -------
+        dict
+            A dict of laser parameters.
+        """
+        if not isinstance(channels, list):
+            raise TypeError("channels must be a list of dict.")
+
+        if any([not isinstance(_, dict) for _ in channels]):
+            raise TypeError("channels must be a list of dict.")
+
+        if area_scaling_factor is not None and not isinstance(
+                area_scaling_factor, Number):
+            raise TypeError("area_scaling_factor must be a number.")
+
+        if power is not None:
+            power = parse_unit(power, "milliwatts")
+
+        if excitation is not None:
+            excitation = parse_unit(excitation, "nanometers")
+
+        self.excitation = excitation
+        channels = [self.channel(**_) for _ in channels]
+
+        return {
+            "excitation": self.excitation,
+            "power": power,
+            "area_scaling_factor": area_scaling_factor,
+            "channels": channels,
+        }
+
+    def channel(self, emission_filter, detector_gain, measurements=None,
+                trigger_threshold=None, trigger_logic=None):
+        """
+        Generates a dict of channel parameters.
+
+        Parameters
+        ----------
+        emission_filter : dict
+            See :meth:`FlowCytometryBuilders.emission_filter`.
+        detector_gain : Unit or str
+            Detector gain.
+        measurements : dict, optional
+            Pulse properties to record. See
+            :meth:`FlowCytometryBuilders.measurements`.
+        trigger_threshold : int, optional
+            Channel intensity threshold. Events below this threshold.
+        trigger_logic : Enum({"and", "or"}), optional
+            Operator used to combine threshold.
+
+        Raises
+        ------
+        TypeError
+            If `trigger_threshold` is not of type int.
+        ValueError
+            If `trigger_logic` is not one of {"and", "or"}.
+
+        Returns
+        -------
+        dict
+            A dict of channel parameters.
+        """
+        if trigger_threshold is not None and not isinstance(
+                trigger_threshold, int):
+            raise TypeError("trigger_threshold must be of type int.")
+
+        trigger_modes = ("and", "or")
+        if trigger_logic is not None and trigger_logic not in trigger_modes:
+            raise ValueError("trigger_logic must be one of {}."
+                             .format(trigger_modes))
+
+        if measurements is None:
+            measurements = self.measurements()
+        else:
+            measurements = self.measurements(**measurements)
+
+        emission_filter = self.emission_filter(**emission_filter)
+        detector_gain = parse_unit(detector_gain, "millivolts")
+
+        return {
+            "emission_filter": emission_filter,
+            "detector_gain": detector_gain,
+            "measurements": measurements,
+            "trigger_threshold": trigger_threshold,
+            "trigger_logic": trigger_logic
+        }
+
+    def emission_filter(self, channel_name, shortpass=None, longpass=None):
+        """
+        Generates a dict of emission filter parameters.
+
+        Parameters
+        ----------
+        channel_name : str
+            Specifies the channel name.
+        shortpass : Unit or str
+            Shortpass filter wavelength.
+        longpass : Unit or str
+            Longpass filter wavelength.
+
+        Raises
+        ------
+        ValueError
+            If values for longpass or shortpass are provided and
+            channel_name is "FSC" or "SSC".
+
+        Returns
+        -------
+        dict
+            A dict of emission_filter params.
+        """
+        gating_modes = ("FSC", "SSC")
+        if channel_name in gating_modes and (shortpass or longpass or
+                                             self.excitation):
+            raise ValueError("Cannot specify shortpass/longpass/excitation "
+                             "parameters if channel_name is one {}"
+                             .format(gating_modes))
+
+        if shortpass is not None:
+            shortpass = parse_unit(shortpass, "nanometers")
+
+        if longpass is not None:
+            longpass = parse_unit(longpass, "nanometers")
+
+        return {
+            "channel_name": channel_name,
+            "shortpass": shortpass,
+            "longpass": longpass
+        }
+
+    @staticmethod
+    def measurements(area=None, height=None, width=None):
+        """
+        Generates a dict of measurements parameters.
+
+        Parameters
+        ----------
+        area : bool, optional
+            Area measurement.
+        height : bool, optional
+            Height measurement.
+        width : bool, optional
+            Width measurement.
+
+        Raises
+        ------
+        TypeError
+            If any of `area` | `height` | `width` are not of type bool.
+
+        Returns
+        -------
+        dict
+            A dict of measurements params.
+        """
+
+        if any(not isinstance(_, (bool, type(None)))
+               for _ in(area, height, width)):
+            raise TypeError("area, height, and width must be of type bool.")
+
+        return {
+            "area": area,
+            "height": height,
+            "width": width
+        }
+
+    def collection_conditions(self, acquisition_volume, flow_rate, wait_time,
+                              mix_cycles, mix_volume, rinse_cycles,
+                              stop_criteria=None):
+        """
+        Generates a dict of collection_conditions parameters.
+
+        Parameters
+        ----------
+        acquisition_volume : Unit or str
+            Acquisition volume.
+        flow_rate : Unit or str
+            Flow rate.
+        wait_time : Unit or str
+            Waiting time.
+        mix_cycles : int
+            Number of mixing cycles before acquisition.
+        mix_volume : Unit or str
+            Mixing volume.
+        rinse_cycles : int
+            Number of rinsing cycles.
+        stop_criteria : dict, optional
+            See :meth:`FlowCytometryBuilders.stop_criteria`.
+
+        Raises
+        ------
+        TypeError
+            If `rinse_cycles` is not of type int.
+        TypeError
+            If `mix_cycles` is not of type int.
+
+        Returns
+        -------
+        dict
+            A dict of `collection_condition` parameters.
+        """
+        if not isinstance(rinse_cycles, int):
+            raise TypeError("rinse_cycles must be of type int.")
+
+        if not isinstance(mix_cycles, int):
+            raise TypeError("mix_cycles must be of type int.")
+
+        acquisition_volume = parse_unit(acquisition_volume, "ul")
+        wait_time = parse_unit(wait_time, "s")
+        mix_volume = parse_unit(mix_volume, "ul")
+        flow_rate = parse_unit(flow_rate, "ul/min")
+
+        if stop_criteria is None:
+            stop_criteria = self.stop_criteria(volume=acquisition_volume)
+        else:
+            stop_criteria = self.stop_criteria(**stop_criteria)
+
+        return {
+            "acquisition_volume": acquisition_volume,
+            "flow_rate": flow_rate,
+            "stop_criteria": stop_criteria,
+            "wait_time": wait_time,
+            "mix_cycles": mix_cycles,
+            "mix_volume": mix_volume,
+            "rinse_cycles": rinse_cycles
+        }
+
+    @staticmethod
+    def stop_criteria(volume=None, events=None, time=None):
+        """
+        Generates a dict of stop_criteria parameters.
+
+        Parameters
+        ----------
+        volume : Unit or str, optional
+            Stopping volume.
+        events : int, optional
+            Number of events to trigger stop.
+        time : Unit or str, optional
+            Stopping time.
+
+        Raises
+        ------
+        TypeError
+            If `events` is not of type int.
+
+        Returns
+        -------
+        dict
+            A dict of `stop_criteria` params.
+        """
+        if events is not None and not isinstance(events, int):
+            raise TypeError("events must be of type int.")
+
+        if volume is not None:
+            volume = parse_unit(volume, "ul")
+
+        if time is not None:
+            time = parse_unit(time, "s")
+
+        return {
+            "volume": volume,
+            "events": events,
+            "time": time
         }

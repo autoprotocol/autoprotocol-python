@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`-` add new `FlowCytometry` instruction and corresponding protocol method
+* :feature:`171` add new `FlowCytometry` instruction and corresponding protocol method
 * :support:`169` add CONTRIBUTING.rst, cleaned up README.md, and ported it to rst
 * :feature:`165` add __repr__ methods to Autoprotocol Python objects
 * :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data

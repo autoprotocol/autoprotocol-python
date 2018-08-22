@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`170` protect liquid_handle-related utils until they can be made more general-purpose
+* :feature:`170` deprecate unused utils including `euclidean_distance`, `quad_ind_to_num`, and `quad_num_to_ind`
+* :feature:`170` port existing checkers to builders format
 * :support:`169` add CONTRIBUTING.rst, cleaned up README.md, and ported it to rst
 * :feature:`165` add __repr__ methods to Autoprotocol Python objects
 * :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data

@@ -3671,6 +3671,154 @@ class Protocol(object):
             ref.cover = None
             return self._append_and_return(Uncover(ref))
 
+    def flow_cytometry(self, dataref, samples, lasers,
+                       collection_conditions, width_threshold=None,
+                       window_extension=None, remove_coincident_events=None):
+        """
+        A non-ambiguous set of parameters for performing flow cytometry.
+
+        Parameters
+        ----------
+        dataref : str
+            Name of dataset that will be returned.
+        samples : list(Well) or Well or WellGroup
+            Wells to be analyzed
+        lasers : list(dict)
+            See FlowCytometryBuilders.laser.
+        collection_conditions : dict
+            See FlowCytometryBuilders.collection_conditions.
+        width_threshold : int or float, optional
+            Threshold to determine width measurement.
+        window_extension : int or float, optional
+            Front and rear window extension.
+        remove_coincident_events : bool, optional
+            Remove coincident events.
+
+        Returns
+        -------
+        FlowCytometry
+            Returns a :py:class:`autoprotocol.instruction.FlowCytometry`
+            instruction created from the specified parameters.
+
+        Raises
+        ------
+        TypeError
+            If `lasers` is not of type list.
+        TypeError
+            If `samples` is not of type Well, list of Well, or WellGroup.
+        TypeError
+            If `width_threshold` is not a number.
+        TypeError
+            If `window_extension` is not a number.
+        TypeError
+            If `remove_coincident_events` is not of type bool.
+
+        Examples
+        --------
+        Example flow cytometry protocol
+
+        .. code-block:: python
+
+            p = Protocol()
+            plate = p.ref("sample-plate", cont_type="384-flat", discard=True)
+
+            lasers = [FlowCytometry.builders.laser(
+                excitation="405:nanometers",
+                channels=[
+                    FlowCytometry.builders.channel(
+                        emission_filter=FlowCytometry.builders.emission_filter(
+                            channel_name="VL1",
+                            shortpass="415:nanometers",
+                            longpass="465:nanometers"
+                        ),
+                        detector_gain="10:millivolts"
+                    )
+                ]
+            )]
+
+            collection_conds = FlowCytometry.builders.collection_conditions(
+                acquisition_volume="5.0:ul",
+                flowrate="12.5:ul/min",
+                wait_time="10:seconds",
+                mix_cycles=10,
+                mix_volume="10:ul",
+                rinse_cycles=10
+            )
+
+            p.flow_cytometry("flow-1234", plate.wells_from(0, 3), lasers,
+                             collection_conds)
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            {
+              "op": "flow_cytometry",
+              "dataref": "flow-1234",
+              "samples": [
+                "sample-plate/0",
+                "sample-plate/1",
+                "sample-plate/2"
+              ],
+              "lasers": [
+                {
+                  "excitation": "405:nanometer",
+                  "channels": [
+                    {
+                      "emission_filter": {
+                        "channel_name": "VL1",
+                        "shortpass": "415:nanometer",
+                        "longpass": "465:nanometer"
+                      },
+                      "detector_gain": "10:millivolt"
+                    }
+                  ]
+                }
+              ],
+              "collection_conditions": {
+                "acquisition_volume": "5:microliter",
+                "flowrate": "12.5:microliter/minute",
+                "stop_criteria": {
+                  "volume": "5:microliter"
+                },
+                "wait_time": "10:second",
+                "mix_cycles": 10,
+                "mix_volume": "10:microliter",
+                "rinse_cycles": 10
+              }
+            }
+
+        """
+        if not isinstance(lasers, list):
+            raise TypeError("lasers must be of type list.")
+
+        if not is_valid_well(samples):
+            raise TypeError("samples must be of type Well, list of Well, "
+                            "or WellGroup.")
+
+        if width_threshold is not None:
+            if not isinstance(width_threshold, Number):
+                raise TypeError("width_threshold must be a number.")
+
+        if window_extension is not None:
+            if not isinstance(window_extension, Number):
+                raise TypeError("window_extension must be a number.")
+
+        if remove_coincident_events is not None:
+            if not isinstance(remove_coincident_events, bool):
+                raise TypeError("remove_coincident_events must be of type "
+                                "bool.")
+
+        lasers = [FlowCytometry.builders.laser(**_) for _ in lasers]
+
+        collection_conditions = FlowCytometry.builders.collection_conditions(
+            **collection_conditions)
+
+        return self._append_and_return(
+            FlowCytometry(dataref, samples, lasers, collection_conditions,
+                          width_threshold, window_extension,
+                          remove_coincident_events))
+
     def flow_analyze(self, dataref, FSC, SSC, neg_controls, samples,
                      colors=None, pos_controls=None):
         """

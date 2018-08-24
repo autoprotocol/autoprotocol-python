@@ -937,6 +937,48 @@ class Uncover(Instruction):
         )
 
 
+class FlowCytometry(Instruction):
+    """
+    This instruction provides a non-ambiguous set of parameters for the
+    performance of flow cytometry.
+
+    Parameters
+    ----------
+    dataref : str
+        Name of dataset that will be returned.
+    samples : list(Well) or Well or WellGroup
+        Wells to be analyzed
+    lasers : list(dict)
+        See FlowCytometryBuilders.laser.
+    collection_conditions : dict
+        See FlowCytometryBuilders.collection_conditions.
+    width_threshold : int or float, optional
+        Threshold to determine width measurement.
+    window_extension : int or float, optional
+        Front and rear window extension.
+    remove_coincident_events : bool, optional
+        Remove coincident events. Defaults to false.
+    """
+    builders = FlowCytometryBuilders()
+
+    def __init__(self, dataref, samples, lasers, collection_conditions,
+                 width_threshold=None, window_extension=None,
+                 remove_coincident_events=None):
+
+        instruction = {
+            "dataref": dataref,
+            "samples": samples,
+            "lasers": lasers,
+            "collection_conditions": collection_conditions,
+            "width_threshold": width_threshold,
+            "window_extension": window_extension,
+            "remove_coincident_events": remove_coincident_events
+        }
+
+        super(FlowCytometry, self).__init__(op="flow_cytometry",
+                                            data=instruction)
+
+
 class FlowAnalyze(Instruction):
 
     """

@@ -625,9 +625,6 @@ class PreMixBlowoutTransfer(Transfer):
         )
         self.pre_mix_blowout = pre_mix_blowout
 
-    def default_dispense_z(self, volume):
-        return self.default_tracked_position_z()
-
     def _dispense_transports(self, volume=None):
         self._transports = []
         volume = parse_unit(volume, "ul")
@@ -645,20 +642,26 @@ class PreMixBlowoutTransfer(Transfer):
         return self._transports
 
     def _calculate_pre_buffer(self, volume):
-        if self.blowout is not False:
-            blowout = self.blowout or self.default_blowout(volume)
-            blowout_vol = blowout.get("volume")
+        if self.blowout is True:
+            blowout = self.default_blowout(volume)
+        elif self.blowout is False:
+            blowout = {}
         else:
-            blowout_vol = Unit("0:uL")
+            blowout = self.blowout
 
-        if self.pre_mix_blowout is not False:
-            secondary_blowout = (
-                self.pre_mix_blowout or self.default_pre_mix_blowout(volume)
-            )
-            # pylint: disable=no-member
-            secondary_blowout_vol = secondary_blowout.get("volume")
+        if self.pre_mix_blowout is True:
+            secondary_blowout = self.default_pre_mix_blowout(volume)
+        elif self.pre_mix_blowout is False:
+            secondary_blowout = {}
         else:
-            secondary_blowout_vol = Unit("0:uL")
+            secondary_blowout = self.pre_mix_blowout
+
+        blowout_vol = parse_unit(
+            blowout.get("volume", Unit("0:uL")), "uL"
+        )
+        secondary_blowout_vol = parse_unit(
+            secondary_blowout.get("volume", Unit("0:uL")), "uL"
+        )
 
         return blowout_vol + secondary_blowout_vol
 

@@ -3,6 +3,8 @@ Changelog
 =========
 
 * :feature:`172` add new `FlowCytometry` instruction and corresponding protocol method
+* :feature:`174` use more sensible default z positions for pre_buffer and blowout in `LiquidHandleMethod`
+* :bug:`174` fix broken PreMixBlowoutTransfer that used outdated logic
 * :feature:`170` protect liquid_handle-related utils until they can be made more general-purpose
 * :feature:`170` deprecate unused utils including `euclidean_distance`, `quad_ind_to_num`, and `quad_num_to_ind`
 * :feature:`170` port existing checkers to builders format

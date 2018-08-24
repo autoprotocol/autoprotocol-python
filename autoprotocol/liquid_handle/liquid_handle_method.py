@@ -654,7 +654,10 @@ class LiquidHandleMethod(object):
             pre_buffer = parse_unit(pre_buffer, "uL")
             self._aspirate_simple(
                 volume=pre_buffer,
-                initial_z=self.default_well_top_position_z(),
+                initial_z=LiquidHandle.builders.position_z(
+                    reference="well_top",
+                    offset="1:mm"
+                ),
                 liquid_class="air"
             )
 
@@ -785,6 +788,5 @@ class LiquidHandleMethod(object):
             position_z for the well top
         """
         return LiquidHandle.builders.position_z(
-            reference="well_top",
-            offset="-2:mm"
+            reference="well_top"
         )

@@ -5,7 +5,7 @@ Changelog
 * :release:`5.0.0 <2018-08-24>`
 * :feature:`172` add new `FlowCytometry` instruction and corresponding protocol method
 * :feature:`174` use more sensible default z positions for pre_buffer and blowout in `LiquidHandleMethod`
-* :bug:`174` fix broken PreMixBlowoutTransfer that used outdated logic
+* :bug:`174 major` fix broken PreMixBlowoutTransfer that used outdated logic
 * :feature:`170` protect liquid_handle-related utils until they can be made more general-purpose
 * :feature:`170` deprecate unused utils including `euclidean_distance`, `quad_ind_to_num`, and `quad_num_to_ind`
 * :feature:`170` port existing checkers to builders format
@@ -13,7 +13,7 @@ Changelog
 * :feature:`165` add __repr__ methods to Autoprotocol Python objects
 * :feature:`165` update instruction serialization to use a new _as_AST method as op is no longer included in Instruction data
 * :feature:`165` deprecate `Instruction.json` method for now as most instructions contain non-JSON-serializable objects
-* :bug:`167` properly handle `transfer` with tip_type and no volume calibration
+* :bug:`167 major` properly handle `transfer` with tip_type and no volume calibration
 * :feature:`166` add 384-well flat-bottom polystyrene plate containerType
 * :feature:`168` improved pruning of empty data structures from 'Instruction.data' field
 * :support:`164` update `docs/requirements.txt` for rtd to build properly
@@ -65,10 +65,10 @@ Changelog
 * :bug:`- major` remove cover prior to mag steps where applicable
 * :support:`-` convert test suite to py.test
 * :feature:`-` add new containers, true_max_vol_ul in _CONTAINER_TYPES
+* :support:`-` fix documentation typos
 
 * :release:`3.10.1 <2017-05-25>`
 * :bug:`-` update pint requirements, update error handling on UnitError
-* :support:`- major` fix documentation typos
 * :bug:`-` update default lid types for `container-type-384-echo`, `container-type-96-flat`, `container-type-96-flat-uv`, and `container-type-96-flat-clear-clear-tc`
 
 * :release:`3.10.0 <2016-10-25>`

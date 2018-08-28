@@ -5947,7 +5947,10 @@ class Protocol(object):
         # apply tip types to transfer methods
         for vol, met in zip(volume, method):
             if met._has_calibration() and not met.tip_type:
-                met.tip_type = met._rec_tip_type(vol)
+                try:
+                    met.tip_type = met._rec_tip_type(vol)
+                except RuntimeError:
+                    met.tip_type = met._get_sorted_tip_types()[-1].name
 
         # if one tip is true then all methods need to have the same tip_type
         if one_tip is True:
@@ -6180,7 +6183,10 @@ class Protocol(object):
         # apply tip types to mix methods
         for vol, met in zip(volume, method):
             if met._has_calibration() and not met.tip_type:
-                met.tip_type = met._rec_tip_type(vol)
+                try:
+                    met.tip_type = met._rec_tip_type(vol)
+                except RuntimeError:
+                    met.tip_type = met._get_sorted_tip_types()[-1].name
 
         # if one tip is true then all methods need to have the same tip_type
         if one_tip is True:

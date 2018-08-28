@@ -2,7 +2,7 @@
  Autoprotocol Python Library
 =============================
 
-.. image:: https://img.shields.io/pypi/v/autoprotocol.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/v/autoprotocol.svg?maxAge=86400
    :target: https://pypi.python.org/pypi/autoprotocol
    :alt: PyPI Version
 

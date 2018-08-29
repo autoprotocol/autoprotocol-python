@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`5.0.1 <2018-08-28>`
 * :bug:`175 major` fix transfer failing to assign `tip_type` with calibrated transfers that require splitting
 * :release:`5.0.0 <2018-08-24>`
 * :feature:`172` add new `FlowCytometry` instruction and corresponding protocol method

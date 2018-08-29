@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`-` fix transfer failing to assign `tip_type` with calibrated transfers that require splitting
+* :bug:`175 major` fix transfer failing to assign `tip_type` with calibrated transfers that require splitting
 * :release:`5.0.0 <2018-08-24>`
 * :feature:`172` add new `FlowCytometry` instruction and corresponding protocol method
 * :feature:`174` use more sensible default z positions for pre_buffer and blowout in `LiquidHandleMethod`

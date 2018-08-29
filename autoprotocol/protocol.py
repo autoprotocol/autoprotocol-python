@@ -2448,7 +2448,7 @@ class Protocol(object):
         shaking : bool, optional
             Specify whether or not to shake container if available at the
             specified temperature
-        co2 : int, optional
+        co2 : Number, optional
             Carbon dioxide percentage
         uncovered: bool, optional
             Specify whether the container should be uncovered during incubation

@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`177` update `Incubate` instruction and corresponding protocol method `co2` parameter docstrings and add type check
 * :release:`5.0.2 <2018-08-28>`
 * :bug:`176` increment version
 * :release:`5.0.1 <2018-08-28>`

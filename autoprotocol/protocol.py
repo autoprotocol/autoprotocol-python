@@ -18,6 +18,7 @@ from .util import (
 from .instruction import *  # pylint: disable=unused-wildcard-import
 
 from builtins import round  # pylint: disable=redefined-builtin
+from numbers import Number
 import sys
 import warnings
 
@@ -2448,7 +2449,7 @@ class Protocol(object):
         shaking : bool, optional
             Specify whether or not to shake container if available at the
             specified temperature
-        co2 : int, optional
+        co2 : Number, optional
             Carbon dioxide percentage
         uncovered: bool, optional
             Specify whether the container should be uncovered during incubation
@@ -2481,6 +2482,9 @@ class Protocol(object):
                 "If incubating uncovered, location must be in "
                 "{} and not shaking.".format(', '.join(allowed_uncovered))
             )
+
+        if not isinstance(co2, Number):
+            raise TypeError("co2 must be a number.")
 
         if target_temperature:
             target_temperature = parse_unit(target_temperature, "celsius")

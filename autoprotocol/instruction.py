@@ -423,7 +423,7 @@ class Incubate(Instruction):
     shaking_params: dict, optional
         Specify "path" and "frequency" of shaking parameters to be used
         with compatible devices (eg. thermoshakes)
-    co2 : int, optional
+    co2 : Number, optional
         Carbon dioxide percentage
 
     """

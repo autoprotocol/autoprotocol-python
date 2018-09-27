@@ -3673,7 +3673,7 @@ class Protocol(object):
             raise TypeError("Uncover: store_lid must be of type bool")
         if ref.is_covered():
             ref.cover = None
-            return self._append_and_return(Uncover(ref))
+            return self._append_and_return(Uncover(ref, store_lid))
 
     def flow_cytometry(self, dataref, samples, lasers,
                        collection_conditions, width_threshold=None,

@@ -2,7 +2,8 @@
 Changelog
 =========
 
-* :bug:`178` fixed passing through of store_lid field in `p.uncover`
+* :release:`5.1.0 <2018-9-28>`
+* :bug:`178 major` fixed passing through of store_lid field in `p.uncover`
 * :feature:`177` update `Incubate` instruction and corresponding protocol method `co2` parameter docstrings and add type check
 * :release:`5.0.2 <2018-08-28>`
 * :bug:`176` increment version

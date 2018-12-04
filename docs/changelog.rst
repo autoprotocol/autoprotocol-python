@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`-` add support for `read_position` and `position_z` to `spectrophotometry` (ASC-041)
 * :release:`5.1.0 <2018-9-28>`
 * :bug:`178 major` fixed passing through of store_lid field in `p.uncover`
 * :feature:`177` update `Incubate` instruction and corresponding protocol method `co2` parameter docstrings and add type check

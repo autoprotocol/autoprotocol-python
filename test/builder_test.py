@@ -196,6 +196,18 @@ class TestSpectrophotometryBuilders(object):
         "path": "ccw_orbital",
         "amplitude": "4:millimeter"
     }
+    position_z_manual = {
+        "manual": {
+            "reference": "plate_bottom",
+            "displacement": Unit("15:mm")
+        }
+    }
+    position_z_calculated = {
+        "calculated_from_wells": {
+            "wells": wells,
+            "heuristic": "max_mean_read_without_saturation"
+        }
+    }
 
     luminescence_req = {
         "wells": wells
@@ -204,7 +216,9 @@ class TestSpectrophotometryBuilders(object):
         "num_flashes": 9,
         "settle_time": "1:seconds",
         "integration_time": "4:seconds",
-        "gain": 0.2
+        "gain": 0.2,
+        "read_position": "top",
+        "position_z": position_z_manual
     }
     luminescence = merge_dicts(luminescence_req, luminescence_opt)
 
@@ -219,7 +233,8 @@ class TestSpectrophotometryBuilders(object):
         "lag_time": "6:seconds",
         "integration_time": "4:seconds",
         "gain": 0.2,
-        "read_position": "top"
+        "read_position": "top",
+        "position_z": position_z_calculated
     }
     fluorescence = merge_dicts(fluorescence_req, fluorescence_opt)
 
@@ -229,7 +244,9 @@ class TestSpectrophotometryBuilders(object):
     }
     absorbance_opt = {
         "num_flashes": 6,
-        "settle_time": "100:seconds"
+        "settle_time": "100:seconds",
+        "read_position": "top",
+        "position_z": position_z_manual
     }
     absorbance = merge_dicts(absorbance_req, absorbance_opt)
 
@@ -291,6 +308,16 @@ class TestSpectrophotometryBuilders(object):
         assert(
             Spectrophotometry.builders.shake_before(**self.shake) ==
             cast_values_as_units(self.shake)
+        )
+
+    def test_position_z_params(self):
+        assert(
+            Spectrophotometry.builders._position_z(self.position_z_manual) ==
+            cast_values_as_units(self.position_z_manual)
+        )
+        assert(
+            Spectrophotometry.builders._position_z(self.position_z_calculated)
+            == cast_values_as_units(self.position_z_calculated)
         )
 
     def test_wavelength_selection(self):

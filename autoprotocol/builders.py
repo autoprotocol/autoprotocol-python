@@ -1018,7 +1018,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
             Must be one of "plate_top", "plate_bottom", "well_top",
             "well_bottom"
         displacement: Unit or str, optional
-            Displacement from reference position
+            Displacement from reference position.
+            Negative would refer to the `well_top` to `well_bottom` direction,
+            while positive would refer to the opposite direction.
 
         Returns
         -------
@@ -1057,7 +1059,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
             List of wells to calculate the z-position from
         heuristic: str, optional
             Must be one of "max_mean_read_without_saturation" or
-            "closest_distance_without_saturation"
+            "closest_distance_without_saturation".
+            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_ for the full explanation
 
         Returns
         -------

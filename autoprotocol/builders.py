@@ -552,6 +552,13 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "cw_diamond", "ccw_diamond"
         ]
 
+        self.Z_REFERENCES = ["plate_bottom", "plate_top", "well_bottom",
+                             "well_top"]
+
+        self.Z_HEURISTICS = ["max_mean_read_without_saturation",
+                             "closest_distance_without_saturation"]
+
+
     @staticmethod
     def wavelength_selection(shortpass=None, longpass=None, ideal=None):
         """
@@ -627,9 +634,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "mode_params": self.MODES[mode](**mode_params)
         }
 
-    @staticmethod
-    def absorbance_mode_params(wells, wavelength, num_flashes=None,
-                               settle_time=None):
+    def absorbance_mode_params(self, wells, wavelength, num_flashes=None,
+                               settle_time=None, read_position=None,
+                               position_z=None):
         """
         Parameters
         ----------
@@ -641,6 +648,11 @@ class SpectrophotometryBuilders(InstructionBuilders):
             The number of discrete reads to be taken and then averaged.
         settle_time : Unit or str, optional
             The time to wait between moving to a well and reading it.
+        read_position: Enum("top", "bottom"), optional
+            The position of the probe relative to the plate for the read
+        position_z: dict, optional
+            This should be specified with either `position_z_manual` or
+            `position_z_calculated`
 
         Returns
         -------
@@ -679,11 +691,23 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if settle_time is not None:
             settle_time = parse_unit(settle_time, "second")
 
+        if read_position is not None and read_position \
+                not in self.READ_POSITIONS:
+            raise ValueError(
+                "Invalid read_position {}, must be in {}."
+                "".format(read_position, self.READ_POSITIONS)
+            )
+
+        if position_z is not None:
+            position_z = self._position_z(position_z)
+
         mode_params = {
             "wells": wells,
             "wavelength": wavelength,
             "num_flashes": num_flashes,
-            "settle_time": settle_time
+            "settle_time": settle_time,
+            "read_position": read_position,
+            "position_z": position_z
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
@@ -693,7 +717,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
     def fluorescence_mode_params(self, wells, excitation, emission,
                                  num_flashes=None, settle_time=None,
                                  lag_time=None, integration_time=None,
-                                 gain=None, read_position=None):
+                                 gain=None, read_position=None,
+                                 position_z=None):
         """
         Parameters
         ----------
@@ -717,6 +742,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
             The amount of gain to be applied to the readings.
         read_position : str, optional
             The position from which the wells should be read.
+        position_z: dict, optional
+            This should be specified with either `position_z_manual` or
+            `position_z_calculated`
 
         Returns
         -------
@@ -782,6 +810,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
                 "".format(read_position, self.READ_POSITIONS)
             )
 
+        if position_z is not None:
+            position_z = self._position_z(position_z)
+
         mode_params = {
             "wells": wells,
             "excitation": excitation,
@@ -791,17 +822,18 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "lag_time": lag_time,
             "integration_time": integration_time,
             "gain": gain,
-            "read_position": read_position
+            "read_position": read_position,
+            "position_z": position_z
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
 
         return mode_params
 
-    @staticmethod
-    def luminescence_mode_params(wells, num_flashes=None,
+    def luminescence_mode_params(self, wells, num_flashes=None,
                                  settle_time=None, integration_time=None,
-                                 gain=None):
+                                 gain=None, read_position=None,
+                                 position_z=None):
         """
         Parameters
         ----------
@@ -815,6 +847,11 @@ class SpectrophotometryBuilders(InstructionBuilders):
             Time over which the data should be collected and integrated.
         gain : int, optional
             The amount of gain to be applied to the readings.
+        read_position: Enum("top", "bottom"), optional
+            The position of the probe relative to the plate for the read
+        position_z: dict, optional
+            This should be specified with either `position_z_manual` or
+            `position_z_calculated`
 
         Returns
         -------
@@ -861,12 +898,24 @@ class SpectrophotometryBuilders(InstructionBuilders):
                     "".format(gain)
                 )
 
+        if read_position is not None and read_position \
+                not in self.READ_POSITIONS:
+            raise ValueError(
+                "Invalid read_position {}, must be in {}."
+                "".format(read_position, self.READ_POSITIONS)
+            )
+
+        if position_z is not None:
+            position_z = self._position_z(position_z)
+
         mode_params = {
             "wells": wells,
             "num_flashes": num_flashes,
             "settle_time": settle_time,
             "integration_time": integration_time,
-            "gain": gain
+            "gain": gain,
+            "read_position": read_position,
+            "position_z": position_z
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
@@ -958,6 +1007,119 @@ class SpectrophotometryBuilders(InstructionBuilders):
         params = {k: v for k, v in params.items() if v is not None}
 
         return params
+
+    def position_z_manual(self, reference=None, displacement=None):
+        """Helper for building position_z parameters for a manual position_z
+        configuration
+
+        Parameters
+        ----------
+        reference : str, optional
+            Must be one of "plate_top", "plate_bottom", "well_top",
+            "well_bottom"
+        displacement: Unit or str, optional
+            Displacement from reference position.
+            Negative would refer to the `well_top` to `well_bottom` direction,
+            while positive would refer to the opposite direction.
+
+        Returns
+        -------
+        dict
+            position_z parameters for a Spectrophotometry instruction
+
+        Raises
+        ------
+        ValueError
+            If reference was not in the allowed list
+        ValueError
+            If invalid displacement was provided
+        """
+        if reference is not None and reference not in self.Z_REFERENCES:
+            raise ValueError(
+                "reference must be one of {} but {} was specified"
+                "".format(self.Z_REFERENCES, reference)
+            )
+        if displacement is not None:
+            displacement = parse_unit(displacement, "mm")
+
+        return {
+            "manual": {
+                "reference": reference,
+                "displacement": displacement
+            }
+        }
+
+    def position_z_calculated(self, wells, heuristic=None):
+        """Helper for building position_z parameters for a calculated
+        position_z configuration
+
+        Parameters
+        ----------
+        wells : list(Well)
+            List of wells to calculate the z-position from
+        heuristic: str, optional
+            Must be one of "max_mean_read_without_saturation" or
+            "closest_distance_without_saturation".
+            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_ for the full explanation
+
+        Returns
+        -------
+        dict
+            position_z parameters for a Spectrophotometry instruction
+
+        Raises
+        ------
+        ValueError
+            If a list of wells is not provided
+        ValueError
+            If an invalid heuristic is specified
+
+        """
+        if any([not is_valid_well(well) for well in wells]):
+            raise ValueError(
+                "Only an iterable of wells is allowed"
+            )
+
+        if heuristic is not None and heuristic not in self.Z_HEURISTICS:
+            raise ValueError(
+                "heuristic must be one of {} but {} was specified"
+                "".format(self.Z_HEURISTICS, heuristic)
+            )
+
+        return {
+            "calculated_from_wells": {
+                "wells": wells,
+                "heuristic": heuristic
+            }
+        }
+
+    def _position_z(self, position_z):
+        """
+        Helper method for validating position_z params
+        """
+        suggested_msg = "Please use either `position_z_manual` or " \
+                        "`position_z_calculated` functions to construct " \
+                        "the appropriate z-position."
+
+        if not isinstance(position_z, dict):
+            raise TypeError(
+                "Invalid position_z {}, must be a dict. {}"
+                "".format(position_z, suggested_msg)
+            )
+
+        if "calculated_from_wells" in position_z:
+            return self.position_z_calculated(
+                **position_z["calculated_from_wells"]
+            )
+        elif "manual" in position_z:
+            return self.position_z_manual(
+                **position_z["manual"]
+            )
+        else:
+            raise ValueError(
+                "Invalid position_z {} specified. {}"
+                "".format(position_z, suggested_msg)
+            )
 
 
 class LiquidHandleBuilders(InstructionBuilders):

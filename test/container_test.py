@@ -377,6 +377,18 @@ class TestWellGroupList(object):
         assert (len(ws) == 5)
 
 
+class TestWellGroupEquality(object):
+    @pytest.fixture(autouse=True)
+    def make_container(self, dummy_type):
+        self.c = Container(None, dummy_type)
+
+    def test_equality(self):
+        assert self.c.wells_from(0, 1) == self.c.wells_from(0, 1)
+
+    def test_inequality(self):
+        assert self.c.wells_from(0, 1) != self.c.wells_from(1, 1)
+
+
 class TestContainerVolumes(object):
     def test_true_vol_default(self, dummy_tube, dummy_96):
         assert (dummy_96.container_type.true_max_vol_ul ==

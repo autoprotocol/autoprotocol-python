@@ -8,12 +8,14 @@ if sys.version_info[0] >= 3:
 
 
 # pylint: disable=attribute-defined-outside-init
-class TestContainerWellRef(object):
-
+class HasDummyContainers(object):
     @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
+    def make_containers(self, dummy_type):
         self.c = Container(None, dummy_type)
+        self.c2 = Container(None, dummy_type)
 
+
+class TestContainerWellRef(HasDummyContainers):
     def test_well_ref(self):
         assert isinstance(self.c.well("B4"), Well)
         assert isinstance(self.c.well(14), Well)
@@ -55,16 +57,7 @@ class TestContainerWellRef(object):
             self.c.robotize(["A1", 0.1])
 
 
-class TestContainerWellGroupConstruction(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
-    @pytest.fixture(autouse=True)
-    def make_another_container(self, dummy_type):
-        self.c2 = Container(None, dummy_type)
-
+class TestContainerWellGroupConstruction(HasDummyContainers):
     def test_tube_error(self):
         # tube() should raise AttributeError if container is not tube
         with pytest.raises(AttributeError):
@@ -192,12 +185,7 @@ class TestContainerWellGroupConstruction(object):
             dummy_384.quadrant(9)
 
 
-class TestWellVolume(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestWellVolume(HasDummyContainers):
     def test_set_volume(self):
         self.c.well(0).set_volume("20:microliter")
         assert (Unit(20, "microliter") == self.c.well(0).volume)
@@ -233,16 +221,7 @@ class TestWellVolume(object):
             echo_w.set_volume("136:microliter")
 
 
-class TestWellProperty(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
-    @pytest.fixture(autouse=True)
-    def make_another_container(self, dummy_type):
-        self.c2 = Container(None, dummy_type)
-
+class TestWellProperty(HasDummyContainers):
     def test_set_properties(self):
         self.c.well(0).set_properties(
             {"Concentration": "40:nanogram/microliter"}
@@ -307,35 +286,20 @@ class TestWellProperty(object):
             assert ("property2" in well.properties)
 
 
-class TestWellName(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestWellName(HasDummyContainers):
     def test_set_name(self):
         self.c.well(0).set_name("sample")
         assert (self.c.well(0).name == "sample")
 
 
-class TestWellGroupName(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestWellGroupName(HasDummyContainers):
     def test_set_group_name(self):
         ws = self.c.all_wells()
         ws.set_group_name("test_name")
         assert (ws.name == "test_name")
 
 
-class TestWellGroupList(object):
-
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestWellGroupList(HasDummyContainers):
     def test_wells_with(self):
         ws = self.c.wells_from('A1', 2)
         ws.set_properties({'property1': 'value1'})
@@ -377,16 +341,12 @@ class TestWellGroupList(object):
         assert (len(ws) == 5)
 
 
-class TestWellGroupEquality(object):
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestWellGroupEquality(HasDummyContainers):
     def test_equality(self):
-        assert self.c.wells_from(0, 1) == self.c.wells_from(0, 1)
+        assert self.c.wells([0]) == self.c.wells([0])
 
     def test_inequality(self):
-        assert self.c.wells_from(0, 1) != self.c.wells_from(1, 1)
+        assert self.c.wells([0]) != self.c.wells([1])
 
 
 class TestContainerVolumes(object):
@@ -397,11 +357,7 @@ class TestContainerVolumes(object):
                 dummy_tube.container_type.well_volume_ul)
 
 
-class TestAliquotProperties(object):
-    @pytest.fixture(autouse=True)
-    def make_container(self, dummy_type):
-        self.c = Container(None, dummy_type)
-
+class TestAliquotProperties(HasDummyContainers):
     def test_wells(self):
         self.c.well(0).add_properties({"test0": "true"})
         assert(self.c.well(0).properties["test0"] == "true")

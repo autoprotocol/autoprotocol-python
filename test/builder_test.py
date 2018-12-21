@@ -162,6 +162,25 @@ class TestThermocycleBuilders(object):
             'read': True
         })
 
+    def test_dyes_valid(self):
+        dye_builder = Thermocycle.builders.dyes(
+            FRET=1,
+            FAM=[1, 2]
+        )
+        assert dye_builder == {"FRET": [1], "FAM": [1, 2]}
+
+    def test_dyes_invalid_dye(self):
+        with pytest.raises(ValueError):
+            Thermocycle.builders.dyes(
+                FOO=1
+            )
+
+    def test_dyes_invalid_well(self):
+        with pytest.raises(ValueError):
+            Thermocycle.builders.dyes(
+                FRET={}
+            )
+
 
 def cast_values_as_units(params):
     def to_unit(item):

@@ -126,9 +126,9 @@ class ContainerType(namedtuple("ContainerType",
             form. Also accepts lists of str, int or Well.
 
         Returns
-        ----------
-        well_ref : int, list
-            Single or list of Well references passed as rowwise integer
+        -------
+        int or list
+            Single or list of Well references passed as row-wise integer
             (left-to-right, top-to-bottom, starting at 0 = A1).
 
         Raises

@@ -34,6 +34,7 @@ def to_decimal(number):
     Returns
     -------
     Decimal
+        decimal representation of the input number
 
     Raises
     ------

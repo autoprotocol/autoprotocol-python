@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`183` fix `ThermocycleBuilders.dyes` to reference ints instead of Wells
+* :support:`184` Improve CI pipeline and fix lint warnings for new versions of pylint
 * :bug:`182` fix `WellGroup` missing equality method
 * :release:`5.2.0 <2018-12-11>`
 * :feature:`180` add support for `read_position` and `position_z` to `spectrophotometry` (ASC-041)

@@ -178,8 +178,8 @@ class ThermocycleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        **kwargs : Well or WellGroup
-            A mapping from a dye (str) to a Well or WellGroup
+        **kwargs : dict(str: int or list(int))
+            A mapping from a dye (str) to the index of a well
 
         Returns
         -------
@@ -190,14 +190,25 @@ class ThermocycleBuilders(InstructionBuilders):
         ------
         ValueError
             If any of the specified dyes are not valid
-
+        ValueError
+            If wells is not an int, str, list(int), or list(str)
         """
-        dyes = {dye: WellGroup(wells) for dye, wells in kwargs.items()}
-        if not all(_ in self.valid_dyes for _ in dyes.keys()):
-            raise ValueError(
-                "dyes: {} was specified but contains a keys that are not in "
-                "the set of accepted dyes: {}".format(dyes, self.valid_dyes)
-            )
+        dyes = {}
+        for dye, wells in kwargs.items():
+            if dye not in self.valid_dyes:
+                raise ValueError(
+                    "dye {} is not in the set of valid dyes {}"
+                    "".format(dye, self.valid_dyes)
+                )
+            if not isinstance(wells, list):
+                wells = [wells]
+            if not all(isinstance(_, (int, str)) for _ in wells):
+                raise ValueError(
+                    "dye {} had wells {} that were not an int, str or list"
+                    "".format(dye, wells)
+                )
+            dyes[dye] = wells
+
         return dyes
 
     def dyes_from_well_map(self, well_map):

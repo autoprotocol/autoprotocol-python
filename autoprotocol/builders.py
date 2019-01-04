@@ -24,13 +24,19 @@ Instruction
     Instructions corresponding to each of the builders
 """
 
-from collections import Iterable, defaultdict
+from collections import defaultdict
 from functools import reduce
+from sys import version_info
 from numbers import Number
 from .constants import SBS_FORMAT_SHAPES
 from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well, Container
 from .unit import Unit
+
+if version_info.major == 3 and version_info.minor >= 3:
+    from collections.abc import Iterable  # pylint: disable=no-name-in-module
+else:
+    from collections import Iterable  # pylint: disable=no-name-in-module
 
 
 class InstructionBuilders(object):  # pylint: disable=too-few-public-methods

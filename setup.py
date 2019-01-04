@@ -16,14 +16,14 @@ setup(
         'future==0.16.0'
     ],
     tests_require=[
-        'coverage>=4,<5',
-        'pylint>=1,<2',
-        'pytest>=3,<4',
-        'tox>=3,<4'
+        'coverage==4.*',
+        'pylint==1.*',
+        'pytest==4.*',
+        'tox==3.*'
     ],
     extras_require={
         "docs": [
-            "Sphinx>=1.7,<2",
+            "Sphinx==1.*",
             "sphinx-rtd-theme",
             "releases"
         ]

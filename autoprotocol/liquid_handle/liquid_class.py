@@ -261,6 +261,7 @@ class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
         Returns
         -------
         VolumeCalibrationBin
+            an object used for linear fitting volumes within a bin
 
         Raises
         ------

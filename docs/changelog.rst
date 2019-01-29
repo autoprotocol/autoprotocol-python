@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`185` Allow `384-flat-white-clear` containers to be sealed with `ultra-clear` seals
 * :bug:`183` fix `ThermocycleBuilders.dyes` to reference ints instead of Wells
 * :support:`184` Improve CI pipeline and fix lint warnings for new versions of pylint
 * :bug:`182` fix `WellGroup` missing equality method

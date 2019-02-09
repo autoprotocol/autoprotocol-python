@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`5.2.1 <2019-01-08>`
+* :bug:`187` Add missing seal capability for `384-flat-white-clear`
+* :bug:`186` Fix well volume math when liquid handling in python2
 * :feature:`185` Allow `384-flat-white-clear` containers to be sealed with `ultra-clear` seals
 * :bug:`183` fix `ThermocycleBuilders.dyes` to reference ints instead of Wells
 * :support:`184` Improve CI pipeline and fix lint warnings for new versions of pylint

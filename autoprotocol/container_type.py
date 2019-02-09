@@ -897,7 +897,7 @@ FLAT384WHITECLEAR = ContainerType(
     sterile=False,
     is_tube=False,
     cover_types=["standard", "universal"],
-    seal_types=["ultra-clear"],
+    seal_types=["breathable", "ultra-clear"],
     capabilities=["liquid_handle", "spin", "absorbance",
                   "fluorescence", "luminescence",
                   "incubate", "gel_separate",

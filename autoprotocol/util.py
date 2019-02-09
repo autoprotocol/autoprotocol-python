@@ -7,6 +7,7 @@ Module containing utility functions
 
 """
 
+from __future__ import division
 from math import ceil, floor
 from itertools import repeat
 from .constants import SBS_FORMAT_SHAPES

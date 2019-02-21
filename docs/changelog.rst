@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :feature:`188` Add `Protocol` flag to propagate aliquot properties when liquid handling
+* :feature:`188` Add `Container` utils for selecting wells
+* :feature:`188` Add support for non-string aliquot property values as long as they're JSON-serializable
 * :support:`187` Remove Phabricator URI from .arcconfig
 * :release:`5.2.1 <2019-01-08>`
 * :bug:`186` Fix well volume math when liquid handling in python2 and add missing seal capability for `384-flat-white-clear`

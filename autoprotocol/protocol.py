@@ -12,9 +12,7 @@ from .container_type import ContainerType, _CONTAINER_TYPES
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
-from .util import (
-    _get_wells, _validate_as_instance, _check_container_type_with_shape
-)
+from .util import _validate_as_instance, _check_container_type_with_shape
 from .instruction import *  # pylint: disable=unused-wildcard-import
 
 from builtins import round  # pylint: disable=redefined-builtin
@@ -44,11 +42,22 @@ class Ref(object):
 
 
 class Protocol(object):
-
     """
     A Protocol is a sequence of instructions to be executed, and a set of
     containers on which those instructions act.
 
+    Parameters
+    ----------
+    refs : list(Ref)
+        Pre-existing refs that the protocol should be populated with.
+    instructions : list(Instruction)
+        Pre-existing instructions that the protocol should be populated with.
+    propagate_properties : bool, optional
+        Whether liquid handling operations should propagate aliquot properties
+        from source to destination wells.
+
+    Examples
+    --------
     Initially, a Protocol has an empty sequence of instructions and no
     referenced containers. To add a reference to a container, use the ref()
     method, which returns a Container.
@@ -121,13 +130,14 @@ class Protocol(object):
                 }
               ]
             }
-
     """
 
-    def __init__(self, refs=None, instructions=None):
+    def __init__(self, refs=None, instructions=None,
+                 propagate_properties=False):
         super(Protocol, self).__init__()
         self.refs = refs or {}
         self.instructions = instructions or []
+        self.propagate_properties = propagate_properties
 
     def __repr__(self):
         return "Protocol({})".format(self.__dict__)
@@ -212,7 +222,7 @@ class Protocol(object):
         ----------
         name : str
             name of the container/ref being created.
-        id : str
+        id : str, optional
             id of the container being created, from your organization's
             inventory on http://secure.transcriptic.com.  Strings representing
             ids begin with "ct".
@@ -231,13 +241,12 @@ class Protocol(object):
         Returns
         -------
         Container
-            Container object generated from the id and container type
-             provided.
+            Container object generated from the id and container type provided
 
         Raises
         ------
         RuntimeError
-            If a container previously referenced in this protocol (existant
+            If a container previously referenced in this protocol (existent
             in refs section) has the same name as the one specified.
         RuntimeError
             If no container type is specified.
@@ -5854,16 +5863,7 @@ class Protocol(object):
             """
             self._remove_cover(source.container, "liquid_handle from")
             self._remove_cover(destination.container, "liquid_handle into")
-
-            # update volumes
-            for well in _get_wells(source, method._shape):
-                if well.volume:
-                    well.volume -= volume
-            for well in _get_wells(destination, method._shape):
-                if well.volume:
-                    well.volume += volume
-                else:
-                    well.volume = volume
+            self._transfer_volume(source, destination, volume, method._shape)
 
             return [
                 LiquidHandle.builders.location(
@@ -6397,3 +6397,48 @@ class Protocol(object):
         ]
 
         return self._append_and_return(LiquidHandle(location))
+
+    def _transfer_volume(self, source, destination, volume, shape):
+        """
+        Transfers volume and properties between aliquots.
+
+        Parameters
+        ----------
+        source : Well
+            The shape origin to be transferred from
+        destination : Well
+            The shape origin to be transferred to
+        volume : Unit
+            The volume to be transferred
+        shape : dict
+            See Also Instruction.builders.shape
+
+        Raises
+        ------
+        RuntimeError
+            If the inferred sources and destinations aren't the same length
+        """
+        source_wells = source.container.wells_from_shape(
+            source.index, shape
+        )
+        dest_wells = destination.container.wells_from_shape(
+            destination.index, shape
+        )
+        if not len(source_wells) == len(dest_wells):
+            raise RuntimeError(
+                "Transfer source: {} and destination: {} WellGroups didn't "
+                "have the same number of wells.".format(
+                    source_wells, dest_wells
+                )
+            )
+        for source_well, dest_well in zip(source_wells, dest_wells):
+            if self.propagate_properties:
+                dest_well.add_properties(source_well.properties)
+
+            if source_well.volume is not None:
+                source_well.volume -= volume
+
+            if dest_well.volume is not None:
+                dest_well.volume += volume
+            else:
+                dest_well.volume = volume

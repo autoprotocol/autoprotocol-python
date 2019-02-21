@@ -8,8 +8,6 @@ Module containing utility functions
 """
 
 from __future__ import division
-from math import ceil, floor
-from itertools import repeat
 from .constants import SBS_FORMAT_SHAPES
 from .unit import Unit, UnitStringError, UnitValueError
 
@@ -137,100 +135,6 @@ def _validate_as_instance(item, target_type):
     return item
 
 
-def _get_wells(origin, shape):
-    """
-    Returns the wells interacted with by a transfer depending on its origin
-    and its shape
-
-    Parameters
-    ----------
-    origin : Well
-        the origin Well (the top-left-most well) for the transfer
-    shape : dict
-        the shape of the transfer
-        See Also LiquidHandle.builders.shape
-
-    Returns
-    -------
-    WellGroup
-        all of the wells being interacted with by the transfer
-
-    Raises
-    ------
-    ValueError
-        if row or column counts exceed the extents of the plate
-    """
-    from .container import WellGroup
-    from .instruction import LiquidHandle
-
-    # validating shape
-    shape = LiquidHandle.builders.shape(**shape)
-
-    # unpacking container and shape format properties
-    container = origin.container
-    container_rows = container.container_type.row_count()
-    container_columns = container.container_type.col_count
-    format_rows = SBS_FORMAT_SHAPES[shape["format"]]["rows"]
-    format_columns = SBS_FORMAT_SHAPES[shape["format"]]["columns"]
-
-    # ratios of tip shape to container well shape
-    row_ratio = container_rows / format_rows
-    column_ratio = container_columns / format_columns
-
-    # get the origins well position
-    origin_row, origin_column = origin.container.decompose(origin)
-
-    # the total row/column span of the head of tips
-    tip_row_span = floor((shape["rows"] - 1) * row_ratio) + 1
-    tip_column_span = floor((shape["columns"] - 1) * column_ratio) + 1
-
-    # validating origin and shape against container shape
-    if origin_row + tip_row_span > container_rows:
-        raise ValueError(
-            "Specified shape {} with origin {} exceeds the row count {} of "
-            "container_type {}."
-            "".format(shape, origin, container_rows, container)
-        )
-
-    if origin_column + tip_column_span > container_columns:
-        raise ValueError(
-            "Specified shape {} with origin {} exceeds the column count {} of "
-            "container_type {}."
-            "".format(shape, origin, container_columns, container)
-        )
-
-    # get the column origins for the operation
-    column_origins = container.wells_from(
-        origin, int(tip_column_span)
-    )[::int(max(column_ratio, 1))]
-
-    # get the whole columns for the operation
-    columns = [
-        WellGroup(container.wells_from(
-            _, int(tip_row_span), columnwise=True
-        )[::int(max(row_ratio, 1))])
-        for _ in column_origins
-    ]
-
-    # we currently don't support summing lists of WellGroups
-    wells = WellGroup([])
-    for column in columns:
-        wells += column
-
-    # the number of tips entering each well of the container
-    rowwise_tips_per_well = min(
-        [shape["rows"], int(ceil(format_rows / container_rows))])
-    columnwise_tips_per_well = min(
-        [shape["columns"], int(ceil(format_columns / container_columns))])
-    tips_per_well = int(columnwise_tips_per_well * rowwise_tips_per_well)
-
-    # repeating each well for each tip that enters it
-    repeated_wells = WellGroup(
-        [well for item in wells for well in repeat(item, tips_per_well)])
-
-    return repeated_wells
-
-
 def _check_container_type_with_shape(container_type, shape):
     """
     Checks whether the selected origin and shape pair are valid
@@ -251,9 +155,9 @@ def _check_container_type_with_shape(container_type, shape):
     ValueError
         invalid combination of container and shape specified
     """
-    from .instruction import LiquidHandle
+    from .instruction import Instruction
 
-    shape = LiquidHandle.builders.shape(**shape)
+    shape = Instruction.builders.shape(**shape)
     format_rows = SBS_FORMAT_SHAPES[shape["format"]]["rows"]
     format_columns = SBS_FORMAT_SHAPES[shape["format"]]["columns"]
 

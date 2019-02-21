@@ -1,3 +1,4 @@
+# pragma pylint: disable=missing-docstring
 import pytest
 from autoprotocol.container import Container
 from autoprotocol.container_type import ContainerType
@@ -93,6 +94,75 @@ def dummy_96():
             capabilities=["cover"],
             shortname="dummy",
             col_count=12,
+            dead_volume_ul=Unit(15, "microliter"),
+            safe_min_volume_ul=Unit(30, "microliter")
+        )
+    )
+
+
+@pytest.fixture(scope="module")
+def dummy_reservoir_row():
+    return Container(
+        None,
+        ContainerType(
+            name="dummy",
+            well_count=8,
+            well_depth_mm=None,
+            well_volume_ul=Unit(200, "microliter"),
+            well_coating=None,
+            sterile=False,
+            is_tube=False,
+            cover_types=None,
+            seal_types=None,
+            capabilities=None,
+            shortname="dummy",
+            col_count=1,
+            dead_volume_ul=Unit(15, "microliter"),
+            safe_min_volume_ul=Unit(30, "microliter")
+        )
+    )
+
+
+@pytest.fixture(scope="module")
+def dummy_reservoir_column():
+    return Container(
+        None,
+        ContainerType(
+            name="dummy",
+            well_count=12,
+            well_depth_mm=None,
+            well_volume_ul=Unit(200, "microliter"),
+            well_coating=None,
+            sterile=False,
+            is_tube=False,
+            cover_types=None,
+            seal_types=None,
+            capabilities=None,
+            shortname="dummy",
+            col_count=12,
+            dead_volume_ul=Unit(15, "microliter"),
+            safe_min_volume_ul=Unit(30, "microliter")
+        )
+    )
+
+
+@pytest.fixture(scope="module")
+def dummy_24():
+    return Container(
+        None,
+        ContainerType(
+            name="dummy",
+            well_count=24,
+            well_depth_mm=None,
+            well_volume_ul=Unit(200, "microliter"),
+            well_coating=None,
+            sterile=False,
+            is_tube=False,
+            cover_types=None,
+            seal_types=None,
+            capabilities=None,
+            shortname="dummy",
+            col_count=6,
             dead_volume_ul=Unit(15, "microliter"),
             safe_min_volume_ul=Unit(30, "microliter")
         )

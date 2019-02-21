@@ -7,9 +7,12 @@ Container, Well, WellGroup objects and associated functions
 
 """
 
-from __future__ import print_function
-from .unit import Unit
+from __future__ import print_function, division
+import warnings
+import json
 import sys
+from .constants import SBS_FORMAT_SHAPES
+from .unit import Unit
 
 if sys.version_info.major == 3:
     xrange = range  # pylint: disable=invalid-name
@@ -54,10 +57,15 @@ class Well(object):
                 raise TypeError(
                     "Aliquot property {} : {} has a key of type {}, "
                     "it should be a 'str'.".format(key, value, type(key)))
-            if not isinstance(value, basestring):
+            try:
+                json.dumps(value)
+            except TypeError:
                 raise TypeError(
                     "Aliquot property {} : {} has a value of type {}, "
-                    "it should be a 'str'.".format(key, value, type(value)))
+                    "that isn't JSON serializable.".format(
+                        key, value, type(value)
+                    )
+                )
 
     def set_properties(self, properties):
         """
@@ -97,6 +105,12 @@ class Well(object):
         """
         self.validate_properties(properties)
         for key, value in properties.items():
+            if key in self.properties:
+                warnings.warn(
+                    message="Overwriting existing property {} for {}".format(
+                        key, self
+                    )
+                )
             self.properties[key] = value
         return self
 
@@ -559,7 +573,7 @@ class Container(object):
 
     Parameters
     ----------
-    id : str
+    id : str, optional
         Alphanumerical identifier for a Container.
     container_type : ContainerType
         ContainerType associated with a Container.
@@ -615,6 +629,27 @@ class Container(object):
             raise TypeError("Well reference given is not of type 'int' or "
                             "'str'.")
         return self._wells[self.robotize(i)]
+
+    def well_from_coordinates(self, row, column):
+        """
+        Gets the well at 0-indexed position (row, column) within the container.
+        The origin is in the top left corner.
+
+        Parameters
+        ----------
+        row : int
+            The 0-indexed row index of the well to be fetched
+        column : int
+            The 0-indexed column index of the well to be fetched
+
+        Returns
+        -------
+        Well
+            The well at position (row, column)
+        """
+        return self.well(
+            self.container_type.well_from_coordinates(row=row, column=column)
+        )
 
     def tube(self):
         """
@@ -951,6 +986,81 @@ class Container(object):
         """
         self.storage = None
         return self
+
+    # pylint: disable=too-many-locals
+    def wells_from_shape(self, origin, shape):
+        """
+        Gets a WellGroup that originates from the `origin` and is distributed
+        across the container in `shape`. This group has a Well for each index
+        in `range(shape["rows"] * shape["columns"])`.
+
+        In cases where the container dimensions are smaller than the shape
+        format's dimensions the returned WellGroup will reference some wells
+        multiple times. This is analogous to an SBS96-formatted liquid handler
+        acting with multiple tips in each well of an SBS24-formatted plate.
+
+        Parameters
+        ----------
+        origin : int or str
+            The index of the top left corner origin of the shape
+        shape : dict
+            See Also Instruction.builders.shape
+
+        Returns
+        -------
+        WellGroup
+            The group of wells distributed in `shape` from the `origin`
+
+        Raises
+        ------
+        ValueError
+            if the shape exceeds the extents of the container
+        """
+        from .instruction import Instruction
+
+        shape = Instruction.builders.shape(**shape)
+        origin = self.well(origin)
+
+        # unpacking container and shape format properties
+        container_rows = self.container_type.row_count()
+        container_cols = self.container_type.col_count
+        format_rows = SBS_FORMAT_SHAPES[shape["format"]]["rows"]
+        format_cols = SBS_FORMAT_SHAPES[shape["format"]]["columns"]
+
+        # getting the row and column values for the origin
+        origin_row, origin_col = self.decompose(origin)
+
+        # origin coordinates transformed to SBS format space
+        sbs_row = int(origin_row / container_rows * format_rows)
+        sbs_col = int(origin_col / container_cols * format_cols)
+
+        # coordinates of the tail (bottom right well)
+        tail_row = sbs_row + shape["rows"]
+        tail_col = sbs_col + shape["columns"]
+        if tail_row > format_rows or tail_col > format_cols:
+            raise ValueError(
+                "origin: {} with shape: {} exceeds the bounds of "
+                "container: {}".format(origin, shape, self)
+            )
+
+        # ratios of container shape to format shape
+        row_scaling = container_rows / format_rows
+        col_scaling = container_cols / format_cols
+
+        # the 0-indexed coordinates of all wells to be included
+        well_rows = [
+            int(_ * row_scaling)
+            for _ in range(sbs_row, sbs_row + shape["rows"])
+        ]
+        well_cols = [
+            int(_ * col_scaling)
+            for _ in range(sbs_col, sbs_col + shape["columns"])
+        ]
+
+        return WellGroup([
+            self.well_from_coordinates(x, y)
+            for x in well_rows for y in well_cols
+        ])
 
     def __repr__(self):
         """

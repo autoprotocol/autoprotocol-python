@@ -1,13 +1,12 @@
-import sys
+# pragma pylint: disable=missing-docstring,protected-access
+# pragma pylint: disable=attribute-defined-outside-init,no-self-use
+import warnings
 import pytest
 from autoprotocol.container import Container, Well, WellGroup
+from autoprotocol.instruction import Instruction
 from autoprotocol.unit import Unit
 
-if sys.version_info[0] >= 3:
-    xrange = range  # pylint: disable=invalid-name
 
-
-# pylint: disable=attribute-defined-outside-init
 class HasDummyContainers(object):
     @pytest.fixture(autouse=True)
     def make_containers(self, dummy_type):
@@ -72,7 +71,7 @@ class TestContainerWellGroupConstruction(HasDummyContainers):
         # all_wells() should return wells in row-dominant order
         ws = self.c.all_wells()
         assert (15 == len(ws))
-        for i in xrange(15):
+        for i in range(15):
             assert (i == ws[i].index)
 
     def test_columnwise(self):
@@ -82,7 +81,7 @@ class TestContainerWellGroupConstruction(HasDummyContainers):
         row_count = (
             self.c.container_type.well_count / self.c.container_type.col_count
         )
-        for i in xrange(15):
+        for i in range(15):
             row, col = self.c.decompose(ws[i].index)
             assert (i == row + col * row_count)
 
@@ -380,6 +379,145 @@ class TestAliquotProperties(HasDummyContainers):
         with pytest.raises(TypeError):
             self.c.well(0).add_properties({True: "True"})
         with pytest.raises(TypeError):
-            self.c.well(0).add_properties({"True": True})
-        with pytest.raises(TypeError):
             self.c.well(0).add_properties([])
+
+    def test_can_use_nonstring_properties(self):
+        self.c.well(0).set_properties({"foo": [1, 2, 3]})
+        self.c.well(0).add_properties({"bar": [1, 2, 3]})
+
+    def test_fails_to_set_unserializeable_property(self):
+        with pytest.raises(TypeError):
+            self.c.well(0).set_properties({"test": {1}})
+
+    def test_doesnt_warn_when_not_overwriting_property(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.c.well(0).set_properties({"field1": True})
+            self.c.well(1).add_properties({"field2": False})
+            assert len(w) == 0
+
+    def test_warns_when_overwriting_property(self):
+        self.c.well(0).set_properties({"foo": "bar"})
+        with warnings.catch_warnings(record=True) as w:
+            self.c.well(0).add_properties({"foo": "bar"})
+            assert len(w) == 1
+            for message in w:
+                assert "Overwriting existing property" in str(message.message)
+
+
+class TestWells(HasDummyContainers):
+    def test_ctype_gets_first_well(self, dummy_96):
+        assert dummy_96.container_type.well_from_coordinates(0, 0) == 0
+
+    def test_gets_first_well(self, dummy_96):
+        assert dummy_96.well_from_coordinates(0, 0) == dummy_96.well(0)
+
+    def test_gets_last_well(self, dummy_96):
+        assert dummy_96.well_from_coordinates(7, 11) == dummy_96.well(95)
+
+    def test_fails_out_of_row_bounds(self, dummy_96):
+        with pytest.raises(ValueError):
+            dummy_96.well_from_coordinates(row=8, column=0)
+
+    def test_fails_out_of_column_bounds(self, dummy_96):
+        with pytest.raises(ValueError):
+            dummy_96.well_from_coordinates(row=0, column=12)
+
+
+SHAPE = Instruction.builders.shape
+
+
+class TestAsShapeOrigin(HasDummyContainers):
+    def test_gets_origin(self, dummy_96):
+        assert dummy_96.wells_from_shape(0, SHAPE()) == dummy_96.wells([0])
+
+    def test_handles_str_origins(self, dummy_96):
+        assert(
+            dummy_96.wells_from_shape("A1", SHAPE()) ==
+            dummy_96.wells([0])
+        )
+
+    def test_gets_row(self, dummy_96):
+        assert(
+            dummy_96.wells_from_shape(0, SHAPE(rows=8)) ==
+            dummy_96.wells(list(range(0, 96, 12)))
+        )
+
+    def test_handles_full_stamping(self, dummy_96):
+        assert(
+            dummy_96.wells_from_shape(0, SHAPE(rows=8, columns=12)) ==
+            dummy_96.all_wells()
+        )
+
+    def test_handles_sbs384_containers(self, dummy_384):
+        assert(
+            dummy_384.wells_from_shape(0, SHAPE(rows=8, columns=12))
+            == dummy_384.quadrant(0)
+        )
+
+    def test_handles_sbs384_shape(self, dummy_384):
+        assert(
+            dummy_384.wells_from_shape(
+                0, SHAPE(rows=16, columns=24, format="SBS384")
+            ) == dummy_384.all_wells()
+        )
+
+    def test_gets_row_from_nonzero_origin(self, dummy_96):
+        assert(
+            dummy_96.wells_from_shape(1, SHAPE(rows=8)) ==
+            dummy_96.wells(list(range(1, 96, 12)))
+        )
+
+    def test_gets_column(self, dummy_96):
+        assert(
+            dummy_96.wells_from_shape(0, SHAPE(columns=12)) ==
+            dummy_96.wells_from(0, 12)
+        )
+
+    def test_fails_out_of_column_range(self, dummy_96):
+        with pytest.raises(ValueError):
+            dummy_96.wells_from_shape(1, SHAPE(columns=12))
+
+    def test_fails_out_of_row_range(self, dummy_96):
+        with pytest.raises(ValueError):
+            dummy_96.wells_from_shape(12, SHAPE(rows=8))
+
+    def test_row_reservoirs_by_column(self, dummy_reservoir_row):
+        assert(
+            dummy_reservoir_row.wells_from_shape(0, SHAPE(columns=12)) ==
+            dummy_reservoir_row.wells([0] * 12)
+        )
+
+    def test_row_reservoirs_by_row(self, dummy_reservoir_row):
+        assert(
+            dummy_reservoir_row.wells_from_shape(0, SHAPE(rows=8)) ==
+            dummy_reservoir_row.wells_from(0, 8)
+        )
+
+    def test_column_reservoirs_by_column(self, dummy_reservoir_column):
+        assert(
+            dummy_reservoir_column.wells_from_shape(0, SHAPE(columns=12)) ==
+            dummy_reservoir_column.wells_from(0, 12)
+        )
+
+    def test_column_reservoirs_by_row(self, dummy_reservoir_column):
+        assert(
+            dummy_reservoir_column.wells_from_shape(0, SHAPE(rows=8)) ==
+            dummy_reservoir_column.wells([0] * 8)
+        )
+
+    def test_handles_24_wells(self, dummy_24):
+        rows = [
+            idx
+            for idx in range(0, 24, 6)
+            for _ in range(2)
+        ]
+        wells = [
+            well + col
+            for well in rows
+            for col in range(0, 6)
+            for _ in range(2)
+        ]
+        assert(
+            dummy_24.wells_from_shape(0, SHAPE(rows=8, columns=12)) ==
+            dummy_24.wells(wells)
+        )

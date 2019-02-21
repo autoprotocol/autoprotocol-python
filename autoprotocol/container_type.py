@@ -99,6 +99,46 @@ class ContainerType(namedtuple("ContainerType",
                                                  cat_no,
                                                  prioritize_seal_or_cover)
 
+    def well_from_coordinates(self, row, column):
+        """
+        Gets the well at 0-indexed position (row, column) within the container.
+        The origin is in the top left corner.
+
+        Parameters
+        ----------
+        row : int
+            The 0-indexed row index of the well to be fetched
+        column : int
+            The 0-indexed column index of the well to be fetched
+
+        Returns
+        -------
+        Int
+            The robotized index of the well at at position (row, column)
+
+        Raises
+        ------
+        ValueError
+            if the specified row is outside the bounds of the container_type
+        ValueError
+            if the specified column is outside the bounds of the container_type
+        """
+        if row >= self.row_count():
+            raise ValueError(
+                "0-indexed row {} is outside of the bounds of {}".format(
+                    row, self
+                )
+            )
+
+        if column >= self.col_count:
+            raise ValueError(
+                "0-indexed column {} is outside of the bounds of {}".format(
+                    column, self
+                )
+            )
+
+        return row * self.col_count + column
+
     def robotize(self, well_ref):
         """
         Return a robot-friendly well reference from a number of well reference
@@ -137,7 +177,8 @@ class ContainerType(namedtuple("ContainerType",
             If well reference given is not an accepted type.
         ValueError
             If well reference given exceeds container dimensions.
-
+        ValueError
+            If well reference given is in an invalid format.
         """
         if isinstance(well_ref, list):
             return [self.robotize(well) for well in well_ref]
@@ -154,15 +195,7 @@ class ContainerType(namedtuple("ContainerType",
         if m:
             row = ord(m.group(1).upper()) - ord('A')
             col = int(m.group(2)) - 1
-            well_num = row * self.col_count + col
-            # Check bounds
-            if row >= self.row_count():
-                raise ValueError("ContainerType.robotize(): Row given exceeds "
-                                 "container dimensions.")
-            if col >= self.col_count or col < 0:
-                raise ValueError("ContainerType.robotize(): Col given exceeds "
-                                 "container dimensions.")
-            return well_num
+            return self.well_from_coordinates(row, col)
         else:
             m = re.match(r"\d+$", well_ref)
             if m:

@@ -205,3 +205,17 @@ class TestExtendedLiquidHandleMethods(LiquidHandleTester):
         assert(
             len(self.p.instructions[0].locations[1]["transports"]) == 6
         )
+
+
+class TestPropagatesAliquotProperties(LiquidHandleTester):
+    def test_doesnt_propagate_properties_by_default(self):
+        self.flat.well(0).add_properties({"propagated": True})
+        self.p.transfer(self.flat.well(0), self.flat.well(1), "5:uL")
+        assert not self.flat.well(1).properties
+
+    def test_propagates_aliquot_properties(self):
+        properties = {"propagated": True}
+        self.p.propagate_properties = True
+        self.flat.well(0).add_properties(properties)
+        self.p.transfer(self.flat.well(0), self.flat.well(1), "5:uL")
+        assert self.flat.well(1).properties == properties

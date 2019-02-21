@@ -1,8 +1,10 @@
+# pragma pylint: disable=missing-docstring,protected-access
+# pragma pylint: disable=attribute-defined-outside-init
 import pytest
 from autoprotocol.container import Container, WellGroup
 from autoprotocol.instruction import (
     Thermocycle, Incubate, Spin, Dispense, GelPurify,
-    Fluorescence, Absorbance, Luminescence
+    Fluorescence, Absorbance, Luminescence, Instruction
 )
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
@@ -2474,3 +2476,46 @@ class TestCountCells(object):
             # Not of correct dimensionality
             self.p.count_cells(self.tube.well(0), "10:meter", "cell_count_4",
                                ["trypan_blue"])
+
+
+class TestTransferVolume(object):
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()  # pylint: disable=invalid-name
+        self.container = self.p.ref(
+            "container", cont_type="96-flat", discard=True
+        )
+
+    def test_transfers_volume(self):
+        transfer_volume = Unit("5:uL")
+        self.p._transfer_volume(
+            self.container.well(0),
+            self.container.well(1),
+            transfer_volume,
+            shape=Instruction.builders.shape()
+        )
+        assert self.container.well(1).volume == transfer_volume
+
+    def test_doesnt_transfer_properties_by_default(self):
+        self.container.well(0).set_properties({"foo": "bar"})
+        self.p._transfer_volume(
+            self.container.well(0),
+            self.container.well(1),
+            Unit("5:uL"),
+            shape=Instruction.builders.shape()
+        )
+        assert not self.container.well(1).properties
+
+    def test_can_transfer_properties(self):
+        self.p.propagate_properties = True
+        self.container.well(0).set_properties({"foo": "bar"})
+        self.p._transfer_volume(
+            self.container.well(0),
+            self.container.well(1),
+            Unit("5:uL"),
+            shape=Instruction.builders.shape()
+        )
+        assert(
+            self.container.well(1).properties ==
+            self.container.well(0).properties
+        )

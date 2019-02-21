@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`5.3.0 <2019-02-21>`
 * :feature:`188` Add `Protocol` flag to propagate aliquot properties when liquid handling
 * :feature:`188` Add `Container` utils for selecting wells
 * :feature:`188` Add support for non-string aliquot property values as long as they're JSON-serializable

@@ -106,11 +106,11 @@ class Well(object):
         self.validate_properties(properties)
         for key, value in properties.items():
             if key in self.properties:
-                keys_are_lists = all(
+                values_are_lists = all(
                     isinstance(_, list)
                     for _ in [value, self.properties[key]]
                 )
-                if keys_are_lists:
+                if values_are_lists:
                     self.properties[key].extend(value)
                 else:
                     message = "Overwriting existing property {} for {}".format(

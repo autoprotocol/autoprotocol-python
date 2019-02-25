@@ -88,10 +88,11 @@ class Well(object):
 
     def add_properties(self, properties):
         """
-        Add properties to the properties attribute of a Well. If any key/value
-        pairs are present in both the old and new dictionaries, they will be
-        overwritten by the pairs in the new dictionary unless both the old and
-        new values are lists which case the new one will be appended to the old.
+        Add properties to the properties attribute of a Well.
+
+        If any property with the same key already exists for the Well then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
 
         Parameters
         ----------

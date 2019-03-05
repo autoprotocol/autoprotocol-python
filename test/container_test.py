@@ -1,6 +1,5 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init,no-self-use
-import warnings
 import pytest
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.instruction import Instruction
@@ -220,71 +219,6 @@ class TestWellVolume(HasDummyContainers):
             echo_w.set_volume("136:microliter")
 
 
-class TestWellProperty(HasDummyContainers):
-    def test_set_properties(self):
-        self.c.well(0).set_properties(
-            {"Concentration": "40:nanogram/microliter"}
-        )
-        assert isinstance(self.c.well(0).properties, dict)
-        assert (["Concentration"] ==
-                list(self.c.well(0).properties.keys()))
-        assert (["40:nanogram/microliter"] ==
-                list(self.c.well(0).properties.values()))
-        self.c.well(0).set_properties({"Dilution": "1"})
-        assert (["Dilution"] ==
-                list(self.c.well(0).properties.keys()))
-        assert (["1"] ==
-                list(self.c.well(0).properties.values()))
-        with pytest.raises(TypeError):
-            self.c.well(0).set_properties(["property", "value"])
-        with pytest.raises(TypeError):
-            self.c.well(0).set_properties({"property", True})
-        with pytest.raises(TypeError):
-            self.c.well(0).set_properties({("property"), "value"})
-
-    def test_add_properties(self):
-        self.c.well(0).add_properties({"nickname": "dummy"})
-        assert (len(self.c.well(0).properties.keys()) == 1)
-        self.c.well(0).add_properties({"nickname": "dummy2"})
-        assert (len(self.c.well(0).properties.keys()) == 1)
-        assert (["dummy2"] ==
-                list(self.c.well(0).properties.values()))
-        self.c.well(0).add_properties(
-            {"concentration": "12:nanogram/microliter"}
-        )
-        assert (len(self.c.well(0).properties.keys()) == 2)
-        self.c.well(0).add_properties({"property1": "2", "ratio": "1:10"})
-        assert (len(self.c.well(0).properties.keys()) == 4)
-        with pytest.raises(TypeError):
-            self.c.well(0).add_properties(["property", "value"])
-
-    def test_properties_copy(self):
-        self.c.well(0).set_properties(
-            {"Concentration": "40:nanogram/microliter"}
-        )
-        self.c2.well(0).set_properties(self.c.well(0).properties)
-        self.c2.well(0).add_properties({"nickname": "dummy"})
-        assert (["Concentration"] ==
-                list(self.c.well(0).properties.keys()))
-        assert (["40:nanogram/microliter"] ==
-                list(self.c.well(0).properties.values()))
-        self.c2.well(0).set_properties({"nickname": "dummy"})
-        assert (["Concentration"] ==
-                list(self.c.well(0).properties.keys()))
-        assert (["40:nanogram/microliter"] ==
-                list(self.c.well(0).properties.values()))
-
-    def test_add_properties_wellgroup(self):
-        group = self.c.wells_from(0, 3).set_properties(
-            {"property1": "value1", "property2": "value2"}
-        )
-        self.c.well(0).add_properties({"property4": "value4"})
-        assert (len(self.c.well(0).properties.keys()) == 3)
-        for well in group:
-            assert ("property1" in well.properties)
-            assert ("property2" in well.properties)
-
-
 class TestWellName(HasDummyContainers):
     def test_set_name(self):
         self.c.well(0).set_name("sample")
@@ -358,50 +292,16 @@ class TestContainerVolumes(object):
 
 class TestAliquotProperties(HasDummyContainers):
     def test_wells(self):
-        self.c.well(0).add_properties({"test0": "true"})
-        assert(self.c.well(0).properties["test0"] == "true")
+        test_property = {"foo": "bar"}
+        self.c.well(0).set_properties(test_property)
+        assert self.c.well(0).properties == test_property
 
-        self.c.well(0).set_properties({"test1": "true"})
-        assert(self.c.well(0).properties == {"test1": "true"})
-
-        assert(self.c.well(3).properties == {})
-
-    def test_well_groups(self):
-        self.c.wells(0, 1).add_properties({"test0": "true"})
-        assert(self.c.well(1).properties["test0"] == "true")
-
-        self.c.wells(0, 1).set_properties({"test1": "true"})
-        assert(self.c.well(1).properties == {"test1": "true"})
-
-        assert(self.c.well(3).properties == {})
-
-    def test_correct_formatting(self):
-        with pytest.raises(TypeError):
-            self.c.well(0).add_properties({True: "True"})
-        with pytest.raises(TypeError):
-            self.c.well(0).add_properties([])
-
-    def test_can_use_nonstring_properties(self):
-        self.c.well(0).set_properties({"foo": [1, 2, 3]})
-        self.c.well(0).add_properties({"bar": [1, 2, 3]})
-
-    def test_fails_to_set_unserializeable_property(self):
-        with pytest.raises(TypeError):
-            self.c.well(0).set_properties({"test": {1}})
-
-    def test_doesnt_warn_when_not_overwriting_property(self):
-        with warnings.catch_warnings(record=True) as w:
-            self.c.well(0).set_properties({"field1": True})
-            self.c.well(1).add_properties({"field2": False})
-            assert len(w) == 0
-
-    def test_warns_when_overwriting_property(self):
-        self.c.well(0).set_properties({"foo": "bar"})
-        with warnings.catch_warnings(record=True) as w:
-            self.c.well(0).add_properties({"foo": "bar"})
-            assert len(w) == 1
-            for message in w:
-                assert "Overwriting existing property" in str(message.message)
+    def test_wellgroups(self):
+        test_property = {"foo": "bar"}
+        group = self.c.wells_from(0, 3)
+        group.set_properties(test_property)
+        for well in group:
+            assert well.properties == test_property
 
 
 class TestWells(HasDummyContainers):

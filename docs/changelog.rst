@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`190` Make Well.add_properties extend the original instead of replacing it if both values are lists
 * :release:`5.3.0 <2019-02-21>`
 * :feature:`188` Add `Protocol` flag to propagate aliquot properties when liquid handling
 * :feature:`188` Add `Container` utils for selecting wells

@@ -89,9 +89,10 @@ class Well(object):
     def add_properties(self, properties):
         """
         Add properties to the properties attribute of a Well.
-        If any key/value pairs are present in both the old and
-        new dictionaries, they will be overwritten by the pairs
-        in the new dictionary.
+
+        If any property with the same key already exists for the Well then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
 
         Parameters
         ----------
@@ -106,12 +107,20 @@ class Well(object):
         self.validate_properties(properties)
         for key, value in properties.items():
             if key in self.properties:
-                warnings.warn(
-                    message="Overwriting existing property {} for {}".format(
+                values_are_lists = all(
+                    isinstance(_, list)
+                    for _ in [value, self.properties[key]]
+                )
+                if values_are_lists:
+                    self.properties[key].extend(value)
+                else:
+                    message = "Overwriting existing property {} for {}".format(
                         key, self
                     )
-                )
-            self.properties[key] = value
+                    warnings.warn(message=message)
+                    self.properties[key] = value
+            else:
+                self.properties[key] = value
         return self
 
     def set_volume(self, vol):

@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`191` Add initial cover state to ref opts (ASC-42)
+* :feature:`191` Add initial cover state to ref opts (ASC-042)
 * :feature:`190` Make Well.add_properties extend the original instead of replacing it if both values are lists
 * :release:`5.3.0 <2019-02-21>`
 * :feature:`188` Add `Protocol` flag to propagate aliquot properties when liquid handling

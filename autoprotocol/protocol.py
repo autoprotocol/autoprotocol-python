@@ -283,6 +283,10 @@ class Protocol(object):
                 "You must specify either a valid storage condition or set "
                 "discard=True for a Ref."
             )
+
+        if cover:
+            opts["cover"] = cover
+
         container = Container(
             id, cont_type, name=name,
             storage=storage if storage else None,

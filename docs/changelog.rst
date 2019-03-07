@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`5.4.0 <2019-03-06>`
 * :feature:`191` Add initial cover state to ref opts (ASC-042)
 * :feature:`190` Make Well.add_properties extend the original instead of replacing it if both values are lists
 * :release:`5.3.0 <2019-02-21>`

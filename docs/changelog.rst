@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`-` Add support for well properties with non-string values in `wells_with`
+* :bug:`193` Add support for well properties with non-string values in `wells_with`
 
 * :release:`5.4.0 <2019-03-06>`
 * :feature:`191` Add initial cover state to ref opts (ASC-042)

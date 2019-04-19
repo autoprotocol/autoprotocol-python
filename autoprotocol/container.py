@@ -426,7 +426,7 @@ class WellGroup(object):
         """
         if not isinstance(prop, str):
             raise TypeError("property is not a string: %r" % prop)
-        if val:
+        if val is not None:
             return WellGroup([w for w in self.wells if prop in w.properties and
                              w.properties[prop] is val])
         else:

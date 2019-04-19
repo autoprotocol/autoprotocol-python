@@ -254,6 +254,25 @@ class TestWellGroupList(HasDummyContainers):
         assert (prop_and_val[0] == ws[2])
         assert (prop_and_val[1] == ws[3])
 
+    def test_wells_with_non_string_values(self):
+        # Current minimal set of cases, we technically should support any value
+        # that's supported in `set_properties`
+        non_str_test_cases = [
+            (1, 2),
+            (True, False),
+            (0.1, 0.2)
+        ]
+        for (val1, val2) in non_str_test_cases:
+            ws = self.c.wells_from('A1', 2)
+            ws.set_properties({'property1': val1})
+            ws2 = self.c.wells_from('B1', 2)
+            ws2.set_properties({'property1': val2})
+            both_ws = ws + ws2
+            prop = both_ws.wells_with('property1')
+            assert(prop == both_ws)
+            prop_and_val = both_ws.wells_with('property1', val2)
+            assert(prop_and_val == ws2)
+
     def test_pop(self):
         ws = self.c.wells_from('A1', 3)
         assert (ws[0] == ws.pop(0))

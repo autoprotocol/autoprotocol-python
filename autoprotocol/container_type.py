@@ -311,6 +311,7 @@ FLAT384 = ContainerType(
     is_tube=False,
     cover_types=["standard", "universal"],
     seal_types=["ultra-clear", "foil"],
+    prioritize_seal_or_cover="cover",
     capabilities=["liquid_handle", "spin", "absorbance",
                   "fluorescence", "luminescence",
                   "incubate", "gel_separate",

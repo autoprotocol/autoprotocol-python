@@ -26,6 +26,23 @@ _DYE_TEST_RS = {
 }
 
 
+def get_protocol_preview(protocol, name):
+    manifest_json = io.open('manifest.json', encoding='utf-8').read()
+    manifest = Manifest(json.loads(manifest_json))
+
+    try:
+        source = [
+            manifest.protocols[i] for i, m in enumerate(manifest.protocols)
+            if manifest.protocols[i]['name'] == name][0]['preview']
+    except IndexError:
+        raise RuntimeError(
+            "Protocol '%s' not found in list of protocols in this manifest."
+            % name
+        )
+    run_params = manifest.protocol_info(name).parse(protocol, source)
+    return run_params
+
+
 def param_default(type_desc):
     if isinstance(type_desc, basestring):
         type_desc = {'type': type_desc}

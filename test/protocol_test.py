@@ -2404,7 +2404,7 @@ class TestSeal(object):
             self.p.cover(self.c1)
             self.p.seal(self.c1)
         with pytest.raises(RuntimeError):
-            self.p.seal(self.c2)
+            self.p.seal(self.c2, mode="illegal")
         with pytest.raises(RuntimeError):
             self.p.seal(self.c1, type="aluminum")
         with pytest.raises(RuntimeError):

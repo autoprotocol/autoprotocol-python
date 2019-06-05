@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :release:`5.4.1 <2019-05-06>`
+* :bug:`194` Add support for seal capabilities to 384-flat
 * :bug:`193` Add support for well properties with non-string values in `wells_with`
 
 * :release:`5.4.0 <2019-03-06>`

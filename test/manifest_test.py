@@ -1,5 +1,5 @@
 import pytest
-from autoprotocol.harness import ProtocolInfo, Manifest, seal_on_store
+from autoprotocol.harness import ProtocolInfo, Manifest, seal_on_store, get_protocol_preview
 from autoprotocol import Protocol, Unit, Well, WellGroup
 import json
 
@@ -605,3 +605,7 @@ class TestManifest(object):
         self.protocol.uncover(test2)
         seal_on_store(self.protocol)
         assert (self.protocol.instructions[-1].lid == "low_evaporation")
+
+    def test_get_protocol_preview(self):
+        preview = get_protocol_preview(self.protocol, "TestMethod", manifest="test/manifest_test.json")
+        assert isinstance(preview, dict)

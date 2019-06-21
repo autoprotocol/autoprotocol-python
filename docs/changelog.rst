@@ -2,7 +2,6 @@
 Changelog
 =========
 
-* :release:`5.4.2 <2019-06-20>`
 * :feature:`196` Add get_protocol_preview in harness
 
 * :release:`5.4.1 <2019-05-06>`

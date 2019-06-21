@@ -608,4 +608,8 @@ class TestManifest(object):
 
     def test_get_protocol_preview(self):
         preview = get_protocol_preview(self.protocol, "TestMethod", manifest="test/manifest_test.json")
-        assert isinstance(preview, dict)
+        assert "my_string" in preview
+        assert "my_container" in preview
+        assert "my_volume" in preview
+        assert "my_length" in preview
+        assert "my_bool" in preview

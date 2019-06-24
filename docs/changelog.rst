@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`196` Add get_protocol_preview in harness
+
 * :release:`5.4.1 <2019-05-06>`
 * :bug:`194` Add support for seal capabilities to 384-flat
 * :bug:`193` Add support for well properties with non-string values in `wells_with`

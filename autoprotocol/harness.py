@@ -26,6 +26,81 @@ _DYE_TEST_RS = {
 }
 
 
+def get_protocol_preview(protocol, name, manifest='manifest.json'):
+    """
+    Parses the 'preview' section of a manifest to use as protocol inputs
+
+        Example Usage:
+
+        .. code-block:: python
+
+          p = Protocol()
+          preview = get_protocol_preview(p, name="qPCR")
+
+        Output:
+
+        .. code-block:: python
+        {
+            "qPCR_input1": "value",
+            "qPCR_input2": "value2",
+            "qPCR_group": {
+                "group_entry1": "value",
+                "group_entry2": "value"
+            }
+        }
+
+
+    Parameters
+    ----------
+    protocol : Protocol
+        Protocol object being parsed.
+    name : str
+        Name of protocol in manifest to get preview for
+    manifest : str, optional
+        Name of manifest file
+
+    Returns
+    -------
+    dict
+        Dictionary of parameters used as a Protocol input
+
+    Raises
+    ------
+    RuntimeError
+        No manifest.json file present in directory
+    RuntimeError
+        Protocol not found in manifest
+    RuntimeError
+        More than one protocol found in manifest
+
+    """
+    try:
+        manifest_json = io.open(manifest, encoding='utf-8').read()
+    except IOError:
+        raise RuntimeError(
+            "'%s' file not found in directory."
+            % manifest
+        )
+    manifest = Manifest(json.loads(manifest_json))
+
+    source = [m for m in manifest.protocols if m['name'] == name]
+    if not source:
+        raise RuntimeError(
+            "Protocol '%s' not found in list of protocols in this manifest."
+            % name
+        )
+    if len(source) != 1:
+        raise RuntimeError(
+            "More than one protocol with name '%s' was found in the manifest. "
+            "All protocol names in a manifest must be unique for it to be valid."
+            % name
+        )
+    preview = source[0]['preview']
+    run_params = manifest.protocol_info(name).parse(protocol, preview)
+
+    return run_params
+
+
 def param_default(type_desc):
     if isinstance(type_desc, basestring):
         type_desc = {'type': type_desc}

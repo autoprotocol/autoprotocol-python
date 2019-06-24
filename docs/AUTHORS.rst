@@ -11,6 +11,7 @@ Autoprotocol-Python is currently maintained by:
 - Varun Kanwar - `VarunKanwar <https://github.com/VarunKanwar>`_ - varun@transcriptic.com
 - Peter Lee - `pleaderlee <https://github.com/pleaderlee>`_ - peter@transcriptic.com
 - Rhys Ormond - `rhysormond <https://github.com/rhysormond>`_ - rhys@transcriptic.com
+- Joshua Nowak - `joshhacksthings <https://github.com/joshhacksthings>`_ - josh@transcriptic.com
 
 `See all Github contributors <https://github.com/autoprotocol/autoprotocol-python/contributors>`_
 

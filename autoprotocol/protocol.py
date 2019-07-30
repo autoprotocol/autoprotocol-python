@@ -1,28 +1,21 @@
 """
 Module containing the main `Protocol` object and associated functions
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
+import warnings
+
+from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import Container, Well, SEAL_TYPES, COVER_TYPES
 from .container_type import ContainerType, _CONTAINER_TYPES
-from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
+from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
 from .util import _validate_as_instance, _check_container_type_with_shape
-from .instruction import *  # pylint: disable=unused-wildcard-import
-
-from builtins import round  # pylint: disable=redefined-builtin
-from numbers import Number
-import sys
-import warnings
-
-if sys.version_info.major == 3:
-    xrange = range
-    basestring = str
 
 
 class Ref(object):
@@ -1091,7 +1084,7 @@ class Protocol(object):
                 )
 
         # Auto-generate list from single volume, check if list length matches
-        if isinstance(volume, basestring) or isinstance(volume, Unit):
+        if isinstance(volume, str) or isinstance(volume, Unit):
             if len_dest == 1 and not one_source:
                 volume = [Unit(volume).to("ul")] * len_source
             else:
@@ -1782,7 +1775,7 @@ class Protocol(object):
 
             reagent, resource_id, reagent_source = None, None, reagent
         else:
-            if not isinstance(reagent, basestring):
+            if not isinstance(reagent, str):
                 raise TypeError(
                     "reagent: {} must be a Well or string but it was: {}."
                     "".format(reagent, type(reagent)))
@@ -4966,7 +4959,7 @@ class Protocol(object):
             raise TypeError("Destinations (dests) must be of type Well, "
                             "list of Wells, or WellGroup.")
         dests = WellGroup(dests)
-        if not isinstance(resource_id, basestring):
+        if not isinstance(resource_id, str):
             raise TypeError("Resource ID must be a string.")
         if not isinstance(volumes, list):
             volumes = [Unit(volumes)] * len(dests)
@@ -4978,7 +4971,7 @@ class Protocol(object):
                                    "destinations in length and in order.")
             volumes = [Unit(v) for v in volumes]
         for v in volumes:
-            if not isinstance(v, (basestring, Unit)):
+            if not isinstance(v, (str, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
         for d, v in zip(dests, volumes):
             d_max_vol = d.container.container_type.true_max_vol_ul

@@ -1,25 +1,21 @@
 """
 Module containing a Units library
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
-from __future__ import division, print_function
+from collections import defaultdict
+from decimal import Decimal, InvalidOperation
+from numbers import Number
+
+from math import ceil, floor
 from pint import UnitRegistry
+from pint.errors import UndefinedUnitError
 from pint.quantity import _Quantity
 from pint.util import UnitsContainer
-from pint.errors import UndefinedUnitError
-from decimal import Decimal, InvalidOperation
-from collections import defaultdict
-from math import ceil, floor
-from numbers import Number
-import sys
-
-if sys.version_info.major == 3:
-    basestring = str  # pylint: disable=invalid-name
 
 
 def to_decimal(number):
@@ -191,7 +187,7 @@ class Unit(_Quantity):
             return value
 
         # Automatically parse String if no units provided
-        if not units and isinstance(value, basestring):
+        if not units and isinstance(value, str):
             try:
                 value, units = value.split(":")
             except ValueError:

@@ -1,13 +1,12 @@
 """
 Module containing utility functions
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
-from __future__ import division
 from .constants import SBS_FORMAT_SHAPES
 from .unit import Unit, UnitStringError, UnitValueError
 

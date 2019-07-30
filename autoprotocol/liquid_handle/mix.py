@@ -5,8 +5,8 @@ movements within individual wells.
 """
 from .transfer import LiquidHandleMethod
 from ..instruction import LiquidHandle
-from ..util import parse_unit
 from ..unit import Unit
+from ..util import parse_unit
 
 
 # pylint: disable=protected-access

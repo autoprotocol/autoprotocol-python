@@ -1,21 +1,18 @@
 """
 Container-type object and associated functions
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
-import re
-import sys
 from collections import namedtuple
+
+import re
+
 from .container import Well
 from .unit import Unit
-
-if sys.version_info.major == 3:
-    xrange = range  # pylint: disable=invalid-name
-    basestring = str  # pylint: disable=invalid-name
 
 
 class ContainerType(namedtuple("ContainerType",
@@ -183,7 +180,7 @@ class ContainerType(namedtuple("ContainerType",
         if isinstance(well_ref, list):
             return [self.robotize(well) for well in well_ref]
 
-        if not isinstance(well_ref, (basestring, int, Well)):
+        if not isinstance(well_ref, (str, int, Well)):
             raise TypeError("ContainerType.robotize(): Well reference (%s) "
                             "given is not of type 'str', 'int', or "
                             "'Well'." % well_ref)
@@ -250,7 +247,7 @@ class ContainerType(namedtuple("ContainerType",
         if isinstance(well_ref, list):
             return [self.humanize(well) for well in well_ref]
 
-        if not isinstance(well_ref, (int, basestring)):
+        if not isinstance(well_ref, (int, str)):
             raise TypeError("ContainerType.humanize(): Well reference given "
                             "is not of type 'int' or 'str'.")
         try:
@@ -286,7 +283,7 @@ class ContainerType(namedtuple("ContainerType",
             Index given is not of the right parameter type
 
         """
-        if not isinstance(idx, (int, basestring, Well)):
+        if not isinstance(idx, (int, str, Well)):
             raise TypeError("Well index given is not of type 'int' or "
                             "'str'.")
         idx = self.robotize(idx)

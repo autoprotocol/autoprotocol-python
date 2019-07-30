@@ -1,7 +1,7 @@
 """Builders
 Module containing builders, which help build inputs for Instruction parameters
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -25,18 +25,15 @@ Instruction
 """
 
 from collections import defaultdict
-from functools import reduce
-from sys import version_info
 from numbers import Number
+
+from collections.abc import Iterable  # pylint: disable=no-name-in-module
+from functools import reduce
+
 from .constants import SBS_FORMAT_SHAPES
-from .util import parse_unit, is_valid_well
 from .container import WellGroup, Well, Container
 from .unit import Unit
-
-if version_info.major == 3 and version_info.minor >= 3:
-    from collections.abc import Iterable  # pylint: disable=no-name-in-module
-else:
-    from collections import Iterable  # pylint: disable=no-name-in-module
+from .util import parse_unit, is_valid_well
 
 
 class InstructionBuilders(object):  # pylint: disable=too-few-public-methods

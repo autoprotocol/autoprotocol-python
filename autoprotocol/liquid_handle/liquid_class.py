@@ -3,8 +3,9 @@
 Base class for defining the portions of liquid handling behavior that are
 intrinsic to specific types of liquids.
 """
-from numbers import Number
 from collections import namedtuple
+from numbers import Number
+
 from ..util import parse_unit
 
 

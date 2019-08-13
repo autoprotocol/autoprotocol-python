@@ -1299,6 +1299,28 @@ class FlashFreeze(Instruction):
         })
 
 
+class Sonicate(Instruction):
+    """
+    Sonicate wells using high intensity ultrasonic vibrations.
+
+    Parameters
+    ----------
+
+    """
+
+    def __init__(self, wells, duration, frequency, temperature, mode,
+                 mode_params):
+        json_dict = {
+            "wells": wells,
+            "duration": duration,
+            "frequency": frequency,
+            "temperature": temperature,
+            "mode": mode,
+            "mode_params": mode_params
+        }
+        super(Sonicate, self).__init__(op="sonicate", data=json_dict)
+
+
 class MeasureConcentration(Instruction):
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified

@@ -5080,9 +5080,11 @@ class Protocol(object):
             sample_wells = p.ref("sample_plate",
                                  None,
                                  "96-pcr",
-                                 storage="warm_37").wells_from(0,3)
+                                 storage="warm_37").wells_from(0,2)
 
-            p.sonicate(sample_wells, "1:minute", ""
+            p.sonicate(sample_wells, duration="1:minute",
+                       mode="bath",
+                       mode_params={"sample_holder": "suspender"}
 
         Autoprotocol Output:
 
@@ -5090,13 +5092,15 @@ class Protocol(object):
 
             "instructions": [
                 {
-                    "object": "sample_plate",
-                    "type": "ultra-clear",
-                    "mode": "thermal",
+                    "wells": ["sample_plate/0", "sample_plate/1"],
+                    "mode": "bath",
+                    "duration": "1:minute",
+                    "temperature": "ambient",
+                    "frequency": "40:kilohertz"
                     "mode_params": {
-                        "temperature": "160:celsius"
+                        "sample_holder": "suspender"
                     }
-                    "op": "seal"
+                    "op": "sonciate"
                 }
             ]
 
@@ -5106,18 +5110,42 @@ class Protocol(object):
            Wells to be sonicated
         mode: Enum({"bath", "horn"})
             Sonicating method to be used, must be "horn" or "bath". Sonicate
-             mode "horn" uses metal probe to create a localized shear force
-             directly in the sample media; "bath" mode applies ultrasound to
-             wells held inside a bath.
+            mode "horn" uses metal probe to create a localized shear force
+            directly in the sample media; "bath" mode applies ultrasound to
+            wells held inside a bath. Defaults to "bath".
         duration : Unit or str
             Duration for which to sonicate wells
         temperature: Unit or str, optional
             Temperature at which the sample is kept during sonication. Optional,
-            defaults to room temperature
+            defaults to ambient
         frequency: Unit or str, optional
-             Frequency of the ultrasonic wave, usually indicated in kHz.
-             Optional; defaults to the most commonly used frequency for each mode:
-             20 kHz for `horn`, and 40 kHz for `bath` mode
+            Frequency of the ultrasonic wave, usually indicated in kHz.
+            Optional; defaults to the most commonly used frequency for each mode:
+            20 kHz for `horn`, and 40 kHz for `bath` mode
+        mode_params: Dict
+            Dictionary containing mode parameters for the specified mode.
+            Enum("suspender", "perforated_container", "solid_container")
+        .. code-block:: none
+            {
+                "mode": "bath",
+                "mode_params":
+                    {
+                        "sample_holder": Enum({"suspender",
+                                               "perforated_container",
+                                               "solid_container"})
+                        "power": Unit or str, optional
+                    }
+            }
+            - or -
+            {
+                "mode": "horn",
+                "mode_params":
+                    {
+                        "duty_cycle": Float, 0 < value <=1
+                        "amplitude": Unit or str
+                    }
+            }
+
 
         Returns
         -------
@@ -5127,8 +5155,12 @@ class Protocol(object):
 
         Raises
         ------
+        RuntimeError
+            If valid mode is not specified.
         TypeError
             If wells not of type WellGroup or List of Wells.
+        ValueError
+            If invalid `mode_params` for specified mode.
 
         """
         sonic_modes = ["bath", "horn"]

@@ -5120,8 +5120,8 @@ class Protocol(object):
             defaults to ambient
         frequency: Unit or str, optional
             Frequency of the ultrasonic wave, usually indicated in kHz.
-            Optional; defaults to the most commonly used frequency for each mode:
-            20 kHz for `horn`, and 40 kHz for `bath` mode
+            Optional; defaults to the most commonly used frequency for each
+            mode: 20 kHz for `horn`, and 40 kHz for `bath` mode
         mode_params: Dict
             Dictionary containing mode parameters for the specified mode.
 
@@ -5177,7 +5177,8 @@ class Protocol(object):
                                  "'mode_params' mode: {} and must be one of "
                                  "{}.".format(mode, valid_sample_holders))
             parsed_mode_params["sample_holder"] = sample_holder
-            if mode_params.get("power"):
+            power = mode_params.get("power")
+            if power:
                 parsed_power = parse_unit(power, "power-watt")
                 parsed_mode_params["power"] = parsed_power
             frequency = frequency or "20:kilohertz"
@@ -5191,13 +5192,13 @@ class Protocol(object):
             amplitude = mode_params["amplitude"]
             if not isinstance(duty_cycle, (int, float)):
                 raise TypeError(
-                    "Invalid duty_cycle {}, must be a decimal".format(gain)
+                    "Invalid duty_cycle {}, must be a decimal".format(duty_cycle)
                 )
             duty_cycle = float(duty_cycle)
             if not 0 <= duty_cycle <= 1:
                 raise ValueError(
-                    "Invalid duty_cycle {}, must be between 0 and 1 (inclusive)."
-                    "".format(duty_cycle)
+                    "Invalid duty_cycle {}, must be between 0 and 1"
+                    "(inclusive).".format(duty_cycle)
                 )
             parsed_mode_params["duty_cycle"] = duty_cycle
             parsed_amplitude = parse_unit(amplitude, "micrometer")
@@ -5209,7 +5210,10 @@ class Protocol(object):
             )
         parsed_duration = parse_unit(duration, "seconds")
         parsed_frequency = parse_unit(frequency, "hertz")
-        parsed_temperature = parse_unit(temperature, "celsius") if temperature else "ambient"
+        if temperature:
+            parsed_temperature = parse_unit(temperature, "celsius")
+        else:
+            parsed_temperature = None
         return self._append_and_return(Sonicate(wells, parsed_duration, mode,
                                                 parsed_mode_params, parsed_frequency,
                                                 parsed_temperature))

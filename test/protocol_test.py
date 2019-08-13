@@ -2489,8 +2489,7 @@ class TestSonicate(object):
         self.p.sonicate(self.ws, "1:minute", "horn",
                         {"duty_cycle": 0.1, "amplitude": "3:micrometer"})
         assert (self.p.instructions[-1].op == "sonicate")
-        assert (self.p.instructions[-1].data["temperature"] ==
-                "ambient")
+        assert ("temperature" not in self.p.instructions[-1].data)
         assert (self.p.instructions[-1].data["frequency"] ==
                 Unit("20:kilohertz"))
 

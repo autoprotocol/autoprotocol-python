@@ -1314,10 +1314,11 @@ class Sonicate(Instruction):
             "wells": wells,
             "duration": duration,
             "frequency": frequency,
-            "temperature": temperature,
             "mode": mode,
             "mode_params": mode_params
         }
+        if temperature:
+            json_dict["temperature"] = temperature
         super(Sonicate, self).__init__(op="sonicate", data=json_dict)
 
 

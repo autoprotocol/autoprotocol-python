@@ -2465,6 +2465,47 @@ class TestIncubate(object):
         assert (p.instructions[-1].op == "incubate")
 
 
+class TestSonicate(object):
+    p = Protocol()
+    ws = p.ref("c1", id=None,
+               cont_type="96-flat",
+               discard=True).wells_from(0, 3)
+
+    def test_sonicate(self):
+        self.p.sonicate(self.ws, duration="1:minute", frequency=None,
+                        temperature=None, mode="horn",
+                        mode_params={
+                            "duty_cycle": 0.1,
+                            "amplitude": "3:micrometer"
+                        })
+        assert (self.p.instructions[-1].op == "sonicate")
+        assert (self.p.instructions[-1].data["temperature"] ==
+                "ambient")
+        assert (self.p.instructions[-1].data["frequency"] ==
+                Unit("20:kilohertz"))
+    def test_sonicate_default(self):
+        self.p.sonicate(self.ws, duration="1:minute", frequency=None,
+                        temperature="4:celsius")
+        assert (self.p.instructions[-1].data["mode"] ==
+                "bath")
+        assert (self.p.instructions[-1].data["mode_params"] ==
+                {"sample_holder": "solid_container"})
+        assert (self.p.instructions[-1].data["temperature"] ==
+                Unit("4:celsius"))
+        assert (self.p.instructions[-1].data["frequency"] ==
+                Unit("40:kilohertz"))
+
+    def test_bad_params(self):
+        with pytest.raises(ValueError):
+            # invalid 'duty_cycle'
+            self.p.sonicate(self.ws, duration="1:minute",
+                            frequency=None, temperature=None, mode="horn",
+                            mode_params={
+                                "duty_cycle": 3.1,
+                                "amplitude": "3:micrometer"
+                            })
+
+
 class TestProvision(object):
     p = Protocol()
     w1 = p.ref("w1", None, cont_type="96-pcr", discard=True)\

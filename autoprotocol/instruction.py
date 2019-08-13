@@ -1308,8 +1308,8 @@ class Sonicate(Instruction):
 
     """
 
-    def __init__(self, wells, duration, frequency, temperature, mode,
-                 mode_params):
+    def __init__(self, wells, duration, mode, mode_params,
+                 frequency, temperature):
         json_dict = {
             "wells": wells,
             "duration": duration,

@@ -5067,10 +5067,10 @@ class Protocol(object):
 
         return self._append_and_return(FlashFreeze(container, duration))
 
-    def sonicate(self, wells, duration=None, frequency=None,
-                 temperature=None, mode=None,
-                 mode_params=None):
-        """ Sonicate wells using high intensity ultrasonic vibrations.
+    def sonicate(self, wells, duration, mode, mode_params, frequency=None,
+                 temperature=None):
+        """
+        Sonicate wells using high intensity ultrasonic vibrations.
 
         Example Usage:
 
@@ -5084,7 +5084,7 @@ class Protocol(object):
 
             p.sonicate(sample_wells, duration="1:minute",
                        mode="bath",
-                       mode_params={"sample_holder": "suspender"}
+                       mode_params={"sample_holder": "suspender"})
 
         Autoprotocol Output:
 
@@ -5100,7 +5100,7 @@ class Protocol(object):
                     "mode_params": {
                         "sample_holder": "suspender"
                     }
-                    "op": "sonciate"
+                    "op": "sonicate"
                 }
             ]
 
@@ -5108,13 +5108,13 @@ class Protocol(object):
         ----------
         wells : WellGroup, List of Wells
            Wells to be sonicated
+        duration : Unit or str
+            Duration for which to sonicate wells
         mode: Enum({"bath", "horn"})
             Sonicating method to be used, must be "horn" or "bath". Sonicate
             mode "horn" uses metal probe to create a localized shear force
             directly in the sample media; "bath" mode applies ultrasound to
-            wells held inside a bath. Defaults to "bath".
-        duration : Unit or str
-            Duration for which to sonicate wells
+            wells held inside a bath.
         temperature: Unit or str, optional
             Temperature at which the sample is kept during sonication. Optional,
             defaults to ambient
@@ -5124,7 +5124,7 @@ class Protocol(object):
             20 kHz for `horn`, and 40 kHz for `bath` mode
         mode_params: Dict
             Dictionary containing mode parameters for the specified mode.
-            Enum("suspender", "perforated_container", "solid_container")
+
         .. code-block:: none
             {
                 "mode": "bath",
@@ -5164,7 +5164,7 @@ class Protocol(object):
 
         """
         sonic_modes = ["bath", "horn"]
-        if mode and mode not in sonic_modes:
+        if mode not in sonic_modes:
             raise RuntimeError("{} is not a valid sonication mode".format(mode))
 
         parsed_mode_params = {}
@@ -5181,7 +5181,7 @@ class Protocol(object):
                 parsed_power = parse_unit(power, "power-watt")
                 parsed_mode_params["power"] = parsed_power
             frequency = frequency or "20:kilohertz"
-        elif mode == "horn":
+        if mode == "horn":
             valid_mode_params = ["duty_cycle", "amplitude"]
             if not all(k in mode_params for k in valid_mode_params):
                 raise ValueError("Incorrect mode_params.  All of {} must be "
@@ -5203,12 +5203,6 @@ class Protocol(object):
             parsed_amplitude = parse_unit(amplitude, "micrometer")
             parsed_mode_params["amplitude"] = parsed_amplitude
             frequency = frequency or "20:kilohertz"
-        else:
-            mode = "bath"
-            parsed_mode_params = {
-                "sample_holder": "solid_container"
-            }
-            frequency = frequency or "40:kilohertz"
         if not is_valid_well(wells):
             raise TypeError(
                 "Wells must be of type Well, list of Wells, or WellGroup."
@@ -5216,9 +5210,9 @@ class Protocol(object):
         parsed_duration = parse_unit(duration, "seconds")
         parsed_frequency = parse_unit(frequency, "hertz")
         parsed_temperature = parse_unit(temperature, "celsius") if temperature else "ambient"
-        return self._append_and_return(Sonicate(wells, parsed_duration, parsed_frequency,
-                                                parsed_temperature, mode,
-                                                parsed_mode_params))
+        return self._append_and_return(Sonicate(wells, parsed_duration, mode,
+                                                parsed_mode_params, parsed_frequency,
+                                                parsed_temperature))
 
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)

@@ -5208,6 +5208,7 @@ class Protocol(object):
             raise TypeError(
                 "Wells must be of type Well, list of Wells, or WellGroup."
             )
+        wells = WellGroup(wells)
         parsed_duration = parse_unit(duration, "seconds")
         parsed_frequency = parse_unit(frequency, "hertz")
         if temperature:

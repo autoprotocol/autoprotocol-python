@@ -2485,6 +2485,19 @@ class TestSonicate(object):
         assert (self.p.instructions[-1].data["frequency"] ==
                 Unit("22:kilohertz"))
 
+    def test_sonicate_one_well(self):
+        self.p.sonicate(self.ws[0], "1:minute", "horn",
+                        {"duty_cycle": 0.2, "amplitude": "1:micrometer"},
+                        frequency="25:kilohertz",
+                        temperature="4:celsius")
+        assert (self.p.instructions[-1].data["mode"] ==
+                "horn")
+        assert (len(self.p.instructions[-1].data["wells"]) == 1)
+        assert (self.p.instructions[-1].data["temperature"] ==
+                Unit("4:celsius"))
+        assert (self.p.instructions[-1].data["frequency"] ==
+                Unit("25:kilohertz"))
+
     def test_sonicate_default(self):
         self.p.sonicate(self.ws, "1:minute", "horn",
                         {"duty_cycle": 0.1, "amplitude": "3:micrometer"})

@@ -2,7 +2,7 @@
 
 import pytest
 from autoprotocol.protocol import Protocol, Ref
-from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry, Agitate
+from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError

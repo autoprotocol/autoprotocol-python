@@ -5088,7 +5088,7 @@ class Protocol(object):
 
         Autoprotocol Output:
 
-        .. code-block:: none
+        .. code-block:: json
 
             "instructions": [
                 {
@@ -5106,7 +5106,7 @@ class Protocol(object):
 
         Parameters
         ----------
-        wells : WellGroup, List of Wells
+        wells : Well, WellGroup, List of Wells
            Wells to be sonicated
         duration : Unit or str
             Duration for which to sonicate wells
@@ -5125,7 +5125,7 @@ class Protocol(object):
         mode_params: Dict
             Dictionary containing mode parameters for the specified mode.
 
-        .. code-block:: none
+        .. code-block:: json
             {
                 "mode": "bath",
                 "mode_params":
@@ -5161,15 +5161,22 @@ class Protocol(object):
             If wells not of type WellGroup or List of Wells.
         ValueError
             If invalid `mode_params` for specified mode.
+        TypeError
+            If invalid `mode_params` type for specified mode.
 
         """
         sonic_modes = ["bath", "horn"]
         if mode not in sonic_modes:
             raise RuntimeError("{} is not a valid sonication mode".format(mode))
+        if not isinstance(mode_params, dict):
+            raise TypeError(
+                "Invalid mode_params {}, must be a dict".format(mode_params)
+            )
 
         parsed_mode_params = {}
         if mode == "bath":
-            valid_sample_holders = ["suspender", "perforated_container", "solid_container"]
+            valid_sample_holders = ["suspender", "perforated_container",
+                                    "solid_container"]
             valid_mode_params = ["sample_holder", "power"]
             sample_holder = mode_params.get("sample_holder")
             if sample_holder not in valid_sample_holders:
@@ -5192,7 +5199,8 @@ class Protocol(object):
             amplitude = mode_params["amplitude"]
             if not isinstance(duty_cycle, (int, float)):
                 raise TypeError(
-                    "Invalid duty_cycle {}, must be a decimal".format(duty_cycle)
+                    "Invalid duty_cycle {}, must be a decimal"
+                    "".format(duty_cycle)
                 )
             duty_cycle = float(duty_cycle)
             if not 0 <= duty_cycle <= 1:
@@ -5216,7 +5224,8 @@ class Protocol(object):
         else:
             parsed_temperature = None
         return self._append_and_return(Sonicate(wells, parsed_duration, mode,
-                                                parsed_mode_params, parsed_frequency,
+                                                parsed_mode_params,
+                                                parsed_frequency,
                                                 parsed_temperature))
 
     def _ref_for_well(self, well):

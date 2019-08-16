@@ -451,6 +451,7 @@ class Incubate(Instruction):
             incubate_json["shaking_params"] = shaking_params
         super(Incubate, self).__init__(op="incubate", data=incubate_json)
 
+
 class Agitate(Instruction):
     """
     Agitate sample(s) in a container in a specific condition for a given duration.
@@ -463,27 +464,28 @@ class Agitate(Instruction):
         The container to be agitated
     mode : Enum(["votex", "invert", "roll", "stir_bar"])
         Specifies the mode of agitation
+    speed : Unit or str
+        Speed to agitate container at
     duration : Unit or str
         Length of time to agitate container
     temperature : Unit or str
         Temperature to agitate container at
-    speed : speed to agitate container at
-    bar_params : {}
+    mode_params : {}
         physical parameters of stir bar used to agitate sample directly
     """
-    builders = AgitateBuilders()
 
-    def __init__(self, object, mode, duration, temperature, speed, bar_params=None):
+    def __init__(self, object, mode, speed, duration, temperature, mode_params=None):
         agitate_json = {
-            "object" : object,
-            "mode" : mode,
-            "duration" : duration,
-            "temperature" : temperature,
-            "speed" : speed,
-            "bar_params" : bar_params
+            "object": object,
+            "mode": mode,
+            "duration": duration,
+            "temperature": temperature,
+            "speed": speed
         }
-
+        if mode_params:
+            agitate_json["mode_params"] = mode_params
         super(Agitate, self).__init__(op="agitate", data=agitate_json)
+
 
 class IlluminaSeq(Instruction):
     """

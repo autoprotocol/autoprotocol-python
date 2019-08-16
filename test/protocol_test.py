@@ -2466,6 +2466,7 @@ class TestIncubate(object):
 
 
 class TestSonicate(object):
+    # pylint: disable=invalid-name
     p = Protocol()
     ws = p.ref("c1", id=None,
                cont_type="96-flat",
@@ -2523,15 +2524,13 @@ class TestSonicate(object):
         with pytest.raises(TypeError):
             # invalid wells
             self.p.sonicate("bad_wells", "1:minute", "horn",
-                    {"duty_cycle": 0.2, "amplitude": "1:micrometer"},
-                    frequency="25:kilohertz",
-                    temperature="4:celsius")
+                            {"duty_cycle": 0.2, "amplitude": "1:micrometer"},
+                            frequency="25:kilohertz",
+                            temperature="4:celsius")
         with pytest.raises(TypeError):
             # invalid wells
-            self.p.sonicate(self.ws[0], "1:minute", "horn",
-                    "not_a_dict",
-                    frequency="25:kilohertz",
-                    temperature="4:celsius")
+            self.p.sonicate(self.ws[0], "1:minute", "horn", "not_a_dict",
+                            frequency="25:kilohertz", temperature="4:celsius")
 
 
 class TestProvision(object):

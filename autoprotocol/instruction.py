@@ -1245,6 +1245,35 @@ class ImagePlate(Instruction):
         })
 
 
+class Image(Instruction):
+    """
+    Capture an image of the specified container.
+
+    Parameters
+    ----------
+    object : str
+        Container to take image of
+    mode : str
+        Imaging mode (currently supported: "top")
+    dataref : str
+        Name of data reference of resulting image
+
+    """
+
+    def __init__(self, ref, mode, dataref, num_images,
+                 backlighting, exposure, magnification):
+        json_dict = {
+            "object": ref,
+            "mode": mode,
+            "dataref": dataref,
+            "num_images": num_images,
+            "magnification": magnification,
+            "backlighting": backlighting,
+            "exposure": exposure
+        }
+
+        super(Image, self).__init__(op="image", data=json_dict)
+
 class Provision(Instruction):
     """
     Provision a commercial resource from a catalog into the specified

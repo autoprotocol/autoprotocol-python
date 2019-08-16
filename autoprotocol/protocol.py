@@ -2066,16 +2066,19 @@ class Protocol(object):
             Spin(ref, acceleration, duration, flow_direction, spin_direction)
         )
 
-    def agitate(self, ref, mode, speed, duration, temperature="22:degC", mode_params=None):
+    def agitate(self, ref, mode, speed, duration, temperature="22:degC",
+                mode_params=None):
         """
-        Agitate a container in a specific condition for a given duration. If temperature
-        is not specified, container is agitated at ambient temperature by default.
+        Agitate a container in a specific condition for a given duration. If
+        temperature is not specified, container is agitated at ambient
+        temperature by default.
 
         Example Usage:
 
         .. code-block:: python
             p = Protocol()
-            plate = p.ref("test pcr plate", id=None, cont_type="96-pcr", storage="cold_4")
+            plate = p.ref("test pcr plate", id=None, cont_type="96-pcr",
+                          storage="cold_4")
             p.agitate(
                 ref = plate,
                 mode="vortex",
@@ -2110,15 +2113,16 @@ class Protocol(object):
         duration : str or Unit
             Specify the duration to agitate for
         temperature : Unit or str, optional
-            Specify target temperature to agitate container at, defaults to ambient
+            Specify target temperature to agitate container at.
+            Defaults to ambient
         mode_params : dict, optional
             Dictionary containing mode params for agitation modes
 
         Returns
         -------
             Agitate
-                returns a :py:class:`autoprotocol.instruction.Agitate` instruction created from
-                the specified parameters
+                returns a :py:class:`autoprotocol.instruction.Agitate`
+                instruction created from the specified parameters
 
         Raises
         ------
@@ -2131,7 +2135,7 @@ class Protocol(object):
         ValueError
             If `mode_params` not specified for mode `stir_bar`
         ValueError
-            If proper keys for `mode_params` used for `stir_bar` are not included
+            If valid keys for `mode_params` used for `stir_bar` are not included
         ValueError
             If wells specified in `mode_params` are not in the same container
         ValueError
@@ -2140,7 +2144,7 @@ class Protocol(object):
             If `bar_length` is less than 0 millimeter
         ValueError
             If `mode` used does not require `mode_params`
-        ValueError
+        TypeError
             If ref cannot be undergo agitate mode `roll` or `invert`
 
         """
@@ -2165,47 +2169,50 @@ class Protocol(object):
             raise ValueError(
                 "Duration: {} must be longer than 0 minutes.".format(duration)
             )
-        if mode in valid_modes:
-            if mode == "stir_bar":
-                if mode_params is None:
-                    raise ValueError(
-                        "Dictionary `mode_params` must be specified for the mode `stir_bar`"
-                    )
-                elif not all(valid_p in valid_bar_mode_params for valid_p in mode_params.keys()):
-                    raise ValueError(
-                        "Params for `stir_bar` must include {}".format(valid_bar_mode_params)
-                    )
-
-                wells = WellGroup(mode_params["wells"])
-                container = set([w.container for w in wells])
-                shape = mode_params["bar_shape"]
-                length = parse_unit(mode_params["bar_length"], "millimeter")
-
-                if len(container) > 1:
-                    raise ValueError(
-                        "All wells need to be on the same container for Agitate."
-                    )
-                if shape not in valid_bar_shapes:
-                    raise ValueError(
-                        "Param `bar_shape` must be one of {}".format(valid_bar_shapes)
-                    )
-                if length <= Unit(0, "millimeter"):
-                    raise ValueError(
-                        "Params `bar_length` must be greater than 0 millimeter"
-                    )
-            elif mode != "stir_bar" and mode_params:
-                raise ValueError(
-                    "Mode {} does not need mode_params specified".format(mode)
-                )
-            elif mode in ["invert", "roll"]:
-                if not ref.container_type.is_tube:
-                    raise TypeError(
-                        "Specified container {} cannot be inverted or rolled.".format(ref)
-                    )
-
-        else:
+        if mode not in valid_modes:
             raise ValueError(
                 "Agitate mode must be one of {}".format(valid_modes)
+            )
+        if mode == "stir_bar":
+            if mode_params is None:
+                raise ValueError(
+                    "Dictionary `mode_params` must be specified for the "
+                    "mode `stir_bar`"
+                )
+            elif not all(
+                    valid_p in valid_bar_mode_params
+                    for valid_p in mode_params.keys()):
+                raise ValueError(
+                    "Params for `stir_bar` must include {}"
+                    "".format(valid_bar_mode_params)
+                )
+
+            wells = WellGroup(mode_params["wells"])
+            container = set([w.container for w in wells])
+            shape = mode_params["bar_shape"]
+            length = parse_unit(mode_params["bar_length"], "millimeter")
+
+            if len(container) > 1:
+                raise ValueError(
+                    "All wells need to be on the same container for Agitate"
+                )
+            if shape not in valid_bar_shapes:
+                raise ValueError(
+                    "Param `bar_shape` must be one of {}"
+                    "".format(valid_bar_shapes)
+                )
+            if length <= Unit(0, "millimeter"):
+                raise ValueError(
+                    "Params `bar_length` must be greater than 0 millimeter"
+                )
+        elif mode != "stir_bar" and mode_params:
+            raise ValueError(
+                "Mode {} does not need mode_params specified".format(mode)
+            )
+        elif mode in ["invert", "roll"] and not ref.container_type.is_tube:
+            raise TypeError(
+                "Specified container {} cannot be inverted or rolled."
+                "".format(ref)
             )
 
         return self._append_and_return(

@@ -156,6 +156,102 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
             "format": format
         }
 
+class AgitateBuilders(InstructionBuilders):
+    """
+    These builders are meant for helping to construct the `groups`
+    argument in the `Protocol.agitate` method
+    """
+
+    def __init__(self):
+        super(AgitateBuilders, self).__init__()
+        self.VALID_MODES = ["vortex", "invert", "roll", "stir_bar"]
+        self.VALID_BAR_SHAPES = ["bar", "cross"]
+
+    def check_mode(self, object, mode=None):
+        """
+        Helper method for checking container compatibility
+        """
+        if not isinstance(object, Container):
+            raise TypeError("object: {} is not a Container".format(object))
+
+        if mode not in self.VALID_MODES:
+            raise ValueError(
+                "Specified mode {} is not in the set of valid modes {}.".format(
+                    mode, self.VALID_MODES
+                )
+            )
+        # possible to have rectangular single well container. How to check for shape?
+        if mode in ["invert", "roll"]:
+            if not object.container_type.is_tube:
+                raise TypeError(
+                    "Specified container {} cannot be inverted or rolled.".format(object)
+                )
+            else:
+                output = mode
+        else:
+            output = mode
+
+        return output
+
+    def bar_params (self, object, mode=None, bar_params=None):
+        """
+        Helper method to return stir_bar mode_params
+        """
+        if bar_params is not None:
+            bar_length = bar_params.get("bar_length", None)
+            bar_shape = bar_params.get("bar_shape", None)
+            wells = bar_params.get("wells", None)
+            if wells is None:
+                if object.container_type.is_tube:
+                    wells = Well(object,0)
+                else:
+                    raise ValueError(
+                        "wells must be specified for non-tube container types."
+                    )
+            if not is_valid_well(wells):
+                raise ValueError(
+                    "Invalid wells {}, must be an iterable of wells or a WellGroup."
+                    "".format(wells)
+                )
+            if bar_length is not None:
+                bar_length = parse_unit(bar_length,'millimeter')
+            if bar_length <= Unit("0: millimeter"):
+                raise ValueError(
+                    "bar_length must be longer than 0 millimeter."
+                )
+            if bar_shape is not None:
+                if not isinstance(bar_shape, str):
+                    raise TypeError(
+                        "bar_shape must be specified in str."
+                    )
+            if mode == "stir_bar":
+                if bar_shape is None or bar_length is None:
+                    raise ValueError(
+                        "bar_shape and bar_length must be specified for mode: {}".format(mode)
+                    )
+                if not bar_shape in self.VALID_BAR_SHAPES:
+                    raise TypeError(
+                        "bar_shape must be one of {}.".format(self.VALID_BAR_SHAPES)
+                    )
+                output = {
+                        "wells": wells,
+                        "bar_shape": bar_shape,
+                        "bar_length": bar_length
+                    }
+            else:
+                raise ValueError(
+                    "bar_params cannot be specified for the mode {}.".format(mode)
+                )
+        else:
+            if mode == "stir_bar":
+                raise ValueError(
+                    "bar-params must be specified for mode {}.".format(mode)
+                )
+            else:
+                output = bar_params
+
+        return output
+
 
 class ThermocycleBuilders(InstructionBuilders):
     """

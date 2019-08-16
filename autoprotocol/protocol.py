@@ -2066,6 +2066,66 @@ class Protocol(object):
             Spin(ref, acceleration, duration, flow_direction, spin_direction)
         )
 
+    def agitate(self, ref, mode, duration=None, temperature="25:celsius", speed=None, bar_params=None):
+        """
+        Agitate a container in a specific condition for a given duration. If temperature
+        is not specified, container is agitated at ambient temperature by default.
+
+        .. code-block:: python
+            "bar_params": {
+                "bar_shape": Enum("bar", "cross")
+                "bar_length": Unit or str
+            }
+
+        Example usage:
+        To vortex a plate at 1000 rpm for 5 minutes at room temperature:
+        p = Protocol()
+        plate = p.ref("test pcr plate", id=None, cont_type="96-pcr")
+        p.agitate(
+            ref = plate
+            mode="vortex"
+            speed="1000:rpm"
+            temperature="25:celsius"
+            duration="5:minute"
+        )
+        """
+        mode = Agitate.builders.check_mode(ref, mode)
+        bar_params = Agitate.builders.bar_params(ref, mode, bar_params)
+
+        if speed is not None:
+            speed = parse_unit(speed)
+            if speed <= Unit("0: rpm"):
+                raise ValueError(
+                    "speed: {} must be more than 0 rpm.".format(speed)
+                )
+        else:
+            raise ValueError(
+                "agitation speed must be specified."
+            )
+
+        if temperature is not None:
+            temperature = parse_unit(temperature, "celsius")
+
+        if duration is not None:
+            duration = parse_unit(duration, "minute")
+            if duration <= Unit("0: minute"):
+                raise ValueError(
+                    "duration: {} must be longer than 0 minutes.".format(duration)
+                )
+        else:
+            raise ValueError(
+                "duration must be specified in Unit or str."
+            )
+
+        if mode == "stir_bar" and bar_params== None:
+            raise ValueError(
+                "bar_params must be specified for the mode stir_bar."
+            )
+
+        return self._append_and_return(
+            Agitate(ref, mode, duration, temperature, speed, bar_params)
+        )
+
     def thermocycle(self, ref, groups,
                     volume="10:microliter",
                     dataref=None,

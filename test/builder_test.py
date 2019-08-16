@@ -1,7 +1,8 @@
 # pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
+from autoprotocol.protocol import Protocol, Ref
+from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry, Agitate
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
@@ -101,7 +102,6 @@ class TestDispenseBuilders(object):
         )
         with pytest.raises(ValueError):
             Dispense.builders.shake_after("5:second", path="foo")
-
 
 class TestThermocycleBuilders(object):
     def test_group_input(self):
@@ -360,4 +360,46 @@ class TestSpectrophotometryBuilders(object):
         )
         Spectrophotometry.builders.absorbance_mode_params(
             **self.absorbance_req
+        )
+
+class TestAgitateBuilders(object):
+    p = Protocol()
+    c1 = p.ref("c1", id=None, cont_type="96-pcr", discard=True)
+    def test_mode_errors(self):
+        with pytest.raises(TypeError):
+            Agitate.builders.check_mode(self.c1, "invert")
+        with pytest.raises(TypeError):
+            Agitate.builders.check_mode(self.c1, "roll")
+    def test_check_mode(self):
+        assert(
+            Agitate.builders.check_mode(self.c1, "vortex") ==
+            "vortex"
+        )
+    def test_bar_params_errors(self):
+        with pytest.raises(ValueError):
+            Agitate.builders.bar_params(self.c1, "invert", bar_params=
+            {"wells": Well(self.c1,0), "bar_shape": "cross",
+             "bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            Agitate.builders.bar_params(self.c1, "stir_bar")
+        with pytest.raises(TypeError):
+            Agitate.builders.bar_params(self.c1, "stir_bar", bar_params=
+            {"wells": Well(self.c1,0), "bar_shape": "fake",
+             "bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            Agitate.builders.bar_params(self.c1, "stir_bar", bar_params=
+            {"wells": Well(self.c1,0), "bar_shape": "bar"})
+        with pytest.raises(TypeError):
+            Agitate.builders.bar_params(self.c1, "stir_bar", bar_params=
+            {"wells": Well(self.c1,0), "bar_shape": "fake",
+             "bar_length": "234:milligram"})
+        with pytest.raises(ValueError):
+            Agitate.builders.bar_params(self.c1, "stir_bar", bar_params=
+            {"wells": "fake wells", "bar_shape": "fake",
+             "bar_length": "234:milligram"})
+    def test_bar_params(self):
+        assert(
+            Agitate.builders.bar_params(self.c1, "stir_bar", bar_params=
+            {"wells": Well(self.c1,0), "bar_shape": "bar",
+             "bar_length": "20:millimeter"})
         )

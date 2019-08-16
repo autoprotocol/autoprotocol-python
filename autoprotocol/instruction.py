@@ -463,7 +463,7 @@ class Agitate(Instruction):
     ----------
     object : ref or str
         The container to be agitated
-    mode : Enum(["votex", "invert", "roll", "stir_bar"])
+    mode : Enum(["vortex", "invert", "roll", "stir_bar"])
         Specifies the mode of agitation
     speed : Unit or str
         Speed to agitate container at

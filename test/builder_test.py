@@ -1,7 +1,6 @@
 # pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well

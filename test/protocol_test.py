@@ -2401,6 +2401,19 @@ class TestAgitate(object):
                                "wells": Well(self.t1, 0),
                                "bar_shape": "cross",
                                "bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="stir_bar", duration="3:minute",
+                           speed="250:rpm",
+                           mode_params={
+                               "not_wells": Well(self.t1, 0),
+                               "not_bar_shape": "cross",
+                               "not_bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="stir_bar", duration="3:minute",
+                           speed="250:rpm",
+                           mode_params={
+                               "wells": Well(self.t1, 0)
+                           })
 
     # pylint: disable=no-self-use
     def test_roll(self, dummy_protocol):

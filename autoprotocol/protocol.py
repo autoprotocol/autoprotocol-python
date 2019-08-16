@@ -2179,9 +2179,7 @@ class Protocol(object):
                     "Dictionary `mode_params` must be specified for the "
                     "mode `stir_bar`"
                 )
-            elif not all(
-                    valid_p in valid_bar_mode_params
-                    for valid_p in mode_params.keys()):
+            elif not set(mode_params.keys()) == set(valid_bar_mode_params):
                 raise ValueError(
                     "Params for `stir_bar` must include {}"
                     "".format(valid_bar_mode_params)

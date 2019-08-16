@@ -4856,12 +4856,10 @@ class Protocol(object):
 
             p = Protocol()
 
-            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
-            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
-
-            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
-            p.incubate(agar_plate, "warm_37", "18:hour")
-            p.image_plate(agar_plate, mode="top", dataref="my_plate_image_1")
+            sample = p.ref("Sample", None, "micro-1.5", discard=True)
+            p.image(sample, "top", "image_1", num_images=3,
+                    backlighting=False, exposure={"iso": 4},
+                    magnification=1.0)
 
 
         Autoprotocol Output:
@@ -4870,35 +4868,23 @@ class Protocol(object):
 
             {
               "refs": {
-                "bacteria": {
+                "Sample": {
                   "new": "micro-1.5",
-                  "discard": true
-                },
-                "agar_plate": {
-                  "new": "1-flat",
                   "discard": true
                 }
               },
               "instructions": [
                 {
-                  "volume": "55.0:microliter",
-                  "to": "agar_plate/0",
-                  "from": "bacteria/0",
-                  "op": "spread"
-                },
-                {
-                  "where": "warm_37",
-                  "object": "agar_plate",
-                  "co2_percent": 0,
-                  "duration": "18:hour",
-                  "shaking": false,
-                  "op": "incubate"
-                },
-                {
-                  "dataref": "my_plate_image_1",
-                  "object": "agar_plate",
+                  "magnification": 1.0,
+                  "backlighting": false,
                   "mode": "top",
-                  "op": "image_plate"
+                  "dataref": "image_1",
+                  "object": "Sample",
+                  "num_images": 3,
+                  "op": "image",
+                  "exposure": {
+                    "iso": 4
+                  }
                 }
               ]
             }
@@ -5480,7 +5466,7 @@ class Protocol(object):
         ----------
         ref : Container
             Container of which to take image.
-        mode : Enum(“top”, ”bottom”, “side”)
+        mode : Enum("top", "bottom", "side")
             Angle of image.
         num_images : int
             Number of images taken of the container. Defaults to 1.
@@ -5519,10 +5505,11 @@ class Protocol(object):
                              "".format(mode, valid_image_modes))
         if not isinstance(dataref, str):
             raise TypeError("dataref must be of type String.")
-        if not isinstance(num_images, int) or num_images < 0:
+        if not isinstance(num_images, int) or num_images <= 0:
             raise TypeError("num_images must be a positive integer.")
         if magnification:
-            if not isinstance(magnification, (float, int)):
+            if not isinstance(magnification, (float, int)) or \
+               magnification <= 0:
                 raise TypeError("magnification must be a number.")
         if backlighting:
             if not isinstance(backlighting, bool):

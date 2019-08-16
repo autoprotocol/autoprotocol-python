@@ -1228,12 +1228,29 @@ class ImagePlate(Instruction):
 
     Parameters
     ----------
-    object : str
-        Container to take image of
-    mode : str
-        Imaging mode (currently supported: "top")
+    ref : Container
+        Container of which to take image.
+    mode : Enum("top", "bottom", "side")
+        Angle of image.
+    num_images : int
+        Number of images taken of the container. Defaults to 1.
     dataref : str
         Name of data reference of resulting image
+    backlighting : Bool, optional
+        Whether back-lighting is desired.
+    magnification : float
+        Ratio of sizes of the image projected on the camera
+        sensor compared to the actual size of the object
+        captured. Defaults to 1.0.
+    exposure : dict, optional
+        Parameters to control exposure: "aperture", "iso",
+        and "shutter_speed".
+    shutter_speed: Unit, optional
+        Duration that the imaging sensor is exposed.
+    iso : Float, optional
+        Light sensitivity of the imaging sensor.
+    aperture: Float, optional
+        Diameter of the lens opening.
 
     """
 

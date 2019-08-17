@@ -451,7 +451,6 @@ class Incubate(Instruction):
             incubate_json["shaking_params"] = shaking_params
         super(Incubate, self).__init__(op="incubate", data=incubate_json)
 
-
 class Agitate(Instruction):
     """
     Agitate sample(s) in a container in a specific condition for a given
@@ -1299,6 +1298,66 @@ class FlashFreeze(Instruction):
         })
 
 
+class Evaporate(Instruction):
+    """
+    Removes liquid or moisture from sample.
+
+    Parameters
+    ----------
+    ref : Container
+        Sample container
+    mode : str
+        Mode of evaporation
+    duration : Unit or str
+        Duration object is processed
+    evaporator_temperature : Unit or str
+        Temperature object is exposed to
+    mode_params : dict
+        Dictionary of parameters for evaporation mode
+    """
+
+    builders = EvaporateBuilders()
+
+    def __init__(self, ref, mode, duration, evaporator_temperature,
+                 mode_params):
+        json_dict = {
+            "object": ref,
+            "mode": mode,
+            "duration": duration,
+            "evaporator_temperature": evaporator_temperature,
+            "mode_params": mode_params
+        }
+        super(Evaporate, self).__init__(op="evaporate", data=json_dict)
+
+
+
+class MeasureConcentration(Instruction):
+    """
+    Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
+    volume of the source aliquots.
+
+    Parameters
+    ----------
+    object : list or WellGroup
+        WellGroup of wells to be measured
+    volume : str or Unit
+        Volume of sample required for analysis
+    dataref : str
+        Name of this specific dataset of measurements
+    measurement : str
+        Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
+        "protein"].
+
+    """
+
+    def __init__(self, object, volume, dataref, measurement):
+        json_dict = {"object": object,
+                     "volume": volume,
+                     "dataref": dataref,
+                     "measurement": measurement}
+        super(MeasureConcentration, self).__init__(op="measure_concentration",
+                                                   data=json_dict)
+
 class Sonicate(Instruction):
     """
     Sonicate wells using high intensity ultrasonic vibrations.
@@ -1338,34 +1397,6 @@ class Sonicate(Instruction):
         if temperature:
             json_dict["temperature"] = temperature
         super(Sonicate, self).__init__(op="sonicate", data=json_dict)
-
-
-class MeasureConcentration(Instruction):
-    """
-    Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
-    volume of the source aliquots.
-
-    Parameters
-    ----------
-    object : list or WellGroup
-        WellGroup of wells to be measured
-    volume : str or Unit
-        Volume of sample required for analysis
-    dataref : str
-        Name of this specific dataset of measurements
-    measurement : str
-        Class of material to be measured. One of ["DNA", "ssDNA", "RNA",
-        "protein"].
-
-    """
-
-    def __init__(self, object, volume, dataref, measurement):
-        json_dict = {"object": object,
-                     "volume": volume,
-                     "dataref": dataref,
-                     "measurement": measurement}
-        super(MeasureConcentration, self).__init__(op="measure_concentration",
-                                                   data=json_dict)
 
 
 class MeasureMass(Instruction):

@@ -2066,7 +2066,7 @@ class Protocol(object):
             Spin(ref, acceleration, duration, flow_direction, spin_direction)
         )
 
-    def agitate(self, ref, mode, speed, duration, temperature="22:degC",
+    def agitate(self, ref, mode, speed, duration, temperature=None,
                 mode_params=None):
         """
         Agitate a container in a specific condition for a given duration. If
@@ -2153,7 +2153,7 @@ class Protocol(object):
         valid_bar_mode_params = ["wells", "bar_shape", "bar_length"]
 
         speed = parse_unit(speed)
-        temperature = parse_unit(temperature, "celsius")
+        temperature = parse_unit(temperature, "celsius") if temperature else None
         duration = parse_unit(duration, "minute")
 
         if not isinstance(ref, Container):

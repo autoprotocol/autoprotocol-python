@@ -475,17 +475,18 @@ class Agitate(Instruction):
         Dictionary containing mode params for agitation modes
     """
 
-    def __init__(self, object, mode, speed, duration, temperature,
+    def __init__(self, object, mode, speed, duration, temperature=None,
                  mode_params=None):
         agitate_json = {
             "object": object,
             "mode": mode,
             "duration": duration,
-            "temperature": temperature,
             "speed": speed
         }
         if mode_params:
             agitate_json["mode_params"] = mode_params
+        if temperature:
+            agitate_json["temperature"] = temperature
         super(Agitate, self).__init__(op="agitate", data=agitate_json)
 
 

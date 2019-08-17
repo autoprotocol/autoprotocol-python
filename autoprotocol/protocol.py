@@ -5067,6 +5067,167 @@ class Protocol(object):
 
         return self._append_and_return(FlashFreeze(container, duration))
 
+    def sonicate(self, wells, duration, mode, mode_params, frequency=None,
+                 temperature=None):
+        """
+        Sonicate wells using high intensity ultrasonic vibrations.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            sample_wells = p.ref("sample_plate",
+                                 None,
+                                 "96-pcr",
+                                 storage="warm_37").wells_from(0,2)
+
+            p.sonicate(sample_wells, duration="1:minute",
+                       mode="bath",
+                       mode_params={"sample_holder": "suspender"})
+
+        Autoprotocol Output:
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                    "wells": ["sample_plate/0", "sample_plate/1"],
+                    "mode": "bath",
+                    "duration": "1:minute",
+                    "temperature": "ambient",
+                    "frequency": "40:kilohertz"
+                    "mode_params": {
+                        "sample_holder": "suspender"
+                    }
+                    "op": "sonicate"
+                }
+            ]
+
+        Parameters
+        ----------
+        wells : Well, WellGroup, List of Wells
+           Wells to be sonicated
+        duration : Unit or str
+            Duration for which to sonicate wells
+        mode: Enum({"bath", "horn"})
+            Sonicating method to be used, must be "horn" or "bath". Sonicate
+            mode "horn" uses metal probe to create a localized shear force
+            directly in the sample media; "bath" mode applies ultrasound to
+            wells held inside a bath.
+        temperature: Unit or str, optional
+            Temperature at which the sample is kept during sonication. Optional,
+            defaults to ambient
+        frequency: Unit or str, optional
+            Frequency of the ultrasonic wave, usually indicated in kHz.
+            Optional; defaults to the most commonly used frequency for each
+            mode: 20 kHz for `horn`, and 40 kHz for `bath` mode
+        mode_params: Dict
+            Dictionary containing mode parameters for the specified mode.
+
+        .. code-block:: json
+            {
+                "mode": "bath",
+                "mode_params":
+                    {
+                        "sample_holder": Enum({"suspender",
+                                               "perforated_container",
+                                               "solid_container"})
+                        "power": Unit or str, optional
+                    }
+            }
+            - or -
+            {
+                "mode": "horn",
+                "mode_params":
+                    {
+                        "duty_cycle": Float, 0 < value <=1
+                        "amplitude": Unit or str
+                    }
+            }
+
+
+        Returns
+        -------
+        Sonicate
+            Returns the :py:class:`autoprotocol.instruction.Sonicate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        RuntimeError
+            If valid mode is not specified.
+        TypeError
+            If wells not of type WellGroup or List of Wells.
+        ValueError
+            If invalid `mode_params` for specified mode.
+        TypeError
+            If invalid `mode_params` type for specified mode.
+
+        """
+        sonic_modes = ["bath", "horn"]
+        if mode not in sonic_modes:
+            raise RuntimeError("{} is not a valid sonication mode".format(mode))
+        if not isinstance(mode_params, dict):
+            raise TypeError(
+                "Invalid mode_params {}, must be a dict".format(mode_params)
+            )
+
+        parsed_mode_params = {}
+        if mode == "bath":
+            valid_sample_holders = ["suspender", "perforated_container",
+                                    "solid_container"]
+            valid_mode_params = ["sample_holder", "power"]
+            sample_holder = mode_params.get("sample_holder")
+            if sample_holder not in valid_sample_holders:
+                raise ValueError("'sample_holder' must be specified in "
+                                 "'mode_params' mode: {} and must be one of "
+                                 "{}.".format(mode, valid_sample_holders))
+            parsed_mode_params["sample_holder"] = sample_holder
+            power = mode_params.get("power")
+            if power:
+                parsed_power = parse_unit(power, "power-watt")
+                parsed_mode_params["power"] = parsed_power
+            frequency = frequency or "20:kilohertz"
+        if mode == "horn":
+            valid_mode_params = ["duty_cycle", "amplitude"]
+            if not all(k in mode_params for k in valid_mode_params):
+                raise ValueError("Incorrect mode_params.  All of {} must be "
+                                 "included in mode: {}"
+                                 "".format(valid_mode_params, mode))
+            duty_cycle = mode_params["duty_cycle"]
+            amplitude = mode_params["amplitude"]
+            if not isinstance(duty_cycle, (int, float)):
+                raise TypeError(
+                    "Invalid duty_cycle {}, must be a decimal"
+                    "".format(duty_cycle)
+                )
+            duty_cycle = float(duty_cycle)
+            if not 0 <= duty_cycle <= 1:
+                raise ValueError(
+                    "Invalid duty_cycle {}, must be between 0 and 1"
+                    "(inclusive).".format(duty_cycle)
+                )
+            parsed_mode_params["duty_cycle"] = duty_cycle
+            parsed_amplitude = parse_unit(amplitude, "micrometer")
+            parsed_mode_params["amplitude"] = parsed_amplitude
+            frequency = frequency or "20:kilohertz"
+        if not is_valid_well(wells):
+            raise TypeError(
+                "Wells must be of type Well, list of Wells, or WellGroup."
+            )
+        wells = WellGroup(wells)
+        parsed_duration = parse_unit(duration, "seconds")
+        parsed_frequency = parse_unit(frequency, "hertz")
+        if temperature:
+            parsed_temperature = parse_unit(temperature, "celsius")
+        else:
+            parsed_temperature = None
+        return self._append_and_return(Sonicate(wells, parsed_duration, mode,
+                                                parsed_mode_params,
+                                                parsed_frequency,
+                                                parsed_temperature))
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

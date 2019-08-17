@@ -1299,6 +1299,47 @@ class FlashFreeze(Instruction):
         })
 
 
+class Sonicate(Instruction):
+    """
+    Sonicate wells using high intensity ultrasonic vibrations.
+
+    Parameters
+    ----------
+    wells : Well, WellGroup, List of Wells
+       Wells to be sonicated
+    duration : Unit or str
+        Duration for which to sonicate wells
+    mode: Enum({"bath", "horn"})
+        Sonicating method to be used, must be "horn" or "bath". Sonicate
+        mode "horn" uses metal probe to create a localized shear force
+        directly in the sample media; "bath" mode applies ultrasound to
+        wells held inside a bath.
+    temperature: Unit or str, optional
+        Temperature at which the sample is kept during sonication. Optional,
+        defaults to ambient
+    frequency: Unit or str, optional
+        Frequency of the ultrasonic wave, usually indicated in kHz.
+        Optional; defaults to the most commonly used frequency for each
+        mode: 20 kHz for `horn`, and 40 kHz for `bath` mode
+    mode_params: Dict
+        Dictionary containing mode parameters for the specified mode.
+
+    """
+
+    def __init__(self, wells, duration, mode, mode_params,
+                 frequency, temperature):
+        json_dict = {
+            "wells": wells,
+            "duration": duration,
+            "frequency": frequency,
+            "mode": mode,
+            "mode_params": mode_params
+        }
+        if temperature:
+            json_dict["temperature"] = temperature
+        super(Sonicate, self).__init__(op="sonicate", data=json_dict)
+
+
 class MeasureConcentration(Instruction):
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified

@@ -1708,6 +1708,137 @@ class PlateReaderBuilders(InstructionBuilders):
         }
 
 
+class EvaporateBuilders(InstructionBuilders):
+    """
+    Helpers for building Evaporate instructions
+    """
+
+    def __init__(self):
+        super(EvaporateBuilders, self).__init__()
+        self.valid_modes = ["rotate", "centrifuge", "vortex", "blowdown"]
+        self.valid_gases = ["nitrogen", "argon", "helium"]
+        self.rotary_params = ["flask_volume", "rotation_speed",
+                              "vacuum_pressure", "condenser_temperature"]
+        self.centrifugal_params = ["spin_acceleration", "vacuum_pressure",
+                                   "condenser_temperature"]
+        self.vortex_params = ["vortex_speed", "vacuum_pressure",
+                              "condenser_temperature"]
+        self.blowdown_params = ["gas", "blow_rate", "vortex_speed"]
+
+    def get_mode_params(self, mode, mode_params):
+        """
+        Checks on the validity of mode and mode_params, and
+        creates a dictionary for mode_params
+
+        Parameters
+        ----------
+        mode : Str
+            Mode of the evaporate method.
+        mode_params : Dict
+            Method parameters for each mode.
+
+        Returns
+        -------
+        Dict
+            Dictionary of mode_params
+
+        Raises
+        ------
+        ValueError
+            If mode is not specified.
+        ValueError
+            If specified mode is not a valid mode.
+        ValueError
+            If mode_params contain key(s) that are not
+            applicable for the specified mode.
+        TypeError
+            If there are multiple speed parameters.
+        ValueError
+            If container agitation speed is less than 0.
+        ValueError
+            If vacuum_pressure is less than 0 torr.
+
+        """
+        mode_to_param_dict = {
+            "rotary": self.rotary_params,
+            "centrifugal": self.centrifugal_params,
+            "vortex": self.vortex_params,
+            "blowdown": self.blowdown_params
+        }
+        if mode not in self.valid_modes:
+            raise ValueError(
+                "Specified mode: {} is not valid. Make sure it is one of {}"
+                "".format(mode, self.valid_modes)
+            )
+
+        mode_param_keys = mode_to_param_dict[mode]
+
+        if set(mode_params.keys()) != set(mode_param_keys):
+            raise ValueError(
+                "Specified mode_params: {} do not contain appropriate key(s) "
+                "applicable to the mode: {}, which include {}"
+                "".format(mode_params.keys(), mode, mode_param_keys)
+            )
+        speed_unit_dict = {
+            "rotation_speed": "rpm",
+            "vortex_speed": "rpm",
+            "spin_acceleration": "g"
+        }
+        mode_param_output = {}
+        speed_param = [(k) for k in mode_params.keys()
+                       if k in speed_unit_dict.keys()]
+        if len(speed_param) > 1:
+            raise TypeError(
+                "There are multiple speed parameters: {}."
+                "".format(speed_param)
+            )
+
+        for s in speed_param:
+            if Unit(mode_params[s]).magnitude <= 0:
+                raise ValueError(
+                    "{} is less than or equal to 0.".format(s)
+                )
+            else:
+                mode_param_output[s] = parse_unit(
+                    mode_params[s], speed_unit_dict[s])
+
+        if "vacuum_pressure" in mode_params.keys():
+            pressure = mode_params["vacuum_pressure"]
+            if pressure is not None:
+                pressure = parse_unit(pressure, "torr")
+                if pressure <= Unit("0: torr"):
+                    raise ValueError(
+                        "vacuum_pressure cannot be lower than 0 torr."
+                    )
+                else:
+                    mode_param_output["vacuum_pressure"] = pressure
+
+        if "condenser_temperature" in mode_params.keys():
+            temp = mode_params["condenser_temperature"]
+            if temp is not None:
+                temp = parse_unit(temp, "celsius")
+                mode_param_output["condenser_temperature"] = temp
+
+        if "gas" in mode_params.keys():
+            if not mode_params["gas"] in self.valid_gases:
+                raise TypeError(
+                    "Specified gas: {} is not included in valid"
+                    "gases: {}".format(
+                        mode_params["gas"],
+                        self.valid_gases
+                    )
+                )
+            mode_param_output["gas"] = mode_params["gas"]
+
+        if "blow_rate" in mode_params.keys():
+            blow_rate = mode_params["blow_rate"]
+            if not blow_rate is None:
+                blow_rate = parse_unit(blow_rate, "mL/min")
+                mode_param_output["blow_rate"] = blow_rate
+
+        return mode_param_output
+
+
 class GelPurifyBuilders(InstructionBuilders):
     """Helpers for building GelPurify instructions
     """

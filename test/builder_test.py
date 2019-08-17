@@ -1,7 +1,9 @@
-# pragma pylint: disable=missing-docstring
+
+ # pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry
+from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry,\
+    Evaporate
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
@@ -360,3 +362,22 @@ class TestSpectrophotometryBuilders(object):
         Spectrophotometry.builders.absorbance_mode_params(
             **self.absorbance_req
         )
+
+
+# pylint: disable=too-few-public-methods
+class TestEvaporateBuilders(object):
+    # pylint: disable=no-self-use
+    def test_get_mode_params(self):
+        with pytest.raises(ValueError):
+            Evaporate.builders.get_mode_params(mode="vortex", mode_params={
+                "gas": "nitrogen"})
+        with pytest.raises(ValueError):
+            Evaporate.builders.get_mode_params(mode="vortex", mode_params={
+                "vortex_speed":Unit("200:ml/sec")})
+        test1 = Evaporate.builders.get_mode_params(
+            mode="blowdown", mode_params={
+                "gas": "nitrogen",
+                "vortex_speed": Unit("200:rpm"),
+                "blow_rate": "200:uL/sec"
+            })
+        assert test1["gas"] == "nitrogen"

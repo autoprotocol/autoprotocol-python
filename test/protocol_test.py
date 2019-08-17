@@ -5,7 +5,8 @@ from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
     Thermocycle, Incubate, Spin, Dispense, GelPurify,
-    Fluorescence, Absorbance, Luminescence, Instruction
+    Fluorescence, Absorbance, Luminescence, Instruction,
+    Evaporate
 )
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
@@ -2680,3 +2681,49 @@ class TestTransferVolume(object):
             self.container.well(1).properties ==
             self.container.well(0).properties
         )
+
+
+class TestEvaporate(object):
+    p = Protocol()
+    t1 = p.ref("c1", cont_type="micro-2.0", discard=True)
+
+    def test_bad_args(self):
+        with pytest.raises(TypeError):
+            self.p.evaporate(self.t1, mode="vortex",
+                             evaporator_temperature=Unit("45:celsius"),
+                             duration=Unit("30:gram"))
+        with pytest.raises(ValueError):
+            self.p.evaporate(self.t1, mode="fake",
+                             evaporator_temperature=Unit("45:celsius"),
+                             duration=Unit("30:minute"))
+        with pytest.raises(ValueError):
+            self.p.evaporate(self.t1, mode="vortex",
+                             evaporator_temperature=Unit("5:celsius"),
+                             duration=Unit("30:minutes"),
+                             mode_params={
+                                 "condenser_temperature": Unit("10: celsius")
+                             })
+        with pytest.raises(TypeError):
+            self.p.evaporate(self.t1, mode="fake",
+                             evaporator_temperature=Unit("45:gram"),
+                             duration=Unit("30:minute"))
+
+    def test_good_args(self):
+        self.p.evaporate(self.t1, mode="vortex",
+                         evaporator_temperature=Unit("45:celsius"),
+                         duration=Unit("30:minute"),
+                         mode_params={
+                             "vortex_speed": "100:rpm",
+                             "vacuum_pressure": "1:torr",
+                             "condenser_temperature": "20:degC"
+                         })
+        assert len(self.p.instructions) == 1
+
+        self.p.evaporate(self.t1, mode="blowdown",
+                         evaporator_temperature=Unit("45:celsius"),
+                         duration=Unit("30:minute"),
+                         mode_params={
+                             "gas": "nitrogen",
+                             "blow_rate": Unit("200:ul/sec"),
+                             "vortex_speed": Unit("200:rpm")})
+        assert self.p.instructions[0].op == "evaporate"

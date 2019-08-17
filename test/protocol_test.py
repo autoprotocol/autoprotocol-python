@@ -2546,6 +2546,7 @@ class TestProvision(object):
         with pytest.raises(ValueError):
             self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
 
+
 class TestImage(object):
     p = Protocol()
     c1 = p.ref("c1", cont_type="96-pcr", discard=True)
@@ -2573,7 +2574,6 @@ class TestImage(object):
         with pytest.raises(TypeError):
             self.p.image(self.c1, "top", "dataref_1",
                          exposure={"iso": "true"})
-
 
 
 class TestSeal(object):

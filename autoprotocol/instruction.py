@@ -452,6 +452,44 @@ class Incubate(Instruction):
         super(Incubate, self).__init__(op="incubate", data=incubate_json)
 
 
+class Agitate(Instruction):
+    """
+    Agitate sample(s) in a container in a specific condition for a given
+    duration. Once the duration has elapsed, sample(s) will be returned
+    to specified storage condition until it is used in the next
+    instruction.
+
+    Parameters
+    ----------
+    object : ref or str
+        The container to be agitated
+    mode : Enum(["vortex", "invert", "roll", "stir_bar"])
+        Specifies the mode of agitation
+    speed : Unit or str
+        Speed to agitate container at
+    duration : Unit or str
+        Length of time to agitate container
+    temperature : Unit or str
+        Temperature to agitate container at
+    mode_params : dict, optional
+        Dictionary containing mode params for agitation modes
+    """
+
+    def __init__(self, object, mode, speed, duration, temperature=None,
+                 mode_params=None):
+        agitate_json = {
+            "object": object,
+            "mode": mode,
+            "duration": duration,
+            "speed": speed
+        }
+        if mode_params:
+            agitate_json["mode_params"] = mode_params
+        if temperature:
+            agitate_json["temperature"] = temperature
+        super(Agitate, self).__init__(op="agitate", data=agitate_json)
+
+
 class IlluminaSeq(Instruction):
     """
     Load aliquots into specified lanes for Illumina sequencing.

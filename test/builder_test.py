@@ -102,7 +102,6 @@ class TestDispenseBuilders(object):
         with pytest.raises(ValueError):
             Dispense.builders.shake_after("5:second", path="foo")
 
-
 class TestThermocycleBuilders(object):
     def test_group_input(self):
         step = Thermocycle.builders.step('1:celsius', '1:s')

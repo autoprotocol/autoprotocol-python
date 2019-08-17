@@ -1,7 +1,7 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init
 import pytest
-from autoprotocol.container import Container, WellGroup
+from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
     Thermocycle, Incubate, Spin, Dispense, GelPurify,
@@ -129,7 +129,6 @@ class TestRef(object):
                     p.ref(name + cover, cont_type=name, cover=cover, discard=True)
                     ref = list(p.as_dict()["refs"].values())[0]
                     assert ref["cover"] == cover
-
 
 class TestThermocycle(object):
 
@@ -2365,6 +2364,90 @@ class TestDyeTest(object):
 
         with pytest.raises(ValueError):
             _convert_dispense_instructions(p1, 7, 4)
+
+
+class TestAgitate(object):
+    # pylint: disable=invalid-name
+    p = Protocol()
+    pl1 = p.ref("pl1", id=None, cont_type="96-pcr", discard=True)
+    t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
+
+    def test_param_checks(self):
+        with pytest.raises(TypeError):
+            self.p.agitate(self.pl1, "roll", duration="5:minute",
+                           speed="100:rpm")
+        with pytest.raises(TypeError):
+            self.p.agitate(self.pl1, "invert", duration="5:minute",
+                           speed="100:rpm")
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, "invert", duration="5:minute",
+                           speed="0:rpm")
+        with pytest.raises(ValueError):
+            self.p.agitate(self.pl1, "fake", duration="5:minute",
+                           speed="100:rpm")
+        with pytest.raises(ValueError):
+            self.p.agitate(self.pl1, "stir_bar", duration="5:minute",
+                           speed="100:rpm")
+        with pytest.raises(TypeError):
+            self.p.agitate(self.t1, "invert", duration="30:gram",
+                           speed="100;rpm")
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="vortex", duration="0:second",
+                           speed="100:rpm")
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="vortex", duration="3:minute",
+                           speed="250:rpm",
+                           mode_params={
+                               "wells": Well(self.t1, 0),
+                               "bar_shape": "cross",
+                               "bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="stir_bar", duration="3:minute",
+                           speed="250:rpm",
+                           mode_params={
+                               "not_wells": Well(self.t1, 0),
+                               "not_bar_shape": "cross",
+                               "not_bar_length": "234:micrometer"})
+        with pytest.raises(ValueError):
+            self.p.agitate(self.t1, mode="stir_bar", duration="3:minute",
+                           speed="250:rpm",
+                           mode_params={
+                               "wells": Well(self.t1, 0)
+                           })
+
+    # pylint: disable=no-self-use
+    def test_roll(self, dummy_protocol):
+        p = dummy_protocol
+        t1 = p.ref("t1", id=None, cont_type="micro-2.0",
+                   discard=True)
+        p.agitate(t1, "roll", duration="5:minute", speed="100:rpm")
+        assert p.instructions[0].data["mode"] == "roll"
+
+    def test_stir_bar(self, dummy_protocol):
+        p = dummy_protocol
+        t1 = p.ref("t1", id=None, cont_type="micro-2.0",
+                   discard=True)
+        wells = Well(t1, 0)
+        p.agitate(t1, "stir_bar", duration="5:minute", speed="1000:rpm",
+                  mode_params={
+                      "wells": wells,
+                      "bar_shape": "cross",
+                      "bar_length": "234:micrometer"})
+        assert p.instructions[0].data["mode"] == "stir_bar"
+
+    def test_invert(self, dummy_protocol):
+        p = dummy_protocol
+        t1 = p.ref("t1", id=None, cont_type="micro-2.0",
+                   discard=True)
+        p.agitate(t1, "invert", duration="5:minute", speed="100:rpm")
+        assert p.instructions[0].data["mode"] == "invert"
+
+    def test_vortex(self, dummy_protocol):
+        p = dummy_protocol
+        t1 = p.ref("t1", id=None, cont_type="micro-2.0",
+                   discard=True)
+        p.agitate(t1, "vortex", duration="5:minute", speed="1000:rpm")
+        assert p.instructions[0].data["mode"] == "vortex"
 
 
 class TestIncubate(object):

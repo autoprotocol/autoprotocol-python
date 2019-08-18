@@ -1,8 +1,8 @@
 # pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.instruction import (Thermocycle, Dispense,
-                                      Spectrophotometry, SPE)
+from autoprotocol.instruction import Thermocycle, Dispense, \
+    Spectrophotometry, Evaporate, SPE
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
@@ -381,10 +381,6 @@ class TestEvaporateBuilders(object):
                 "blow_rate": "200:uL/sec"
             })
         assert test1["gas"] == "nitrogen"
-
-
-        ValueError
-            Wells specified are not from the same container
 
 
 class TestSPEBuilders(object):

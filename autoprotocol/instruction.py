@@ -1340,14 +1340,13 @@ class SPE(Instruction):
 
     Parameters
     ----------
-    well : str or Container
-        Container to plate read.
-    cartridge : list(Well) or WellGroup or Well
-        WellGroup of wells to be measured or a list of well references in
-        the form of ["A1", "B1", "C5", ...]
-    pressure_mode : Enum("positive", "negative")
+    well : Well
+        Well to solid phase extract.
+    cartridge : str
+        Cartridge to use for solid phase extraction.
+    pressure_mode : str
         The direction of pressure applied to the cartridge to force
-        liquid flow.
+        liquid flow. One of "positive", "negative".
     load_sample: dict
         Parameters for applying the sample to the cartridge.
         Single 'mobile_phase_param'.
@@ -1355,13 +1354,13 @@ class SPE(Instruction):
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
         Requires `destination_well`.
-    condition: list of dicts
+    condition: list of dicts, optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
-    equilibrate: list of dicts
+    equilibrate: list of dicts, optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
-    rinse: list of dicts
+    rinse: list of dicts, optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
 

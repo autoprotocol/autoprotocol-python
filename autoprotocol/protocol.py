@@ -5318,14 +5318,13 @@ class Protocol(object):
 
         Parameters
         ----------
-        well : str or Container
-            Container to plate read.
-        cartridge : list(Well) or WellGroup or Well
-            WellGroup of wells to be measured or a list of well references in
-            the form of ["A1", "B1", "C5", ...]
-        pressure_mode : Enum("positive", "negative")
+        well : Well
+            Well to solid phase extract.
+        cartridge : str
+            Cartridge to use for solid phase extraction.
+        pressure_mode : str
             The direction of pressure applied to the cartridge to force
-            liquid flow.
+            liquid flow. One of "positive", "negative".
         load_sample: dict
             Parameters for applying the sample to the cartridge.
             Single 'mobile_phase_param'.
@@ -5333,13 +5332,13 @@ class Protocol(object):
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
             Requires `destination_well`.
-        condition: list of dicts
+        condition: list of dicts, optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
-        equilibrate: list of dicts
+        equilibrate: list of dicts, optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
-        rinse: list of dicts
+        rinse: list of dicts, optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
 
@@ -5375,6 +5374,8 @@ class Protocol(object):
         ValueError
             Wells specified are not from the same container
         ValueError
+            Invalid pressure_mode
+        ValueError
             settle_time, processing_time, flow_pressure not greater than 0
         ValueError
             If not exactly one elution parameter for each elution container
@@ -5395,7 +5396,8 @@ class Protocol(object):
             raise ValueError("'pressure_mode': {} has to be one of {}"
                              "".format(pressure_mode,
                                        valid_pressure_modes))
-        load_sample = SPE.builders.mobile_phase_params(is_sample=True, **load_sample)
+        load_sample = SPE.builders.mobile_phase_params(is_sample=True,
+                                                       **load_sample)
         SPE.builders.spe_params(elute, is_elute=True)
         if condition:
             SPE.builders.spe_params(condition)

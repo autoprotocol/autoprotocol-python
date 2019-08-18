@@ -1228,10 +1228,33 @@ class ImagePlate(Instruction):
 
     Parameters
     ----------
+    object : str
+        Container to take image of
+    mode : str
+        Imaging mode (currently supported: "top")
+    dataref : str
+        Name of data reference of resulting image
+
+    """
+
+    def __init__(self, object, mode, dataref):
+        super(ImagePlate, self).__init__(op="image_plate", data={
+            "object": object,
+            "mode": mode,
+            "dataref": dataref
+        })
+
+
+class Image(Instruction):
+    """
+    Capture an image of the specified container.
+
+    Parameters
+    ----------
     ref : Container
         Container of which to take image.
-    mode : Enum("top", "bottom", "side")
-        Angle of image.
+    mode : str
+        Angle of image, one of "top", "bottom", "side"
     num_images : int
         Number of images taken of the container. Defaults to 1.
     dataref : str
@@ -1254,29 +1277,6 @@ class ImagePlate(Instruction):
 
     """
 
-    def __init__(self, object, mode, dataref):
-        super(ImagePlate, self).__init__(op="image_plate", data={
-            "object": object,
-            "mode": mode,
-            "dataref": dataref
-        })
-
-
-class Image(Instruction):
-    """
-    Capture an image of the specified container.
-
-    Parameters
-    ----------
-    object : str
-        Container to take image of
-    mode : str
-        Imaging mode (currently supported: "top")
-    dataref : str
-        Name of data reference of resulting image
-
-    """
-
     def __init__(self, ref, mode, dataref, num_images,
                  backlighting, exposure, magnification):
         json_dict = {
@@ -1290,6 +1290,7 @@ class Image(Instruction):
         }
 
         super(Image, self).__init__(op="image", data=json_dict)
+
 
 class Provision(Instruction):
     """
@@ -1376,9 +1377,6 @@ class Evaporate(Instruction):
         super(Evaporate, self).__init__(op="evaporate", data=json_dict)
 
 
-
-
-
 class SPE(Instruction):
 
     """
@@ -1449,7 +1447,6 @@ class SPE(Instruction):
         super(SPE, self).__init__(op="spe", data=json_dict)
 
 
-
 class MeasureConcentration(Instruction):
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
@@ -1476,6 +1473,7 @@ class MeasureConcentration(Instruction):
                      "measurement": measurement}
         super(MeasureConcentration, self).__init__(op="measure_concentration",
                                                    data=json_dict)
+
 
 class Sonicate(Instruction):
     """

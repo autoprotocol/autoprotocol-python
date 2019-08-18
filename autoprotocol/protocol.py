@@ -4847,6 +4847,7 @@ class Protocol(object):
         return self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
+
         """
         Capture an image of the specified container.
 
@@ -4856,10 +4857,12 @@ class Protocol(object):
 
             p = Protocol()
 
-            sample = p.ref("Sample", None, "micro-1.5", discard=True)
-            p.image(sample, "top", "image_1", num_images=3,
-                    backlighting=False, exposure={"iso": 4},
-                    magnification=1.0)
+            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
+            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
+
+            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
+            p.incubate(agar_plate, "warm_37", "18:hour")
+            p.image_plate(agar_plate, mode="top", dataref="my_plate_image_1")
 
 
         Autoprotocol Output:
@@ -4868,23 +4871,35 @@ class Protocol(object):
 
             {
               "refs": {
-                "Sample": {
+                "bacteria": {
                   "new": "micro-1.5",
+                  "discard": true
+                },
+                "agar_plate": {
+                  "new": "1-flat",
                   "discard": true
                 }
               },
               "instructions": [
                 {
-                  "magnification": 1.0,
-                  "backlighting": false,
+                  "volume": "55.0:microliter",
+                  "to": "agar_plate/0",
+                  "from": "bacteria/0",
+                  "op": "spread"
+                },
+                {
+                  "where": "warm_37",
+                  "object": "agar_plate",
+                  "co2_percent": 0,
+                  "duration": "18:hour",
+                  "shaking": false,
+                  "op": "incubate"
+                },
+                {
+                  "dataref": "my_plate_image_1",
+                  "object": "agar_plate",
                   "mode": "top",
-                  "dataref": "image_1",
-                  "object": "Sample",
-                  "num_images": 3,
-                  "op": "image",
-                  "exposure": {
-                    "iso": 4
-                  }
+                  "op": "image_plate"
                 }
               ]
             }
@@ -5398,171 +5413,50 @@ class Protocol(object):
             )
         )
 
-    def evaporate(self, ref, mode, duration, evaporator_temperature,
-                  mode_params=None):
-        """
-        Removes liquid or moisture from a container using the mode specified.
-
-        Example Usage:
-
-        .. code-block:: python
-
-            p = Protocol()
-            c = p.ref("container", id=None,
-                      cont_type="micro-1.5", storage="cold_20")
-            blowdown_params = Evaporate.builders.get_mode_params(
-                                mode="blowdown", mode_params={
-                                    "gas":"nitrogen",
-                                    "vortex_speed":Unit("200:rpm"),
-                                    "blow_rate": "200:uL/sec"
-                                })
-            p.evaporate(c,
-                        mode="blowdown",
-                        duration="10:minute",
-                        evaporator_temperature="22:degC",
-                        mode_params = blowdown_params
-
-        .. code-block:: json
-
-            "instructions": [
-                {
-                    "ref": "container",
-                    "mode": "blowdown",
-                    "duration": "10:minute",
-                    "evaporator_temperature": "22:degC",
-                    "mode_params": {
-                        "gas": "ntirogen",
-                        "vortex_speed": "200:rpm",
-                        "blow_rate": "200:uL/sec"
-                    }
-                    "op": "evaporate"
-                }
-            ]
-
-        Parameters
-        ----------
-        ref : Container
-            Sample container
-        mode : Str
-            The mode of evaporation method
-        duration : Unit or Str
-            The length of time the sample is evaporated for
-        evaporator_temperature : Unit or str
-            The incubation temperature of the sample being evaporated
-        mode_params : Dict
-            Dictionary of parameters for evaporation mode
-
-        Returns
-        -------
-        Evaporate
-            Returns a :py:class:`autoprotocol.instruction.Evaporate`
-            instruction created from the specified parameters
-
-        Raises
-        ------
-        TypeError
-            If the provided object is not a Container type.
-        ValueError
-            If the duration is less than 0 minute
-        TypeError
-            If evaporator_temperature is not provided in Unit or str
-        ValueError
-            If the evaporation_temperature is lower than or equal to
-            condenser_temperature
-        """
-
-        duration = parse_unit(duration, "minute")
-        evaporator_temperature = parse_unit(evaporator_temperature, "celsius")
-        mode_params = Evaporate.builders.get_mode_params(mode, mode_params)
-        if not isinstance(ref, Container):
-            raise TypeError(
-                "Param `ref` must be a container object."
-            )
-
-        if duration <= Unit("0:minute"):
-            raise ValueError(
-                "Param `duration`: {} should be longer than 0 minute.".format(
-                    duration
-                )
-            )
-
-        if mode_params:
-            condenser_temp = mode_params.get("condenser_temperature")
-            if "condenser_temperature" in mode_params.keys():
-                if condenser_temp >= evaporator_temperature:
-                    raise ValueError(
-                        "Param `condenser_temperature`: {} cannot be higher "
-                        "than the evaporator_temperature: {}"
-                        "".format(condenser_temp, evaporator_temperature)
-                    )
-
-        return self._append_and_return(
-            Evaporate(
-                ref=ref,
-                duration=duration,
-                evaporator_temperature=evaporator_temperature,
-                mode=mode,
-                mode_params=mode_params
-            )
-        )
 
     def image(self, ref, mode, dataref, num_images=1, backlighting=None,
               exposure=None, magnification=1.0):
         """
         Capture an image of the specified container.
 
-        Example Usage:
+                Example Usage:
 
-        .. code-block:: python
+                .. code-block:: python
 
-            p = Protocol()
+                    p = Protocol()
 
-            agar_plate = p.ref("agar_plate", None, "1-flat", discard=True)
-            bact = p.ref("bacteria", None, "micro-1.5", discard=True)
-
-            p.spread(bact.well(0), agar_plate.well(0), "55:microliter")
-            p.incubate(agar_plate, "warm_37", "18:hour")
-            p.image_plate(agar_plate, mode="top", dataref="my_plate_image_1")
+                    sample = p.ref("Sample", None, "micro-1.5", discard=True)
+                    p.image(sample, "top", "image_1", num_images=3,
+                            backlighting=False, exposure={"iso": 4},
+                            magnification=1.0)
 
 
-        Autoprotocol Output:
+                Autoprotocol Output:
 
-        .. code-block:: json
+                .. code-block:: json
 
-            {
-              "refs": {
-                "bacteria": {
-                  "new": "micro-1.5",
-                  "discard": true
-                },
-                "agar_plate": {
-                  "new": "1-flat",
-                  "discard": true
-                }
-              },
-              "instructions": [
-                {
-                  "volume": "55.0:microliter",
-                  "to": "agar_plate/0",
-                  "from": "bacteria/0",
-                  "op": "spread"
-                },
-                {
-                  "where": "warm_37",
-                  "object": "agar_plate",
-                  "co2_percent": 0,
-                  "duration": "18:hour",
-                  "shaking": false,
-                  "op": "incubate"
-                },
-                {
-                  "dataref": "my_plate_image_1",
-                  "object": "agar_plate",
-                  "mode": "top",
-                  "op": "image_plate"
-                }
-              ]
-            }
+                    {
+                      "refs": {
+                        "Sample": {
+                          "new": "micro-1.5",
+                          "discard": true
+                        }
+                      },
+                      "instructions": [
+                        {
+                          "magnification": 1.0,
+                          "backlighting": false,
+                          "mode": "top",
+                          "dataref": "image_1",
+                          "object": "Sample",
+                          "num_images": 3,
+                          "op": "image",
+                          "exposure": {
+                            "iso": 4
+                          }
+                        }
+                      ]
+                    }
 
 
         Parameters
@@ -7172,3 +7066,111 @@ class Protocol(object):
                 dest_well.volume += volume
             else:
                 dest_well.volume = volume
+
+    def evaporate(self, ref, mode, duration, evaporator_temperature,
+                  mode_params=None):
+        """
+        Removes liquid or moisture from a container using the mode specified.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+            c = p.ref("container", id=None,
+                      cont_type="micro-1.5", storage="cold_20")
+            blowdown_params = Evaporate.builders.get_mode_params(
+                                mode="blowdown", mode_params={
+                                    "gas":"nitrogen",
+                                    "vortex_speed":Unit("200:rpm"),
+                                    "blow_rate": "200:uL/sec"
+                                })
+            p.evaporate(c,
+                        mode="blowdown",
+                        duration="10:minute",
+                        evaporator_temperature="22:degC",
+                        mode_params = blowdown_params
+
+        .. code-block:: json
+
+            "instructions": [
+                {
+                    "ref": "container",
+                    "mode": "blowdown",
+                    "duration": "10:minute",
+                    "evaporator_temperature": "22:degC",
+                    "mode_params": {
+                        "gas": "ntirogen",
+                        "vortex_speed": "200:rpm",
+                        "blow_rate": "200:uL/sec"
+                    }
+                    "op": "evaporate"
+                }
+            ]
+
+        Parameters
+        ----------
+        ref : Container
+            Sample container
+        mode : Str
+            The mode of evaporation method
+        duration : Unit or Str
+            The length of time the sample is evaporated for
+        evaporator_temperature : Unit or str
+            The incubation temperature of the sample being evaporated
+        mode_params : Dict
+            Dictionary of parameters for evaporation mode
+
+        Returns
+        -------
+        Evaporate
+            Returns a :py:class:`autoprotocol.instruction.Evaporate`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            If the provided object is not a Container type.
+        ValueError
+            If the duration is less than 0 minute
+        TypeError
+            If evaporator_temperature is not provided in Unit or str
+        ValueError
+            If the evaporation_temperature is lower than or equal to
+            condenser_temperature
+        """
+
+        duration = parse_unit(duration, "minute")
+        evaporator_temperature = parse_unit(evaporator_temperature, "celsius")
+        mode_params = Evaporate.builders.get_mode_params(mode, mode_params)
+        if not isinstance(ref, Container):
+            raise TypeError(
+                "Param `ref` must be a container object."
+            )
+
+        if duration <= Unit("0:minute"):
+            raise ValueError(
+                "Param `duration`: {} should be longer than 0 minute.".format(
+                    duration
+                )
+            )
+
+        if mode_params:
+            condenser_temp = mode_params.get("condenser_temperature")
+            if "condenser_temperature" in mode_params.keys():
+                if condenser_temp >= evaporator_temperature:
+                    raise ValueError(
+                        "Param `condenser_temperature`: {} cannot be higher "
+                        "than the evaporator_temperature: {}"
+                        "".format(condenser_temp, evaporator_temperature)
+                    )
+
+        return self._append_and_return(
+            Evaporate(
+                ref=ref,
+                duration=duration,
+                evaporator_temperature=evaporator_temperature,
+                mode=mode,
+                mode_params=mode_params
+            )
+        )

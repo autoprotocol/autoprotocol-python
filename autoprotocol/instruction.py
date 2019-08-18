@@ -1331,6 +1331,79 @@ class Evaporate(Instruction):
 
 
 
+
+
+class SPE(Instruction):
+
+    """
+    Apply a solid phase extraction (spe) technique to a sample.
+
+    Parameters
+    ----------
+    well : Well
+        Well to solid phase extract.
+    cartridge : str
+        Cartridge to use for solid phase extraction.
+    pressure_mode : str
+        The direction of pressure applied to the cartridge to force
+        liquid flow. One of "positive", "negative".
+    load_sample: dict
+        Parameters for applying the sample to the cartridge.
+        Single 'mobile_phase_param'.
+    elute:list of dicts
+        Parameters for applying a mobile phase to the cartridge
+        with one or more solvents. List of 'mobile_phase_params'.
+        Requires `destination_well`.
+    condition: list of dicts, optional
+        Parameters for applying a mobile phase to the cartridge
+        with one or more solvents. List of 'mobile_phase_params'.
+    equilibrate: list of dicts, optional
+        Parameters for applying a mobile phase to the cartridge
+        with one or more solvents. List of 'mobile_phase_params'.
+    rinse: list of dicts, optional
+        Parameters for applying a mobile phase to the cartridge
+        with one or more solvents. List of 'mobile_phase_params'.
+
+    mobile_phase_params:
+    resource_id: str
+        Resource ID of desired solvent.
+    volume: volume
+        Volume added to the cartridge.
+    loading_flowrate: Unit
+        Speed at which volume is added to cartridge.
+    settle_time: Unit
+        Duration for which the solvent remains on the cartridge
+        before a pressure mode is applied.
+    processing_time: Unit
+        Duration for which pressure is applied to the cartridge
+        after `settle_time` has elapsed.
+    flow_pressure: Unit
+        Pressure applied to the column.
+    destination_well: Well
+        Destination well for eluate.  Required parameter for
+        each `elute` mobile phase parameter
+
+    """
+    builders = SPEBuilders()
+
+    def __init__(self, well, cartridge, pressure_mode,
+                 load_sample, elute, condition,
+                 equilibrate, rinse):
+        json_dict = {
+            "well": well,
+            "cartridge": cartridge,
+            "pressure_mode": pressure_mode,
+            "condition": condition,
+            "load_sample": load_sample,
+            "rinse": rinse,
+            "elute": elute,
+            "equilibrate": equilibrate
+        }
+
+        super(SPE, self).__init__(op="spe", data=json_dict)
+
+
+
 class MeasureConcentration(Instruction):
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified

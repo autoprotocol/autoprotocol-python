@@ -5228,6 +5228,192 @@ class Protocol(object):
                                                 parsed_frequency,
                                                 parsed_temperature))
 
+
+    def spe(self, well, cartridge, pressure_mode,
+            load_sample, elute, condition=None,
+            equilibrate=None, rinse=None):
+        """
+        Apply a solid phase extraction (spe) technique to a sample.
+
+        Example Usage:
+
+        .. code-block:: python
+
+            p = Protocol()
+
+            elute_params = [
+                SPE.builders.mobile_phase_params(
+                    is_elute=True,
+                    volume="2:microliter",
+                    loading_flowrate="100:ul/second",
+                    settle_time="2:minute",
+                    processing_time="3:minute",
+                    flow_pressure="2:bar",
+                    resource_id="solvent_a",
+                    destination_well=p.ref("Elute %s" % i, None,
+                                           "micro-1.5",
+                                           discard=True).well(0))
+                for i in range(3)
+            ]
+
+            sample_loading_params = SPE.builders.mobile_phase_params(
+                volume="10:microliter", loading_flowrate="1:ul/second",
+                settle_time="2:minute", processing_time="3:minute",
+                flow_pressure="2:bar", is_sample=True)
+
+            cartridge = "spe_cartridge"
+            sample = p.ref("Sample", None, "micro-1.5", discard=True).well(0)
+
+            p.spe(sample, cartridge, "positive",
+                  load_sample=sample_loading_params, elute=elute_params)
+
+        Autoprotocol Output:
+
+        .. code-block:: none
+
+          "instructions": [
+                {
+                  "op": "spe",
+                  "elute": [
+                    {
+                      "loading_flowrate": "100:microliter/second",
+                      "resource_id": "solvent_a",
+                      "settle_time": "2:minute",
+                      "volume": "2:microliter",
+                      "flow_pressure": "2:bar",
+                      "destination_well": "Elute 0/0",
+                      "processing_time": "3:minute"
+                    },
+                    {
+                      "loading_flowrate": "100:microliter/second",
+                      "resource_id": "solvent_a",
+                      "settle_time": "2:minute",
+                      "volume": "2:microliter",
+                      "flow_pressure": "2:bar",
+                      "destination_well": "Elute 1/0",
+                      "processing_time": "3:minute"
+                    },
+                    {
+                      "loading_flowrate": "100:microliter/second",
+                      "resource_id": "solvent_a",
+                      "settle_time": "2:minute",
+                      "volume": "2:microliter",
+                      "flow_pressure": "2:bar",
+                      "destination_well": "Elute 2/0",
+                      "processing_time": "3:minute"
+                    }
+                  ],
+                  "cartridge": "spe_cartridge",
+                  "well": "Sample/0",
+                  "load_sample": {
+                    "flow_pressure": "2:bar",
+                    "loading_flowrate": "1:microliter/second",
+                    "settle_time": "2:minute",
+                    "processing_time": "3:minute",
+                    "volume": "10:microliter"
+                  },
+                  "pressure_mode": "positive"
+                }
+              ]
+
+        Parameters
+        ----------
+        well : Well
+            Well to solid phase extract.
+        cartridge : str
+            Cartridge to use for solid phase extraction.
+        pressure_mode : str
+            The direction of pressure applied to the cartridge to force
+            liquid flow. One of "positive", "negative".
+        load_sample: dict
+            Parameters for applying the sample to the cartridge.
+            Single 'mobile_phase_param'.
+        elute:list of dicts
+            Parameters for applying a mobile phase to the cartridge
+            with one or more solvents. List of 'mobile_phase_params'.
+            Requires `destination_well`.
+        condition: list of dicts, optional
+            Parameters for applying a mobile phase to the cartridge
+            with one or more solvents. List of 'mobile_phase_params'.
+        equilibrate: list of dicts, optional
+            Parameters for applying a mobile phase to the cartridge
+            with one or more solvents. List of 'mobile_phase_params'.
+        rinse: list of dicts, optional
+            Parameters for applying a mobile phase to the cartridge
+            with one or more solvents. List of 'mobile_phase_params'.
+
+        mobile_phase_params:
+        resource_id: str
+            Resource ID of desired solvent.
+        volume: volume
+            Volume added to the cartridge.
+        loading_flowrate: Unit
+            Speed at which volume is added to cartridge.
+        settle_time: Unit
+            Duration for which the solvent remains on the cartridge
+            before a pressure mode is applied.
+        processing_time: Unit
+            Duration for which pressure is applied to the cartridge
+            after `settle_time` has elapsed.
+        flow_pressure: Unit
+            Pressure applied to the column.
+        destination_well: Well
+            Destination well for eluate.  Required parameter for
+            each `elute` mobile phase parameter
+
+        Returns
+        -------
+        SPE
+            Returns the :py:class:`autoprotocol.instruction.SPE`
+            instruction created from the specified parameters
+
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. well given is not of type Well
+        ValueError
+            Wells specified are not from the same container
+        ValueError
+            Invalid pressure_mode
+        ValueError
+            settle_time, processing_time, flow_pressure not greater than 0
+        ValueError
+            If not exactly one elution parameter for each elution container
+        UnitError
+            Improperly formatted units for mobile phase parameters
+
+        """
+        if not is_valid_well(well):
+            raise TypeError(
+                "Well must be of type Well."
+            )
+        if not isinstance(cartridge, str):
+            raise TypeError(
+                "Cartrige must be of type string."
+            )
+        valid_pressure_modes = ["positive", "negative"]
+        if pressure_mode not in valid_pressure_modes:
+            raise ValueError("'pressure_mode': {} has to be one of {}"
+                             "".format(pressure_mode,
+                                       valid_pressure_modes))
+        load_sample = SPE.builders.mobile_phase_params(is_sample=True,
+                                                       **load_sample)
+        SPE.builders.spe_params(elute, is_elute=True)
+        if condition:
+            SPE.builders.spe_params(condition)
+        if equilibrate:
+            SPE.builders.spe_params(equilibrate)
+        if rinse:
+            SPE.builders.spe_params(rinse)
+
+        return self._append_and_return(
+            SPE(
+                well, cartridge, pressure_mode,
+                load_sample, elute, condition, equilibrate,
+                rinse
+            )
+        )
+
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
 

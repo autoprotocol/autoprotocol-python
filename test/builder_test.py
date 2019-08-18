@@ -1,9 +1,8 @@
-
- # pragma pylint: disable=missing-docstring
+# pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.instruction import Thermocycle, Dispense, Spectrophotometry,\
-    Evaporate
+from autoprotocol.instruction import Thermocycle, Dispense, \
+    Spectrophotometry, Evaporate, SPE
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
@@ -103,6 +102,7 @@ class TestDispenseBuilders(object):
         )
         with pytest.raises(ValueError):
             Dispense.builders.shake_after("5:second", path="foo")
+
 
 class TestThermocycleBuilders(object):
     def test_group_input(self):
@@ -381,3 +381,48 @@ class TestEvaporateBuilders(object):
                 "blow_rate": "200:uL/sec"
             })
         assert test1["gas"] == "nitrogen"
+
+
+class TestSPEBuilders(object):
+    mobile_phase_reference = [
+        cast_values_as_units(
+            {
+                "volume": "10:microliter",
+                "loading_flowrate": "23:ul/second",
+                "settle_time": "2:second",
+                "processing_time": "1:minute",
+                "flow_pressure": "2:bar",
+                "resource_id": "solvent_b"
+            }),
+        cast_values_as_units(
+            {
+                "volume": "10:milliliter",
+                "loading_flowrate": "1:ul/second",
+                "settle_time": "2:minute",
+                "processing_time": "3:minute",
+                "flow_pressure": "2:bar",
+                "resource_id": "solvent_a"
+            })
+    ]
+    sample_reference = {
+        "volume": "10:microliter",
+        "loading_flowrate": "23:ul/second",
+        "settle_time": "2:second",
+        "processing_time": "1:minute",
+        "flow_pressure": "2:bar"
+    }
+
+
+    def test_mobile_phase_builder(self):
+        for param in self.mobile_phase_reference:
+            assert(param ==
+                   SPE.builders.mobile_phase_params(**param))
+    def test_spe_phase_builder(self):
+        assert(self.mobile_phase_reference ==
+               SPE.builders.spe_params(self.mobile_phase_reference))
+
+
+    def test_sample_builder(self):
+        assert(cast_values_as_units(self.sample_reference) ==
+               SPE.builders.mobile_phase_params(is_sample=True,
+                                                **self.sample_reference))

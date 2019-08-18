@@ -414,6 +414,102 @@ class ThermocycleBuilders(InstructionBuilders):
 
         return step_dict
 
+class SPEBuilders(InstructionBuilders):
+    """
+    These builders are meant for helping to construct arguments for the
+    `SPE` instruction.
+    """
+    def spe_params(self, params, is_elute=False):
+        if not isinstance(params, list):
+            raise ValueError("SPE mobile phase parameters {} must be a list.")
+        parsed_params = []
+        for param in params:
+            parsed_params.append(self.mobile_phase_params(is_elute=is_elute,
+                                                          **param))
+        return parsed_params
+
+
+
+    def mobile_phase_params(self, volume, loading_flowrate, settle_time,
+                            processing_time, flow_pressure,
+                            resource_id=None, is_sample=False,
+                            destination_well=None, is_elute=False):
+        """
+        Create a dictionary with mobile phase parameters which can be
+        used as input for instructions.
+
+        Parameters
+        ----------
+        volume: str or Unit
+            the duration to shake the plate for
+        loading_flowrate: str or Unit, optional
+            amplitude of shaking between 1 and 6:millimeter
+        settle_time: bool, optional
+            True for orbital and False for linear shaking
+
+        Returns
+        -------
+        dict
+            spe mobile_phase_params
+
+        Raises
+        ------
+        ValueError
+            if shake `flow_pressure` is not positive
+        ValueError
+            if mobile phase solvent and resource_id not included
+        TypeError
+            if `resource_id` is not a string
+        ValueError
+            if `settle_time` is not positive
+        ValueError
+            if `processing_time` is not positive
+
+        """
+        volume = parse_unit(volume, "milliliter")
+        settle_time = parse_unit(settle_time, "second")
+        if settle_time <= Unit(0, "second"):
+            raise ValueError("settle_time: {} is not positive"
+                             "".format(settle_time))
+
+        processing_time = parse_unit(processing_time, "second")
+        if processing_time <= Unit(0, "second"):
+            raise ValueError("processing_time: {} is not positive"
+                             "".format(processing_time))
+
+        flow_pressure = parse_unit(flow_pressure, "bar")
+        if flow_pressure <= Unit(0, "bar"):
+            raise ValueError("flow_pressure: {} must be positive."
+                             "".format(flow_pressure))
+        loading_flowrate = parse_unit(loading_flowrate, "ul/s")
+
+        if not is_sample:
+            if not resource_id:
+                raise ValueError("A 'resource_id' must be included "
+                                 "for mobile_phase_params.")
+            if not isinstance(resource_id, str):
+                raise TypeError("'resource_id' {} must be a string")
+        if is_elute:
+            if not destination_well:
+                raise ValueError("A 'destination_well' must be included "
+                                 "for elute parameter.")
+            if not isinstance(destination_well, Well):
+                raise TypeError("'destination_well' {} must be of type Well")
+
+        mode_params = {
+            "volume": volume,
+            "settle_time": settle_time,
+            "processing_time": processing_time,
+            "flow_pressure": flow_pressure,
+            "loading_flowrate": loading_flowrate,
+            "resource_id": resource_id,
+            "destination_well": destination_well
+        }
+
+        mode_params = {k: v for k, v in mode_params.items() if v is not None}
+
+        return mode_params
+
 
 class DispenseBuilders(InstructionBuilders):
     """

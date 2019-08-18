@@ -6,7 +6,7 @@ from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
     Thermocycle, Incubate, Spin, Dispense, GelPurify,
     Fluorescence, Absorbance, Luminescence, Instruction,
-    Evaporate
+    Evaporate, SPE
 )
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
@@ -130,6 +130,7 @@ class TestRef(object):
                     p.ref(name + cover, cont_type=name, cover=cover, discard=True)
                     ref = list(p.as_dict()["refs"].values())[0]
                     assert ref["cover"] == cover
+
 
 class TestThermocycle(object):
 
@@ -2638,6 +2639,51 @@ class TestCountCells(object):
             # Not of correct dimensionality
             self.p.count_cells(self.tube.well(0), "10:meter", "cell_count_4",
                                ["trypan_blue"])
+
+
+class TestSPE(object):
+    p = Protocol()
+    sample = p.ref("Sample", None, "micro-1.5", discard=True).well(0)
+    elution_well = p.ref("Elution", None, "micro-1.5",
+                         discard=True).well(0)
+    elute_params = [
+        SPE.builders.mobile_phase_params(
+            volume="2:microliter",
+            loading_flowrate="100:ul/second",
+            settle_time="2:minute",
+            processing_time="3:minute",
+            flow_pressure="2:bar",
+            resource_id="solvent_a",
+            destination_well=elution_well,
+            is_elute=True)]
+
+    bad_elute_params = [
+        SPE.builders.mobile_phase_params(
+            volume="2:microliter",
+            loading_flowrate="100:ul/second",
+            settle_time="2:minute",
+            processing_time="3:minute",
+            flow_pressure="2:bar",
+            resource_id="solvent_a")]
+
+    load_sample_params = SPE.builders.mobile_phase_params(
+        volume="10:microliter", loading_flowrate="1:ul/second",
+        settle_time="2:minute", processing_time="3:minute",
+        flow_pressure="2:bar", is_sample=True)
+
+    cartridge = "spe_cartridge"
+
+    def test_good_inputs(self):
+        self.p.spe(self.sample, self.cartridge, "positive",
+                   load_sample=self.load_sample_params,
+                   elute=self.elute_params)
+        assert (self.p.instructions[-1].op == "spe")
+
+    def test_bad_inputs(self):
+        with pytest.raises(ValueError):
+            self.p.spe(self.sample, self.cartridge, "positive",
+                       load_sample=self.load_sample_params,
+                       elute=self.bad_elute_params)
 
 
 class TestTransferVolume(object):

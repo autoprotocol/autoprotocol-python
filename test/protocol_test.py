@@ -2547,6 +2547,35 @@ class TestProvision(object):
             self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
 
 
+class TestImage(object):
+    p = Protocol()
+    c1 = p.ref("c1", cont_type="96-pcr", discard=True)
+
+    def test_image(self):
+        self.p.image(self.c1, "top", "dataref_1", num_images=3,
+                     backlighting=False, exposure={"iso": 4},
+                     magnification=1.5)
+        assert (self.p.instructions[-1].op == "image")
+        assert (self.p.instructions[-1].data["magnification"] == 1.5)
+
+    def test_image_default(self):
+        self.p.image(self.c1, "top", "dataref_1")
+        assert (self.p.instructions[-1].op == "image")
+        assert (self.p.instructions[-1].data["magnification"] == 1.0)
+        assert (self.p.instructions[-1].data["num_images"] == 1)
+
+    def test_bad_inputs(self):
+        with pytest.raises(ValueError):
+            self.p.image(self.c1, "bad_mode", "dataref_1")
+        with pytest.raises(TypeError):
+            self.p.image(self.c1, "top", "dataref_1", num_images=0)
+        with pytest.raises(TypeError):
+            self.p.image(self.c1, "top", "dataref_1", num_images=None)
+        with pytest.raises(TypeError):
+            self.p.image(self.c1, "top", "dataref_1",
+                         exposure={"iso": "true"})
+
+
 class TestSeal(object):
     p = Protocol()
     c1 = p.ref("c1", cont_type="96-pcr", discard=True)

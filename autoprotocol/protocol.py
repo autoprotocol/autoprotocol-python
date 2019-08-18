@@ -4436,7 +4436,7 @@ class Protocol(object):
         pick["from"] = sources
         if len(set([s.container for s in pick["from"]])) > 1:
             raise ValueError("All source wells for autopick must exist "
-                               "on the same container")
+                             "on the same container")
         dests = WellGroup(dests)
         pick["to"] = dests
         pick["min_abort"] = min_abort
@@ -4847,6 +4847,7 @@ class Protocol(object):
         return self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref, mode, dataref):
+
         """
         Capture an image of the specified container.
 
@@ -5228,10 +5229,8 @@ class Protocol(object):
                                                 parsed_frequency,
                                                 parsed_temperature))
 
-
-    def spe(self, well, cartridge, pressure_mode,
-            load_sample, elute, condition=None,
-            equilibrate=None, rinse=None):
+    def spe(self, well, cartridge, pressure_mode, load_sample, elute,
+            condition=None, equilibrate=None, rinse=None):
         """
         Apply a solid phase extraction (spe) technique to a sample.
 
@@ -5413,6 +5412,129 @@ class Protocol(object):
                 rinse
             )
         )
+
+
+    def image(self, ref, mode, dataref, num_images=1, backlighting=None,
+              exposure=None, magnification=1.0):
+        """
+        Capture an image of the specified container.
+
+                Example Usage:
+
+                .. code-block:: python
+
+                    p = Protocol()
+
+                    sample = p.ref("Sample", None, "micro-1.5", discard=True)
+                    p.image(sample, "top", "image_1", num_images=3,
+                            backlighting=False, exposure={"iso": 4},
+                            magnification=1.0)
+
+
+                Autoprotocol Output:
+
+                .. code-block:: json
+
+                    {
+                      "refs": {
+                        "Sample": {
+                          "new": "micro-1.5",
+                          "discard": true
+                        }
+                      },
+                      "instructions": [
+                        {
+                          "magnification": 1.0,
+                          "backlighting": false,
+                          "mode": "top",
+                          "dataref": "image_1",
+                          "object": "Sample",
+                          "num_images": 3,
+                          "op": "image",
+                          "exposure": {
+                            "iso": 4
+                          }
+                        }
+                      ]
+                    }
+
+
+        Parameters
+        ----------
+        ref : Container
+            Container of which to take image.
+        mode : Enum("top", "bottom", "side")
+            Angle of image.
+        num_images : int
+            Number of images taken of the container. Defaults to 1.
+        dataref : str
+            Name of data reference of resulting image
+        backlighting : Bool, optional
+            Whether back-lighting is desired.
+        magnification : float
+            Ratio of sizes of the image projected on the camera
+            sensor compared to the actual size of the object
+            captured. Defaults to 1.0.
+        exposure : dict, optional
+            Parameters to control exposure: "aperture", "iso",
+            and "shutter_speed".
+        shutter_speed: Unit, optional
+            Duration that the imaging sensor is exposed.
+        iso : Float, optional
+            Light sensitivity of the imaging sensor.
+        aperture: Float, optional
+            Diameter of the lens opening.
+
+
+        Returns
+        -------
+        Image
+            Returns the :py:class:`autoprotocol.instruction.Image`
+            instruction created from the specified parameters
+
+        """
+        valid_image_modes = ["top", "bottom", "side"]
+        if not isinstance(ref, Container):
+            raise TypeError("image ref: {} has to be of type "
+                            "Container".format(ref))
+        if mode not in valid_image_modes:
+            raise ValueError("specified mode: {} must be one of {}"
+                             "".format(mode, valid_image_modes))
+        if not isinstance(dataref, str):
+            raise TypeError("dataref must be of type String.")
+        if not isinstance(num_images, int) or num_images <= 0:
+            raise TypeError("num_images must be a positive integer.")
+        if magnification:
+            if not isinstance(magnification, (float, int)) or \
+               magnification <= 0:
+                raise TypeError("magnification must be a number.")
+        if backlighting:
+            if not isinstance(backlighting, bool):
+                raise TypeError("backlighting must be a boolean.")
+        if exposure:
+            valid_exposure_params = ["shutter_speed", "iso", "aperture"]
+            if not isinstance(exposure, dict):
+                raise TypeError("exposure must be a dict with "
+                                "optional keys: {}."
+                                "".format(valid_exposure_params))
+            if not all(k in valid_exposure_params for k in exposure):
+                raise ValueError("Invalid exposure param.  Valid params: {}."
+                                 "".format(valid_exposure_params))
+            shutter_speed = exposure.get("shutter_speed")
+            if shutter_speed:
+                shutter_speed = parse_unit(shutter_speed, "millimeter/s")
+            iso = exposure.get("iso")
+            if iso:
+                if not isinstance(iso, (float, int)):
+                    raise TypeError("iso must be a number.")
+            aperture = exposure.get("aperture")
+            if aperture:
+                if not isinstance(aperture, (float, int)):
+                    raise TypeError("aperture must be a number.")
+
+        return self._append_and_return(Image(ref, mode, dataref, num_images,
+                                             backlighting, exposure,
+                                             magnification))
 
     def _ref_for_well(self, well):
         return "%s/%d" % (self._ref_for_container(well.container), well.index)
@@ -7040,7 +7162,7 @@ class Protocol(object):
                     raise ValueError(
                         "Param `condenser_temperature`: {} cannot be higher "
                         "than the evaporator_temperature: {}"
-                        "".format(condenser_temp,evaporator_temperature)
+                        "".format(condenser_temp, evaporator_temperature)
                     )
 
         return self._append_and_return(

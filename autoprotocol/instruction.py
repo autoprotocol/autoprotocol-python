@@ -1245,6 +1245,53 @@ class ImagePlate(Instruction):
         })
 
 
+class Image(Instruction):
+    """
+    Capture an image of the specified container.
+
+    Parameters
+    ----------
+    ref : Container
+        Container of which to take image.
+    mode : str
+        Angle of image, one of "top", "bottom", "side"
+    num_images : int
+        Number of images taken of the container. Defaults to 1.
+    dataref : str
+        Name of data reference of resulting image
+    backlighting : Bool, optional
+        Whether back-lighting is desired.
+    magnification : float
+        Ratio of sizes of the image projected on the camera
+        sensor compared to the actual size of the object
+        captured. Defaults to 1.0.
+    exposure : dict, optional
+        Parameters to control exposure: "aperture", "iso",
+        and "shutter_speed".
+    shutter_speed: Unit, optional
+        Duration that the imaging sensor is exposed.
+    iso : Float, optional
+        Light sensitivity of the imaging sensor.
+    aperture: Float, optional
+        Diameter of the lens opening.
+
+    """
+
+    def __init__(self, ref, mode, dataref, num_images,
+                 backlighting, exposure, magnification):
+        json_dict = {
+            "object": ref,
+            "mode": mode,
+            "dataref": dataref,
+            "num_images": num_images,
+            "magnification": magnification,
+            "backlighting": backlighting,
+            "exposure": exposure
+        }
+
+        super(Image, self).__init__(op="image", data=json_dict)
+
+
 class Provision(Instruction):
     """
     Provision a commercial resource from a catalog into the specified
@@ -1330,9 +1377,6 @@ class Evaporate(Instruction):
         super(Evaporate, self).__init__(op="evaporate", data=json_dict)
 
 
-
-
-
 class SPE(Instruction):
 
     """
@@ -1403,7 +1447,6 @@ class SPE(Instruction):
         super(SPE, self).__init__(op="spe", data=json_dict)
 
 
-
 class MeasureConcentration(Instruction):
     """
     Measure the concentration of DNA, ssDNA, RNA or Protein in the specified
@@ -1430,6 +1473,7 @@ class MeasureConcentration(Instruction):
                      "measurement": measurement}
         super(MeasureConcentration, self).__init__(op="measure_concentration",
                                                    data=json_dict)
+
 
 class Sonicate(Instruction):
     """

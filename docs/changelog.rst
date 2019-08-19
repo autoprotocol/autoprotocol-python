@@ -2,14 +2,16 @@
 Changelog
 =========
 
-* :release: `5.6.0 <2019-08-18>`
+* :support:`205` Fix changelog formatting
+
+* :release:`5.6.0 <2019-08-18>`
 * :feature:`203` Add `image` instruction
 * :feature:`202` Add `SPE` instruction
 * :feature:`201` Add `evaporate` instruction
 * :feature:`200` Add `sonicate` instruction
 * :feature:`199` Add `agitate` instruction
 
-* :release: `5.5.0 <2019-07-17>`
+* :release:`5.5.0 <2019-07-17>`
 * :feature:`196` Add get_protocol_preview in harness
 
 * :release:`5.4.1 <2019-05-06>`

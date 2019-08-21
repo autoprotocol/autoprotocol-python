@@ -1268,12 +1268,13 @@ class Image(Instruction):
     exposure : dict, optional
         Parameters to control exposure: "aperture", "iso",
         and "shutter_speed".
-    shutter_speed: Unit, optional
-        Duration that the imaging sensor is exposed.
-    iso : Float, optional
-        Light sensitivity of the imaging sensor.
-    aperture: Float, optional
-        Diameter of the lens opening.
+
+        shutter_speed: Unit, optional
+            Duration that the imaging sensor is exposed.
+        iso : Float, optional
+            Light sensitivity of the imaging sensor.
+        aperture: Float, optional
+            Diameter of the lens opening.
 
     """
 
@@ -1394,38 +1395,38 @@ class SPE(Instruction):
     load_sample: dict
         Parameters for applying the sample to the cartridge.
         Single 'mobile_phase_param'.
-    elute:list of dicts
+    elute: list(dict)
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
         Requires `destination_well`.
-    condition: list of dicts, optional
+    condition: list(dict), optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
-    equilibrate: list of dicts, optional
+    equilibrate: list(dict)), optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
-    rinse: list of dicts, optional
+    rinse: list(dict), optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
 
-    mobile_phase_params:
-    resource_id: str
-        Resource ID of desired solvent.
-    volume: volume
-        Volume added to the cartridge.
-    loading_flowrate: Unit
-        Speed at which volume is added to cartridge.
-    settle_time: Unit
-        Duration for which the solvent remains on the cartridge
-        before a pressure mode is applied.
-    processing_time: Unit
-        Duration for which pressure is applied to the cartridge
-        after `settle_time` has elapsed.
-    flow_pressure: Unit
-        Pressure applied to the column.
-    destination_well: Well
-        Destination well for eluate.  Required parameter for
-        each `elute` mobile phase parameter
+        mobile_phase_params:
+            resource_id: str
+                Resource ID of desired solvent.
+            volume: volume
+                Volume added to the cartridge.
+            loading_flowrate: Unit
+                Speed at which volume is added to cartridge.
+            settle_time: Unit
+                Duration for which the solvent remains on the cartridge
+                before a pressure mode is applied.
+            processing_time: Unit
+                Duration for which pressure is applied to the cartridge
+                after `settle_time` has elapsed.
+            flow_pressure: Unit
+                Pressure applied to the column.
+            destination_well: Well
+                Destination well for eluate.  Required parameter for
+                each `elute` mobile phase parameter
 
     """
     builders = SPEBuilders()
@@ -1481,7 +1482,7 @@ class Sonicate(Instruction):
 
     Parameters
     ----------
-    wells : Well, WellGroup, List of Wells
+    wells : Well or WellGroup or list(Well)
        Wells to be sonicated
     duration : Unit or str
         Duration for which to sonicate wells

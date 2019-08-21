@@ -6,7 +6,7 @@ from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
     Thermocycle, Incubate, Spin, Dispense, GelPurify,
     Fluorescence, Absorbance, Luminescence, Instruction,
-    Evaporate, SPE
+    SPE
 )
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError

@@ -2069,6 +2069,7 @@ class Protocol(object):
         Example Usage:
 
         .. code-block:: python
+
             p = Protocol()
             plate = p.ref("test pcr plate", id=None, cont_type="96-pcr",
                           storage="cold_4")
@@ -2083,6 +2084,7 @@ class Protocol(object):
         Autoprotocol Output:
 
         .. code-block:: none
+
             "instructions" : [
                 {
                     "object": "test pcr plate",
@@ -5084,23 +5086,21 @@ class Protocol(object):
 
         .. code-block:: json
 
-            "instructions": [
-                {
-                    "wells": ["sample_plate/0", "sample_plate/1"],
-                    "mode": "bath",
-                    "duration": "1:minute",
-                    "temperature": "ambient",
-                    "frequency": "40:kilohertz"
-                    "mode_params": {
-                        "sample_holder": "suspender"
-                    }
-                    "op": "sonicate"
+            {
+                "op": "sonicate",
+                "wells": ["sample_plate/0", "sample_plate/1"],
+                "mode": "bath",
+                "duration": "1:minute",
+                "temperature": "ambient",
+                "frequency": "40:kilohertz"
+                "mode_params": {
+                    "sample_holder": "suspender"
                 }
-            ]
+            }
 
         Parameters
         ----------
-        wells : Well, WellGroup, List of Wells
+        wells : Well or WellGroup or list(Well)
            Wells to be sonicated
         duration : Unit or str
             Duration for which to sonicate wells
@@ -5119,26 +5119,27 @@ class Protocol(object):
         mode_params: Dict
             Dictionary containing mode parameters for the specified mode.
 
-        .. code-block:: json
-            {
-                "mode": "bath",
-                "mode_params":
-                    {
-                        "sample_holder": Enum({"suspender",
-                                               "perforated_container",
-                                               "solid_container"})
-                        "power": Unit or str, optional
-                    }
-            }
-            - or -
-            {
-                "mode": "horn",
-                "mode_params":
-                    {
-                        "duty_cycle": Float, 0 < value <=1
-                        "amplitude": Unit or str
-                    }
-            }
+            .. code-block:: none
+
+                {
+                    "mode": "bath",
+                    "mode_params":
+                        {
+                            "sample_holder": Enum({"suspender",
+                                                   "perforated_container",
+                                                   "solid_container"})
+                            "power": Unit or str, optional
+                        }
+                }
+                - or -
+                {
+                    "mode": "horn",
+                    "mode_params":
+                        {
+                            "duty_cycle": Float, 0 < value <=1
+                            "amplitude": Unit or str
+                        }
+                }
 
 
         Returns
@@ -5320,38 +5321,38 @@ class Protocol(object):
         load_sample: dict
             Parameters for applying the sample to the cartridge.
             Single 'mobile_phase_param'.
-        elute:list of dicts
+        elute: list(dict))
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
             Requires `destination_well`.
-        condition: list of dicts, optional
+        condition: list(dict), optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
-        equilibrate: list of dicts, optional
+        equilibrate: list(dict), optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
-        rinse: list of dicts, optional
+        rinse: list(dict), optional
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
 
-        mobile_phase_params:
-        resource_id: str
-            Resource ID of desired solvent.
-        volume: volume
-            Volume added to the cartridge.
-        loading_flowrate: Unit
-            Speed at which volume is added to cartridge.
-        settle_time: Unit
-            Duration for which the solvent remains on the cartridge
-            before a pressure mode is applied.
-        processing_time: Unit
-            Duration for which pressure is applied to the cartridge
-            after `settle_time` has elapsed.
-        flow_pressure: Unit
-            Pressure applied to the column.
-        destination_well: Well
-            Destination well for eluate.  Required parameter for
-            each `elute` mobile phase parameter
+            mobile_phase_params:
+                resource_id: str
+                    Resource ID of desired solvent.
+                volume: volume
+                    Volume added to the cartridge.
+                loading_flowrate: Unit
+                    Speed at which volume is added to cartridge.
+                settle_time: Unit
+                    Duration for which the solvent remains on the cartridge
+                    before a pressure mode is applied.
+                processing_time: Unit
+                    Duration for which pressure is applied to the cartridge
+                    after `settle_time` has elapsed.
+                flow_pressure: Unit
+                    Pressure applied to the column.
+                destination_well: Well
+                    Destination well for eluate.  Required parameter for
+                    each `elute` mobile phase parameter
 
         Returns
         -------
@@ -5471,12 +5472,13 @@ class Protocol(object):
         exposure : dict, optional
             Parameters to control exposure: "aperture", "iso",
             and "shutter_speed".
-        shutter_speed: Unit, optional
-            Duration that the imaging sensor is exposed.
-        iso : Float, optional
-            Light sensitivity of the imaging sensor.
-        aperture: Float, optional
-            Diameter of the lens opening.
+
+            shutter_speed: Unit, optional
+                Duration that the imaging sensor is exposed.
+            iso : Float, optional
+                Light sensitivity of the imaging sensor.
+            aperture: Float, optional
+                Diameter of the lens opening.
 
 
         Returns
@@ -5485,6 +5487,12 @@ class Protocol(object):
             Returns the :py:class:`autoprotocol.instruction.Image`
             instruction created from the specified parameters
 
+        Raises
+        ------
+        TypeError
+            Invalid input types, e.g. num_images is not a positive integer
+        ValueError
+            Invalid exposure parameter supplied
         """
         valid_image_modes = ["top", "bottom", "side"]
         if not isinstance(ref, Container):
@@ -7086,20 +7094,18 @@ class Protocol(object):
 
         .. code-block:: json
 
-            "instructions": [
-                {
-                    "ref": "container",
-                    "mode": "blowdown",
-                    "duration": "10:minute",
-                    "evaporator_temperature": "22:degC",
-                    "mode_params": {
-                        "gas": "ntirogen",
-                        "vortex_speed": "200:rpm",
-                        "blow_rate": "200:uL/sec"
-                    }
-                    "op": "evaporate"
+            {
+                "op": "evaporate",
+                "ref": "container",
+                "mode": "blowdown",
+                "duration": "10:minute",
+                "evaporator_temperature": "22:degC",
+                "mode_params": {
+                    "gas": "ntirogen",
+                    "vortex_speed": "200:rpm",
+                    "blow_rate": "200:uL/sec"
                 }
-            ]
+            }
 
         Parameters
         ----------

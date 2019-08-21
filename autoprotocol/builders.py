@@ -443,6 +443,20 @@ class SPEBuilders(InstructionBuilders):
             amplitude of shaking between 1 and 6:millimeter
         settle_time: bool, optional
             True for orbital and False for linear shaking
+        processing_time: str or Unit
+            Duration for which pressure is applied to the cartridge
+            after `settle_time` has elapsed.
+        flow_pressure: str or Unit
+            Pressure applied to the column.
+        resource_id: str
+            Resource ID of desired solvent.
+        is_sample: bool
+            If a sample is processed.
+        destination_well: Well
+            Destination well for eluate.  Required parameter for
+            each `elute` mobile phase parameter
+        is_elute: bool
+            If an elute is processed.
 
         Returns
         -------

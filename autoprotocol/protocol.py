@@ -5321,7 +5321,7 @@ class Protocol(object):
         load_sample: dict
             Parameters for applying the sample to the cartridge.
             Single 'mobile_phase_param'.
-        elute: list(dict))
+        elute: list(dict)
             Parameters for applying a mobile phase to the cartridge
             with one or more solvents. List of 'mobile_phase_params'.
             Requires `destination_well`.

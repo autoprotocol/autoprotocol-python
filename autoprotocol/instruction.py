@@ -1402,7 +1402,7 @@ class SPE(Instruction):
     condition: list(dict), optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
-    equilibrate: list(dict)), optional
+    equilibrate: list(dict), optional
         Parameters for applying a mobile phase to the cartridge
         with one or more solvents. List of 'mobile_phase_params'.
     rinse: list(dict), optional

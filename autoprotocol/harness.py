@@ -1,24 +1,21 @@
 """
 Module containing the harness module which helps with Manifest interpretation
 
-    :copyright: 2018 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2019 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
 """
 
-from __future__ import print_function
 import json
+
+import argparse
 import io
+
+from . import UserError
+from .container import WellGroup
 from .protocol import Protocol
 from .unit import Unit, UnitError
-from .container import WellGroup
-from . import UserError
-import argparse
-import sys
-
-if sys.version_info.major == 3:
-    basestring = str  # pylint: disable=invalid-name
 
 _DYE_TEST_RS = {
     "dye4000": "rs18qmhr7t9jwq",
@@ -102,7 +99,7 @@ def get_protocol_preview(protocol, name, manifest='manifest.json'):
 
 
 def param_default(type_desc):
-    if isinstance(type_desc, basestring):
+    if isinstance(type_desc, str):
         type_desc = {'type': type_desc}
 
     type = type_desc['type']  # pylint: disable=redefined-builtin
@@ -179,7 +176,7 @@ def convert_param(protocol, val, type_desc):
         Unknown input type provided
 
     """
-    if isinstance(type_desc, basestring):
+    if isinstance(type_desc, str):
         type_desc = {'type': type_desc}
     if val is None:
         val = param_default(type_desc)

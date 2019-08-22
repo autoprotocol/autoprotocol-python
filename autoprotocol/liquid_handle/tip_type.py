@@ -2,7 +2,8 @@
 Generic tip type and device class mappings for LiquidHandleMethods
 """
 from collections import namedtuple
-from autoprotocol.util import parse_unit
+
+from ..util import parse_unit
 
 
 class TipType(namedtuple("TipType", ["name", "volume"])):

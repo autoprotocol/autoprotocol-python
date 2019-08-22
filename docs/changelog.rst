@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`-` Deprecate support for Python 2, migrate to support only Python >=3.5
 * :support:`205` Fix changelog formatting
 
 * :release:`5.6.0 <2019-08-18>`

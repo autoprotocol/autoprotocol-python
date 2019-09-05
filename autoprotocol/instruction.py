@@ -1435,7 +1435,7 @@ class SPE(Instruction):
                  load_sample, elute, condition,
                  equilibrate, rinse):
         json_dict = {
-            "well": well,
+            "object": well,
             "cartridge": cartridge,
             "pressure_mode": pressure_mode,
             "condition": condition,

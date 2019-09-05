@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :bug:`210` Fix `agitate` parameter order in protocol.py
+* :bug:`210` Fix `spe` instruction autoprotocol to match asc
+
 * :release:`6.0.0 <2019-08-21>`
 * :support:`206` Deprecate support for Python 2, migrate to support only Python >=3.5
 * :support:`205` Fix changelog formatting

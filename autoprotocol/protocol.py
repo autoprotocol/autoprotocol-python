@@ -2209,7 +2209,7 @@ class Protocol(object):
             )
 
         return self._append_and_return(
-            Agitate(ref, mode, duration, temperature, speed, mode_params)
+            Agitate(ref, mode, speed, duration, temperature, mode_params)
         )
 
     def thermocycle(self, ref, groups,

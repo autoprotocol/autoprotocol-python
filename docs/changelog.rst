@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug: `209` Fix Sonicate `bath` mode default frequency
+* :bug:`209` Fix Sonicate `bath` mode default frequency
 
 * :release:`6.0.0 <2019-08-21>`
 * :support:`206` Deprecate support for Python 2, migrate to support only Python >=3.5

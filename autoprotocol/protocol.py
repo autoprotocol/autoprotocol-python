@@ -5183,7 +5183,7 @@ class Protocol(object):
             if power:
                 parsed_power = parse_unit(power, "power-watt")
                 parsed_mode_params["power"] = parsed_power
-            frequency = frequency or "20:kilohertz"
+            frequency = frequency or "40:kilohertz"
         if mode == "horn":
             valid_mode_params = ["duty_cycle", "amplitude"]
             if not all(k in mode_params for k in valid_mode_params):

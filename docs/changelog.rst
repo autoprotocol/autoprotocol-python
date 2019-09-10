@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`213` Fix SPE autoprotocol instruction key
 * :bug:`212` Fix Agitate parameter order
 * :bug:`209` Fix Sonicate `bath` mode default frequency
 * :bug:`210` Fix `semantic-version` dependency, pin to 2.6.0 for docs to build

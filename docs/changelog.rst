@@ -4,6 +4,7 @@ Changelog
 
 * :bug:`211` Fix `agitate` parameter order in protocol.py
 * :bug:`211` Fix `spe` instruction autoprotocol to match asc
+* :bug:`209` Fix Sonicate `bath` mode default frequency
 * :bug:`210` Fix `semantic-version` dependency, pin to 2.6.0 for docs to build
 
 * :release:`6.0.0 <2019-08-21>`

@@ -36,7 +36,8 @@ test_deps = [
 doc_deps = [
     'releases>=1.5, <2',
     'Sphinx>=1.7, <1.8',
-    'sphinx_rtd_theme>=0.4, <1'
+    'sphinx_rtd_theme>=0.4, <1',
+    'semantic-version==2.6.0'
 ]
 
 

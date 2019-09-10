@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`210` Fix `semantic-version` dependency, pin to 2.6.0 for docs to build
+
 * :release:`6.0.0 <2019-08-21>`
 * :support:`206` Deprecate support for Python 2, migrate to support only Python >=3.5
 * :support:`205` Fix changelog formatting

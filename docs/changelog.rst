@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`6.0.1 <2019-09-11>`
 * :bug:`213` Fix SPE autoprotocol instruction key
 * :bug:`212` Fix Agitate parameter order
 * :bug:`209` Fix Sonicate `bath` mode default frequency

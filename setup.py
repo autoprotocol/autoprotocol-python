@@ -29,7 +29,7 @@ test_deps = [
     'coverage>=4.5, <5',
     'pylint>=1.9, <2',
     'pytest>=4, <5',
-    'pytest-cov>=2, <3',
+    'pytest-cov==2',
     'tox>=3.7, <4'
 ]
 

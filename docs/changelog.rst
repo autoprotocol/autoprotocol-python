@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :release:`6.1.1 <2019-10-10>`
+* :feature: Add `concentration(molar)` to valid input-types in harness
+* :feature: Add `concentration(mass)` to valid input-types in harness
+
 * :release:`6.0.1 <2019-09-11>`
 * :bug:`213` Fix SPE autoprotocol instruction key
 * :bug:`212` Fix Agitate parameter order

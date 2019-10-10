@@ -226,7 +226,7 @@ def convert_param(protocol, val, type_desc):
             raise RuntimeError(
                 "The value supplied to input '%s' (type container+) is "
                 "improperly formatted." % label)
-    elif type in ['volume', 'time', 'length', 'frequency']:
+    elif type in ['volume', 'time', 'length', 'frequency', 'concentration(mass)', 'concentration(molar)']:
         try:
             return Unit(val)
         except UnitError as e:

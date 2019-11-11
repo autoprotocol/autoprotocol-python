@@ -2564,6 +2564,11 @@ class TestImage(object):
         assert (self.p.instructions[-1].data["magnification"] == 1.0)
         assert (self.p.instructions[-1].data["num_images"] == 1)
 
+    def test_image_params(self):
+        self.p.image(self.c1, "top", "dataref_2", backlighting=True)
+        assert (self.p.instructions[-1].op == "image")
+        assert (self.p.instructions[-1].data["back_lighting"])
+
     def test_bad_inputs(self):
         with pytest.raises(ValueError):
             self.p.image(self.c1, "bad_mode", "dataref_1")

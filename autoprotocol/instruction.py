@@ -1286,7 +1286,7 @@ class Image(Instruction):
             "dataref": dataref,
             "num_images": num_images,
             "magnification": magnification,
-            "backlighting": backlighting,
+            "back_lighting": backlighting,
             "exposure": exposure
         }
 

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`-` Fix Image autoprotocol parameter
+
 * :release:`6.1.0 <2019-10-14>`
 * :feature:`217` Add `concentration(molar)` to valid input-types in harness
 * :feature:`217` Add `concentration(mass)` to valid input-types in harness

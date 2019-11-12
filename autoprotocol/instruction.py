@@ -427,7 +427,9 @@ class Incubate(Instruction):
         Carbon dioxide percentage
 
     """
-    WHERE = ["ambient", "warm_30", "warm_37", "cold_4", "cold_20", "cold_80"]
+    WHERE = [
+        "ambient", "warm_30", "warm_35", "warm_37",
+        "cold_4", "cold_20", "cold_80"]
 
     def __init__(self, object, where, duration, shaking=False, co2=0,
                  target_temperature=None, shaking_params=None):

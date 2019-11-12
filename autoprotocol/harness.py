@@ -236,11 +236,10 @@ def convert_param(protocol, val, type_desc):
                                e.value, type, type))
     elif type == 'temperature':
         try:
-            if val in ['ambient', 'warm_30', 'warm_35', 'warm_37', 
+            if val in ['ambient', 'warm_30', 'warm_35', 'warm_37',
                        'cold_4', 'cold_20', 'cold_80']:
                 return val
-            else:
-                return Unit(val)
+            return Unit(val)
         except UnitError as e:
             raise RuntimeError("Invalid temperature value for %s: temperature "
                                "input types must be either storage conditions "

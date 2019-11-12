@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`-` Add `warm_37` incubation location
+* :feature:`-` Add `warm_35` incubation location
 * :bug:`-` Fix Image autoprotocol parameter
 
 * :release:`6.1.0 <2019-10-14>`

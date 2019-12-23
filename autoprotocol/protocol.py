@@ -2267,7 +2267,7 @@ class Protocol(object):
 
         .. code-block:: python
 
-            from instruction import Thermocycle
+            from .instruction import Thermocycle
 
             p = Protocol()
             sample_plate = p.ref("sample_plate",

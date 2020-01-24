@@ -1032,32 +1032,28 @@ class Container(object):
         # getting the row and column values for the origin
         origin_row, origin_col = self.decompose(origin)
 
-        # origin coordinates transformed to SBS format space
-        sbs_row = int(origin_row / container_rows * format_rows)
-        sbs_col = int(origin_col / container_cols * format_cols)
-
-        # coordinates of the tail (bottom right well)
-        tail_row = sbs_row + shape["rows"]
-        tail_col = sbs_col + shape["columns"]
-        if tail_row > format_rows or tail_col > format_cols:
-            raise ValueError(
-                "origin: {} with shape: {} exceeds the bounds of "
-                "container: {}".format(origin, shape, self)
-            )
-
         # ratios of container shape to format shape
         row_scaling = container_rows / format_rows
         col_scaling = container_cols / format_cols
 
-        # the 0-indexed coordinates of all wells to be included
-        well_rows = [
-            int(_ * row_scaling)
-            for _ in range(sbs_row, sbs_row + shape["rows"])
-        ]
-        well_cols = [
-            int(_ * col_scaling)
-            for _ in range(sbs_col, sbs_col + shape["columns"])
-        ]
+        # the 0-indexed coordinates of all wells in origin plate to be included
+        well_rows = []
+        well_cols = []
+        for idx in range(shape["rows"]):
+            well_row = int(origin_row + idx * row_scaling)
+            well_rows.append(well_row)
+        for idx in range(shape["columns"]):
+            well_col = int(origin_col + idx * col_scaling)
+            well_cols.append(well_col)
+
+        # coordinates of the tail (bottom right well) should not exceed bounds
+        tail_row = well_rows[-1]
+        tail_col = well_cols[-1]
+        if tail_row + 1 > container_rows or tail_col + 1 > container_cols:
+            raise ValueError(
+                "origin: {} with shape: {} exceeds the bounds of "
+                "container: {}".format(origin, shape, self)
+            )
 
         return WellGroup([
             self.well_from_coordinates(x, y)

@@ -372,6 +372,18 @@ class TestAsShapeOrigin(HasDummyContainers):
             dummy_384.wells_from_shape(0, SHAPE(rows=8, columns=12))
             == dummy_384.quadrant(0)
         )
+        assert(
+            dummy_384.wells_from_shape(1, SHAPE(rows=8, columns=12))
+            == dummy_384.quadrant(1)
+        )
+        assert(
+            dummy_384.wells_from_shape(24, SHAPE(rows=8, columns=12))
+            == dummy_384.quadrant(2)
+        )
+        assert(
+            dummy_384.wells_from_shape(25, SHAPE(rows=8, columns=12))
+            == dummy_384.quadrant(3)
+        )
 
     def test_handles_sbs384_shape(self, dummy_384):
         assert(
@@ -399,6 +411,12 @@ class TestAsShapeOrigin(HasDummyContainers):
     def test_fails_out_of_row_range(self, dummy_96):
         with pytest.raises(ValueError):
             dummy_96.wells_from_shape(12, SHAPE(rows=8))
+
+    def test_fails_out_of_range_sbs384(self, dummy_384):
+        with pytest.raises(ValueError):
+            dummy_384.wells_from_shape(3, SHAPE(rows=8, columns=12))
+        with pytest.raises(ValueError):
+            dummy_384.wells_from_shape(26, SHAPE(rows=8, columns=12))
 
     def test_row_reservoirs_by_column(self, dummy_reservoir_row):
         assert(

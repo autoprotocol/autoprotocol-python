@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :bug:`223` Fix `well_from_shape` logic for 384 well plates
 * :feature:`-` Add `warm_35` incubation location
 * :bug:`-` Fix Image autoprotocol parameter
 

@@ -1049,6 +1049,8 @@ class Container(object):
         # coordinates of the tail (bottom right well) should not exceed bounds
         tail_row = well_rows[-1]
         tail_col = well_cols[-1]
+        # tail_row and tail_col are 0-indexed based
+        # container_rows and container_cols are 1-indexed based
         if tail_row + 1 > container_rows or tail_col + 1 > container_cols:
             raise ValueError(
                 "origin: {} with shape: {} exceeds the bounds of "

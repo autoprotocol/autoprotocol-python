@@ -131,8 +131,8 @@ class TestLiquidHandleBuilder(object):
                 "threshold": flat_position_z["detection_threshold"],
                 "duration": flat_position_z["detection_duration"],
                 "fallback": flat_position_z["detection_fallback"],
-                "x_edge_steepness": 20,
-                "x_detection_offset": 20
+                "sensitivity": 20,
+                "offset": 20
             }
         }
 

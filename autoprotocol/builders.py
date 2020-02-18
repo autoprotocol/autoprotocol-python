@@ -1629,16 +1629,16 @@ class LiquidHandleBuilders(InstructionBuilders):
         if fallback is not None:
             fallback = self.position_z(**fallback)
 
+        detection["method"] = method
+        detection["duration"] = duration
+        detection["threshold"] = threshold
+        detection["fallback"] = fallback
+
         return {
             "reference": reference,
             "offset": offset,
             "move_rate": move_rate,
-            "detection": {
-                "method": method,
-                "duration": duration,
-                "threshold": threshold,
-                "fallback": fallback
-            }
+            "detection": detection
         }
 
     @staticmethod

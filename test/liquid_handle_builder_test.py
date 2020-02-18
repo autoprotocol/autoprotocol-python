@@ -122,6 +122,25 @@ class TestLiquidHandleBuilder(object):
             structured_position_z
         )
 
+        extra_detection_arguments_positions_z = {
+            "reference": flat_position_z["reference"],
+            "offset": flat_position_z["offset"],
+            "move_rate": flat_position_z["move_rate"],
+            "detection": {
+                "method": flat_position_z["detection_method"],
+                "threshold": flat_position_z["detection_threshold"],
+                "duration": flat_position_z["detection_duration"],
+                "fallback": flat_position_z["detection_fallback"],
+                "sensitivity": 20,
+                "offset": 20
+            }
+        }
+
+        assert(
+            LiquidHandle.builders.position_z(**extra_detection_arguments_positions_z) ==
+            extra_detection_arguments_positions_z
+        )
+
         with pytest.raises(ValueError):
             LiquidHandle.builders.position_z(
                 reference="well_top", detection_method="capacitance"

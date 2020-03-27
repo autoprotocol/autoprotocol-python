@@ -2,8 +2,13 @@
 Changelog
 =========
 
-* :feature:`-` Add `warm_35` incubation location
-* :bug:`-` Fix Image autoprotocol parameter
+* :release:`6.1.2 <2020-02-18>`
+* :bug:`226` Don't unnecessarily sanitize inputs in z position builder
+
+* :release:`6.1.1 <2020-01-27>`
+* :bug:`223` Fix `well_from_shape` logic for 384 well plates
+* :feature:`221` Add `warm_35` incubation location
+* :bug:`220` Fix Image autoprotocol parameter
 
 * :release:`6.1.0 <2019-10-14>`
 * :feature:`217` Add `concentration(molar)` to valid input-types in harness

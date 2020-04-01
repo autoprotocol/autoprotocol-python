@@ -1305,7 +1305,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             "transports": transports
         }
 
-    def transport(self, volume=None, pump_override_volume=None,
+    def transport(self, volume=None, density=None, pump_override_volume=None,
                   flowrate=None, delay_time=None, mode_params=None):
         """Helper for building transports
 
@@ -1314,6 +1314,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         volume : Unit or str, optional
             Volume to be aspirated/dispensed. Positive volume -> Dispense.
             Negative -> Aspirate
+        density : Unit or str, optional
+            Density of the liquid to be aspirated/dispensed.
         pump_override_volume : Unit or str, optional
             Calibrated volume, volume which the pump will move
         flowrate : dict, optional
@@ -1333,6 +1335,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if volume is not None:
             volume = parse_unit(volume, "ul")
+        if density is not None:
+            density = parse_unit(density, "mg/ml")
         if pump_override_volume is not None:
             pump_override_volume = parse_unit(pump_override_volume, "ul")
         if flowrate is not None:
@@ -1344,6 +1348,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         return {
             "volume": volume,
+            "density": density,
             "pump_override_volume": pump_override_volume,
             "flowrate": flowrate,
             "delay_time": delay_time,

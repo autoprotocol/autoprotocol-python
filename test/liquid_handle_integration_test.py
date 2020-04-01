@@ -108,6 +108,14 @@ class TestLiquidClassTransfer(LiquidHandleTester):
             num_wells * transfers_per_well * transports_per_transfer
         )
 
+    def test_generates_liquid_handle_with_density(self):
+        self.p.transfer(
+            self.flat.well(0), self.flat.well(0), "1:uL",
+            density=Unit(1.1, "mg/ml")
+        )
+        inst = self.p.instructions[-1]
+        assert inst.op == "liquid_handle"
+        assert inst.data["locations"][0]["transports"][4]["density"] == Unit(1.1, "mg/ml")
 
 class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
     def test_updates_well_volume(self):

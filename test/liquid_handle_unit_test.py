@@ -124,6 +124,7 @@ class LiquidHandleMethodTester(object):
     )
     asp_transport = LiquidHandle.builders.transport(
         volume=Unit(1, "uL"),
+        density=None,
         pump_override_volume=Unit(2, "uL"),
         flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
         delay_time=Unit(0.5, "s"),
@@ -262,6 +263,24 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         assert self.lhm._transports[1] == prime_aspirate
         assert self.lhm._transports[3] == prime_dispense
 
+    def test_aspirate_simple_with_density(self):
+        tip_position = self.asp_transport["mode_params"]["tip_position"]
+        self.lhm._aspirate_simple(
+            # pylint: disable=invalid-unary-operand-type
+            volume=-self.asp_transport["volume"],
+            # pylint: disable=invalid-unary-operand-type
+            calibrated_vol=-self.asp_transport["pump_override_volume"],
+            initial_z=self.well_top_z,
+            position_x=tip_position["position_x"],
+            position_y=tip_position["position_y"],
+            flowrate=self.asp_transport["flowrate"],
+            delay_time=self.asp_transport["delay_time"],
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
+            density=Unit(1, "mg/ml")
+        )
+        assert self.lhm._transports[0] == self.well_top_transport
+        assert self.lhm._transports[1]["density"] == Unit(1, "mg/ml")
+
     def test_dispense_simple(self):
         tip_position = self.asp_transport["mode_params"]["tip_position"]
         self.lhm._dispense_simple(
@@ -276,6 +295,22 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[1] == self.asp_transport
+
+    def test_dispense_simple_with_density(self):
+        tip_position = self.asp_transport["mode_params"]["tip_position"]
+        self.lhm._dispense_simple(
+            volume=self.asp_transport["volume"],
+            calibrated_vol=self.asp_transport["pump_override_volume"],
+            initial_z=self.well_top_z,
+            position_x=tip_position["position_x"],
+            position_y=tip_position["position_y"],
+            flowrate=self.asp_transport["flowrate"],
+            delay_time=self.asp_transport["delay_time"],
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
+            density=Unit(1, "mg/ml")
+        )
+        assert self.lhm._transports[0] == self.well_top_transport
+        assert self.lhm._transports[1]["density"] == Unit(1, "mg/ml")
 
     def test_mix(self):
         mix_reps = 4

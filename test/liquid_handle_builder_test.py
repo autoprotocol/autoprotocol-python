@@ -34,12 +34,25 @@ class TestLiquidHandleBuilder(object):
     def test_transport_builder(self):
         transport = {
             "volume": Unit(1, "uL"),
+            "density": None,
             "pump_override_volume": Unit(2, "uL"),
             "flowrate": LiquidHandle.builders.flowrate(target="2:uL/s"),
             "delay_time": Unit(5, "s"),
             "mode_params": LiquidHandle.builders.mode_params(liquid_class="air")
         }
         assert LiquidHandle.builders.transport(**transport) == transport
+
+    def test_transports_with_denisty_buider(self):
+        transport = {
+            "volume": Unit(5, "uL"),
+            "density": Unit(1, "mg/ml"),
+            "pump_override_volume": Unit(2, "uL"),
+            "flowrate": LiquidHandle.builders.flowrate(target="2:uL/s"),
+            "delay_time": Unit(5, "s"),
+            "mode_params": LiquidHandle.builders.mode_params(liquid_class="air")
+        }
+        density = LiquidHandle.builders.transport(**transport)["density"]
+        assert density == Unit(1, "mg/ml")
 
     def test_flowrate_builder(self):
         flowrate = {

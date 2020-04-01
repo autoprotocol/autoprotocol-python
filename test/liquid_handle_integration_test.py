@@ -117,6 +117,16 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         assert inst.op == "liquid_handle"
         assert inst.data["locations"][0]["transports"][4]["density"] == Unit(1.1, "mg/ml")
 
+    def test_generates_liquid_handle_with_mode(self):
+        self.p.transfer(
+            self.flat.well(0), self.flat.well(0), "1:uL",
+            mode="positive_displacement"
+        )
+        inst = self.p.instructions[-1]
+        assert inst.op == "liquid_handle"
+        assert inst.data["mode"] == "positive_displacement"
+
+
 class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
     def test_updates_well_volume(self):
         source_volume = Unit(30, "uL")

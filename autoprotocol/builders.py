@@ -1251,12 +1251,13 @@ class LiquidHandleBuilders(InstructionBuilders):
     """
     def __init__(self):
         super(LiquidHandleBuilders, self).__init__()
-        self.liquid_classes = ["air", "default"]
+        self.liquid_classes = ["air", "default", "viscous"]
         self.xy_max = 1
         self.z_references = [
             "well_top", "well_bottom", "liquid_surface", "preceding_position"
         ]
         self.z_detection_methods = ["capacitance", "pressure", "tracked"]
+        self.dispense_modes = ["air_displacement", "positive_displacement"]
 
     def location(self, location=None, transports=None):
         """Helper for building locations
@@ -1405,7 +1406,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        liquid_class : Enum({"default", "air"}), optional
+        liquid_class : Enum({"default", "air", "viscous"}), optional
             The name of the liquid class to be handled. This affects how
             vendors handle populating liquid handling defaults.
         position_x : dict, optional
@@ -1742,6 +1743,72 @@ class LiquidHandleBuilders(InstructionBuilders):
             "initial_z": initial_z,
             "flowrate": flowrate
         }
+
+    def mode(self, transports=None, mode=None):
+        """Helper for selecting dispense mode based on liquid_class name
+
+        Parameters
+        ----------
+        trasnports : dict, optional
+            Dictionary of the transport parameters
+        mode : str, optional
+            Mode of dispense type
+
+        Returns
+        -------
+        str
+            Mode of dispense type
+
+        Raises
+        ------
+        TypeError
+        ValueError
+
+        """
+        liquid_classes = set([transport["mode_params"]["liquid_class"] for transport in transports])
+        # remove automatically added 'air' class from blowout, etc.
+        non_air_classes = [liq for liq in liquid_classes if liq != "air"]
+        if mode:
+            if mode not in self.dispense_modes:
+                raise ValueError(
+                    "mode: {} must be one of the valid modes: {}"
+                    "".format(mode, self.dispense_modes)
+                )
+        modes = []
+        # get mode for each liquid_class if not specified already from the user input.
+        for liquid in non_air_classes:
+            if liquid is not None:
+                if not isinstance(liquid, str):
+                    raise TypeError(
+                        "liquid: {} is not of type str or None".format(liquid)
+                    )
+                if liquid not in self.liquid_classes:
+                    raise ValueError(
+                        "liquid_class: {} must be one of the valid classes: {} "
+                        "".format(liquid, self.liquid_classes)
+                    )
+                if mode is None:
+                    if liquid == "viscous":
+                        modes.append("positive_displacement")
+                    else:
+                        modes.append("air_displacement")
+            else:
+                if mode is None:
+                    modes.append("air_displacement")
+        # return error if there are incompatible liquid_class in one set of transports.
+        if len(set(modes)) > 1:
+            raise ValueError(
+                "There are multiple liquid classes which could potentially have different modes: {}."
+                "Please specify the mode to be used from: {}."
+                "".format(modes, self.dispense_modes)
+            )
+        # if all liquid classes happen to be "air", mode is "air_displacement"
+        elif len(modes) == 0:
+            mode = "air_displacement"
+        else:
+            mode = list(modes)[0]
+
+        return mode
 
 
 class PlateReaderBuilders(InstructionBuilders):

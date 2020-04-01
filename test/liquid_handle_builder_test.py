@@ -21,6 +21,19 @@ class TestInstuctionBuilders(object):
 
 
 class TestLiquidHandleBuilder(object):
+    asp_transport = LiquidHandle.builders.transport(
+        volume=Unit(1, "uL"),
+        density=None,
+        pump_override_volume=Unit(2, "uL"),
+        flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+        delay_time=Unit(0.5, "s"),
+        mode_params=LiquidHandle.builders.mode_params(
+            liquid_class="air",
+            position_z=LiquidHandle.builders.position_z(
+                reference="preceding_position")
+        )
+    )
+
     def test_location_builder(self):
         location = {
             "location": "test_well/0",
@@ -42,7 +55,7 @@ class TestLiquidHandleBuilder(object):
         }
         assert LiquidHandle.builders.transport(**transport) == transport
 
-    def test_transports_with_denisty_buider(self):
+    def test_transports_with_denisty_builder(self):
         transport = {
             "volume": Unit(5, "uL"),
             "density": Unit(1, "mg/ml"),
@@ -199,3 +212,70 @@ class TestLiquidHandleBuilder(object):
             "flowrate": LiquidHandle.builders.flowrate(target="1:uL/s")
         }
         assert LiquidHandle.builders.blowout(**blowout) == blowout
+
+    def test_mode_builder(self):
+        transports_air = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class=None,
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        transports_viscous = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="viscous",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        mode_air = {
+            "transports": transports_air,
+            "mode": None
+        }
+        mode_viscous = {
+            "transports": transports_viscous,
+            "mode": None
+        }
+        assert LiquidHandle.builders.mode(**mode_air) == "air_displacement"
+        assert LiquidHandle.builders.mode(**mode_viscous) == "positive_displacement"
+        # failure tests
+        with pytest.raises(ValueError):
+            LiquidHandle.builders.mode(transports_air, "foo")

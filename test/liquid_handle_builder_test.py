@@ -234,7 +234,7 @@ class TestLiquidHandleBuilder(object):
                 flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
-                    liquid_class=None,
+                    liquid_class="air",
                     position_z=LiquidHandle.builders.position_z(
                         reference="preceding_position")
                 )

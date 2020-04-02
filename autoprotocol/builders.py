@@ -24,6 +24,7 @@ Instruction
     Instructions corresponding to each of the builders
 """
 
+#pylint: disable=C0412
 from collections import defaultdict
 from numbers import Number
 
@@ -75,7 +76,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
 
         unique = dict()
         for key, value in union.items():
-            if len(value) is 1:
+            if len(value) == 1:
                 unique[key] = value[0]
             else:
                 raise ValueError(
@@ -329,7 +330,7 @@ class ThermocycleBuilders(InstructionBuilders):
 
         if cycles <= 0:
             raise ValueError("`cycles` {} has to be positive".format(cycles))
-        if len(steps) <= 0:
+        if not steps:
             raise ValueError("`steps` has to contain at least one element")
 
         # Reformatting to use temperature for gradient input
@@ -653,6 +654,7 @@ class DispenseBuilders(InstructionBuilders):
 
 
 class SpectrophotometryBuilders(InstructionBuilders):
+    # pylint: disable=C0103
     """
     These builders are meant for helping to construct arguments for the
     `Spectrophotometry` instruction.
@@ -1184,7 +1186,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         heuristic: str, optional
             Must be one of "max_mean_read_without_saturation" or
             "closest_distance_without_saturation".
-            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_ for the full explanation
+            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_
+            for the full explanation
 
         Returns
         -------
@@ -1235,7 +1238,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             return self.position_z_calculated(
                 **position_z["calculated_from_wells"]
             )
-        elif "manual" in position_z:
+        if "manual" in position_z:
             return self.position_z_manual(
                 **position_z["manual"]
             )
@@ -1749,7 +1752,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        trasnports : dict, optional
+        transports : dict, optional
             Dictionary of the transport parameters
         mode : str, optional
             Mode of dispense type
@@ -1761,11 +1764,17 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Raises
         ------
-        TypeError
         ValueError
-
+            mode does not contain valid mode value
+        TypeError
+            liquid is not of str
+        ValueError
+            liquid_class is not a valid value
+        ValueError
+            multiple liquid_class exists in one LiquidHandle
         """
-        liquid_classes = set([transport["mode_params"]["liquid_class"] for transport in transports])
+        liquid_classes = set([transport["mode_params"]["liquid_class"]
+                              for transport in transports])
         # remove automatically added 'air' class from blowout, etc.
         non_air_classes = [liq for liq in liquid_classes if liq != "air"]
         if mode:
@@ -1775,7 +1784,8 @@ class LiquidHandleBuilders(InstructionBuilders):
                     "".format(mode, self.dispense_modes)
                 )
         modes = []
-        # get mode for each liquid_class if not specified already from the user input.
+        # get mode for each liquid_class if not specified already from the
+        # user input.
         for liquid in non_air_classes:
             if liquid is not None:
                 if not isinstance(liquid, str):
@@ -1795,15 +1805,17 @@ class LiquidHandleBuilders(InstructionBuilders):
             else:
                 if mode is None:
                     modes.append("air_displacement")
-        # return error if there are incompatible liquid_class in one set of transports.
+        # return error if there are incompatible liquid_class in one set of
+        # transports.
         if len(set(modes)) > 1:
             raise ValueError(
-                "There are multiple liquid classes which could potentially have different modes: {}."
+                "There are multiple liquid classes which could potentially"
+                "have different modes: {}."
                 "Please specify the mode to be used from: {}."
                 "".format(modes, self.dispense_modes)
             )
         # if all liquid classes happen to be "air", mode is "air_displacement"
-        elif len(modes) == 0:
+        if not modes:
             mode = "air_displacement"
         else:
             mode = list(modes)[0]
@@ -1905,6 +1917,7 @@ class EvaporateBuilders(InstructionBuilders):
         self.blowdown_params = ["gas", "blow_rate", "vortex_speed"]
 
     def get_mode_params(self, mode, mode_params):
+        #pylint: disable=R0912
         """
         Checks on the validity of mode and mode_params, and
         creates a dictionary for mode_params
@@ -1964,22 +1977,22 @@ class EvaporateBuilders(InstructionBuilders):
             "spin_acceleration": "g"
         }
         mode_param_output = {}
-        speed_param = [(k) for k in mode_params.keys()
-                       if k in speed_unit_dict.keys()]
+        speed_param = [key for key in mode_params.keys()
+                       if key in speed_unit_dict.keys()]
         if len(speed_param) > 1:
             raise TypeError(
                 "There are multiple speed parameters: {}."
                 "".format(speed_param)
             )
 
-        for s in speed_param:
-            if Unit(mode_params[s]).magnitude <= 0:
+        for speed in speed_param:
+            if Unit(mode_params[speed]).magnitude <= 0:
                 raise ValueError(
-                    "{} is less than or equal to 0.".format(s)
+                    "{} is less than or equal to 0.".format(speed)
                 )
             else:
-                mode_param_output[s] = parse_unit(
-                    mode_params[s], speed_unit_dict[s])
+                mode_param_output[speed] = parse_unit(
+                    mode_params[speed], speed_unit_dict[speed])
 
         if "vacuum_pressure" in mode_params.keys():
             pressure = mode_params["vacuum_pressure"]

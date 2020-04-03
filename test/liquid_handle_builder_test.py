@@ -5,7 +5,7 @@ from autoprotocol.instruction import LiquidHandle
 from autoprotocol import Unit
 
 
-class TestInstuctionBuilders(object):
+class TestInstructionBuilders(object):
     def test_shape_builder(self):
         shape = {"rows": 1, "columns": 12, "format": "SBS96"}
         assert LiquidHandle.builders.shape(**shape) == shape
@@ -163,7 +163,8 @@ class TestLiquidHandleBuilder(object):
         }
 
         assert(
-            LiquidHandle.builders.position_z(**extra_detection_arguments_positions_z) ==
+            LiquidHandle.builders.position_z(
+                **extra_detection_arguments_positions_z) ==
             extra_detection_arguments_positions_z
         )
 
@@ -219,7 +220,8 @@ class TestLiquidHandleBuilder(object):
                 volume=Unit(1, "uL"),
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="air",
@@ -231,7 +233,8 @@ class TestLiquidHandleBuilder(object):
                 volume=Unit(1, "uL"),
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="air",
@@ -245,7 +248,8 @@ class TestLiquidHandleBuilder(object):
                 volume=Unit(1, "uL"),
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="air",
@@ -257,7 +261,8 @@ class TestLiquidHandleBuilder(object):
                 volume=Unit(1, "uL"),
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="viscous",
@@ -275,7 +280,8 @@ class TestLiquidHandleBuilder(object):
             "mode": None
         }
         assert LiquidHandle.builders.mode(**mode_air) == "air_displacement"
-        assert LiquidHandle.builders.mode(**mode_viscous) == "positive_displacement"
+        assert LiquidHandle.builders.mode(**mode_viscous) == \
+            "positive_displacement"
         # failure tests
         with pytest.raises(ValueError):
             LiquidHandle.builders.mode(transports_air, "foo")

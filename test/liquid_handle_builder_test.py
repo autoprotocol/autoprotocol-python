@@ -214,7 +214,7 @@ class TestLiquidHandleBuilder(object):
         }
         assert LiquidHandle.builders.blowout(**blowout) == blowout
 
-    def test_mode_builder(self):
+    def test_desired_mode_builder(self):
         transports_air = [
             LiquidHandle.builders.transport(
                 volume=Unit(1, "uL"),
@@ -271,6 +271,62 @@ class TestLiquidHandleBuilder(object):
                 )
             )
         ]
+        transports_none = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class=None,
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class=None,
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        transports_invalid = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="viscous",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="default",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
         mode_air = {
             "transports": transports_air,
             "mode": None
@@ -279,9 +335,22 @@ class TestLiquidHandleBuilder(object):
             "transports": transports_viscous,
             "mode": None
         }
-        assert LiquidHandle.builders.mode(**mode_air) == "air_displacement"
-        assert LiquidHandle.builders.mode(**mode_viscous) == \
+        mode_none = {
+            "transports": transports_none,
+            "mode": None
+        }
+        mode_viscous_air = {
+            "transports": transports_viscous,
+            "mode": "air_displacement"
+        }
+        assert LiquidHandle.builders.desired_mode(**mode_air) == "air_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_viscous) == \
             "positive_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_none) == "air_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_viscous_air) == \
+             "air_displacement"
         # failure tests
         with pytest.raises(ValueError):
-            LiquidHandle.builders.mode(transports_air, "foo")
+            LiquidHandle.builders.desired_mode(transports_air, "foo")
+        with pytest.raises(ValueError):
+            LiquidHandle.builders.desired_mode(transports_invalid, None)

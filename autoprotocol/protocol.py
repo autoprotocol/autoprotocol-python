@@ -6624,7 +6624,7 @@ class Protocol(object):
                     source_transports = location_transports[0]["transports"]
                     instruction_mode = mode
                     if instruction_mode is None:
-                        instruction_mode = LiquidHandle.builders.mode(source_transports, mode)
+                        instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                     instructions.append(
                         LiquidHandle(
                             location_transports,
@@ -6643,7 +6643,7 @@ class Protocol(object):
         if locations:
             source_transports = locations[0]["transports"]
             if mode is None:
-                mode = LiquidHandle.builders.mode(source_transports, mode)
+                mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
                     locations,
@@ -6875,7 +6875,7 @@ class Protocol(object):
                 source_transports = location_transports[0]["transports"]
                 instruction_mode = mode
                 if instruction_mode is None:
-                    instruction_mode = LiquidHandle.builders.mode(source_transports, mode)
+                    instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                 instructions.append(
                     LiquidHandle(
                         location_transports,
@@ -6893,7 +6893,7 @@ class Protocol(object):
         if locations:
             source_transports = locations[0]["transports"]
             if mode is None:
-                mode = LiquidHandle.builders.mode(source_transports, mode)
+                mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
                     locations,

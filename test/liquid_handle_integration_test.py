@@ -126,6 +126,15 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         assert inst.op == "liquid_handle"
         assert inst.data["mode"] == "positive_displacement"
 
+    def test_generates_liquid_handle_without_mode(self):
+        self.p.transfer(
+            self.flat.well(0), self.flat.well(0), "1:uL",
+            mode=None
+        )
+        inst = self.p.instructions[-1]
+        assert inst.op == "liquid_handle"
+        assert inst.data["mode"] == "air_displacement"
+
 
 class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
     def test_updates_well_volume(self):

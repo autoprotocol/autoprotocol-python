@@ -19,6 +19,7 @@ from .util import _validate_as_instance, _check_container_type_with_shape
 
 
 class Ref(object):
+
     """
     Link a ref name (string) to a Container instance.
 
@@ -286,7 +287,6 @@ class Protocol(object):
         )
         self.refs[name] = Ref(name, opts, container)
         return container
-
     # pragma pylint: enable=redefined-builtin
 
     def add_time_constraint(self, from_dict, to_dict, less_than=None,
@@ -490,8 +490,8 @@ class Protocol(object):
 
         def add_time_constraint_internal(time_const):
             setattr(self, "time_constraints", (
-                    getattr(self, "time_constraints", []) + [time_const])
-                    )
+                getattr(self, "time_constraints", []) + [time_const])
+            )
 
         keys = []
 
@@ -1106,7 +1106,7 @@ class Protocol(object):
             raise RuntimeError(
                 "Transfer volume has to be a multiple of the droplet size ({})."
                 "This is not true for the following volumes: {}"
-                    .format(droplet_size, vol_errors)
+                .format(droplet_size, vol_errors)
             )
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
@@ -1363,7 +1363,7 @@ class Protocol(object):
                     "Illumina sequencing lanes must be a list(dict)"
                 )
             if not all(k in l.keys() for k in [
-                "object", "library_concentration"]):
+                    "object", "library_concentration"]):
                 raise TypeError("Each Illumina sequencing lane must contain an "
                                 "'object' and a 'library_concentration'")
             if not isinstance(l["object"], Well):
@@ -1385,7 +1385,7 @@ class Protocol(object):
                              " modes: {}.You specified: {}."
                              "".format(sequencer,
                                        ', '.join(valid_sequencers[
-                                                     sequencer]["modes"]),
+                                                sequencer]["modes"]),
                                        mode)
                              )
         if index not in valid_indices:
@@ -1765,7 +1765,7 @@ class Protocol(object):
 
             # Volume accounting
             total_vol_dispensed = (
-                    sum([Unit(c["volume"]) for c in columns]) * row_count)
+                sum([Unit(c["volume"]) for c in columns]) * row_count)
             if pre_dispense is not None:
                 total_vol_dispensed += nozzle_count * pre_dispense
             if reagent.volume:
@@ -4212,7 +4212,7 @@ class Protocol(object):
                 raise ValueError("Each sample or control must indicate a "
                                  "volume of type unit. %s" % e)
             if (s.get("captured_events") and not
-            isinstance(s.get("captured_events"), int)):
+                    isinstance(s.get("captured_events"), int)):
                 raise TypeError("captured_events is optional, if given it"
                                 " must be of type integer.")
         for c in controls:
@@ -4221,7 +4221,7 @@ class Protocol(object):
                                 "indicating the colors/channels that this"
                                 " control is to be used for.")
             if (c.get("minimize_bleed") and not
-            isinstance(c.get("minimize_bleed"), list)):
+                    isinstance(c.get("minimize_bleed"), list)):
                 raise TypeError("Minimize_bleed must be of type list.")
             elif c.get("minimize_bleed"):
                 for b in c["minimize_bleed"]:
@@ -4275,7 +4275,7 @@ class Protocol(object):
                                         "type dict.")
                     else:
                         if (not c.get("name") or not
-                        isinstance(c.get("name"), str)):
+                                isinstance(c.get("name"), str)):
                             raise TypeError("Each color must have a `name` "
                                             "that is of type string.")
                         if c.get("emission_wavelength"):
@@ -5506,7 +5506,7 @@ class Protocol(object):
             raise TypeError("num_images must be a positive integer.")
         if magnification:
             if not isinstance(magnification, (float, int)) or \
-                    magnification <= 0:
+                magnification <= 0:
                 raise TypeError("magnification must be a number.")
         if backlighting:
             if not isinstance(backlighting, bool):
@@ -5598,10 +5598,10 @@ class Protocol(object):
         """
         last_instruction = self.instructions[-1] if self.instructions else None
         maybe_same_instruction = (
-                new_instruction is False and
-                last_instruction and
-                isinstance(last_instruction, MagneticTransfer) and
-                last_instruction.data.get("magnetic_head") == head
+            new_instruction is False and
+            last_instruction and
+            isinstance(last_instruction, MagneticTransfer) and
+            last_instruction.data.get("magnetic_head") == head
         )
         # Overwriting __dict__ since that's edited on __init__ and we use it
         # for downstream checks
@@ -6530,6 +6530,12 @@ class Protocol(object):
         if density:
             if not isinstance(density, list):
                 density = [density] * count
+            elif len(density) != count:
+                raise ValueError(
+                    "the length of provided density: {} does "
+                    "not match the number of transports."
+                    "".format(len(density))
+                )
             density = [parse_unit(d, "mg/ml") for d in density]
             for d in density:
                 if d.magnitude <= 0:
@@ -6538,6 +6544,7 @@ class Protocol(object):
                         "".format(d)
                     )
         else:
+            # if density is None, it should still be a list of None
             density = [density] * count
 
         if not isinstance(source_liquid, list):
@@ -6623,7 +6630,7 @@ class Protocol(object):
                     location_transports = location_helper(src, des, transfer_vol, met, dens)
                     source_transports = location_transports[0]["transports"]
                     instruction_mode = mode
-                    if instruction_mode is None:
+                    if not instruction_mode:
                         instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                     instructions.append(
                         LiquidHandle(
@@ -6642,8 +6649,8 @@ class Protocol(object):
         # if one tip is true then there's a locations list
         if locations:
             source_transports = locations[0]["transports"]
-            if mode is None:
-                mode = LiquidHandle.builders.desired_mode(source_transports, mode)
+            # if not mode:
+            mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
                     locations,
@@ -6762,7 +6769,6 @@ class Protocol(object):
         --------
         Mix : base LiquidHandleMethod for mix operations
         """
-
         def location_helper(aliquot, volume, method):
             """Generates LiquidHandle mix locations
 
@@ -6874,7 +6880,7 @@ class Protocol(object):
                 location_transports = location_helper(wel, vol, met)
                 source_transports = location_transports[0]["transports"]
                 instruction_mode = mode
-                if instruction_mode is None:
+                if not instruction_mode:
                     instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                 instructions.append(
                     LiquidHandle(
@@ -6892,7 +6898,7 @@ class Protocol(object):
         # if one tip is true then there's a locations list
         if locations:
             source_transports = locations[0]["transports"]
-            if mode is None:
+            if not mode:
                 mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
@@ -6948,7 +6954,6 @@ class Protocol(object):
         TypeError
             If specified destination is not of type Well
         """
-
         def euclidean_distance(point_a, point_b):
             """
             Calculate the euclidean distance between a pair of xy coordinates

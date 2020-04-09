@@ -1810,12 +1810,16 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Raises
         ------
+        TypeError
+            mode is not in str
         ValueError
             mode does not contain valid mode value
         TypeError
             liquid is not of str
         ValueError
             liquid_class is not a valid value
+        ValueError
+            liquid_class did not resolve to a mode
         ValueError
             multiple liquid_class exists in one LiquidHandle
         """
@@ -1826,6 +1830,10 @@ class LiquidHandleBuilders(InstructionBuilders):
             "viscous": "positive_displacement"
         }
         if mode:
+            if not isinstance(mode, str):
+                raise TypeError(
+                    "mode: {} must be in str".format(mode)
+                )
             if mode not in self.dispense_modes:
                 raise ValueError(
                     "mode: {} must be one of the valid modes: {}"
@@ -1880,8 +1888,8 @@ class LiquidHandleBuilders(InstructionBuilders):
                     "is allowed per transfer."
                     "".format(set(modes), self.dispense_modes)
                 )
-            if len(set(modes)) == 1:
-                mode = list(modes)[0]
+
+            mode = list(modes)[0]
 
         return mode
 

@@ -1236,7 +1236,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             return self.position_z_calculated(
                 **position_z["calculated_from_wells"]
             )
-        if "manual" in position_z:
+        elif "manual" in position_z:
             return self.position_z_manual(
                 **position_z["manual"]
             )

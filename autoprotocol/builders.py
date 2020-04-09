@@ -1762,12 +1762,14 @@ class LiquidHandleBuilders(InstructionBuilders):
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
                 flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")),
+                    target=Unit(10, "uL/s")
+                ),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="air",
                     position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position")
+                        reference="preceding_position"
+                    )
                 )
             ),
             LiquidHandle.builders.transport(
@@ -1775,12 +1777,14 @@ class LiquidHandleBuilders(InstructionBuilders):
                 density=None,
                 pump_override_volume=Unit(2, "uL"),
                 flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")),
+                    target=Unit(10, "uL/s")
+                ),
                 delay_time=Unit(0.5, "s"),
                 mode_params=LiquidHandle.builders.mode_params(
                     liquid_class="viscous",
                     position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position")
+                        reference="preceding_position"
+                    )
                 )
             )
         ]

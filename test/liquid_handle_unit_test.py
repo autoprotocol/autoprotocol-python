@@ -124,7 +124,6 @@ class LiquidHandleMethodTester(object):
     )
     asp_transport = LiquidHandle.builders.transport(
         volume=Unit(1, "uL"),
-        density=None,
         pump_override_volume=Unit(2, "uL"),
         flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
         delay_time=Unit(0.5, "s"),

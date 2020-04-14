@@ -1250,6 +1250,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 class LiquidHandleBuilders(InstructionBuilders):
     """Builders for LiquidHandle Instructions
     """
+
     def __init__(self):
         super(LiquidHandleBuilders, self).__init__()
         self.liquid_classes = ["air", "default", "viscous"]
@@ -1824,7 +1825,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             multiple liquid_class exists in one LiquidHandle
         """
         # dict for default dispense mode for each liquid_class
-        liquid_class_to_dispense_modes = {
+        liquid_class_to_dispense_mode = {
             "air": "air_displacement",
             "default": "air_displacement",
             "viscous": "positive_displacement"
@@ -1839,60 +1840,53 @@ class LiquidHandleBuilders(InstructionBuilders):
                     "mode: {} must be one of the valid modes: {}"
                     "".format(mode, self.dispense_modes)
                 )
-        else:
-            # get liquid_classes from transport input
-            liquid_classes = set([transport["mode_params"]["liquid_class"]
-                                  for transport in transports])
-            # remove automatically added 'air' class from blowout, etc.
-            non_air_classes = [liq for liq in liquid_classes if liq != "air"]
-            # if liquid classes only contain "air" type, mode is returned.
-            has_only_air_classes = not non_air_classes
-            if has_only_air_classes:
-                return liquid_class_to_dispense_modes["air"]
+            return mode
 
-            modes = []
-            # get mode for each liquid_class if not specified already from the
-            # user input.
-            for liquid in non_air_classes:
-                # resolve mode for different liquid classes (except for None).
-                if liquid:
-                    if not isinstance(liquid, str):
-                        raise TypeError(
-                            "liquid: {} is not of type str".format(liquid)
-                        )
-                    if liquid not in self.liquid_classes:
-                        raise ValueError(
-                            "liquid_class: {} must be one of the valid"
-                            "classes: {} ".format(liquid, self.liquid_classes)
-                        )
-                    if liquid not in liquid_class_to_dispense_modes.keys():
-                        raise ValueError(
-                            "modes: {} did not resolve accordingly. If there "
-                            "is a new liquid_class, make sure dictionary: {}"
-                            "is updated.".format(
-                                set(modes), liquid_class_to_dispense_modes
-                            )
-                        )
-                    modes.append(liquid_class_to_dispense_modes[liquid])
+        # get liquid_classes from transport input
+        liquid_classes = set([transport["mode_params"]["liquid_class"]
+                              for transport in transports])
 
-            # if liquid class only contains "air" and/or None, default to
-            # "air_displacement".
-            if not modes:
-                modes.append(liquid_class_to_dispense_modes["air"])
-            # return error if there are incompatible liquid_class a set of
-            # transports.
-            if len(set(modes)) > 1:
-                raise ValueError(
-                    "There are multiple liquid classes which could potentially"
-                    "have different modes: {}."
-                    "Please specify the mode to be used from: {}. Only one mode"
-                    "is allowed per transfer."
-                    "".format(set(modes), self.dispense_modes)
+        # # remove automatically added 'air' class from blowout, etc.
+        other_classes = liquid_classes - {"air", None}
+
+        if not other_classes:
+            return liquid_class_to_dispense_mode["air"]
+
+        modes = set()
+        for other_class in other_classes:
+
+            # resolve mode for different other_class classes (except for None).
+            if not isinstance(other_class, str):
+                raise TypeError(
+                    "other_class: {} is not of type str".format(other_class)
                 )
+            if other_class not in self.liquid_classes:
+                raise ValueError(
+                    "liquid_class: {} must be one of the valid"
+                    "classes: {} ".format(other_class, self.liquid_classes)
+                )
+            if other_class not in liquid_class_to_dispense_mode.keys():
+                raise ValueError(
+                    "other_class: {} did not resolve accordingly. If there "
+                    "is a new liquid_class, make sure dictionary: {}"
+                    "is updated.".format(
+                        other_class, liquid_class_to_dispense_mode
+                    )
+                )
+            modes.add(liquid_class_to_dispense_mode[other_class])
 
-            mode = modes[0]
+        # return error if there are incompatible liquid_class a set of
+        # transports.
+        if len(set(modes)) > 1:
+            raise ValueError(
+                "There are multiple other_class classes which could potentially"
+                "have different modes: {}."
+                "Please specify the mode to be used from: {}. Only one mode"
+                "is allowed per transfer."
+                "".format(set(modes), self.dispense_modes)
+            )
 
-        return mode
+        return list(modes)[0]
 
 
 class PlateReaderBuilders(InstructionBuilders):

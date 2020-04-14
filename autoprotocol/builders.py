@@ -1877,7 +1877,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             # if liquid class only contains "air" and/or None, default to
             # "air_displacement".
             if not modes:
-                modes.append("air_displacement")
+                modes.append(liquid_class_to_dispense_modes["air"])
             # return error if there are incompatible liquid_class a set of
             # transports.
             if len(set(modes)) > 1:

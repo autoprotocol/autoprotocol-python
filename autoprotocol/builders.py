@@ -1889,7 +1889,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                     "".format(set(modes), self.dispense_modes)
                 )
 
-            mode = list(modes)[0]
+            mode = modes[0]
 
         return mode
 

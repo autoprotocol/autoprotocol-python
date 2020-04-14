@@ -1846,7 +1846,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             # remove automatically added 'air' class from blowout, etc.
             non_air_classes = [liq for liq in liquid_classes if liq != "air"]
             # if liquid classes only contain "air" type, mode is returned.
-            if not non_air_classes:
+            has_only_air_classes = not non_air_classes
+            if has_only_air_classes:
                 return liquid_class_to_dispense_modes["air"]
 
             modes = []

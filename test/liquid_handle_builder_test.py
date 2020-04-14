@@ -348,7 +348,7 @@ class TestLiquidHandleBuilder(object):
             "positive_displacement"
         assert LiquidHandle.builders.desired_mode(**mode_none) == "air_displacement"
         assert LiquidHandle.builders.desired_mode(**mode_viscous_air) == \
-             "air_displacement"
+            "air_displacement"
         # failure tests
         with pytest.raises(ValueError):
             LiquidHandle.builders.desired_mode(transports_air, "foo")

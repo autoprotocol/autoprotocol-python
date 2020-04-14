@@ -1751,7 +1751,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         For non-viscous, water-like liquid and air, the method will default
         to "air_displacement". To allow for more accurate aspirate and
         dispense volumes, 'viscous' liquid where air pressure alone is
-        sometimes not sufficient to overcome the surface tenstion to pull
+        sometimes not sufficient to overcome the surface tension to pull
         or push the liquid sufficiently through transfer tip, it will
         default to "positive_displacement" unless otherwise specified.
 
@@ -1845,20 +1845,18 @@ class LiquidHandleBuilders(InstructionBuilders):
         # get liquid_classes from transport input
         liquid_classes = set([transport["mode_params"]["liquid_class"]
                               for transport in transports])
-
-        # # remove automatically added 'air' class from blowout, etc.
+        # remove automatically added 'air' (e.g. from blowout steps) and None
+        # classes.
         other_classes = liquid_classes - {"air", None}
-
         if not other_classes:
             return liquid_class_to_dispense_mode["air"]
 
         modes = set()
         for other_class in other_classes:
-
             # resolve mode for different other_class classes (except for None).
             if not isinstance(other_class, str):
                 raise TypeError(
-                    "other_class: {} is not of type str".format(other_class)
+                    "liquid_class: {} is not of type str".format(other_class)
                 )
             if other_class not in self.liquid_classes:
                 raise ValueError(
@@ -1867,7 +1865,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                 )
             if other_class not in liquid_class_to_dispense_mode.keys():
                 raise ValueError(
-                    "other_class: {} did not resolve accordingly. If there "
+                    "liquid_class: {} did not resolve accordingly. If there "
                     "is a new liquid_class, make sure dictionary: {}"
                     "is updated.".format(
                         other_class, liquid_class_to_dispense_mode
@@ -1879,7 +1877,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         # transports.
         if len(set(modes)) > 1:
             raise ValueError(
-                "There are multiple other_class classes which could potentially"
+                "There are multiple liquid_class types which could potentially"
                 "have different modes: {}."
                 "Please specify the mode to be used from: {}. Only one mode"
                 "is allowed per transfer."

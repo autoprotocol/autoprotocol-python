@@ -1,10 +1,14 @@
 =========
 Changelog
 =========
+<<<<<<< HEAD
 
 
 * :bug:`230` Changing Protocol.propagate_properties to use Well.set_properties
 * :bug:`231` Fix LiquidHandleBuilders method desired_mode docstring preventing Travis build
+=======
+* :bug:`230` Changing Protocol.propagate_properties to use Well.set_properties
+>>>>>>> adding PR bug number
 * :support:`228` Remove Phabricator references
 
 * :release:`6.1.2 <2020-02-18>`

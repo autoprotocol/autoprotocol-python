@@ -1336,17 +1336,17 @@ class LiquidHandleBuilders(InstructionBuilders):
         dict
             transport parameters for a LiquidHandle instruction
         """
-        if volume:
+        if volume is not None:
             volume = parse_unit(volume, "ul")
-        if density:
+        if density is not None:
             density = parse_unit(density, "mg/ml")
-        if pump_override_volume:
+        if pump_override_volume is not None:
             pump_override_volume = parse_unit(pump_override_volume, "ul")
-        if flowrate:
+        if flowrate is not None:
             flowrate = self.flowrate(**flowrate)
-        if delay_time:
+        if delay_time is not None:
             delay_time = parse_unit(delay_time, "s")
-        if mode_params:
+        if mode_params is not None:
             mode_params = self.mode_params(**mode_params)
 
         return {
@@ -1831,10 +1831,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             "viscous": "positive_displacement"
         }
         if mode:
-            if not isinstance(mode, str):
-                raise TypeError(
-                    "mode: {} must be in str".format(mode)
-                )
             if mode not in self.dispense_modes:
                 raise ValueError(
                     "mode: {} must be one of the valid modes: {}"
@@ -1872,7 +1868,12 @@ class LiquidHandleBuilders(InstructionBuilders):
                     )
                 )
             modes.add(liquid_class_to_dispense_mode[other_class])
-
+        # return error if modes is empty.
+        if not modes:
+            raise ValueError(
+                "modes: {} resulted in an empty set. Make sure valid mode is "
+                "added for each liquid class."
+            ).format(modes)
         # return error if there are incompatible liquid_class a set of
         # transports.
         if len(set(modes)) > 1:
@@ -1883,7 +1884,6 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "is allowed per transfer."
                 "".format(set(modes), self.dispense_modes)
             )
-
         return list(modes)[0]
 
 

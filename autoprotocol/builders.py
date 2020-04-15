@@ -1308,8 +1308,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             "transports": transports
         }
 
-    def transport(self, volume=None, pump_override_volume=None, flowrate=None,
-                  delay_time=None, mode_params=None, density=None):
+    def transport(self, volume=None, pump_override_volume=None,
+                  flowrate=None, delay_time=None, mode_params=None, density=None):
         """Helper for building transports
 
         Parameters

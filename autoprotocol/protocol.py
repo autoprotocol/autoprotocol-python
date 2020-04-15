@@ -1385,7 +1385,7 @@ class Protocol(object):
                              " modes: {}.You specified: {}."
                              "".format(sequencer,
                                        ', '.join(valid_sequencers[
-                                                sequencer]["modes"]),
+                                                 sequencer]["modes"]),
                                        mode)
                              )
         if index not in valid_indices:
@@ -1533,7 +1533,7 @@ class Protocol(object):
 
         if not isinstance(wells, list):
             raise TypeError("Unknown input. SangerSeq wells accepts either a"
-                            "Well, a WellGroup, or a list of well indices")
+                             "Well, a WellGroup, or a list of well indices")
 
         return self._append_and_return(
             SangerSeq(cont, wells, dataref, type, primer))
@@ -5506,7 +5506,7 @@ class Protocol(object):
             raise TypeError("num_images must be a positive integer.")
         if magnification:
             if not isinstance(magnification, (float, int)) or \
-                magnification <= 0:
+               magnification <= 0:
                 raise TypeError("magnification must be a number.")
         if backlighting:
             if not isinstance(backlighting, bool):

@@ -320,7 +320,7 @@ class LiquidHandleMethod(object):
     def _aspirate_simple(self, volume, initial_z,
                          position_x=None, position_y=None,
                          calibrated_vol=None, flowrate=None, delay_time=None,
-                         liquid_class=None):
+                         liquid_class=None, density=None):
         """Helper function for generating aspirate transports
 
         Parameters
@@ -341,6 +341,8 @@ class LiquidHandleMethod(object):
             time to pause after aspirating to let pressure equilibrate
         liquid_class : str, optional
             the name of the liquid class being aspirated
+        density : Unit, optional
+            the density of liquid being aspirated
         """
 
         followup_z = self._move_to_initial_position(
@@ -356,6 +358,7 @@ class LiquidHandleMethod(object):
 
         self._transports += [LiquidHandle.builders.transport(
             volume=-volume,
+            density=density,
             # pylint: disable=invalid-unary-operand-type
             pump_override_volume=-calibrated_vol if calibrated_vol else None,
             flowrate=flowrate,
@@ -367,7 +370,7 @@ class LiquidHandleMethod(object):
                              position_x=None, position_y=None,
                              calibrated_vol=None,
                              asp_flowrate=None, dsp_flowrate=None,
-                             delay_time=None, liquid_class=None):
+                             delay_time=None, liquid_class=None, density=None):
         """Helper function for generating aspiration with priming
 
         Parameters
@@ -392,6 +395,8 @@ class LiquidHandleMethod(object):
             time to pause after aspirating to let pressure equilibrate
         liquid_class : str, optional
             the name of the liquid class being aspirated
+        density : Unit, optional
+            the density of liquid being aspirated
         """
 
         followup_z = self._move_to_initial_position(
@@ -409,6 +414,7 @@ class LiquidHandleMethod(object):
         self._transports += [
             LiquidHandle.builders.transport(
                 volume=-prime_vol,
+                density=density,
                 pump_override_volume=-prime_vol,
                 flowrate=asp_flowrate,
                 mode_params=mode_params,
@@ -416,6 +422,7 @@ class LiquidHandleMethod(object):
             ),
             LiquidHandle.builders.transport(
                 volume=-volume,
+                density=density,
                 # pylint: disable=invalid-unary-operand-type
                 pump_override_volume=(
                     -calibrated_vol if calibrated_vol else None
@@ -426,6 +433,7 @@ class LiquidHandleMethod(object):
             ),
             LiquidHandle.builders.transport(
                 volume=prime_vol,
+                density=density,
                 pump_override_volume=prime_vol,
                 flowrate=dsp_flowrate,
                 mode_params=mode_params,
@@ -436,7 +444,7 @@ class LiquidHandleMethod(object):
     def _dispense_simple(self, volume, initial_z,
                          position_x=None, position_y=None,
                          calibrated_vol=None, flowrate=None, delay_time=None,
-                         liquid_class=None):
+                         liquid_class=None, density=None):
         """Helper function for generating dispense transports
 
         Parameters
@@ -457,6 +465,8 @@ class LiquidHandleMethod(object):
             time to pause after dispensing to let pressure equilibrate
         liquid_class : str, optional
             the name of the liquid class being dispensed
+        density : Unit, optional
+            the density of liquid to be dispensed
         """
 
         followup_z = self._move_to_initial_position(
@@ -472,6 +482,7 @@ class LiquidHandleMethod(object):
 
         self._transports += [LiquidHandle.builders.transport(
             volume=volume,
+            density=density,
             pump_override_volume=calibrated_vol if calibrated_vol else None,
             flowrate=flowrate,
             mode_params=mode_params,

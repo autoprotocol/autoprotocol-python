@@ -5,7 +5,7 @@ from autoprotocol.instruction import LiquidHandle
 from autoprotocol import Unit
 
 
-class TestInstuctionBuilders(object):
+class TestInstructionBuilders(object):
     def test_shape_builder(self):
         shape = {"rows": 1, "columns": 12, "format": "SBS96"}
         assert LiquidHandle.builders.shape(**shape) == shape
@@ -21,6 +21,19 @@ class TestInstuctionBuilders(object):
 
 
 class TestLiquidHandleBuilder(object):
+    asp_transport = LiquidHandle.builders.transport(
+        volume=Unit(1, "uL"),
+        density=None,
+        pump_override_volume=Unit(2, "uL"),
+        flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+        delay_time=Unit(0.5, "s"),
+        mode_params=LiquidHandle.builders.mode_params(
+            liquid_class="air",
+            position_z=LiquidHandle.builders.position_z(
+                reference="preceding_position")
+        )
+    )
+
     def test_location_builder(self):
         location = {
             "location": "test_well/0",
@@ -34,12 +47,25 @@ class TestLiquidHandleBuilder(object):
     def test_transport_builder(self):
         transport = {
             "volume": Unit(1, "uL"),
+            "density": None,
             "pump_override_volume": Unit(2, "uL"),
             "flowrate": LiquidHandle.builders.flowrate(target="2:uL/s"),
             "delay_time": Unit(5, "s"),
             "mode_params": LiquidHandle.builders.mode_params(liquid_class="air")
         }
         assert LiquidHandle.builders.transport(**transport) == transport
+
+    def test_transports_with_denisty_builder(self):
+        transport = {
+            "volume": Unit(5, "uL"),
+            "density": Unit(1, "mg/ml"),
+            "pump_override_volume": Unit(2, "uL"),
+            "flowrate": LiquidHandle.builders.flowrate(target="2:uL/s"),
+            "delay_time": Unit(5, "s"),
+            "mode_params": LiquidHandle.builders.mode_params(liquid_class="air")
+        }
+        density = LiquidHandle.builders.transport(**transport)["density"]
+        assert density == Unit(1, "mg/ml")
 
     def test_flowrate_builder(self):
         flowrate = {
@@ -137,7 +163,8 @@ class TestLiquidHandleBuilder(object):
         }
 
         assert(
-            LiquidHandle.builders.position_z(**extra_detection_arguments_positions_z) ==
+            LiquidHandle.builders.position_z(
+                **extra_detection_arguments_positions_z) ==
             extra_detection_arguments_positions_z
         )
 
@@ -186,3 +213,144 @@ class TestLiquidHandleBuilder(object):
             "flowrate": LiquidHandle.builders.flowrate(target="1:uL/s")
         }
         assert LiquidHandle.builders.blowout(**blowout) == blowout
+
+    def test_desired_mode_builder(self):
+        transports_air = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        transports_viscous = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="viscous",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        transports_none = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class=None,
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class=None,
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        transports_invalid = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="viscous",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="default",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position")
+                )
+            )
+        ]
+        mode_air = {
+            "transports": transports_air,
+            "mode": None
+        }
+        mode_viscous = {
+            "transports": transports_viscous,
+            "mode": None
+        }
+        mode_none = {
+            "transports": transports_none,
+            "mode": None
+        }
+        mode_viscous_air = {
+            "transports": transports_viscous,
+            "mode": "air_displacement"
+        }
+        assert LiquidHandle.builders.desired_mode(**mode_air) == "air_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_viscous) == \
+            "positive_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_none) == "air_displacement"
+        assert LiquidHandle.builders.desired_mode(**mode_viscous_air) == \
+            "air_displacement"
+        # failure tests
+        with pytest.raises(ValueError):
+            LiquidHandle.builders.desired_mode(transports_air, "foo")
+        with pytest.raises(ValueError):
+            LiquidHandle.builders.desired_mode(transports_invalid, None)

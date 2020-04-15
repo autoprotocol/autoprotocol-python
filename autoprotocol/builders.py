@@ -75,7 +75,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
 
         unique = dict()
         for key, value in union.items():
-            if len(value) is 1:
+            if len(value) == 1:
                 unique[key] = value[0]
             else:
                 raise ValueError(
@@ -329,7 +329,7 @@ class ThermocycleBuilders(InstructionBuilders):
 
         if cycles <= 0:
             raise ValueError("`cycles` {} has to be positive".format(cycles))
-        if len(steps) <= 0:
+        if not steps:
             raise ValueError("`steps` has to contain at least one element")
 
         # Reformatting to use temperature for gradient input
@@ -1184,7 +1184,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         heuristic: str, optional
             Must be one of "max_mean_read_without_saturation" or
             "closest_distance_without_saturation".
-            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_ for the full explanation
+            Please refer to `ASC-041 <http://autoprotocol.org/ascs/#ASC-040>`_
+            for the full explanation
 
         Returns
         -------
@@ -1249,14 +1250,16 @@ class SpectrophotometryBuilders(InstructionBuilders):
 class LiquidHandleBuilders(InstructionBuilders):
     """Builders for LiquidHandle Instructions
     """
+
     def __init__(self):
         super(LiquidHandleBuilders, self).__init__()
-        self.liquid_classes = ["air", "default"]
+        self.liquid_classes = ["air", "default", "viscous"]
         self.xy_max = 1
         self.z_references = [
             "well_top", "well_bottom", "liquid_surface", "preceding_position"
         ]
         self.z_detection_methods = ["capacitance", "pressure", "tracked"]
+        self.dispense_modes = ["air_displacement", "positive_displacement"]
 
     def location(self, location=None, transports=None):
         """Helper for building locations
@@ -1306,7 +1309,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         }
 
     def transport(self, volume=None, pump_override_volume=None,
-                  flowrate=None, delay_time=None, mode_params=None):
+                  flowrate=None, delay_time=None, mode_params=None, density=None):
         """Helper for building transports
 
         Parameters
@@ -1324,6 +1327,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         mode_params : dict, optional
             Mode parameters
             See Also LiquidHandle.builders.mode_params
+        density : Unit or str, optional
+            Density of the liquid to be aspirated/dispensed in mg/ml.
 
 
         Returns
@@ -1333,6 +1338,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if volume is not None:
             volume = parse_unit(volume, "ul")
+        if density is not None:
+            density = parse_unit(density, "mg/ml")
         if pump_override_volume is not None:
             pump_override_volume = parse_unit(pump_override_volume, "ul")
         if flowrate is not None:
@@ -1344,6 +1351,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         return {
             "volume": volume,
+            "density": density,
             "pump_override_volume": pump_override_volume,
             "flowrate": flowrate,
             "delay_time": delay_time,
@@ -1400,7 +1408,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        liquid_class : Enum({"default", "air"}), optional
+        liquid_class : str, optional
             The name of the liquid class to be handled. This affects how
             vendors handle populating liquid handling defaults.
         position_x : dict, optional
@@ -1737,6 +1745,146 @@ class LiquidHandleBuilders(InstructionBuilders):
             "initial_z": initial_z,
             "flowrate": flowrate
         }
+
+    def desired_mode(self, transports=None, mode=None):
+        """Helper for selecting dispense mode based on liquid_class name
+        For non-viscous, water-like liquid and air, the method will default
+        to "air_displacement". To allow for more accurate aspirate and
+        dispense volumes, 'viscous' liquid where air pressure alone is
+        sometimes not sufficient to overcome the surface tension to pull
+        or push the liquid sufficiently through transfer tip, it will
+        default to "positive_displacement" unless otherwise specified.
+
+        Example Usage:
+        .. code-block:: python
+        example_transports = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")
+                ),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="air",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position"
+                    )
+                )
+            ),
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(
+                    target=Unit(10, "uL/s")
+                ),
+                delay_time=Unit(0.5, "s"),
+                mode_params=LiquidHandle.builders.mode_params(
+                    liquid_class="viscous",
+                    position_z=LiquidHandle.builders.position_z(
+                        reference="preceding_position"
+                    )
+                )
+            )
+        ]
+
+        LiquidHandle.builders.desired_mode(example_transports, None)
+
+        This will return "positive_displacement" based on the "viscous" liquid
+        class. Note that "air" (which defaults to "air_displacement") does not
+        cause a conflict since "air" is often applied in additional transfers
+        of air (such as blowout) for any liquid class, and is disregarded.
+
+        Parameters
+        ----------
+        transports : dict, optional
+            Dictionary of the transport parameters
+        mode : str, optional
+            Mode of dispense type
+
+        Returns
+        -------
+        str
+            Mode of dispense type
+
+        Raises
+        ------
+        TypeError
+            mode is not in str
+        ValueError
+            mode does not contain valid mode value
+        TypeError
+            liquid is not of str
+        ValueError
+            liquid_class is not a valid value
+        ValueError
+            liquid_class did not resolve to a mode
+        ValueError
+            multiple liquid_class exists in one LiquidHandle
+        """
+        # dict for default dispense mode for each liquid_class
+        liquid_class_to_dispense_mode = {
+            "air": "air_displacement",
+            "default": "air_displacement",
+            "viscous": "positive_displacement"
+        }
+        if mode:
+            if mode not in self.dispense_modes:
+                raise ValueError(
+                    "mode: {} must be one of the valid modes: {}"
+                    "".format(mode, self.dispense_modes)
+                )
+            return mode
+
+        # get liquid_classes from transport input
+        liquid_classes = set([transport["mode_params"]["liquid_class"]
+                              for transport in transports])
+        # remove automatically added 'air' (e.g. from blowout steps) and None
+        # classes.
+        other_classes = liquid_classes - {"air", None}
+        if not other_classes:
+            return liquid_class_to_dispense_mode["air"]
+
+        modes = set()
+        for other_class in other_classes:
+            # resolve mode for different other_class classes (except for None).
+            if not isinstance(other_class, str):
+                raise TypeError(
+                    "liquid_class: {} is not of type str".format(other_class)
+                )
+            if other_class not in self.liquid_classes:
+                raise ValueError(
+                    "liquid_class: {} must be one of the valid"
+                    "classes: {} ".format(other_class, self.liquid_classes)
+                )
+            if other_class not in liquid_class_to_dispense_mode.keys():
+                raise ValueError(
+                    "liquid_class: {} did not resolve accordingly. If there "
+                    "is a new liquid_class, make sure dictionary: {}"
+                    "is updated.".format(
+                        other_class, liquid_class_to_dispense_mode
+                    )
+                )
+            modes.add(liquid_class_to_dispense_mode[other_class])
+        # return error if modes is empty.
+        if not modes:
+            raise ValueError(
+                "modes: {} resulted in an empty set. Make sure valid mode is "
+                "added for each liquid class."
+            ).format(modes)
+        # return error if there are incompatible liquid_class a set of
+        # transports.
+        if len(set(modes)) > 1:
+            raise ValueError(
+                "There are multiple liquid_class types which could potentially"
+                "have different modes: {}."
+                "Please specify the mode to be used from: {}. Only one mode"
+                "is allowed per transfer."
+                "".format(set(modes), self.dispense_modes)
+            )
+        return list(modes)[0]
 
 
 class PlateReaderBuilders(InstructionBuilders):

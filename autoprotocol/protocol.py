@@ -5407,7 +5407,6 @@ class Protocol(object):
             )
         )
 
-
     def image(self, ref, mode, dataref, num_images=1, backlighting=None,
               exposure=None, magnification=1.0):
         """
@@ -6341,7 +6340,7 @@ class Protocol(object):
     def transfer(self, source, destination, volume, rows=1, columns=1,
                  source_liquid=LiquidClass,
                  destination_liquid=LiquidClass,
-                 method=Transfer, one_tip=False):
+                 method=Transfer, one_tip=False, density=None, mode=None):
         """Generates LiquidHandle instructions between wells
 
         Transfer liquid between specified pairs of source & destination wells.
@@ -6372,6 +6371,10 @@ class Protocol(object):
             to define a set of physical movements.
         one_tip : bool, optional
             If True then a single tip will be used for all operations
+        density : Unit or str, optional
+            Density of the liquid to be aspirated/dispensed
+        mode : str, optional
+            The liquid handling mode
 
         Returns
         -------
@@ -6465,7 +6468,8 @@ class Protocol(object):
         --------
         Transfer : base LiquidHandleMethod for transfer operations
         """
-        def location_helper(source, destination, volume, method):
+
+        def location_helper(source, destination, volume, method, density):
             """Generates LiquidHandle transfer locations
 
             Parameters
@@ -6480,6 +6484,8 @@ class Protocol(object):
             method : Transfer
                 Integrates the two input liquid classes and defines a set of
                 transfers based on their attributes and methods.
+            density : Unit
+                The density of liquid to be aspirated/dispensed.
 
             Returns
             -------
@@ -6494,12 +6500,12 @@ class Protocol(object):
                 LiquidHandle.builders.location(
                     location=source,
                     # pylint: disable=protected-access
-                    transports=method._aspirate_transports(volume)
+                    transports=method._aspirate_transports(volume, density)
                 ),
                 LiquidHandle.builders.location(
                     location=destination,
                     # pylint: disable=protected-access
-                    transports=method._dispense_transports(volume)
+                    transports=method._dispense_transports(volume, density)
                 )
             ]
 
@@ -6520,6 +6526,26 @@ class Protocol(object):
             parse_unit(_, "uL")
             for _ in volume
         ]
+
+        if density:
+            if not isinstance(density, list):
+                density = [density] * count
+            elif len(density) != count:
+                raise ValueError(
+                    "the length of provided density: {} does "
+                    "not match the number of transports."
+                    "".format(len(density))
+                )
+            density = [parse_unit(d, "mg/ml") for d in density]
+            for d in density:
+                if d.magnitude <= 0:
+                    raise ValueError(
+                        "Density: {} must be a value larger than 0."
+                        "".format(d)
+                    )
+        else:
+            # if density is None, it should still be a list of None
+            density = [density] * count
 
         if not isinstance(source_liquid, list):
             source_liquid = [source_liquid] * count
@@ -6544,7 +6570,7 @@ class Protocol(object):
 
         # validate parameter counts
         countable_parameters = (
-            source, destination, volume, source_liquid, destination_liquid,
+            source, destination, volume, density, source_liquid, destination_liquid,
             method
         )
         correct_parameter_counts = all(
@@ -6593,20 +6619,24 @@ class Protocol(object):
 
         # generate either a LiquidHandle location or instruction list
         locations, instructions = [], []
-        for src, des, vol, met in zip(source, destination, volume, method):
+        for src, des, vol, met, dens in zip(source, destination, volume, method, density):
             max_tip_capacity = met._tip_capacity()
-
             remaining_vol = vol
             while remaining_vol > Unit(0, "ul"):
                 transfer_vol = min(remaining_vol, max_tip_capacity)
                 if one_tip is True:
-                    locations += location_helper(src, des, transfer_vol, met)
+                    locations += location_helper(src, des, transfer_vol, met, dens)
                 else:
+                    location_transports = location_helper(src, des, transfer_vol, met, dens)
+                    source_transports = location_transports[0]["transports"]
+                    instruction_mode = mode
+                    if not instruction_mode:
+                        instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                     instructions.append(
                         LiquidHandle(
-                            location_helper(src, des, transfer_vol, met),
+                            location_transports,
                             shape=met._shape,
-                            mode="air_displacement",
+                            mode=instruction_mode,
                             mode_params=(
                                 LiquidHandle.builders.instruction_mode_params(
                                     tip_type=met.tip_type
@@ -6618,11 +6648,14 @@ class Protocol(object):
 
         # if one tip is true then there's a locations list
         if locations:
+            source_transports = locations[0]["transports"]
+            # if not mode:
+            mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
                     locations,
                     shape=shape,
-                    mode="air_displacement",
+                    mode=mode,
                     mode_params=LiquidHandle.builders.instruction_mode_params(
                         tip_type=method[0].tip_type
                     )
@@ -6632,7 +6665,7 @@ class Protocol(object):
 
     # pylint: disable=protected-access
     def mix(self, well, volume, rows=1, columns=1,
-            liquid=LiquidClass, method=Mix, one_tip=False):
+            liquid=LiquidClass, method=Mix, one_tip=False, mode=None):
         """Generates LiquidHandle instructions within wells
 
         Mix liquid in specified wells.
@@ -6658,6 +6691,8 @@ class Protocol(object):
             define a set of physical movements.
         one_tip : bool, optional
             If True then a single tip will be used for all operations
+        mode : str, optional
+            The liquid handling mode
 
         Returns
         -------
@@ -6842,11 +6877,16 @@ class Protocol(object):
             if one_tip is True:
                 locations += location_helper(wel, vol, met)
             else:
+                location_transports = location_helper(wel, vol, met)
+                source_transports = location_transports[0]["transports"]
+                instruction_mode = mode
+                if not instruction_mode:
+                    instruction_mode = LiquidHandle.builders.desired_mode(source_transports, mode)
                 instructions.append(
                     LiquidHandle(
-                        location_helper(wel, vol, met),
+                        location_transports,
                         shape=met._shape,
-                        mode="air_displacement",
+                        mode=instruction_mode,
                         mode_params=(
                             LiquidHandle.builders.instruction_mode_params(
                                 tip_type=met.tip_type
@@ -6857,11 +6897,14 @@ class Protocol(object):
 
         # if one tip is true then there's a locations list
         if locations:
+            source_transports = locations[0]["transports"]
+            if not mode:
+                mode = LiquidHandle.builders.desired_mode(source_transports, mode)
             instructions.append(
                 LiquidHandle(
                     locations,
                     shape=shape,
-                    mode="air_displacement",
+                    mode=mode,
                     mode_params=LiquidHandle.builders.instruction_mode_params(
                         tip_type=method[0].tip_type
                     )

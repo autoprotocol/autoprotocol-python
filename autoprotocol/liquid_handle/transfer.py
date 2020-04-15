@@ -144,7 +144,7 @@ class Transfer(LiquidHandleMethod):
             flowrate=None
         )
 
-    def _aspirate_transports(self, volume):
+    def _aspirate_transports(self, volume, density):
         """Generates source well transports
 
         Generates and returns all of the transports that should happen within
@@ -182,12 +182,12 @@ class Transfer(LiquidHandleMethod):
 
         self._transport_pre_buffer(volume)
         self._transport_mix_before(volume)
-        self._transport_aspirate_target_volume(volume)
+        self._transport_aspirate_target_volume(volume, density)
         self._transport_aspirate_transit(volume)
 
         return self._transports
 
-    def _dispense_transports(self, volume):
+    def _dispense_transports(self, volume, density):
         """Generates destination well transports
 
         Generates and returns all of the transports that should happen within
@@ -224,7 +224,7 @@ class Transfer(LiquidHandleMethod):
             return []
 
         self._transport_dispense_transit(volume)
-        self._transport_dispense_target_volume(volume)
+        self._transport_dispense_target_volume(volume, density)
         self._transport_mix_after(volume)
         self._transport_blowout(volume)
 
@@ -294,12 +294,13 @@ class Transfer(LiquidHandleMethod):
             )
         )
 
-    def _transport_aspirate_target_volume(self, volume):
+    def _transport_aspirate_target_volume(self, volume, density):
         """Aspirates the target volume from the source location
 
         Parameters
         ----------
         volume : Unit
+        density : Unit
 
         See Also
         --------
@@ -336,7 +337,8 @@ class Transfer(LiquidHandleMethod):
                     volume, self.tip_type
                 ),
                 delay_time=self._source_liquid.delay_time,
-                liquid_class=self._source_liquid.name
+                liquid_class=self._source_liquid.name,
+                density=density
             )
         else:
             self._aspirate_simple(
@@ -349,7 +351,8 @@ class Transfer(LiquidHandleMethod):
                     volume, self.tip_type
                 ),
                 delay_time=self._source_liquid.delay_time,
-                liquid_class=self._source_liquid.name
+                liquid_class=self._source_liquid.name,
+                density=density
             )
 
     def default_aspirate_z(self, volume):
@@ -477,12 +480,13 @@ class Transfer(LiquidHandleMethod):
 
         return transit_vol
 
-    def _transport_dispense_target_volume(self, volume):
+    def _transport_dispense_target_volume(self, volume, density):
         """Dispenses the target volume into the destination location
 
         Parameters
         ----------
         volume : Unit
+        density : Unit
 
         See Also
         --------
@@ -503,7 +507,8 @@ class Transfer(LiquidHandleMethod):
                 volume, self.tip_type
             ),
             delay_time=self._source_liquid.delay_time,
-            liquid_class=self._source_liquid.name
+            liquid_class=self._source_liquid.name,
+            density=density
         )
 
     def default_dispense_z(self, volume):
@@ -625,7 +630,7 @@ class PreMixBlowoutTransfer(Transfer):
         )
         self.pre_mix_blowout = pre_mix_blowout
 
-    def _dispense_transports(self, volume=None):
+    def _dispense_transports(self, volume=None, density=None):
         self._transports = []
         volume = parse_unit(volume, "ul")
 
@@ -634,7 +639,7 @@ class PreMixBlowoutTransfer(Transfer):
             return []
 
         self._transport_dispense_transit(volume)
-        self._transport_dispense_target_volume(volume)
+        self._transport_dispense_target_volume(volume, density)
         self._transport_pre_mix_blowout(volume)
         self._transport_mix_after(volume)
         self._transport_blowout(volume)

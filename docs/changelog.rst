@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+
 * :bug:`230` Changing Protocol.propagate_properties to use Well.set_properties
 * :support:`228` Remove Phabricator references
 

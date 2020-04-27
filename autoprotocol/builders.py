@@ -1826,6 +1826,20 @@ class LiquidHandleBuilders(InstructionBuilders):
             liquid_class did not resolve to a mode
         ValueError
             multiple liquid_class exists in one LiquidHandle
+
+        Example Usage:
+        .. code-block:: python
+        example_transports = [
+            LiquidHandle.builders.transport(),
+            LiquidHandle.builders.transport()
+        ]
+
+        LiquidHandle.builders.desired_mode(example_transports, None)
+
+        This will return "positive_displacement" based on the "viscous" liquid
+        class. Note that "air" (which defaults to "air_displacement") does not
+        cause a conflict since "air" is often applied in additional transfers
+        of air (such as blowout) for any liquid class, and is disregarded.
         """
         # dict for default dispense mode for each liquid_class
         liquid_class_to_dispense_mode = {

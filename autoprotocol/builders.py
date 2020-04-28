@@ -1827,42 +1827,45 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             multiple liquid_class exists in one LiquidHandle
 
-        Example Usage:
-        .. code-block:: python
-        example_transports = [
-            LiquidHandle.builders.transport(
-                volume=Unit(1, "uL"),
-                density=None,
-                pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")
-                ),
-                delay_time=Unit(0.5, "s"),
-                mode_params=LiquidHandle.builders.mode_params(
-                    liquid_class="air",
-                    position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position"
-                    )
-                )
-            ),
-            LiquidHandle.builders.transport(
-                volume=Unit(1, "uL"),
-                density=None,
-                pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")
-                ),
-                delay_time=Unit(0.5, "s"),
-                mode_params=LiquidHandle.builders.mode_params(
-                    liquid_class="viscous",
-                    position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position"
-                    )
-                )
-            )
-        ]
+        Examples
+        --------
 
-        LiquidHandle.builders.desired_mode(example_transports, None)
+        .. code-block:: python
+
+            example_transports = [
+                LiquidHandle.builders.transport(
+                    volume=Unit(1, "uL"),
+                    density=None,
+                    pump_override_volume=Unit(2, "uL"),
+                    flowrate=LiquidHandle.builders.flowrate(
+                        target=Unit(10, "uL/s")
+                    ),
+                    delay_time=Unit(0.5, "s"),
+                    mode_params=LiquidHandle.builders.mode_params(
+                        liquid_class="air",
+                        position_z=LiquidHandle.builders.position_z(
+                            reference="preceding_position"
+                        )
+                    )
+                ),
+                LiquidHandle.builders.transport(
+                    volume=Unit(1, "uL"),
+                    density=None,
+                    pump_override_volume=Unit(2, "uL"),
+                    flowrate=LiquidHandle.builders.flowrate(
+                        target=Unit(10, "uL/s")
+                    ),
+                    delay_time=Unit(0.5, "s"),
+                    mode_params=LiquidHandle.builders.mode_params(
+                        liquid_class="viscous",
+                        position_z=LiquidHandle.builders.position_z(
+                            reference="preceding_position"
+                        )
+                    )
+                )
+            ]
+
+            LiquidHandle.builders.desired_mode(example_transports, None)
 
         This will return "positive_displacement" based on the "viscous" liquid
         class. Note that "air" (which defaults to "air_displacement") does not

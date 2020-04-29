@@ -1875,8 +1875,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         if not modes:
             raise ValueError(
                 "modes: {} resulted in an empty set. Make sure valid mode is "
-                "added for each liquid class."
-            ).format(modes)
+                "added for each liquid class.".format(modes)
+            )
         # return error if there are incompatible liquid_class a set of
         # transports.
         if len(set(modes)) > 1:

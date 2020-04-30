@@ -67,7 +67,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Autoprotocol'
 year = datetime.now().year
-copyright = u'%d, Transcriptic Inc.' % year
+copyright = u'%d, The Autoprotocol Development Team, see AUTHORS for more details.' % year
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -223,7 +223,7 @@ latex_documents = [(
     'index',
     'Autoprotocol.tex',
     u'Autoprotocol Documentation',
-    u'Transcriptic',
+    u'Strateos',
     'manual'
 )]
 
@@ -254,7 +254,7 @@ latex_documents = [(
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'autoprotocol', u'Autoprotocol Documentation',
-     [u'Transcriptic'], 1)
+     [u'Strateos'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -270,7 +270,7 @@ texinfo_documents = [(
     'index',
     'Autoprotocol',
     u'Autoprotocol Documentation',
-    u'Transcriptic',
+    u'Strateos',
     'Autoprotocol',
     'An open standard for encoding biological protocols.',
     'Miscellaneous'

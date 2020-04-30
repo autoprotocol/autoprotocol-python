@@ -2,6 +2,10 @@
 
 Base class for generating complex liquid handling behavior.
 
+    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
 Summary
 -------
 LiquidHandleMethods are passed as arguments to Protocol methods along with

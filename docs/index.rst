@@ -9,9 +9,9 @@
   AP LiquidHandle <liquid_handle>
   AP Other <autoprotocol>
   Changelog <changelog>
-  CONTRIBUTING
-  AUTHORS
-  LICENSE
+  Contributing <contributing>
+  Authors <authors>
+  License <license>
 
 Use the sidebar to navigate specific module documentation.
 
@@ -23,5 +23,4 @@ Search the Docs
 * :ref:`genindex`
 * :ref:`search`
 
-:copyright: 2019 by The Autoprotocol Development Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details

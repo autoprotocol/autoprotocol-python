@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`232` Changing Protocol.propagate_properties to use Well.set_properties
+* :bug:`233` Changing Protocol.propagate_properties to use Well.set_properties
 * :bug:`231` Fix LiquidHandleBuilders method desired_mode docstring preventing Travis build
 * :support:`228` Remove Phabricator references
 

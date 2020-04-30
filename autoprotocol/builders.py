@@ -1755,40 +1755,43 @@ class LiquidHandleBuilders(InstructionBuilders):
         or push the liquid sufficiently through transfer tip, it will
         default to "positive_displacement" unless otherwise specified.
 
-        Example Usage:
+        Examples
+        --------
+
         .. code-block:: python
-        example_transports = [
-            LiquidHandle.builders.transport(
-                volume=Unit(1, "uL"),
-                density=None,
-                pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")
+
+            example_transports = [
+                LiquidHandle.builders.transport(
+                    volume=Unit(1, "uL"),
+                    density=None,
+                    pump_override_volume=Unit(2, "uL"),
+                    flowrate=LiquidHandle.builders.flowrate(
+                        target=Unit(10, "uL/s")
+                    ),
+                    delay_time=Unit(0.5, "s"),
+                    mode_params=LiquidHandle.builders.mode_params(
+                        liquid_class="air",
+                        position_z=LiquidHandle.builders.position_z(
+                            reference="preceding_position"
+                        )
+                    )
                 ),
-                delay_time=Unit(0.5, "s"),
-                mode_params=LiquidHandle.builders.mode_params(
-                    liquid_class="air",
-                    position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position"
+                LiquidHandle.builders.transport(
+                    volume=Unit(1, "uL"),
+                    density=None,
+                    pump_override_volume=Unit(2, "uL"),
+                    flowrate=LiquidHandle.builders.flowrate(
+                        target=Unit(10, "uL/s")
+                    ),
+                    delay_time=Unit(0.5, "s"),
+                    mode_params=LiquidHandle.builders.mode_params(
+                        liquid_class="viscous",
+                        position_z=LiquidHandle.builders.position_z(
+                            reference="preceding_position"
+                        )
                     )
                 )
-            ),
-            LiquidHandle.builders.transport(
-                volume=Unit(1, "uL"),
-                density=None,
-                pump_override_volume=Unit(2, "uL"),
-                flowrate=LiquidHandle.builders.flowrate(
-                    target=Unit(10, "uL/s")
-                ),
-                delay_time=Unit(0.5, "s"),
-                mode_params=LiquidHandle.builders.mode_params(
-                    liquid_class="viscous",
-                    position_z=LiquidHandle.builders.position_z(
-                        reference="preceding_position"
-                    )
-                )
-            )
-        ]
+            ]
 
         LiquidHandle.builders.desired_mode(example_transports, None)
 
@@ -1872,8 +1875,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         if not modes:
             raise ValueError(
                 "modes: {} resulted in an empty set. Make sure valid mode is "
-                "added for each liquid class."
-            ).format(modes)
+                "added for each liquid class.".format(modes)
+            )
         # return error if there are incompatible liquid_class a set of
         # transports.
         if len(set(modes)) > 1:

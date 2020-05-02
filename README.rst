@@ -37,6 +37,72 @@ Alternatively to get more up-to-date features:
 
 check the changelog_ for information about features included on `master` but not yet released.
 
+Dev Env Setup
+-------------
+
+Installation:
+    Python https://www.python.org/
+
+    Pyenv https://github.com/pyenv/pyenv#installation
+
+Python Version:
+    Current version accepted for development is v3.5.6
+
+Install Python versions:
+    Use pyenv to install multiple Python versions, specify global, local or
+    temporary Python version, and to switch between different versions.
+
+    To install different versions of Python, and to list installed pyenv
+    versions:
+
+    .. code-block:: bash
+
+        pyenv install <python_version>
+        pyenv versions
+
+    To activate pyenv:
+
+    .. code-block:: bash
+
+        pyenv activate <python_version>
+
+    To set global, local or shell-specific Python version:
+
+    .. code-block:: bash
+
+        pyenv global <python_version>
+        pyenv local <python_version>
+        pyenv shell <python_version>
+
+
+    To allow auto-activation of pyenv:
+
+    .. code-block:: bash
+
+        echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n
+        eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
+
+Pyenv Virtual Environment:
+    virtualenv manages virtual environments with a specific Python
+    version.
+
+    To create virtualenv for the Python version you want to
+    use, and the name of the virtualenv:
+
+    .. code-block:: bash
+
+        pyenv virtualenv <python_version> <environment_name>
+
+    To switch between different virtualenvs:
+
+    .. code-block:: bash
+
+        pyenv activate <environment_name>
+        pyenv deactivate
+
+
+For more information, see devenvsetup_
+
 Building a Protocol
 -------------------
 
@@ -124,3 +190,4 @@ For more information, see CONTRIBUTING_.
 .. _changelog: http://autoprotocol-python.readthedocs.io/en/latest/changelog.html
 .. _CONTRIBUTING: http://autoprotocol-python.readthedocs.io/en/latest/CONTRIBUTING.html
 .. _documentation: http://autoprotocol-python.readthedocs.org/en/latest/
+.. _devenvsetup: https://strateos.atlassian.net/wiki/spaces/ENG/pages/191660547/Python+environment+setup

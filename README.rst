@@ -41,15 +41,16 @@ Dev Env Setup
 -------------
 
 Installation:
-    Python https://www.python.org/
-
-    Pyenv https://github.com/pyenv/pyenv#installation
+    python_
 
 Python Version:
-    Current version accepted for development is v3.5.6
+    Current version accepted for development is :code:`v3.5.6`.
+    See python_
 
-Install Python versions:
-    Use pyenv to install multiple Python versions, specify global, local or
+Install Multiple Python versions (Optional):
+    There are several ways to install multiple Python versions if needed.
+
+    May use pyenv_ to install multiple Python versions, specify global, local or
     temporary Python version, and to switch between different versions.
 
     To install different versions of Python, and to list installed pyenv
@@ -74,7 +75,6 @@ Install Python versions:
         pyenv local <python_version>
         pyenv shell <python_version>
 
-
     To allow auto-activation of pyenv:
 
     .. code-block:: bash
@@ -82,26 +82,23 @@ Install Python versions:
         echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n
         eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
 
-Pyenv Virtual Environment:
-    virtualenv manages virtual environments with a specific Python
-    version.
+    Virtual Environment:
+        virtualenv is a plugin for pyenv that manages virtual environments
+        with a specific Python version.
 
-    To create virtualenv for the Python version you want to
-    use, and the name of the virtualenv:
+        To create virtualenv for the Python version you want to
+        use, and the name of the virtualenv:
 
-    .. code-block:: bash
+        .. code-block:: bash
 
-        pyenv virtualenv <python_version> <environment_name>
+            pyenv virtualenv <python_version> <environment_name>
 
-    To switch between different virtualenvs:
+        To switch between different virtualenvs:
 
-    .. code-block:: bash
+        .. code-block:: bash
 
-        pyenv activate <environment_name>
-        pyenv deactivate
-
-
-For more information, see devenvsetup_
+            pyenv activate <environment_name>
+            pyenv deactivate
 
 Building a Protocol
 -------------------
@@ -190,4 +187,6 @@ For more information, see CONTRIBUTING_.
 .. _changelog: http://autoprotocol-python.readthedocs.io/en/latest/changelog.html
 .. _CONTRIBUTING: http://autoprotocol-python.readthedocs.io/en/latest/CONTRIBUTING.html
 .. _documentation: http://autoprotocol-python.readthedocs.org/en/latest/
-.. _devenvsetup: https://strateos.atlassian.net/wiki/spaces/ENG/pages/191660547/Python+environment+setup
+.. _python: https://www.python.org/downloads/release/python-356/
+.. _pyenv: https://github.com/pyenv/pyenv#installation
+.. _conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/

@@ -41,64 +41,14 @@ Dev Env Setup
 -------------
 
 Installation:
+    Current Python version supported for development is :code:`v3.5.6`.
+
     python_
 
-Python Version:
-    Current version accepted for development is :code:`v3.5.6`.
-    See python_
-
-Install Multiple Python versions (Optional):
-    There are several ways to install multiple Python versions if needed.
-
-    May use pyenv_ to install multiple Python versions, specify global, local or
-    temporary Python version, and to switch between different versions.
-
-    To install different versions of Python, and to list installed pyenv
-    versions:
-
-    .. code-block:: bash
-
-        pyenv install <python_version>
-        pyenv versions
-
-    To activate pyenv:
-
-    .. code-block:: bash
-
-        pyenv activate <python_version>
-
-    To set global, local or shell-specific Python version:
-
-    .. code-block:: bash
-
-        pyenv global <python_version>
-        pyenv local <python_version>
-        pyenv shell <python_version>
-
-    To allow auto-activation of pyenv:
-
-    .. code-block:: bash
-
-        echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n
-        eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
-
-    Virtual Environment:
-        virtualenv is a plugin for pyenv that manages virtual environments
-        with a specific Python version.
-
-        To create virtualenv for the Python version you want to
-        use, and the name of the virtualenv:
-
-        .. code-block:: bash
-
-            pyenv virtualenv <python_version> <environment_name>
-
-        To switch between different virtualenvs:
-
-        .. code-block:: bash
-
-            pyenv activate <environment_name>
-            pyenv deactivate
+Python Virtual Environment (Optional):
+    Use of virtual environment to isolate development environment is
+    highly recommended. There are several tools available such as
+    conda_ and pyenv_.
 
 Building a Protocol
 -------------------

@@ -223,7 +223,7 @@ latex_documents = [(
     'index',
     'Autoprotocol.tex',
     u'Autoprotocol Documentation',
-    u'Strateos',
+    u'Autoprotocol Development Team',
     'manual'
 )]
 
@@ -254,7 +254,7 @@ latex_documents = [(
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'autoprotocol', u'Autoprotocol Documentation',
-     [u'Strateos'], 1)
+     [u'Autoprotocol Development Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -270,7 +270,7 @@ texinfo_documents = [(
     'index',
     'Autoprotocol',
     u'Autoprotocol Documentation',
-    u'Strateos',
+    u'Autoprotocol Development Team',
     'Autoprotocol',
     'An open standard for encoding biological protocols.',
     'Miscellaneous'

@@ -469,7 +469,7 @@ class Manifest(object):
                                "associated manifest.json file." % name)
 
 
-def run(fn, protocol_name=None, seal_after_run=True):
+def run(fn, protocol_name=None, seal_after_run=True, protocol_class=None):
     """
     Run the protocol specified by the function.
 
@@ -487,6 +487,15 @@ def run(fn, protocol_name=None, seal_after_run=True):
     seal_after_run : bool, optional
         Implicitly add a seal/cover to all stored refs within the protocol
         using seal_on_store()
+    protocol_class: Protocol, optional
+        References the base protocol class to be used for instantiation.
+        If not provided, defaults to using Autoprotocol Python's default
+        Protocol implementation
+
+    Raises
+    ------
+    TypeError
+        If protocol_class provided is not a subclass of Protocol
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -500,7 +509,14 @@ def run(fn, protocol_name=None, seal_after_run=True):
     args = parser.parse_args()
 
     source = json.loads(io.open(args.config, encoding='utf-8').read())
-    protocol = Protocol()
+
+    if protocol_class is None:
+        protocol = Protocol()
+    else:
+        if not issubclass(protocol_class, Protocol):
+            raise TypeError("Protocol class provided needs to be subclass of "
+                             "Protocol")
+        protocol = protocol_class()
 
     # pragma pylint: disable=protected-access
     if protocol_name:

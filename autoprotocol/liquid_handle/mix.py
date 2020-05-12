@@ -2,6 +2,10 @@
 
 Base LiquidHandleMethod used by Protocol.mix to generate a series of
 movements within individual wells.
+
+    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
 """
 from .transfer import LiquidHandleMethod
 from ..instruction import LiquidHandle

@@ -1,5 +1,9 @@
 """Transfer LiquidHandleMethod
 
+    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
 Base LiquidHandleMethod used by Protocol.transfer to generate a series of
 movements between pairs of wells.
 """

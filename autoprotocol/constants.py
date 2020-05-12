@@ -1,5 +1,10 @@
 """
 Constants used in protocol design, specification, and checking
+
+    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+        for more details.
+    :license: BSD, see LICENSE for more details
+
 """
 from .unit import Unit
 

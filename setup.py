@@ -47,7 +47,7 @@ setup(
     maintainer='The Autoprotocol Development Team',
     description='Python library for generating Autoprotocol',
     license='BSD',
-    maintainer_email="autoprotocol-curators@transcriptic.com",
+    maintainer_email="support@strateos.com",
     version=__version__,  # pylint: disable=undefined-variable
     install_requires=[
         'Pint==0.8.1'

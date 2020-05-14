@@ -621,6 +621,7 @@ V96CC = ContainerType(
     col_count=12,
     dead_volume_ul=Unit(75.0, "microliter"),
     safe_min_volume_ul=Unit(5.0, "microliter"),
+    true_max_vol_ul=Unit(320.0, "microliter"),
     vendor="Corning",
     cat_no="3894"
 )

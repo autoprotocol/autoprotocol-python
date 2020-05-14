@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`6.2.0 <2020-05-13>`
 * :support:`236` Support auto-deploy from travis
 * :feature:`235` Add support for specifying different Protocol subclasses in harness.run
 * :support:`232` Update various date, emails and copyright references

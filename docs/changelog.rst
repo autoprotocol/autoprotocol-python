@@ -7,8 +7,8 @@ Changelog
 * :feature:`235` Add support for specifying different Protocol subclasses in harness.run
 * :support:`232` Update various date, emails and copyright references
 * :support:`232` Move and update license, authors, contributing to top-level
-* :bug:`233` Change Protocol.propagate_properties to use Well.set_properties
-* :bug:`231` Fix LiquidHandleBuilders method desired_mode docstring preventing Travis build
+* :bug:`233 major` Change Protocol.propagate_properties to use Well.set_properties
+* :bug:`231 major` Fix LiquidHandleBuilders method desired_mode docstring preventing Travis build
 * :feature:`229` Update LiquidHandle instruction with 'density' parameter and 'positive_displacement' mode
 * :support:`228` Remove Phabricator references
 
@@ -23,7 +23,7 @@ Changelog
 * :release:`6.1.0 <2019-10-14>`
 * :feature:`217` Add `concentration(molar)` to valid input-types in harness
 * :feature:`217` Add `concentration(mass)` to valid input-types in harness
-* :bug:`216` Fix pytest-cov package dependency
+* :bug:`216 major` Fix pytest-cov package dependency
 
 * :release:`6.0.1 <2019-09-11>`
 * :bug:`213` Fix SPE autoprotocol instruction key

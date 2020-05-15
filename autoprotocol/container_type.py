@@ -586,6 +586,47 @@ DEEP96KF = ContainerType(
 )
 
 #:
+V96CC = ContainerType(
+    name="96-well cell culture multiple well plate, V bottom",
+    well_count=96,
+    well_depth_mm=10.668,
+    well_volume_ul=Unit(200.0, "microliter"),
+    well_coating=None,
+    sterile=True,
+    is_tube=False,
+    cover_types=[
+        "standard",
+        "universal",
+        "low_evaporation",
+        "ultra-clear",
+        "foil"
+    ],
+    seal_types=None,
+    capabilities=[
+        "dispense",
+        "spin",
+        "seal",
+        "unseal",
+        "liquid_handle",
+        "cover",
+        "echo_dest",
+        "spectrophotometry",
+        "image_plate",
+        "incubate",
+        "uncover",
+        "dispense-destination",
+        "envision"
+    ],
+    shortname="96-well-v-bottom",
+    col_count=12,
+    dead_volume_ul=Unit(75.0, "microliter"),
+    safe_min_volume_ul=Unit(5.0, "microliter"),
+    true_max_vol_ul=Unit(320.0, "microliter"),
+    vendor="Corning",
+    cat_no="3894"
+)
+
+#:
 DEEP24 = ContainerType(
     name="24-well extended capacity plate",
     well_count=24,
@@ -970,5 +1011,6 @@ _CONTAINER_TYPES = {
     "res-sw384-lp": RESSW384LP,
     "384-echo-ldv": ECHO384LDV,
     "384-echo-ldv-plus": ECHO384LDVPLUS,
-    "384-flat-white-clear": FLAT384WHITECLEAR
+    "384-flat-white-clear": FLAT384WHITECLEAR,
+    "96-well-v-bottom": V96CC
 }

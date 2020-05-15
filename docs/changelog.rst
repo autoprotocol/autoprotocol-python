@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`238` Add 96-well-v-bottom container type
+
 * :release:`6.2.0 <2020-05-13>`
 * :support:`236` Support auto-deploy from travis
 * :feature:`235` Add support for specifying different Protocol subclasses in harness.run

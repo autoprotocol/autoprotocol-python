@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`239` Add `absorbance` and `fluorescence` capabilities to 96-well-v-bottom container type
 * :feature:`238` Add 96-well-v-bottom container type
 
 * :release:`6.2.0 <2020-05-13>`

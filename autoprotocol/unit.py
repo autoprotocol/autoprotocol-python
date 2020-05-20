@@ -43,8 +43,8 @@ def to_decimal(number):
         decimal = Decimal(str(number))
     else:
         raise ValueError(
-            "Tried to cast {} to decimal but it was of non-numeric type {}."
-            "".format(number, type(number)))
+            f"Tried to cast {number} to decimal but it was of non-numeric type "
+            f"{type(number)}.")
     return decimal
 
 
@@ -220,10 +220,10 @@ class Unit(_Quantity):
         rounded_magnitude = round(self.magnitude, ndigits)
         normalized_magnitude = to_decimal(rounded_magnitude).normalize()
         unit_repr = self.unit.replace("**", "^").replace(" ", "")
-        return "{:f}:{:s}".format(normalized_magnitude, unit_repr)
+        return f"{normalized_magnitude:f}:{unit_repr:s}"
 
     def __repr__(self):
-        return "Unit({:f}, '{:s}')".format(self.magnitude, self.units)
+        return f"Unit({self.magnitude:f}, '{self.units:s}')"
 
     def __ceil__(self):
         return self.__class__(ceil(self.magnitude), self.units)
@@ -269,9 +269,8 @@ class Unit(_Quantity):
             self._magnitude = to_decimal(magnitude)
         except ValueError:
             raise RuntimeError(
-                "Tried to set Unit's magnitude {} but it was of type {}. "
-                "Magnitudes must be numeric.".format(
-                    magnitude, type(magnitude)))
+                f"Tried to set Unit's magnitude {magnitude} but it was of type "
+                f"{type(magnitude)}. Magnitudes must be numeric.")
 
     @staticmethod
     def fromstring(s):

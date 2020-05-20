@@ -38,6 +38,6 @@ class TipType(namedtuple("TipType", ["name", "volume"])):
         :py:class: `autoprotocol.LiquidHandleMethod._get_tip_types`
         """
         if not isinstance(name, str):
-            raise TypeError("TipType name {} was not a str.".format(name))
+            raise TypeError(f"TipType name {name} was not a str.")
         volume = parse_unit(volume, "uL")
         return super(TipType, cls).__new__(cls, name, volume)

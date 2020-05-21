@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :bug:`242` Revert Protocol.propagate_properties to use Well.add_properties
+* :bug:`244` Revert Protocol.propagate_properties to use Well.add_properties
 * :support:`241` Deprecate support for Python 3.5, add support for Python 3.8
 * :feature:`238` Add 96-well-v-bottom container type
 

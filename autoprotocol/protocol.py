@@ -7053,7 +7053,7 @@ class Protocol(object):
             )
         for source_well, dest_well in zip(source_wells, dest_wells):
             if self.propagate_properties:
-                dest_well.set_properties(source_well.properties)
+                dest_well.add_properties(source_well.properties)
 
             if source_well.volume is not None:
                 source_well.volume -= volume

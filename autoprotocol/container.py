@@ -44,22 +44,19 @@ class Well(object):
     def validate_properties(properties):
         if not isinstance(properties, dict):
             raise TypeError(
-                "Aliquot properties {} are of type {}, "
-                "they should be a `dict`.".format(
-                    properties, type(properties)))
+                f"Aliquot properties {properties} are of type "
+                f"{type(properties)}, they should be a `dict`.")
         for key, value in properties.items():
             if not isinstance(key, str):
                 raise TypeError(
-                    "Aliquot property {} : {} has a key of type {}, "
-                    "it should be a 'str'.".format(key, value, type(key)))
+                    f"Aliquot property {key} : {value} has a key of type "
+                    f"{type(key)}, it should be a 'str'.")
             try:
                 json.dumps(value)
             except TypeError:
                 raise TypeError(
-                    "Aliquot property {} : {} has a value of type {}, "
-                    "that isn't JSON serializable.".format(
-                        key, value, type(value)
-                    )
+                    f"Aliquot property {key} : {value} has a value of type "
+                    f"{type(value)}, that isn't JSON serializable."
                 )
 
     def set_properties(self, properties):
@@ -109,9 +106,7 @@ class Well(object):
                 if values_are_lists:
                     self.properties[key].extend(value)
                 else:
-                    message = "Overwriting existing property {} for {}".format(
-                        key, self
-                    )
+                    message = f"Overwriting existing property {key} for {self}"
                     warnings.warn(message=message)
                     self.properties[key] = value
             else:
@@ -141,14 +136,14 @@ class Well(object):
         """
         if not isinstance(vol, str) and not isinstance(vol, Unit):
             raise TypeError(
-                "Volume {} is of type {}, it should be either 'str' or 'Unit'."
-                "".format(vol, type(vol)))
+                f"Volume {vol} is of type {type(vol)}, it should be either "
+                f"'str' or 'Unit'.")
         v = Unit(vol)
         max_vol = self.container.container_type.true_max_vol_ul
         if v > max_vol:
             raise ValueError(
-                "Theoretical volume {} to be set exceeds "
-                "maximum well volume {}.".format(v, max_vol))
+                f"Theoretical volume {v} to be set exceeds maximum well "
+                f"volume {max_vol}.")
         self.volume = v
         return self
 
@@ -201,7 +196,7 @@ class Well(object):
             Well has no volume
         """
         if self.volume is None:
-            raise RuntimeError("well {} has no volume".format(self))
+            raise RuntimeError(f"well {self} has no volume")
         return self.volume - self.container.container_type.dead_volume_ul
 
     def __repr__(self):
@@ -209,8 +204,8 @@ class Well(object):
         Return a string representation of a Well.
 
         """
-        return "Well(%s, %s, %s)" % (str(self.container), str(self.index),
-                                     str(self.volume))
+        return f"Well({str(self.container)}, {str(self.index)}, " \
+               f"{str(self.volume)})"
 
 
 class WellGroup(object):
@@ -420,7 +415,7 @@ class WellGroup(object):
 
         """
         if not isinstance(prop, str):
-            raise TypeError("property is not a string: %r" % prop)
+            raise TypeError(f"property is not a string: {prop!r}")
         if val is not None:
             return WellGroup([w for w in self.wells if prop in w.properties and
                              w.properties[prop] is val])
@@ -603,8 +598,7 @@ class Container(object):
         self._wells = [Well(self, idx)
                        for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
-            raise AttributeError("%s is not a valid seal or cover "
-                                 "type." % cover)
+            raise AttributeError(f"{cover} is not a valid seal or cover type.")
 
     def well(self, i):
         """
@@ -672,8 +666,8 @@ class Container(object):
         if self.container_type.is_tube:
             return self.well(0)
         else:
-            raise AttributeError("%s is a %s and is not a tube" %
-                                 (self, self.container_type.shortname))
+            raise AttributeError(f"{self} is a {self.container_type.shortname} "
+                                 f"and is not a tube")
 
     def wells(self, *args):
         """
@@ -918,8 +912,8 @@ class Container(object):
                     "plate.")
 
         if quad not in [0, 1, 2, 3]:
-            raise ValueError("Invalid quadrant {} for plate type {}".format(
-                quad, str(self.name)))
+            raise ValueError(f"Invalid quadrant {quad} for plate type "
+                             f"{str(self.name)}")
 
         start_well = [0, 1, 24, 25]
         wells = []
@@ -952,8 +946,8 @@ class Container(object):
 
         """
         if not isinstance(storage, str):
-            raise TypeError("Storage condition given ({0}) is not of type "
-                            "str. {1}.".format(storage, type(storage)))
+            raise TypeError(f"Storage condition given ({storage}) is not of "
+                            f"type str. {type(storage)}.")
 
         self.storage = storage
         return self
@@ -1053,8 +1047,8 @@ class Container(object):
         # container_rows and container_cols are 1-indexed based
         if tail_row + 1 > container_rows or tail_col + 1 > container_cols:
             raise ValueError(
-                "origin: {} with shape: {} exceeds the bounds of "
-                "container: {}".format(origin, shape, self)
+                f"origin: {origin} with shape: {shape} exceeds the bounds of "
+                f"container: {self}"
             )
 
         return WellGroup([
@@ -1068,5 +1062,5 @@ class Container(object):
         (ex. Container('my_plate'))
 
         """
-        return "Container(%s%s)" % (str(self.name), ", cover=" +
-                                    self.cover if self.cover else "")
+        return f"Container({str(self.name)}" \
+               f"{', cover=' + self.cover if self.cover else ''})"

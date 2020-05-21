@@ -52,7 +52,7 @@ setup(
     install_requires=[
         'Pint==0.8.1'
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     tests_require=test_deps,
     extras_require={
         'docs': doc_deps,
@@ -73,8 +73,8 @@ setup(
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
         'Topic :: Software Development',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.8'
     ]
 )

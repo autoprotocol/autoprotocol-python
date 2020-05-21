@@ -145,7 +145,7 @@ class Mix(LiquidHandleMethod):
 
         if not isinstance(repetitions, int):
             raise TypeError(
-                "Mix repetitions {} was not an int.".format(repetitions)
+                f"Mix repetitions {repetitions} was not an int."
             )
         position_z = LiquidHandle.builders.position_z(**position_z)
         self._mix(

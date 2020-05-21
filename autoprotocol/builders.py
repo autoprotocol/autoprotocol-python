@@ -79,9 +79,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
                 unique[key] = value[0]
             else:
                 raise ValueError(
-                    "Parameter: {} had multiple values: {} specified.".format(
-                        key, value,
-                    )
+                    f"Parameter: {key} had multiple values: {value} specified."
                 )
 
         return unique
@@ -134,17 +132,15 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
 
         if format not in self.sbs_shapes:
             raise ValueError(
-                "Invalid shape format; format has to be in {}".format(
-                    self.sbs_shapes
-                )
+                f"Invalid shape format; format has to be in {self.sbs_shapes}"
             )
 
         valid_rows = rows <= SBS_FORMAT_SHAPES[format]["rows"]
         valid_columns = columns <= SBS_FORMAT_SHAPES[format]["columns"]
         if not (valid_rows and valid_columns):
             raise ValueError(
-                "rows: {} and columns: {} are not possible with format: {}."
-                "".format(rows, columns, format)
+                f"rows: {rows} and columns: {columns} are not possible with "
+                f"format: {format}."
             )
 
         return {
@@ -194,15 +190,15 @@ class ThermocycleBuilders(InstructionBuilders):
         for dye, wells in kwargs.items():
             if dye not in self.valid_dyes:
                 raise ValueError(
-                    "dye {} is not in the set of valid dyes {}"
-                    "".format(dye, self.valid_dyes)
+                    f"dye {dye} is not in the set of valid dyes "
+                    f"{self.valid_dyes}"
                 )
             if not isinstance(wells, list):
                 wells = [wells]
             if not all(isinstance(_, (int, str)) for _ in wells):
                 raise ValueError(
-                    "dye {} had wells {} that were not an int, str or list"
-                    "".format(dye, wells)
+                    f"dye {dye} had wells {wells} that were not an int, str "
+                    "or list"
                 )
             dyes[dye] = wells
 
@@ -323,12 +319,12 @@ class ThermocycleBuilders(InstructionBuilders):
             `steps` does not contain any elements
         """
         if not isinstance(cycles, int):
-            raise TypeError("`cycles` {} has to be of type int".format(cycles))
+            raise TypeError(f"`cycles` {cycles} has to be of type int")
         if not isinstance(steps, list):
-            raise TypeError("`steps` {} has to be of type list".format(steps))
+            raise TypeError(f"`steps` {steps} has to be of type list")
 
         if cycles <= 0:
-            raise ValueError("`cycles` {} has to be positive".format(cycles))
+            raise ValueError(f"`cycles` {cycles} has to be positive")
         if not steps:
             raise ValueError("`steps` has to contain at least one element")
 
@@ -389,9 +385,10 @@ class ThermocycleBuilders(InstructionBuilders):
         step_dict = dict()
         if isinstance(temperature, dict):
             if set(temperature.keys()) != {'top', 'bottom'}:
-                raise ValueError("{} was specified, but only 'top' and 'bottom'"
-                                 " keys are allowed for a temperature "
-                                 "dictionary".format(temperature))
+                raise ValueError(
+                    f"{temperature} was specified, but only 'top' and 'bottom' "
+                    f"keys are allowed for a temperature dictionary"
+                )
             step_dict['gradient'] = dict(
                 top=parse_unit(temperature['top'], "celsius"),
                 bottom=parse_unit(temperature['bottom'], "celsius")
@@ -406,7 +403,7 @@ class ThermocycleBuilders(InstructionBuilders):
 
         if read is not None:
             if not isinstance(read, bool):
-                raise TypeError("`read` {} has to be of type bool".format(read))
+                raise TypeError(f"`read` {read} has to be of type bool")
             step_dict['read'] = read
 
         return step_dict
@@ -480,18 +477,17 @@ class SPEBuilders(InstructionBuilders):
         volume = parse_unit(volume, "milliliter")
         settle_time = parse_unit(settle_time, "second")
         if settle_time <= Unit(0, "second"):
-            raise ValueError("settle_time: {} is not positive"
-                             "".format(settle_time))
+            raise ValueError(f"settle_time: {settle_time} is not positive")
 
         processing_time = parse_unit(processing_time, "second")
         if processing_time <= Unit(0, "second"):
-            raise ValueError("processing_time: {} is not positive"
-                             "".format(processing_time))
+            raise ValueError(f"processing_time: {processing_time} is not "
+                             "positive")
 
         flow_pressure = parse_unit(flow_pressure, "bar")
         if flow_pressure <= Unit(0, "bar"):
-            raise ValueError("flow_pressure: {} must be positive."
-                             "".format(flow_pressure))
+            raise ValueError(f"flow_pressure: {flow_pressure} must be "
+                             f"positive.")
         loading_flowrate = parse_unit(loading_flowrate, "ul/s")
 
         if not is_sample:
@@ -608,8 +604,9 @@ class DispenseBuilders(InstructionBuilders):
 
         if len(column_list) != len(set([_["column"] for _ in column_list])):
             raise ValueError(
-                "Column indices must be unique, but there were duplicates in "
-                "{}.".format(column_list))
+                f"Column indices must be unique, but there were duplicates "
+                f"in {column_list}."
+            )
 
         return column_list
 
@@ -638,8 +635,8 @@ class DispenseBuilders(InstructionBuilders):
 
         if path and path not in self.SHAKE_PATHS:
             raise ValueError(
-                "Invalid shake path {} specified, must be one of {}"
-                "".format(path, self.SHAKE_PATHS)
+                f"Invalid shake path {path} specified, must be one of "
+                f"{self.SHAKE_PATHS}"
             )
 
         shake_after = {
@@ -749,8 +746,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if mode not in self.MODES.keys():
             raise ValueError(
-                "Invalid mode {}, must be in valid modes {}."
-                "".format(mode, self.MODES.keys())
+                f"Invalid mode {mode}, must be in valid modes "
+                f"{self.MODES.keys()}."
             )
 
         return {
@@ -793,8 +790,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if not is_valid_well(wells):
             raise ValueError(
-                "Invalid wells {}, must be an iterable of wells or a WellGroup."
-                "".format(wells)
+                f"Invalid wells {wells}, must be an iterable of wells or a "
+                f"WellGroup."
             )
 
         if isinstance(wells, Well):
@@ -809,7 +806,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if num_flashes is not None and not isinstance(num_flashes, int):
             raise TypeError(
-                "Invalid num_flashes {}, must be an int".format(num_flashes)
+                f"Invalid num_flashes {num_flashes}, must be an int"
             )
 
         if settle_time is not None:
@@ -818,8 +815,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if read_position is not None and read_position \
                 not in self.READ_POSITIONS:
             raise ValueError(
-                "Invalid read_position {}, must be in {}."
-                "".format(read_position, self.READ_POSITIONS)
+                f"Invalid read_position {read_position}, must be in "
+                f"{self.READ_POSITIONS}."
             )
 
         if position_z is not None:
@@ -886,8 +883,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if not is_valid_well(wells):
             raise ValueError(
-                "Invalid wells {}, must be an iterable of wells or a WellGroup."
-                "".format(wells)
+                f"Invalid wells {wells}, must be an iterable of wells or a "
+                f"WellGroup."
             )
 
         if isinstance(wells, Well):
@@ -903,7 +900,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if num_flashes is not None and not isinstance(num_flashes, int):
             raise ValueError(
-                "Invalid num_flashes {}, must be an int".format(num_flashes)
+                f"Invalid num_flashes {num_flashes}, must be an int"
             )
 
         if settle_time is not None:
@@ -918,20 +915,19 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if gain is not None:
             if not isinstance(gain, (int, float)):
                 raise TypeError(
-                    "Invalid gain {}, must be an int".format(gain)
+                    f"Invalid gain {gain}, must be an int"
                 )
             gain = float(gain)
             if not 0 <= gain <= 1:
                 raise ValueError(
-                    "Invalid gain {}, must be between 0 and 1 (inclusive)."
-                    "".format(gain)
+                    f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
         if read_position is not None and read_position \
                 not in self.READ_POSITIONS:
             raise ValueError(
-                "Invalid read_position {}, must be in {}."
-                "".format(read_position, self.READ_POSITIONS)
+                f"Invalid read_position {read_position}, must be in "
+                f"{self.READ_POSITIONS}."
             )
 
         if position_z is not None:
@@ -992,8 +988,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if not is_valid_well(wells):
             raise ValueError(
-                "Invalid wells {}, must be an iterable of wells or a WellGroup."
-                "".format(wells)
+                f"Invalid wells {wells}, must be an iterable of wells or a "
+                f"WellGroup."
             )
 
         if isinstance(wells, Well):
@@ -1001,7 +997,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if num_flashes is not None and not isinstance(num_flashes, int):
             raise TypeError(
-                "Invalid num_flashes {}, must be an int".format(num_flashes)
+                f"Invalid num_flashes {num_flashes}, must be an int"
             )
 
         if settle_time is not None:
@@ -1013,20 +1009,19 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if gain is not None:
             if not isinstance(gain, (int, float)):
                 raise TypeError(
-                    "Invalid gain {}, must be an int".format(gain)
+                    f"Invalid gain {gain}, must be an int"
                 )
             gain = float(gain)
             if not 0 <= gain <= 1:
                 raise ValueError(
-                    "Invalid gain {}, must be between 0 and 1 (inclusive)."
-                    "".format(gain)
+                    f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
         if read_position is not None and read_position \
                 not in self.READ_POSITIONS:
             raise ValueError(
-                "Invalid read_position {}, must be in {}."
-                "".format(read_position, self.READ_POSITIONS)
+                f"Invalid read_position {read_position}, must be in "
+                f"{self.READ_POSITIONS}."
             )
 
         if position_z is not None:
@@ -1114,8 +1109,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if path and path not in self.SHAKE_PATHS:
             raise ValueError(
-                "Invalid read_position {}, must be in {}."
-                "".format(path, self.SHAKE_PATHS)
+                f"Invalid read_position {path}, must be in {self.SHAKE_PATHS}."
             )
 
         if amplitude is not None:
@@ -1160,8 +1154,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if reference is not None and reference not in self.Z_REFERENCES:
             raise ValueError(
-                "reference must be one of {} but {} was specified"
-                "".format(self.Z_REFERENCES, reference)
+                f"reference must be one of {self.Z_REFERENCES} but {reference} "
+                f"was specified"
             )
         if displacement is not None:
             displacement = parse_unit(displacement, "mm")
@@ -1207,8 +1201,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if heuristic is not None and heuristic not in self.Z_HEURISTICS:
             raise ValueError(
-                "heuristic must be one of {} but {} was specified"
-                "".format(self.Z_HEURISTICS, heuristic)
+                f"heuristic must be one of {self.Z_HEURISTICS} but {heuristic} "
+                f"was specified"
             )
 
         return {
@@ -1228,8 +1222,8 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if not isinstance(position_z, dict):
             raise TypeError(
-                "Invalid position_z {}, must be a dict. {}"
-                "".format(position_z, suggested_msg)
+                f"Invalid position_z {position_z}, must be a dict. "
+                f"{suggested_msg}"
             )
 
         if "calculated_from_wells" in position_z:
@@ -1242,8 +1236,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             )
         else:
             raise ValueError(
-                "Invalid position_z {} specified. {}"
-                "".format(position_z, suggested_msg)
+                f"Invalid position_z {position_z} specified. {suggested_msg}"
             )
 
 
@@ -1288,19 +1281,18 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if not (location is None or isinstance(location, (Well, str))):
             raise TypeError(
-                "Location {} is not of type str or Well".format(location)
+                f"Location {location} is not of type str or Well"
             )
 
         if transports is not None:
             if not isinstance(transports, Iterable):
                 raise ValueError(
-                    "Transports: {} is not iterable".format(transports)
+                    f"Transports: {transports} is not iterable"
                 )
             transports = [self.transport(**_) for _ in transports]
             if len(transports) < 1:
                 raise ValueError(
-                    "transports {} must be nonempty if specified"
-                    "".format(transports)
+                    f"transports {transports} must be nonempty if specified"
                 )
 
         return {
@@ -1438,8 +1430,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if liquid_class is not None and liquid_class not in self.liquid_classes:
             raise ValueError(
-                "liquid_class must be one of {} but {} was specified"
-                "".format(self.liquid_classes, liquid_class)
+                f"liquid_class must be one of {self.liquid_classes} but "
+                f"{liquid_class} was specified"
             )
 
         tip_position = self._merge_param_dicts(
@@ -1524,12 +1516,12 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if not (position is None or isinstance(position, (float, int))):
             raise TypeError(
-                "position {} is not of type float/int".format(position)
+                f"position {position} is not of type float/int"
             )
         if not (position is None or -self.xy_max <= position <= self.xy_max):
             raise ValueError(
-                "position {} was not in range {} - {}"
-                "".format(position, -self.xy_max, self.xy_max)
+                f"position {position} was not in range {-self.xy_max} - "
+                f"{self.xy_max}"
             )
 
         if move_rate is not None:
@@ -1593,8 +1585,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         if reference is not None and reference not in self.z_references:
             raise ValueError(
-                "reference must be one of {} but {} was specified"
-                "".format(self.z_references, reference)
+                f"reference must be one of {self.z_references} but "
+                f"{reference} was specified"
             )
         if offset is not None:
             offset = parse_unit(offset, "mm")
@@ -1613,8 +1605,8 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         if any(detection.values()) and not reference == "liquid_surface":
             raise ValueError(
-                "detection parameters were specified, but reference {} does "
-                "not support detection".format(reference)
+                f"detection parameters were specified, but reference "
+                f"{reference} does not support detection"
             )
 
         method = detection.get("method")
@@ -1624,8 +1616,8 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         if method is not None and method not in self.z_detection_methods:
             raise ValueError(
-                "detection_method must be one of {} but {} was specified"
-                "".format(self.z_detection_methods, method)
+                f"detection_method must be one of {self.z_detection_methods} "
+                f"but {method} was specified"
             )
 
         if duration is not None:
@@ -1701,7 +1693,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         volume = parse_unit(volume, "ul")
         if not isinstance(repetitions, int):
-            raise TypeError("repetitions {} is not an int".format(repetitions))
+            raise TypeError(f"repetitions {repetitions} is not an int")
         initial_z = self.position_z(**initial_z)
         if asp_flowrate is not None:
             asp_flowrate = self.flowrate(**asp_flowrate)
@@ -1836,8 +1828,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         if mode:
             if mode not in self.dispense_modes:
                 raise ValueError(
-                    "mode: {} must be one of the valid modes: {}"
-                    "".format(mode, self.dispense_modes)
+                    f"mode: {mode} must be one of the valid modes: "
+                    f"{self.dispense_modes}"
                 )
             return mode
 
@@ -1855,37 +1847,34 @@ class LiquidHandleBuilders(InstructionBuilders):
             # resolve mode for different other_class classes (except for None).
             if not isinstance(other_class, str):
                 raise TypeError(
-                    "liquid_class: {} is not of type str".format(other_class)
+                    f"liquid_class: {other_class} is not of type str"
                 )
             if other_class not in self.liquid_classes:
                 raise ValueError(
-                    "liquid_class: {} must be one of the valid"
-                    "classes: {} ".format(other_class, self.liquid_classes)
+                    f"liquid_class: {other_class} must be one of the "
+                    f"valid flasses: {self.liquid_classes} "
                 )
             if other_class not in liquid_class_to_dispense_mode.keys():
                 raise ValueError(
-                    "liquid_class: {} did not resolve accordingly. If there "
-                    "is a new liquid_class, make sure dictionary: {}"
-                    "is updated.".format(
-                        other_class, liquid_class_to_dispense_mode
-                    )
+                    f"liquid_class: {other_class} did not resolve accordingly. "
+                    f"If there is a new liquid_class, make sure dictionary:"
+                    f"{liquid_class_to_dispense_mode} is updated."
                 )
             modes.add(liquid_class_to_dispense_mode[other_class])
         # return error if modes is empty.
         if not modes:
             raise ValueError(
-                "modes: {} resulted in an empty set. Make sure valid mode is "
-                "added for each liquid class.".format(modes)
+                f"modes: {modes} resulted in an empty set. Make sure valid "
+                f"mode is added for each liquid class."
             )
         # return error if there are incompatible liquid_class a set of
         # transports.
         if len(set(modes)) > 1:
             raise ValueError(
-                "There are multiple liquid_class types which could potentially"
-                "have different modes: {}."
-                "Please specify the mode to be used from: {}. Only one mode"
-                "is allowed per transfer."
-                "".format(set(modes), self.dispense_modes)
+                f"There are multiple liquid_class types which could "
+                f"potentially have different modes: {set(modes)}. Please "
+                f"specify the mode to be used from: {self.dispense_modes}. "
+                f"Only one mode is allowed per transfer."
             )
         return list(modes)[0]
 
@@ -1932,7 +1921,7 @@ class PlateReaderBuilders(InstructionBuilders):
         """
         duration = parse_unit(duration, "second")
         if duration <= Unit(0, "second"):
-            raise ValueError("duration: {} is not positive".format(duration))
+            raise ValueError(f"duration: {duration} is not positive")
 
         shaking = self._merge_param_dicts(
             dict(amplitude=shake_amplitude, orbital=shake_orbital),
@@ -1945,16 +1934,16 @@ class PlateReaderBuilders(InstructionBuilders):
             amplitude = parse_unit(amplitude, "millimeter")
             if amplitude <= Unit(0, "millimeter"):
                 raise ValueError(
-                    "shake_amplitude: {} is not positive".format(amplitude)
+                    f"shake_amplitude: {amplitude} is not positive"
                 )
             if not isinstance(orbital, bool):
                 raise TypeError(
-                    "shake_orbital: {} is not a bool".format(orbital)
+                    f"shake_orbital: {orbital} is not a bool"
                 )
         elif (amplitude is not None) ^ (orbital is not None):
             raise ValueError(
-                "shake_amplitude: {} and shake_orbital: {} must both be "
-                "specified to shake".format(amplitude, orbital)
+                f"shake_amplitude: {amplitude} and shake_orbital: {orbital} "
+                f"must both be specified to shake"
             )
 
         return {
@@ -2025,17 +2014,17 @@ class EvaporateBuilders(InstructionBuilders):
         }
         if mode not in self.valid_modes:
             raise ValueError(
-                "Specified mode: {} is not valid. Make sure it is one of {}"
-                "".format(mode, self.valid_modes)
+                f"Specified mode: {mode} is not valid. Make sure it is one "
+                f"of {self.valid_modes}"
             )
 
         mode_param_keys = mode_to_param_dict[mode]
 
         if set(mode_params.keys()) != set(mode_param_keys):
             raise ValueError(
-                "Specified mode_params: {} do not contain appropriate key(s) "
-                "applicable to the mode: {}, which include {}"
-                "".format(mode_params.keys(), mode, mode_param_keys)
+                f"Specified mode_params: {mode_params.keys()} do not contain "
+                f"appropriate key(s) applicable to the mode: {mode}, which "
+                f"include {mode_param_keys}"
             )
         speed_unit_dict = {
             "rotation_speed": "rpm",
@@ -2047,14 +2036,13 @@ class EvaporateBuilders(InstructionBuilders):
                        if k in speed_unit_dict.keys()]
         if len(speed_param) > 1:
             raise TypeError(
-                "There are multiple speed parameters: {}."
-                "".format(speed_param)
+                f"There are multiple speed parameters: {speed_param}."
             )
 
         for s in speed_param:
             if Unit(mode_params[s]).magnitude <= 0:
                 raise ValueError(
-                    "{} is less than or equal to 0.".format(s)
+                    f"{s} is less than or equal to 0."
                 )
             else:
                 mode_param_output[s] = parse_unit(
@@ -2080,11 +2068,8 @@ class EvaporateBuilders(InstructionBuilders):
         if "gas" in mode_params.keys():
             if not mode_params["gas"] in self.valid_gases:
                 raise TypeError(
-                    "Specified gas: {} is not included in valid"
-                    "gases: {}".format(
-                        mode_params["gas"],
-                        self.valid_gases
-                    )
+                    f"Specified gas: {mode_params['gas']} is not included in "
+                    f"valid gases: {self.valid_gases}"
                 )
             mode_param_output["gas"] = mode_params["gas"]
 
@@ -2126,7 +2111,7 @@ class GelPurifyBuilders(InstructionBuilders):
 
         """
         if not isinstance(source, Well):
-            raise TypeError("source: {} is not a Well".format(source))
+            raise TypeError(f"source: {source} is not a Well")
 
         if not isinstance(band_list, list):
             band_list = [band_list]
@@ -2180,7 +2165,7 @@ class GelPurifyBuilders(InstructionBuilders):
         elution_buffer = str(elution_buffer)
         elution_volume = parse_unit(elution_volume, "microliter")
         if not isinstance(destination, Well):
-            raise TypeError("destination: {} is not a Well".format(destination))
+            raise TypeError(f"destination: {destination} is not a Well")
 
         band_size_range = self._merge_param_dicts(
             dict(min_bp=min_bp, max_bp=max_bp),
@@ -2190,14 +2175,14 @@ class GelPurifyBuilders(InstructionBuilders):
         max_bp = band_size_range.get("max_bp")
 
         if not isinstance(min_bp, int):
-            raise TypeError("min_bp {} was not an int".format(min_bp))
+            raise TypeError(f"min_bp {min_bp} was not an int")
 
         if not isinstance(max_bp, int):
-            raise TypeError("max_bp {} was not an int".format(max_bp))
+            raise TypeError(f"max_bp {max_bp} was not an int")
 
         if not min_bp < max_bp:
             raise ValueError(
-                "min_bp: {} is not less than max_bp: {}".format(min_bp, max_bp)
+                f"min_bp: {min_bp} is not less than max_bp: {max_bp}"
             )
 
         return {
@@ -2242,7 +2227,7 @@ class MagneticTransferBuilders(InstructionBuilders):
 
         """
         if not isinstance(object, Container):
-            raise TypeError("object: {} is not a Container".format(object))
+            raise TypeError(f"object: {object} is not a Container")
         duration = parse_unit(duration, "seconds")
         return {
             "object": object,
@@ -2287,14 +2272,14 @@ class MagneticTransferBuilders(InstructionBuilders):
 
         """
         if not isinstance(object, Container):
-            raise TypeError("object: {} is not a Container".format(object))
+            raise TypeError(f"object: {object} is not a Container")
         duration = parse_unit(duration, "seconds")
         if not isinstance(magnetize, bool):
-            raise TypeError("magnetize: {} is not a bool".format(magnetize))
+            raise TypeError(f"magnetize: {magnetize} is not a bool")
         tip_position = float(tip_position)
         if tip_position < 0:
             raise ValueError(
-                "tip_position: {} must be >= 0".format(tip_position)
+                f"tip_position: {tip_position} must be >= 0"
             )
         if temperature is not None:
             parse_unit(temperature, "celsius")
@@ -2344,14 +2329,14 @@ class MagneticTransferBuilders(InstructionBuilders):
 
         """
         if not isinstance(object, Container):
-            raise TypeError("object: {} is not a Container".format(object))
+            raise TypeError(f"object: {object} is not a Container")
         if not isinstance(cycles, int):
-            raise TypeError("cycles: {} is not an int".format(cycles))
+            raise TypeError(f"cycles: {cycles} is not an int")
         pause_duration = parse_unit(pause_duration, "seconds")
         bottom_position = float(bottom_position)
         if bottom_position < 0:
             raise ValueError(
-                "bottom_position: {} must be >= 0".format(bottom_position)
+                f"bottom_position: {bottom_position} must be >= 0"
             )
         if temperature is not None:
             parse_unit(temperature, "celsius")
@@ -2403,21 +2388,21 @@ class MagneticTransferBuilders(InstructionBuilders):
 
         """
         if not isinstance(object, Container):
-            raise TypeError("object: {} is not a Container".format(object))
+            raise TypeError(f"object: {object} is not a Container")
         duration = parse_unit(duration, "seconds")
         frequency = parse_unit(frequency, "hertz")
         if center is not None:
             center = float(center)
             if center < 0:
                 raise ValueError(
-                    "center: {} must be >= 0".format(center)
+                    f"center: {center} must be >= 0"
                 )
         if amplitude is not None:
             amplitude = float(amplitude)
         if center is not None and amplitude is not None and amplitude > center:
             raise ValueError(
-                "center: {} must be greater than or equal to amplitude: {}"
-                "".format(center, amplitude)
+                f"center: {center} must be greater than or equal to amplitude: "
+                f"{amplitude}"
             )
         if temperature is not None:
             parse_unit(temperature, "celsius")
@@ -2475,24 +2460,24 @@ class MagneticTransferBuilders(InstructionBuilders):
 
         """
         if not isinstance(object, Container):
-            raise TypeError("object: {} is not a Container".format(object))
+            raise TypeError(f"object: {object} is not a Container")
         duration = parse_unit(duration, "seconds")
         frequency = parse_unit(frequency, "hertz")
         if center is not None:
             center = float(center)
             if center < 0:
                 raise ValueError(
-                    "center: {} must be >= 0".format(center)
+                    f"center: {center} must be >= 0"
                 )
         if amplitude is not None:
             amplitude = float(amplitude)
         if center is not None and amplitude is not None and amplitude > center:
             raise ValueError(
-                "center: {} must be greater than or equal to amplitude: {}"
-                "".format(center, amplitude)
+                f"center: {center} must be greater than or equal to amplitude: "
+                f"{amplitude}"
             )
         if magnetize is not None and not isinstance(magnetize, bool):
-            raise TypeError("magnetize: {} is not a bool".format(magnetize))
+            raise TypeError(f"magnetize: {magnetize} is not a bool")
         if temperature is not None:
             parse_unit(temperature, "celsius")
 
@@ -2607,8 +2592,7 @@ class FlowCytometryBuilders(InstructionBuilders):
 
         trigger_modes = ("and", "or")
         if trigger_logic is not None and trigger_logic not in trigger_modes:
-            raise ValueError("trigger_logic must be one of {}."
-                             .format(trigger_modes))
+            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
 
         if measurements is None:
             measurements = self.measurements()
@@ -2653,9 +2637,9 @@ class FlowCytometryBuilders(InstructionBuilders):
         gating_modes = ("FSC", "SSC")
         if channel_name in gating_modes and (shortpass or longpass or
                                              self.excitation):
-            raise ValueError("Cannot specify shortpass/longpass/excitation "
-                             "parameters if channel_name is one {}"
-                             .format(gating_modes))
+            raise ValueError(f"Cannot specify shortpass/longpass/excitation "
+                             f"parameters if channel_name is one "
+                             f"{gating_modes}")
 
         if shortpass is not None:
             shortpass = parse_unit(shortpass, "nanometers")

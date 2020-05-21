@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`239` Add `absorbance` and `fluorescence` capabilities to 96-well-v-bottom container type
 * :support:`241` Deprecate support for Python 3.5, add support for Python 3.8
 * :feature:`238` Add 96-well-v-bottom container type
 

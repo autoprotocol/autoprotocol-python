@@ -611,7 +611,9 @@ V96CC = ContainerType(
         "incubate",
         "uncover",
         "dispense-destination",
-        "envision"
+        "envision",
+        "absorbance",
+        "fluorescence"
     ],
     shortname="96-well-v-bottom",
     col_count=12,

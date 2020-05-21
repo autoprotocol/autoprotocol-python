@@ -13,7 +13,7 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = "--cov=autoprotocol --cov-report=term"
+        self.pytest_args = "--cov=autoprotocol --cov-report=term"  # pylint: disable=attribute-defined-outside-init
 
     def run_tests(self):
         import shlex
@@ -27,6 +27,7 @@ class PyTest(TestCommand):
 # Test and Documentation dependencies
 test_deps = [
     'coverage>=4.5, <5',
+    'pre-commit>=2.4, <3',
     'pylint>=1.9, <2',
     'pytest>=4, <5',
     'pytest-cov>=2, !=2.8.1',

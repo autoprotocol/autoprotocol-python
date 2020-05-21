@@ -2,5 +2,5 @@
 	<content><![CDATA[append(${1:Well well})]]></content>
 	<tabTrigger>append</tabTrigger>
 	<scope>source.python</scope>
-	<description>Appends Well to WellGroup</description> 
+	<description>Appends Well to WellGroup</description>
 </snippet>

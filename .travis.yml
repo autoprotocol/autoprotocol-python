@@ -1,3 +1,4 @@
+dist: bionic
 env:
   global:
   - secure: 'DvgFv3NTqwnFpR4tzvvwEIc43VPyp9eDlMjtEsqUffMF9oLyRLTiUtMZEzIpGgNg4UY8cyNWv6iWHJBsmmVncow6ziDp2+cpC43zWtilZeo+ohri4ejVw16MNKaIfP2bAVU4u0QpC6xQHHDGsUyRdM6OINjQxPUqFTjjOBRggkk='
@@ -5,12 +6,25 @@ env:
   - secure: 'CicwL3ulhGLS+J8yvSQt18Ta1VUOBKv9Rd60ZMzlkCoEXAoO7IvpYUwnUXE7ZurLRt1Yuif+wd3D7P4BNDFIOVw7gEYllX9S4URE+9j3I/oFze+dFpqncb15CWkCK6EIyerXs/HjZe/J1o0IwPmDTqn6KXBnP6wCNLBf4UoJBnw='
 sudo: false
 language: python
-python:
-- '3.6'
-- '3.7'
-- '3.8'
-install: pip install tox-travis
-script: tox
+jobs:
+  include:
+  - python: '3.6'
+    env: TOXENV=docs
+  - python: '3.6'
+    env: TOXENV=lint
+  - python: '3.6'
+    env: TOXENV=clean,py36,stats
+  - python: '3.7'
+    env: TOXENV=py37
+  - python: '3.8'
+    env: TOXENV=py38
+install:
+- pip install tox
+script:
+- tox -v
+after_failure:
+- more .tox/log/* | cat
+- more .tox/*/log/* | cat
 before_deploy:
 - python setup.py sdist
 - python setup.py bdist_wheel

@@ -6,7 +6,7 @@
   "protocols": [
     {
       "name": "${1:NAME}",
-      "display_name": "${2:DISPLAY NAME}", 
+      "display_name": "${2:DISPLAY NAME}",
       "author": "${3:...}",
       "version": "${4:1.0.0}",
       "last_edited": "${5:...}",
@@ -37,5 +37,3 @@
 	<scope>source.json</scope>
   <description>validated manifest framework</description>
 </snippet>
-
-

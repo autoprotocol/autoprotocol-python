@@ -5,7 +5,7 @@
   "description": "${2:...}",
   "label": "${3:...}",
   "inputs": {
-    ${4:"input1_snippet"} 
+    ${4:"input1_snippet"}
     ${5:"input2_snippet"}
   },
 },
@@ -15,5 +15,3 @@
 	<!-- Optional: Set a scope to limit where the snippet will trigger -->
 	<scope>source.json</scope>
 </snippet>
-
-

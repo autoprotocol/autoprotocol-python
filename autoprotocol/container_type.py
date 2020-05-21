@@ -83,8 +83,8 @@ class ContainerType(namedtuple("ContainerType",
                 vendor=None, cat_no=None, prioritize_seal_or_cover="seal"):
         true_max_vol_ul = true_max_vol_ul or well_volume_ul
         assert true_max_vol_ul >= well_volume_ul, \
-            "{} does not contain valid true_max_vol_ul: {} and " \
-            "well_volume_ul {}".format(name, true_max_vol_ul, well_volume_ul)
+            f"{name} does not contain valid true_max_vol_ul: " \
+            f"{true_max_vol_ul} and well_volume_ul {well_volume_ul}"
         return super(ContainerType, cls).__new__(cls, name, is_tube, well_count,
                                                  well_depth_mm, well_volume_ul,
                                                  well_coating, sterile,
@@ -122,16 +122,12 @@ class ContainerType(namedtuple("ContainerType",
         """
         if row >= self.row_count():
             raise ValueError(
-                "0-indexed row {} is outside of the bounds of {}".format(
-                    row, self
-                )
+                f"0-indexed row {row} is outside of the bounds of {self}"
             )
 
         if column >= self.col_count:
             raise ValueError(
-                "0-indexed column {} is outside of the bounds of {}".format(
-                    column, self
-                )
+                f"0-indexed column {column} is outside of the bounds of {self}"
             )
 
         return row * self.col_count + column
@@ -181,9 +177,9 @@ class ContainerType(namedtuple("ContainerType",
             return [self.robotize(well) for well in well_ref]
 
         if not isinstance(well_ref, (str, int, Well)):
-            raise TypeError("ContainerType.robotize(): Well reference (%s) "
-                            "given is not of type 'str', 'int', or "
-                            "'Well'." % well_ref)
+            raise TypeError(f"ContainerType.robotize(): Well reference "
+                            f"({well_ref}) given is not of type 'str', 'int', "
+                            f"or 'Well'.")
 
         if isinstance(well_ref, Well):
             well_ref = well_ref.index

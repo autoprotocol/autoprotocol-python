@@ -275,7 +275,7 @@ class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
             if slope is not a number
         """
         if not isinstance(slope, Number):
-            raise TypeError("slope {} is not a Number".format(slope))
+            raise TypeError(f"slope {slope} is not a Number")
         intercept = parse_unit(intercept, "microliter")
         return super(VolumeCalibrationBin, cls).__new__(cls, slope, intercept)
 
@@ -322,7 +322,7 @@ class VolumeCalibration(object):
         calibration_types = (VolumeCalibrationBin, dict)
         if not all(isinstance(_, calibration_types) for _ in points):
             raise TypeError(
-                "values {} are not one of {}".format(points, calibration_types)
+                f"values {points} are not one of {calibration_types}"
             )
 
         sorted_curve = list(sorted(calibration_curve, key=lambda k: k[0]))
@@ -357,8 +357,8 @@ class VolumeCalibration(object):
         )
         if not valid_bins:
             raise RuntimeError(
-                "No volume calibration bin in {} is large enough to "
-                "accommodate {}.".format(self.calibration_curve, volume)
+                f"No volume calibration bin in {self.calibration_curve} is "
+                f"large enough to accommodate {volume}."
             )
 
         return valid_bins[0]

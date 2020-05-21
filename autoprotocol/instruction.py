@@ -24,7 +24,7 @@ class Instruction(object):
         self.__dict__.update(self.data)
 
     def __repr__(self):
-        return "Instruction({}, {})".format(self.op, self.data)
+        return f"Instruction({self.op}, {self.data})"
 
     def _as_AST(self):
         """generates a Python object representation of Autoprotocol JSON
@@ -122,8 +122,8 @@ class MagneticTransfer(Instruction):
 
         if not all(len(_) == 1 for _ in sub_ops):
             raise ValueError(
-                "Not all sub-operations in groups {} contain a single "
-                "sub-operation.".format(groups)
+                f"Not all sub-operations in groups {groups} contain a single "
+                f"sub-operation."
             )
 
         containers = {list(_.values()).pop()["object"] for _ in sub_ops}
@@ -133,20 +133,19 @@ class MagneticTransfer(Instruction):
         )
         if not valid_container_types:
             raise ValueError(
-                "Not all containers: {} are in the allowed container_types: {} "
-                "for head_type: {}"
-                "".format(containers, self.heads[magnetic_head], magnetic_head)
+                f"Not all containers: {containers} are in the allowed "
+                f"container_types: {self.heads[magnetic_head]} for head_type: "
+                f"{magnetic_head}"
             )
 
         # a new tip is used for each group
         if len(groups) + len(containers) > self.max_objects:
             raise RuntimeError(
-                "Only {} total objects can be used within the same instruction "
-                "and {} containers: {} were specified in addition to {} groups "
-                "where each group requires a new tip object."
-                "".format(
-                    self.max_objects, len(containers), containers, len(groups)
-                )
+                f"Only {self.max_objects} total objects can be used within the "
+                f"same instruction and {len(containers)} "
+                f"containers: {containers} were specified in addition to "
+                f"{len(groups)} groups where each group requires a new "
+                f"tip object."
             )
 
         magnetic_transfer = {
@@ -230,9 +229,10 @@ class Dispense(Instruction):
         sources = {_: disp[_] for _ in source_fields}
         if sum([_ is not None for _ in sources.values()]) != 1:
             raise ValueError(
-                "Exactly one of `reagent`, `resource_id`, and "
-                "`reagent_source` must be specified for Dispense, "
-                "but got {}.".format(sources))
+                f"Exactly one of `reagent`, `resource_id`, and "
+                f"`reagent_source` must be specified for Dispense, but got "
+                f"{sources}."
+            )
 
         disp = {k: v for k, v in disp.items() if v is not None}
 
@@ -377,13 +377,13 @@ class Thermocycle(Instruction):
         qpcr_params = [dyes, dataref]
         if any(qpcr_params) and not all(qpcr_params):
             raise ValueError(
-                "either dyes {} or dataref {} was specified, but both are "
-                "required for qPCR".format(dyes, dataref)
+                f"either dyes {dyes} or dataref {dataref} was specified, but "
+                f"both are required for qPCR"
             )
 
         if melting and any(melting.values()) and not dyes:
             raise ValueError(
-                "melting: {} was specified, but dyes was not".format(melting)
+                f"melting: {melting} was specified, but dyes was not"
             )
 
         thermocycle = {
@@ -434,8 +434,8 @@ class Incubate(Instruction):
     def __init__(self, object, where, duration, shaking=False, co2=0,
                  target_temperature=None, shaking_params=None):
         if where not in self.WHERE:
-            raise ValueError("Specified `where` not contained in: %s" % ", "
-                             "".join(self.WHERE))
+            raise ValueError("Specified `where` not contained in: "
+                             f"{', '.join(self.WHERE)}")
         if where == "ambient" and shaking and not shaking_params:
             raise ValueError("Shaking is only possible for ambient incubation "
                              "if 'shaking_params' are specified.")
@@ -943,7 +943,7 @@ class Cover(Instruction):
 
     def __init__(self, object, lid="standard", retrieve_lid=None):
         if lid and lid not in self.LIDS:
-            raise ValueError("%s is not a valid lid type" % lid)
+            raise ValueError(f"{lid} is not a valid lid type")
         cover = {
             "object": object,
             "lid": lid,

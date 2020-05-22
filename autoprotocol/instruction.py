@@ -822,14 +822,14 @@ class Fluorescence(Instruction):
                 "calculated_from_wells": []
             }
 
-    manual: str, Unit, optional
-        parameter available within "position_z" to set the distance from
-        the optics to the plate transport.
-    calculated_from_wells: list, WellGroup, Well, optional
-        parameter available within "position_z" to set the distance from
-        the optics to the plate transport.  If specified, the average
-        optimal (maximal signal) distance will be chosen from the list
-        of wells and applied to all measurements.
+        manual: str, Unit, optional
+            parameter available within "position_z" to set the distance from
+            the optics to the plate transport.
+        calculated_from_wells: list, WellGroup, Well, optional
+            parameter available within "position_z" to set the distance from
+            the optics to the plate transport.  If specified, the average
+            optimal (maximal signal) distance will be chosen from the list
+            of wells and applied to all measurements.
     settle_time: Unit, optional
         the time before the start of the measurement, defaults
         to vendor specifications

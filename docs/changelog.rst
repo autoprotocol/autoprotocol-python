@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`250` Bump test dependencies, notably pytest to >=5.4, pylint to 2.5.2 and tox >=3.15
 * :feature:`248` Bump Pint version to 0.9
 * :support:`247` Add `black` as auto-formatter to pre-commit workflow
 * :support:`245` Add expected propagate_properties behavior tests

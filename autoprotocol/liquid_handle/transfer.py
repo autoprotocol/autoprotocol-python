@@ -38,9 +38,18 @@ class Transfer(LiquidHandleMethod):
     LiquidHandleMethod : base LiquidHandleMethod with reused functionality
     Protocol.transfer : the standard interface for interacting with Transfer
     """
-    def __init__(self, tip_type=None, blowout=True, prime=True, transit=True,
-                 mix_before=False, mix_after=True,
-                 aspirate_z=None, dispense_z=None):
+
+    def __init__(
+        self,
+        tip_type=None,
+        blowout=True,
+        prime=True,
+        transit=True,
+        mix_before=False,
+        mix_after=True,
+        aspirate_z=None,
+        dispense_z=None,
+    ):
         """
         Parameters
         ----------
@@ -104,9 +113,10 @@ class Transfer(LiquidHandleMethod):
         return any(_ and _._has_calibration() for _ in liquids)
 
     def _calculate_overage_volume(self, volume):
-        calibration_overage = self._estimate_calibrated_volume(
-            volume, self._source_liquid, self.tip_type
-        ) - volume
+        calibration_overage = (
+            self._estimate_calibrated_volume(volume, self._source_liquid, self.tip_type)
+            - volume
+        )
 
         # handle whichever is larger, prime or transit volume
         if self.prime is True:
@@ -145,7 +155,7 @@ class Transfer(LiquidHandleMethod):
         return LiquidHandle.builders.blowout(
             volume=blowout_vol,
             initial_z=self.default_well_top_position_z(),
-            flowrate=None
+            flowrate=None,
         )
 
     def _aspirate_transports(self, volume, density):
@@ -280,9 +290,7 @@ class Transfer(LiquidHandleMethod):
         _transport_mix : generates the actual mix_before transports
         """
         if self._is_single_channel():
-            mix_z = self.default_lld_position_z(
-                liquid=self._source_liquid
-            )
+            mix_z = self.default_lld_position_z(liquid=self._source_liquid)
         else:
             mix_z = self.default_well_bottom_position_z()
 
@@ -295,7 +303,7 @@ class Transfer(LiquidHandleMethod):
             ),
             dsp_flowrate=self._source_liquid._get_dispense_flowrate(
                 volume, self.tip_type
-            )
+            ),
         )
 
     def _transport_aspirate_target_volume(self, volume, density):
@@ -342,7 +350,7 @@ class Transfer(LiquidHandleMethod):
                 ),
                 delay_time=self._source_liquid.delay_time,
                 liquid_class=self._source_liquid.name,
-                density=density
+                density=density,
             )
         else:
             self._aspirate_simple(
@@ -356,7 +364,7 @@ class Transfer(LiquidHandleMethod):
                 ),
                 delay_time=self._source_liquid.delay_time,
                 liquid_class=self._source_liquid.name,
-                density=density
+                density=density,
             )
 
     def default_aspirate_z(self, volume):
@@ -377,8 +385,7 @@ class Transfer(LiquidHandleMethod):
         _transport_aspirate_target_volume : generates actual aspirate transports
         """
         if self._is_single_channel():
-            aspirate_z = self.default_lld_position_z(
-                liquid=self._source_liquid)
+            aspirate_z = self.default_lld_position_z(liquid=self._source_liquid)
         else:
             aspirate_z = self.default_well_bottom_position_z()
         return aspirate_z
@@ -428,7 +435,7 @@ class Transfer(LiquidHandleMethod):
             self._aspirate_simple(
                 volume=transit_vol,
                 initial_z=self.default_well_top_position_z(),
-                liquid_class="air"
+                liquid_class="air",
             )
 
     def _transport_dispense_transit(self, volume):
@@ -456,7 +463,7 @@ class Transfer(LiquidHandleMethod):
             self._dispense_simple(
                 volume=transit_vol,
                 initial_z=self.default_well_top_position_z(),
-                liquid_class="air"
+                liquid_class="air",
             )
 
     def default_transit(self, volume):
@@ -507,12 +514,10 @@ class Transfer(LiquidHandleMethod):
                 volume, self.tip_type
             ),
             initial_z=dispense_z,
-            flowrate=self._source_liquid._get_dispense_flowrate(
-                volume, self.tip_type
-            ),
+            flowrate=self._source_liquid._get_dispense_flowrate(volume, self.tip_type),
             delay_time=self._source_liquid.delay_time,
             liquid_class=self._source_liquid.name,
-            density=density
+            density=density,
         )
 
     def default_dispense_z(self, volume):
@@ -533,8 +538,7 @@ class Transfer(LiquidHandleMethod):
         _transport_dispense_target_volume : generates actual dispense transports
         """
         if self._is_single_channel():
-            dispense_z = self.default_lld_position_z(
-                liquid=self._destination_liquid)
+            dispense_z = self.default_lld_position_z(liquid=self._destination_liquid)
         else:
             dispense_z = self.default_tracked_position_z()
 
@@ -586,9 +590,7 @@ class Transfer(LiquidHandleMethod):
         _transport_mix : generates the actual mix_after transports
         """
         if self._is_single_channel():
-            mix_z = self.default_lld_position_z(
-                liquid=self._destination_liquid
-            )
+            mix_z = self.default_lld_position_z(liquid=self._destination_liquid)
         else:
             mix_z = self.default_well_bottom_position_z()
 
@@ -601,20 +603,34 @@ class Transfer(LiquidHandleMethod):
             ),
             dsp_flowrate=self._source_liquid._get_dispense_flowrate(
                 volume, self.tip_type
-            )
+            ),
         )
 
 
 class DryWellTransfer(Transfer):
     """Dispenses while tracking liquid without mix_after
     """
-    def __init__(self, tip_type=None, blowout=True, prime=True, transit=True,
-                 mix_before=False, mix_after=False,
-                 aspirate_z=None, dispense_z=None):
+
+    def __init__(
+        self,
+        tip_type=None,
+        blowout=True,
+        prime=True,
+        transit=True,
+        mix_before=False,
+        mix_after=False,
+        aspirate_z=None,
+        dispense_z=None,
+    ):
         super(DryWellTransfer, self).__init__(
-            tip_type=tip_type, blowout=blowout, prime=prime, transit=transit,
-            mix_before=mix_before, mix_after=mix_after,
-            aspirate_z=aspirate_z, dispense_z=dispense_z
+            tip_type=tip_type,
+            blowout=blowout,
+            prime=prime,
+            transit=transit,
+            mix_before=mix_before,
+            mix_after=mix_after,
+            aspirate_z=aspirate_z,
+            dispense_z=dispense_z,
         )
 
     def default_dispense_z(self, volume):
@@ -624,13 +640,28 @@ class DryWellTransfer(Transfer):
 class PreMixBlowoutTransfer(Transfer):
     """Adds an additional blowout before the mix_after step
     """
-    def __init__(self, tip_type=None, blowout=True, prime=True, transit=True,
-                 mix_before=False, mix_after=True,
-                 aspirate_z=None, dispense_z=None, pre_mix_blowout=True):
+
+    def __init__(
+        self,
+        tip_type=None,
+        blowout=True,
+        prime=True,
+        transit=True,
+        mix_before=False,
+        mix_after=True,
+        aspirate_z=None,
+        dispense_z=None,
+        pre_mix_blowout=True,
+    ):
         super(PreMixBlowoutTransfer, self).__init__(
-            tip_type=tip_type, blowout=blowout, prime=prime, transit=transit,
-            mix_before=mix_before, mix_after=mix_after,
-            aspirate_z=aspirate_z, dispense_z=dispense_z
+            tip_type=tip_type,
+            blowout=blowout,
+            prime=prime,
+            transit=transit,
+            mix_before=mix_before,
+            mix_after=mix_after,
+            aspirate_z=aspirate_z,
+            dispense_z=dispense_z,
         )
         self.pre_mix_blowout = pre_mix_blowout
 
@@ -665,9 +696,7 @@ class PreMixBlowoutTransfer(Transfer):
         else:
             secondary_blowout = self.pre_mix_blowout
 
-        blowout_vol = parse_unit(
-            blowout.get("volume", Unit("0:uL")), "uL"
-        )
+        blowout_vol = parse_unit(blowout.get("volume", Unit("0:uL")), "uL")
         secondary_blowout_vol = parse_unit(
             secondary_blowout.get("volume", Unit("0:uL")), "uL"
         )
@@ -700,10 +729,7 @@ class PreMixBlowoutTransfer(Transfer):
 
         if pre_mix_blowout is not False:
             pre_mix_blowout = LiquidHandle.builders.blowout(**pre_mix_blowout)
-            self._dispense_simple(
-                liquid_class="air",
-                **pre_mix_blowout
-            )
+            self._dispense_simple(liquid_class="air", **pre_mix_blowout)
 
     def default_pre_mix_blowout(self, volume):
         """Default pre_mix_blowout parameters
@@ -725,5 +751,5 @@ class PreMixBlowoutTransfer(Transfer):
         return LiquidHandle.builders.blowout(
             volume=Unit(5, "ul"),
             initial_z=self.default_well_top_position_z(),
-            flowrate=None
+            flowrate=None,
         )

@@ -15,6 +15,7 @@ class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON.
 
     """
+
     builders = InstructionBuilders()
 
     def __init__(self, op, data):
@@ -73,11 +74,17 @@ class Instruction(object):
             return item is None or item == [] or item == {}
 
         if isinstance(data, dict):
-            return {k: Instruction._remove_empty_fields(v) for k, v in
-                    data.items() if not filter_criteria(v)}
+            return {
+                k: Instruction._remove_empty_fields(v)
+                for k, v in data.items()
+                if not filter_criteria(v)
+            }
         if isinstance(data, list):
-            return [Instruction._remove_empty_fields(_) for _ in data
-                    if not filter_criteria(_)]
+            return [
+                Instruction._remove_empty_fields(_)
+                for _ in data
+                if not filter_criteria(_)
+            ]
         return data
 
 
@@ -109,12 +116,13 @@ class MagneticTransfer(Instruction):
     magnetic_head: str
         Head-type used for this instruction
     """
+
     builders = MagneticTransferBuilders()
 
     max_objects = 8
     heads = {
         "96-deep": ["96-v-kf", "96-deep-kf", "96-deep"],
-        "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]
+        "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"],
     }
 
     def __init__(self, groups, magnetic_head):
@@ -128,8 +136,7 @@ class MagneticTransfer(Instruction):
 
         containers = {list(_.values()).pop()["object"] for _ in sub_ops}
         valid_container_types = all(
-            _.container_type.shortname in self.heads[magnetic_head]
-            for _ in containers
+            _.container_type.shortname in self.heads[magnetic_head] for _ in containers
         )
         if not valid_container_types:
             raise ValueError(
@@ -148,14 +155,10 @@ class MagneticTransfer(Instruction):
                 f"tip object."
             )
 
-        magnetic_transfer = {
-            "groups": groups,
-            "magnetic_head": magnetic_head
-        }
+        magnetic_transfer = {"groups": groups, "magnetic_head": magnetic_head}
 
         super(MagneticTransfer, self).__init__(
-            op="magnetic_transfer",
-            data=magnetic_transfer
+            op="magnetic_transfer", data=magnetic_transfer
         )
 
 
@@ -206,10 +209,20 @@ class Dispense(Instruction):
 
     builders = DispenseBuilders()
 
-    def __init__(self, object, columns, reagent=None, resource_id=None,
-                 reagent_source=None, step_size=None, flowrate=None,
-                 nozzle_position=None, pre_dispense=None, shape=None,
-                 shake_after=None):
+    def __init__(
+        self,
+        object,
+        columns,
+        reagent=None,
+        resource_id=None,
+        reagent_source=None,
+        step_size=None,
+        flowrate=None,
+        nozzle_position=None,
+        pre_dispense=None,
+        shape=None,
+        shake_after=None,
+    ):
 
         disp = {
             "object": object,
@@ -222,7 +235,7 @@ class Dispense(Instruction):
             "flowrate": flowrate,
             "nozzle_position": nozzle_position,
             "shape": shape,
-            "shake_after": shake_after
+            "shake_after": shake_after,
         }
 
         source_fields = ["reagent", "resource_id", "reagent_source"]
@@ -270,10 +283,8 @@ class AcousticTransfer(Instruction):
     def __init__(self, groups, droplet_size):
         super(AcousticTransfer, self).__init__(
             op="acoustic_transfer",
-            data={
-                "groups": groups,
-                "droplet_size": droplet_size
-            })
+            data={"groups": groups, "droplet_size": droplet_size},
+        )
 
 
 class Spin(Instruction):
@@ -304,14 +315,15 @@ class Spin(Instruction):
 
     """
 
-    def __init__(self, object, acceleration, duration, flow_direction=None,
-                 spin_direction=None):
+    def __init__(
+        self, object, acceleration, duration, flow_direction=None, spin_direction=None
+    ):
         spin_json = {
             "object": object,
             "acceleration": acceleration,
             "duration": duration,
             "flow_direction": flow_direction,
-            "spin_direction": spin_direction
+            "spin_direction": spin_direction,
         }
 
         super(Spin, self).__init__(op="spin", data=spin_json)
@@ -369,10 +381,19 @@ class Thermocycle(Instruction):
     ValueError
         If melting curve parameters are specified but dyes isn't
     """
+
     builders = ThermocycleBuilders()
 
-    def __init__(self, object, groups, volume="25:microliter", dataref=None,
-                 dyes=None, melting=None, lid_temperature=None):
+    def __init__(
+        self,
+        object,
+        groups,
+        volume="25:microliter",
+        dataref=None,
+        dyes=None,
+        melting=None,
+        lid_temperature=None,
+    ):
 
         qpcr_params = [dyes, dataref]
         if any(qpcr_params) and not all(qpcr_params):
@@ -382,9 +403,7 @@ class Thermocycle(Instruction):
             )
 
         if melting and any(melting.values()) and not dyes:
-            raise ValueError(
-                f"melting: {melting} was specified, but dyes was not"
-            )
+            raise ValueError(f"melting: {melting} was specified, but dyes was not")
 
         thermocycle = {
             "object": object,
@@ -393,7 +412,7 @@ class Thermocycle(Instruction):
             "dataref": dataref,
             "dyes": dyes,
             "melting": melting,
-            "lid_temperature": lid_temperature
+            "lid_temperature": lid_temperature,
         }
 
         super(Thermocycle, self).__init__(op="thermocycle", data=thermocycle)
@@ -427,31 +446,42 @@ class Incubate(Instruction):
         Carbon dioxide percentage
 
     """
-    WHERE = [
-        "ambient", "warm_30", "warm_35", "warm_37",
-        "cold_4", "cold_20", "cold_80"]
 
-    def __init__(self, object, where, duration, shaking=False, co2=0,
-                 target_temperature=None, shaking_params=None):
+    WHERE = ["ambient", "warm_30", "warm_35", "warm_37", "cold_4", "cold_20", "cold_80"]
+
+    def __init__(
+        self,
+        object,
+        where,
+        duration,
+        shaking=False,
+        co2=0,
+        target_temperature=None,
+        shaking_params=None,
+    ):
         if where not in self.WHERE:
-            raise ValueError("Specified `where` not contained in: "
-                             f"{', '.join(self.WHERE)}")
+            raise ValueError(
+                "Specified `where` not contained in: " f"{', '.join(self.WHERE)}"
+            )
         if where == "ambient" and shaking and not shaking_params:
-            raise ValueError("Shaking is only possible for ambient incubation "
-                             "if 'shaking_params' are specified.")
+            raise ValueError(
+                "Shaking is only possible for ambient incubation "
+                "if 'shaking_params' are specified."
+            )
 
         incubate_json = {
             "object": object,
             "where": where,
             "duration": duration,
             "shaking": shaking,
-            "co2_percent": co2
+            "co2_percent": co2,
         }
         if target_temperature:
             incubate_json["target_temperature"] = target_temperature
         if shaking_params:
             incubate_json["shaking_params"] = shaking_params
         super(Incubate, self).__init__(op="incubate", data=incubate_json)
+
 
 class Agitate(Instruction):
     """
@@ -476,13 +506,14 @@ class Agitate(Instruction):
         Dictionary containing mode params for agitation modes
     """
 
-    def __init__(self, object, mode, speed, duration, temperature=None,
-                 mode_params=None):
+    def __init__(
+        self, object, mode, speed, duration, temperature=None, mode_params=None
+    ):
         agitate_json = {
             "object": object,
             "mode": mode,
             "duration": duration,
-            "speed": speed
+            "speed": speed,
         }
         if mode_params:
             agitate_json["mode_params"] = mode_params
@@ -528,8 +559,9 @@ class IlluminaSeq(Instruction):
 
     """
 
-    def __init__(self, flowcell, lanes, sequencer, mode, index, library_size,
-                 dataref, cycles):
+    def __init__(
+        self, flowcell, lanes, sequencer, mode, index, library_size, dataref, cycles
+    ):
         seq = {
             "flowcell": flowcell,
             "lanes": lanes,
@@ -538,7 +570,7 @@ class IlluminaSeq(Instruction):
             "index": index,
             "library_size": library_size,
             "dataref": dataref,
-            "cycles": cycles
+            "cycles": cycles,
         }
 
         super(IlluminaSeq, self).__init__(op="illumina_sequence", data=seq)
@@ -570,12 +602,7 @@ class SangerSeq(Instruction):
     """
 
     def __init__(self, object, wells, dataref, type, primer=None):
-        seq = {
-            "type": type,
-            "object": object,
-            "wells": wells,
-            "dataref": dataref
-        }
+        seq = {"type": type, "object": object, "wells": wells, "dataref": dataref}
         if primer and type == "rca":
             seq["primer"] = primer
         super(SangerSeq, self).__init__(op="sanger_sequence", data=seq)
@@ -605,14 +632,17 @@ class GelSeparate(Instruction):
     """
 
     def __init__(self, objects, volume, matrix, ladder, duration, dataref):
-        super(GelSeparate, self).__init__(op="gel_separate", data={
-            "objects": objects,
-            "volume": volume,
-            "matrix": matrix,
-            "ladder": ladder,
-            "duration": duration,
-            "dataref": dataref
-        })
+        super(GelSeparate, self).__init__(
+            op="gel_separate",
+            data={
+                "objects": objects,
+                "volume": volume,
+                "matrix": matrix,
+                "ladder": ladder,
+                "duration": duration,
+                "dataref": dataref,
+            },
+        )
 
 
 class GelPurify(Instruction):
@@ -651,17 +681,21 @@ class GelPurify(Instruction):
               {...}]
 
     """
+
     builders = GelPurifyBuilders()
 
     def __init__(self, objects, volume, matrix, ladder, dataref, extract):
-        super(GelPurify, self).__init__(op="gel_purify", data={
-            "objects": objects,
-            "volume": volume,
-            "matrix": matrix,
-            "ladder": ladder,
-            "dataref": dataref,
-            "extract": extract
-        })
+        super(GelPurify, self).__init__(
+            op="gel_purify",
+            data={
+                "objects": objects,
+                "volume": volume,
+                "matrix": matrix,
+                "ladder": ladder,
+                "dataref": dataref,
+                "extract": extract,
+            },
+        )
 
 
 class Absorbance(Instruction):
@@ -703,19 +737,30 @@ class Absorbance(Instruction):
         time to pause before each well read
 
     """
+
     builders = PlateReaderBuilders()
 
-    def __init__(self, object, wells, wavelength, dataref, flashes=25,
-                 incubate_before=None, temperature=None,
-                 settle_time=None):
-        json_dict = {"object": object,
-                     "wells": wells,
-                     "wavelength": wavelength,
-                     "num_flashes": flashes,
-                     "dataref": dataref,
-                     "incubate_before": incubate_before,
-                     "temperature": temperature,
-                     "settle_time": settle_time}
+    def __init__(
+        self,
+        object,
+        wells,
+        wavelength,
+        dataref,
+        flashes=25,
+        incubate_before=None,
+        temperature=None,
+        settle_time=None,
+    ):
+        json_dict = {
+            "object": object,
+            "wells": wells,
+            "wavelength": wavelength,
+            "num_flashes": flashes,
+            "dataref": dataref,
+            "incubate_before": incubate_before,
+            "temperature": temperature,
+            "settle_time": settle_time,
+        }
 
         super(Absorbance, self).__init__(op="absorbance", data=json_dict)
 
@@ -796,12 +841,26 @@ class Fluorescence(Instruction):
         specifications
 
     """
+
     builders = PlateReaderBuilders()
 
-    def __init__(self, object, wells, excitation, emission, dataref, flashes=25,
-                 incubate_before=None, temperature=None, gain=None,
-                 detection_mode=None, position_z=None, settle_time=None,
-                 lag_time=None, integration_time=None):
+    def __init__(
+        self,
+        object,
+        wells,
+        excitation,
+        emission,
+        dataref,
+        flashes=25,
+        incubate_before=None,
+        temperature=None,
+        gain=None,
+        detection_mode=None,
+        position_z=None,
+        settle_time=None,
+        lag_time=None,
+        integration_time=None,
+    ):
         json_dict = {
             "object": object,
             "wells": wells,
@@ -816,7 +875,7 @@ class Fluorescence(Instruction):
             "lag_time": lag_time,
             "integration_time": integration_time,
             "detection_mode": detection_mode,
-            "position_z": position_z
+            "position_z": position_z,
         }
 
         super(Fluorescence, self).__init__(op="fluorescence", data=json_dict)
@@ -857,10 +916,19 @@ class Luminescence(Instruction):
         specifications
 
     """
+
     builders = PlateReaderBuilders()
 
-    def __init__(self, object, wells, dataref, incubate_before=None,
-                 temperature=None, settle_time=None, integration_time=None):
+    def __init__(
+        self,
+        object,
+        wells,
+        dataref,
+        incubate_before=None,
+        temperature=None,
+        settle_time=None,
+        integration_time=None,
+    ):
         json_dict = {
             "object": object,
             "wells": wells,
@@ -868,7 +936,7 @@ class Luminescence(Instruction):
             "incubate_before": incubate_before,
             "temperature": temperature,
             "settle_time": settle_time,
-            "integration_time": integration_time
+            "integration_time": integration_time,
         }
 
         super(Luminescence, self).__init__(op="luminescence", data=json_dict)
@@ -903,7 +971,7 @@ class Seal(Instruction):
             "object": object,
             "type": type,
             "mode": mode,
-            "mode_params": mode_params
+            "mode_params": mode_params,
         }
 
         super(Seal, self).__init__(op="seal", data=seal_dict)
@@ -939,18 +1007,15 @@ class Cover(Instruction):
         Flag to retrieve lid from stored location
 
     """
+
     LIDS = ["standard", "universal", "low_evaporation"]
 
     def __init__(self, object, lid="standard", retrieve_lid=None):
         if lid and lid not in self.LIDS:
             raise ValueError(f"{lid} is not a valid lid type")
-        cover = {
-            "object": object,
-            "lid": lid,
-            "retrieve_lid": retrieve_lid
-        }
+        cover = {"object": object, "lid": lid, "retrieve_lid": retrieve_lid}
 
-        super(Cover, self).__init__(op='cover', data=cover)
+        super(Cover, self).__init__(op="cover", data=cover)
 
 
 class Uncover(Instruction):
@@ -968,11 +1033,7 @@ class Uncover(Instruction):
 
     def __init__(self, object, store_lid=None):
         super(Uncover, self).__init__(
-            op="uncover",
-            data={
-                "object": object,
-                "store_lid": store_lid
-            }
+            op="uncover", data={"object": object, "store_lid": store_lid}
         )
 
 
@@ -998,11 +1059,19 @@ class FlowCytometry(Instruction):
     remove_coincident_events : bool, optional
         Remove coincident events. Defaults to false.
     """
+
     builders = FlowCytometryBuilders()
 
-    def __init__(self, dataref, samples, lasers, collection_conditions,
-                 width_threshold=None, window_extension=None,
-                 remove_coincident_events=None):
+    def __init__(
+        self,
+        dataref,
+        samples,
+        lasers,
+        collection_conditions,
+        width_threshold=None,
+        window_extension=None,
+        remove_coincident_events=None,
+    ):
 
         instruction = {
             "dataref": dataref,
@@ -1011,11 +1080,10 @@ class FlowCytometry(Instruction):
             "collection_conditions": collection_conditions,
             "width_threshold": width_threshold,
             "window_extension": window_extension,
-            "remove_coincident_events": remove_coincident_events
+            "remove_coincident_events": remove_coincident_events,
         }
 
-        super(FlowCytometry, self).__init__(op="flow_cytometry",
-                                            data=instruction)
+        super(FlowCytometry, self).__init__(op="flow_cytometry", data=instruction)
 
 
 class FlowAnalyze(Instruction):
@@ -1140,14 +1208,16 @@ class FlowAnalyze(Instruction):
 
     """
 
-    def __init__(self,
-                 dataref,
-                 FSC,
-                 SSC,
-                 negative_controls,
-                 samples,
-                 colors=None,
-                 positive_controls=None):
+    def __init__(
+        self,
+        dataref,
+        FSC,
+        SSC,
+        negative_controls,
+        samples,
+        colors=None,
+        positive_controls=None,
+    ):
         flow_instr = {"dataref": dataref, "channels": {}}
         flow_instr["channels"]["FSC"] = FSC
         flow_instr["channels"]["SSC"] = SSC
@@ -1190,9 +1260,9 @@ class Oligosynthesize(Instruction):
     """
 
     def __init__(self, oligos):
-        super(Oligosynthesize, self).__init__(op="oligosynthesize", data={
-            "oligos": oligos
-        })
+        super(Oligosynthesize, self).__init__(
+            op="oligosynthesize", data={"oligos": oligos}
+        )
 
 
 class Autopick(Instruction):
@@ -1215,11 +1285,7 @@ class Autopick(Instruction):
     """
 
     def __init__(self, groups, criteria, dataref):
-        pick = {
-            "groups": groups,
-            "dataref": dataref,
-            "criteria": criteria
-        }
+        pick = {"groups": groups, "dataref": dataref, "criteria": criteria}
 
         super(Autopick, self).__init__(op="autopick", data=pick)
 
@@ -1240,11 +1306,9 @@ class ImagePlate(Instruction):
     """
 
     def __init__(self, object, mode, dataref):
-        super(ImagePlate, self).__init__(op="image_plate", data={
-            "object": object,
-            "mode": mode,
-            "dataref": dataref
-        })
+        super(ImagePlate, self).__init__(
+            op="image_plate", data={"object": object, "mode": mode, "dataref": dataref}
+        )
 
 
 class Image(Instruction):
@@ -1280,8 +1344,9 @@ class Image(Instruction):
 
     """
 
-    def __init__(self, ref, mode, dataref, num_images,
-                 backlighting, exposure, magnification):
+    def __init__(
+        self, ref, mode, dataref, num_images, backlighting, exposure, magnification
+    ):
         json_dict = {
             "object": ref,
             "mode": mode,
@@ -1289,7 +1354,7 @@ class Image(Instruction):
             "num_images": num_images,
             "magnification": magnification,
             "back_lighting": backlighting,
-            "exposure": exposure
+            "exposure": exposure,
         }
 
         super(Image, self).__init__(op="image", data=json_dict)
@@ -1322,8 +1387,7 @@ class Provision(Instruction):
 
     def __init__(self, resource_id, dests):
         super(Provision, self).__init__(
-            op="provision",
-            data={"resource_id": resource_id, "to": dests}
+            op="provision", data={"resource_id": resource_id, "to": dests}
         )
 
 
@@ -1342,10 +1406,9 @@ class FlashFreeze(Instruction):
     """
 
     def __init__(self, object, duration):
-        super(FlashFreeze, self).__init__(op="flash_freeze", data={
-            "object": object,
-            "duration": duration
-        })
+        super(FlashFreeze, self).__init__(
+            op="flash_freeze", data={"object": object, "duration": duration}
+        )
 
 
 class Evaporate(Instruction):
@@ -1368,14 +1431,13 @@ class Evaporate(Instruction):
 
     builders = EvaporateBuilders()
 
-    def __init__(self, ref, mode, duration, evaporator_temperature,
-                 mode_params):
+    def __init__(self, ref, mode, duration, evaporator_temperature, mode_params):
         json_dict = {
             "object": ref,
             "mode": mode,
             "duration": duration,
             "evaporator_temperature": evaporator_temperature,
-            "mode_params": mode_params
+            "mode_params": mode_params,
         }
         super(Evaporate, self).__init__(op="evaporate", data=json_dict)
 
@@ -1431,11 +1493,20 @@ class SPE(Instruction):
                 each `elute` mobile phase parameter
 
     """
+
     builders = SPEBuilders()
 
-    def __init__(self, well, cartridge, pressure_mode,
-                 load_sample, elute, condition,
-                 equilibrate, rinse):
+    def __init__(
+        self,
+        well,
+        cartridge,
+        pressure_mode,
+        load_sample,
+        elute,
+        condition,
+        equilibrate,
+        rinse,
+    ):
         json_dict = {
             "object": well,
             "cartridge": cartridge,
@@ -1444,7 +1515,7 @@ class SPE(Instruction):
             "load_sample": load_sample,
             "rinse": rinse,
             "elute": elute,
-            "equilibrate": equilibrate
+            "equilibrate": equilibrate,
         }
 
         super(SPE, self).__init__(op="spe", data=json_dict)
@@ -1470,12 +1541,15 @@ class MeasureConcentration(Instruction):
     """
 
     def __init__(self, object, volume, dataref, measurement):
-        json_dict = {"object": object,
-                     "volume": volume,
-                     "dataref": dataref,
-                     "measurement": measurement}
-        super(MeasureConcentration, self).__init__(op="measure_concentration",
-                                                   data=json_dict)
+        json_dict = {
+            "object": object,
+            "volume": volume,
+            "dataref": dataref,
+            "measurement": measurement,
+        }
+        super(MeasureConcentration, self).__init__(
+            op="measure_concentration", data=json_dict
+        )
 
 
 class Sonicate(Instruction):
@@ -1505,14 +1579,13 @@ class Sonicate(Instruction):
 
     """
 
-    def __init__(self, wells, duration, mode, mode_params,
-                 frequency, temperature):
+    def __init__(self, wells, duration, mode, mode_params, frequency, temperature):
         json_dict = {
             "wells": wells,
             "duration": duration,
             "frequency": frequency,
             "mode": mode,
-            "mode_params": mode_params
+            "mode_params": mode_params,
         }
         if temperature:
             json_dict["temperature"] = temperature
@@ -1579,7 +1652,7 @@ class CountCells(Instruction):
             "wells": wells,
             "volume": volume,
             "dataref": dataref,
-            "labels": labels
+            "labels": labels,
         }
 
         super(CountCells, self).__init__(op="count_cells", data=json_dict)
@@ -1610,10 +1683,19 @@ class Spectrophotometry(Instruction):
         that dictates how the obj should be incubated with shaking before any of
         the groups are executed.
     """
+
     builders = SpectrophotometryBuilders()
 
-    def __init__(self, dataref, object, groups, interval=None,
-                 num_intervals=None, temperature=None, shake_before=None):
+    def __init__(
+        self,
+        dataref,
+        object,
+        groups,
+        interval=None,
+        num_intervals=None,
+        temperature=None,
+        shake_before=None,
+    ):
         spec = {
             "dataref": dataref,
             "object": object,
@@ -1621,11 +1703,10 @@ class Spectrophotometry(Instruction):
             "interval": interval,
             "num_intervals": num_intervals,
             "temperature": temperature,
-            "shake_before": shake_before
+            "shake_before": shake_before,
         }
 
-        super(Spectrophotometry, self).__init__(op="spectrophotometry",
-                                                data=spec)
+        super(Spectrophotometry, self).__init__(op="spectrophotometry", data=spec)
 
 
 class LiquidHandle(Instruction):
@@ -1648,6 +1729,7 @@ class LiquidHandle(Instruction):
     mode_params : dict, optional
         See Also :meth:`LiquidHandle.builders.instruction_mode_params`
     """
+
     builders = LiquidHandleBuilders()
 
     def __init__(self, locations, shape=None, mode=None, mode_params=None):
@@ -1655,10 +1737,7 @@ class LiquidHandle(Instruction):
             "locations": locations,
             "shape": shape,
             "mode": mode,
-            "mode_params": mode_params
+            "mode_params": mode_params,
         }
 
-        super(LiquidHandle, self).__init__(
-            op="liquid_handle",
-            data=data
-        )
+        super(LiquidHandle, self).__init__(op="liquid_handle", data=data)

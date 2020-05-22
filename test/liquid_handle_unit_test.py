@@ -6,7 +6,9 @@ from autoprotocol import Unit
 from autoprotocol.liquid_handle.tip_type import TipType
 from autoprotocol.liquid_handle import LiquidHandleMethod, Transfer, Mix
 from autoprotocol.liquid_handle.liquid_class import (
-    LiquidClass, VolumeCalibration, VolumeCalibrationBin
+    LiquidClass,
+    VolumeCalibration,
+    VolumeCalibrationBin,
 )
 from autoprotocol.instruction import LiquidHandle
 
@@ -17,8 +19,7 @@ class LiquidClassTester(object):
     vol_bin_1 = VolumeCalibrationBin(3, "3:uL")
     vol_bin_5 = VolumeCalibrationBin(1, "1:uL")
     vol_calibration_curve = VolumeCalibration(
-        (Unit("5:uL"), vol_bin_5),
-        (Unit("1:uL"), vol_bin_1)
+        (Unit("5:uL"), vol_bin_5), (Unit("1:uL"), vol_bin_1)
     )
     volume_calibration = {tip_type: vol_calibration_curve}
 
@@ -26,8 +27,7 @@ class LiquidClassTester(object):
     flow_bin_1 = LiquidHandle.builders.flowrate(target="7:uL/s")
     flowrate_calibration = {
         tip_type: VolumeCalibration(
-            (Unit("5:uL"), flow_bin_5),
-            (Unit("1:uL"), flow_bin_1)
+            (Unit("5:uL"), flow_bin_5), (Unit("1:uL"), flow_bin_1)
         )
     }
 
@@ -45,10 +45,7 @@ class TestLiquidClass(LiquidClassTester):
         slope = 3.14
         intercept = Unit(5, "uL")
         calibration = VolumeCalibrationBin(slope, intercept)
-        assert(
-            calibration.calibrate_volume(volume) ==
-            slope * volume + intercept
-        )
+        assert calibration.calibrate_volume(volume) == slope * volume + intercept
 
     def test_calibration_curve_bins_values(self):
         curve = self.vol_calibration_curve
@@ -59,22 +56,21 @@ class TestLiquidClass(LiquidClassTester):
             curve.binned_calibration_for_volume("7.0:uL")
 
     def test_liquid_class_volume_calibration(self):
-        assert(
-            self.lc._get_calibrated_volume(Unit(1, "ul"), self.tip_type) ==
-            Unit(6, "ul")
+        assert self.lc._get_calibrated_volume(Unit(1, "ul"), self.tip_type) == Unit(
+            6, "ul"
         )
 
         with pytest.raises(KeyError):
             self.lc._get_calibrated_volume(Unit(1, "ul"), "fake_tip_type")
 
     def test_rec_flowrates(self):
-        assert(
-            self.lc._get_aspirate_flowrate(Unit(0.5, "ul"), "generic_1_50") ==
-            self.flow_bin_1
+        assert (
+            self.lc._get_aspirate_flowrate(Unit(0.5, "ul"), "generic_1_50")
+            == self.flow_bin_1
         )
-        assert(
-            self.lc._get_dispense_flowrate(Unit(4.5, "ul"), "generic_1_50") ==
-            self.flow_bin_5
+        assert (
+            self.lc._get_dispense_flowrate(Unit(4.5, "ul"), "generic_1_50")
+            == self.flow_bin_5
         )
 
     def test_specified_point_params(self):
@@ -84,27 +80,24 @@ class TestLiquidClass(LiquidClassTester):
         point_lc = LiquidClass(
             calibrated_volume=test_vol,
             aspirate_flowrate=test_asp_flow,
-            dispense_flowrate=test_dsp_flow
+            dispense_flowrate=test_dsp_flow,
         )
-        assert(
-            point_lc._get_calibrated_volume(Unit(0.5, "ul"), "generic_1_50") ==
-            test_vol
+        assert (
+            point_lc._get_calibrated_volume(Unit(0.5, "ul"), "generic_1_50") == test_vol
         )
-        assert(
-            point_lc._get_aspirate_flowrate(Unit(0.5, "ul"), "generic_1_50") ==
-            test_asp_flow
+        assert (
+            point_lc._get_aspirate_flowrate(Unit(0.5, "ul"), "generic_1_50")
+            == test_asp_flow
         )
-        assert(
-            point_lc._get_dispense_flowrate(Unit(0.5, "ul"), "generic_1_50") ==
-            test_dsp_flow
+        assert (
+            point_lc._get_dispense_flowrate(Unit(0.5, "ul"), "generic_1_50")
+            == test_dsp_flow
         )
 
 
 class LiquidHandleMethodTester(object):
     single_shape = LiquidHandle.builders.shape(1, 1, "SBS96")
-    preceding_z = LiquidHandle.builders.position_z(
-        reference="preceding_position"
-    )
+    preceding_z = LiquidHandle.builders.position_z(reference="preceding_position")
     empty_z = LiquidHandle.builders.position_z()
     well_top_z = LiquidHandle.builders.position_z(reference="well_top")
     well_top_transport = LiquidHandle.builders.transport(
@@ -115,12 +108,10 @@ class LiquidHandleMethodTester(object):
         mode_params=LiquidHandle.builders.mode_params(position_z=surface_z)
     )
     surface_tracked_z = LiquidHandle.builders.position_z(
-        reference="liquid_surface",
-        detection_method="tracked"
+        reference="liquid_surface", detection_method="tracked"
     )
     surface_sensing_z = LiquidHandle.builders.position_z(
-        reference="liquid_surface",
-        detection_method="capacitance"
+        reference="liquid_surface", detection_method="capacitance"
     )
     asp_transport = LiquidHandle.builders.transport(
         volume=Unit(1, "uL"),
@@ -129,9 +120,8 @@ class LiquidHandleMethodTester(object):
         delay_time=Unit(0.5, "s"),
         mode_params=LiquidHandle.builders.mode_params(
             liquid_class="air",
-            position_z=LiquidHandle.builders.position_z(
-                reference="preceding_position")
-        )
+            position_z=LiquidHandle.builders.position_z(reference="preceding_position"),
+        ),
     )
 
     @pytest.fixture(autouse=True)
@@ -142,18 +132,16 @@ class LiquidHandleMethodTester(object):
 
 class TestLiquidHandleMethod(LiquidHandleMethodTester):
     def test_get_tip_types(self):
-        expected = [
-            "generic_1_50", "generic_1_1000"
-        ]
+        expected = ["generic_1_50", "generic_1_1000"]
         actual = [_.name for _ in self.lhm._get_tip_types()]
         assert actual == expected
 
     def test_get_sorted_tip_types(self):
         tip_types = [
             TipType("generic_1_1000", Unit("1000:ul")),
-            TipType("generic_1_50", Unit("50:ul"))
+            TipType("generic_1_50", Unit("50:ul")),
         ]
-        self.lhm._get_tip_types = (lambda: tip_types)
+        self.lhm._get_tip_types = lambda: tip_types
 
         assert self.lhm._get_sorted_tip_types() == tip_types[::-1]
 
@@ -182,13 +170,11 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         position_x = LiquidHandle.builders.position_xy(1)
         position_y = LiquidHandle.builders.position_xy(-1)
         followup_position = self.lhm._move_to_initial_position(
-            position_x=position_x,
-            position_y=position_y
+            position_x=position_x, position_y=position_y
         )
         actual_position = self.lhm._transports[0]["mode_params"]
         reference_position = LiquidHandle.builders.mode_params(
-            position_x=position_x,
-            position_y=position_y
+            position_x=position_x, position_y=position_y
         )
         assert actual_position == reference_position
         assert followup_position == self.preceding_z
@@ -228,7 +214,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             position_y=tip_position["position_y"],
             flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
-            liquid_class=self.asp_transport["mode_params"]["liquid_class"]
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[1] == self.asp_transport
@@ -248,7 +234,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             asp_flowrate=self.asp_transport["flowrate"],
             dsp_flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
-            liquid_class=self.asp_transport["mode_params"]["liquid_class"]
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[2] == self.asp_transport
@@ -275,7 +261,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
             liquid_class=self.asp_transport["mode_params"]["liquid_class"],
-            density=Unit(1, "mg/ml")
+            density=Unit(1, "mg/ml"),
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[1]["density"] == Unit(1, "mg/ml")
@@ -290,7 +276,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             position_y=tip_position["position_y"],
             flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
-            liquid_class=self.asp_transport["mode_params"]["liquid_class"]
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[1] == self.asp_transport
@@ -306,7 +292,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
             liquid_class=self.asp_transport["mode_params"]["liquid_class"],
-            density=Unit(1, "mg/ml")
+            density=Unit(1, "mg/ml"),
         )
         assert self.lhm._transports[0] == self.well_top_transport
         assert self.lhm._transports[1]["density"] == Unit(1, "mg/ml")
@@ -330,15 +316,11 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
             asp_flowrate=self.asp_transport["flowrate"],
             dsp_flowrate=self.asp_transport["flowrate"],
             delay_time=self.asp_transport["delay_time"],
-            liquid_class=self.asp_transport["mode_params"]["liquid_class"]
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
         )
         assert self.lhm._transports[0] == self.well_top_transport
-        asp_transports = [
-            self.lhm._transports[_] for _ in range(1, mix_reps, 2)
-        ]
-        dsp_transports = [
-            self.lhm._transports[_] for _ in range(2, mix_reps, 2)
-        ]
+        asp_transports = [self.lhm._transports[_] for _ in range(1, mix_reps, 2)]
+        dsp_transports = [self.lhm._transports[_] for _ in range(2, mix_reps, 2)]
         assert all(_ == mix_asp_transport for _ in asp_transports)
         assert all(_ == mix_dsp_transport for _ in dsp_transports)
 
@@ -346,9 +328,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         calibrated_volume = Unit(5, "uL")
         calibrated_lc = LiquidClass(calibrated_volume=calibrated_volume)
         estimated_calibrated_volume = self.lhm._estimate_calibrated_volume(
-            volume=Unit(1, "uL"),
-            liquid=calibrated_lc,
-            tip_type="test"
+            volume=Unit(1, "uL"), liquid=calibrated_lc, tip_type="test"
         )
         assert estimated_calibrated_volume == calibrated_volume
 
@@ -356,9 +336,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         target_volume = Unit(1, "uL")
         volume_multiplier = LiquidClass()._safe_volume_multiplier
         estimated_calibrated_volume = self.lhm._estimate_calibrated_volume(
-            volume=target_volume,
-            liquid=LiquidClass(),
-            tip_type=None
+            volume=target_volume, liquid=LiquidClass(), tip_type=None
         )
         assert estimated_calibrated_volume == target_volume * volume_multiplier
 
@@ -366,9 +344,7 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         target_volume = Unit(1, "uL")
         volume_multiplier = LiquidClass()._safe_volume_multiplier
         estimated_calibrated_volume = self.lhm._estimate_calibrated_volume(
-            volume=target_volume,
-            liquid=LiquidClass(),
-            tip_type="generic_96_180"
+            volume=target_volume, liquid=LiquidClass(), tip_type="generic_96_180"
         )
         assert estimated_calibrated_volume == target_volume * volume_multiplier
 
@@ -397,15 +373,13 @@ class TestTransfer(TransferMethodTester):
 
     def test_calculate_overage_volume(self):
         transfer_vol = Unit(10, "uL")
-        expected_overage = transfer_vol * .1 + Unit(5, "uL")
+        expected_overage = transfer_vol * 0.1 + Unit(5, "uL")
         overage_vol = self.transfer._calculate_overage_volume(transfer_vol)
         assert overage_vol == expected_overage
 
     def test_tip_capacity(self):
         total_capacity = Unit(1000, "uL")
-        expected_capacity = total_capacity - (
-            total_capacity * .1 + Unit(5, "uL")
-        )
+        expected_capacity = total_capacity - (total_capacity * 0.1 + Unit(5, "uL"))
         assert self.transfer._tip_capacity() == expected_capacity
 
     def test_has_calibration_with_calibration(self):
@@ -430,15 +404,13 @@ class MixMethodTester(object):
 class TestMix(MixMethodTester):
     def test_calculate_overage_volume(self):
         transfer_vol = Unit(10, "uL")
-        expected_overage = transfer_vol * .1
+        expected_overage = transfer_vol * 0.1
         overage_vol = self.mix._calculate_overage_volume(transfer_vol)
         assert overage_vol == expected_overage
 
     def test_tip_capacity(self):
         total_capacity = Unit(1000, "uL")
-        expected_capacity = total_capacity - (
-            total_capacity * .1
-        )
+        expected_capacity = total_capacity - (total_capacity * 0.1)
         assert self.mix._tip_capacity() == expected_capacity
 
     def test_has_calibration_with_calibration(self):

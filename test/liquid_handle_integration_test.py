@@ -16,9 +16,7 @@ class LiquidHandleTester(object):
 
 class TestLiquidClassTransfer(LiquidHandleTester):
     def test_generates_liquid_handle(self):
-        self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "1:uL"
-        )
+        self.p.transfer(self.flat.well(0), self.flat.well(0), "1:uL")
         assert self.p.instructions[-1].op == "liquid_handle"
 
     def test_updates_well_volume(self):
@@ -27,17 +25,13 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         source_volume = Unit(30, "uL")
         volume = Unit(20, "uL")
 
-        self.p.transfer(
-            source.set_volume(source_volume), destination, volume
-        )
+        self.p.transfer(source.set_volume(source_volume), destination, volume)
         assert source.volume == source_volume - volume
         assert destination.volume == volume
 
     def test_uncover_before_transfer(self):
         self.p.cover(self.flat)
-        self.p.transfer(
-            self.flat.well(0), self.flat.well(1), "20:uL"
-        )
+        self.p.transfer(self.flat.well(0), self.flat.well(1), "20:uL")
         assert len(self.p.instructions) == 3
         assert self.p.instructions[-2].op == "uncover"
         assert self.flat.cover is None
@@ -47,21 +41,14 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         self.p.transfer(
             self.flat.wells_from(0, num_wells),
             self.flat.wells_from(2, num_wells),
-            "20:uL"
+            "20:uL",
         )
         assert len(self.p.instructions) == 2
 
     def test_generates_correct_number_of_transports(self):
-        self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "25:uL"
-        )
-        assert (
-            len(self.p.instructions[0].locations[0]["transports"]) == 9
-        )
-        assert(
-            len(self.p.instructions[0].locations[1]["transports"]) ==
-            9 + 10 * 2
-        )
+        self.p.transfer(self.flat.well(0), self.flat.well(0), "25:uL")
+        assert len(self.p.instructions[0].locations[0]["transports"]) == 9
+        assert len(self.p.instructions[0].locations[1]["transports"]) == 9 + 10 * 2
 
     def test_one_tip_generates_a_single_instruction(self):
         sources = self.flat.wells_from(0, 8)
@@ -74,8 +61,7 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         self.p.transfer(self.deep.well(0), self.deep.well(1), "2000:uL")
         assert len(self.p.instructions) == 3
         volumes = [
-            _.locations[1]["transports"][4]["volume"]
-            for _ in self.p.instructions
+            _.locations[1]["transports"][4]["volume"] for _ in self.p.instructions
         ]
         expected_volumes = [Unit(895, "uL"), Unit(895, "uL"), Unit(210, "uL")]
 
@@ -88,7 +74,7 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         self.p.transfer(
             self.deep.wells_from(0, num_wells, columnwise=True),
             self.deep.wells_from(1, num_wells, columnwise=True),
-            "2:mL"
+            "2:mL",
         )
         assert len(self.p.instructions) == num_wells * transfers_per_well
 
@@ -100,37 +86,35 @@ class TestLiquidClassTransfer(LiquidHandleTester):
         self.p.transfer(
             self.deep.wells_from(0, num_wells, columnwise=True),
             self.deep.wells_from(1, num_wells, columnwise=True),
-            "2:mL", one_tip=True
+            "2:mL",
+            one_tip=True,
         )
         assert len(self.p.instructions) == 1
-        assert(
-            len(self.p.instructions[0].locations) ==
-            num_wells * transfers_per_well * transports_per_transfer
+        assert (
+            len(self.p.instructions[0].locations)
+            == num_wells * transfers_per_well * transports_per_transfer
         )
 
     def test_generates_liquid_handle_with_density(self):
         self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "1:uL",
-            density=Unit(1.1, "mg/ml")
+            self.flat.well(0), self.flat.well(0), "1:uL", density=Unit(1.1, "mg/ml")
         )
         inst = self.p.instructions[-1]
         assert inst.op == "liquid_handle"
-        assert inst.data["locations"][0]["transports"][4]["density"] == Unit(1.1, "mg/ml")
+        assert inst.data["locations"][0]["transports"][4]["density"] == Unit(
+            1.1, "mg/ml"
+        )
 
     def test_generates_liquid_handle_with_mode(self):
         self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "1:uL",
-            mode="positive_displacement"
+            self.flat.well(0), self.flat.well(0), "1:uL", mode="positive_displacement"
         )
         inst = self.p.instructions[-1]
         assert inst.op == "liquid_handle"
         assert inst.data["mode"] == "positive_displacement"
 
     def test_generates_liquid_handle_without_mode(self):
-        self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "1:uL",
-            mode=None
-        )
+        self.p.transfer(self.flat.well(0), self.flat.well(0), "1:uL", mode=None)
         inst = self.p.instructions[-1]
         assert inst.op == "liquid_handle"
         assert inst.data["mode"] == "air_displacement"
@@ -151,10 +135,7 @@ class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
             destination_origin, row_count, columnwise=True
         )
 
-        self.p.transfer(
-            source_origin, destination_origin, volume,
-            rows=row_count
-        )
+        self.p.transfer(source_origin, destination_origin, volume, rows=row_count)
         assert all(_.volume == source_volume - volume for _ in source_wells)
         assert all(_.volume == volume for _ in destination_wells)
 
@@ -162,10 +143,11 @@ class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
         self.p.transfer(
             self.flat.well(0), self.flat.well(0), "20:uL", rows=8, columns=12
         )
-        assert(
-            self.p.instructions[-1].shape ==
-            {"rows": 8, "columns": 12, "format": "SBS96"}
-        )
+        assert self.p.instructions[-1].shape == {
+            "rows": 8,
+            "columns": 12,
+            "format": "SBS96",
+        }
 
     def test_sbs384_shape(self):
         flat_384 = self.p.ref("flat_384", cont_type="384-flat", discard=True)
@@ -173,22 +155,20 @@ class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
         self.p.transfer(
             flat_384.well(0), flat_384.well(0), "10:uL", rows=16, columns=24
         )
-        assert(
-            self.p.instructions[0].shape ==
-            {"rows": 16, "columns": 24, "format": "SBS384"}
-        )
+        assert self.p.instructions[0].shape == {
+            "rows": 16,
+            "columns": 24,
+            "format": "SBS384",
+        }
 
     def test_fails_on_invalid_origin(self):
         with pytest.raises(ValueError):
-            self.p.transfer(
-                self.flat.well(0), self.flat.well(95), "20:uL", rows=8
-            )
+            self.p.transfer(self.flat.well(0), self.flat.well(95), "20:uL", rows=8)
 
     def test_fails_on_sbs384_transfer_in_sbs96_plate(self):
         with pytest.raises(ValueError):
             self.p.transfer(
-                self.flat.well(0), self.flat.well(0), "20:uL",
-                rows=16, columns=24,
+                self.flat.well(0), self.flat.well(0), "20:uL", rows=16, columns=24,
             )
 
 
@@ -205,33 +185,24 @@ class TestLiquidClassMix(LiquidHandleTester):
 
     def test_generates_correct_number_of_transports(self):
         self.p.mix(self.flat.well(0), "20:uL")
-        assert(
-            len(self.p.instructions[0].locations[0]["transports"]) ==
-            6 + 10 * 2
-        )
+        assert len(self.p.instructions[0].locations[0]["transports"]) == 6 + 10 * 2
 
     def test_processes_customizable_mix_repetitions(self):
         repetitions = 2
 
-        self.p.mix(
-            self.flat.well(0), "20:uL",
-            method=Mix(repetitions=repetitions)
-        )
-        assert(
-            len(self.p.instructions[0].locations[0]["transports"]) ==
-            6 + repetitions * 2
+        self.p.mix(self.flat.well(0), "20:uL", method=Mix(repetitions=repetitions))
+        assert (
+            len(self.p.instructions[0].locations[0]["transports"])
+            == 6 + repetitions * 2
         )
 
 
 class TestExtendedLiquidHandleMethods(LiquidHandleTester):
     def test_drywell_generates_correct_number_of_transports(self):
         self.p.transfer(
-            self.flat.well(0), self.flat.well(0), "25:uL",
-            method=DryWellTransfer()
+            self.flat.well(0), self.flat.well(0), "25:uL", method=DryWellTransfer()
         )
-        assert(
-            len(self.p.instructions[0].locations[1]["transports"]) == 6
-        )
+        assert len(self.p.instructions[0].locations[1]["transports"]) == 6
 
 
 class TestPropagatesAliquotProperties(LiquidHandleTester):

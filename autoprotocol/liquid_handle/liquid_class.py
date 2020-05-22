@@ -107,9 +107,16 @@ class LiquidClass(object):
     Protocol.transfer : accepts LiquidClass arguments to determine behavior
     Protocol.mix : accepts a LiquidClass argument to determine behavior
     """
-    def __init__(self, calibrated_volume=None, aspirate_flowrate=None,
-                 dispense_flowrate=None, delay_time=None,
-                 clld_threshold=None, plld_threshold=None):
+
+    def __init__(
+        self,
+        calibrated_volume=None,
+        aspirate_flowrate=None,
+        dispense_flowrate=None,
+        delay_time=None,
+        clld_threshold=None,
+        plld_threshold=None,
+    ):
         """
         Parameters
         ----------
@@ -160,14 +167,16 @@ class LiquidClass(object):
         bool
             Whether there are any calibration attributes for this LiquidClass
         """
-        return any([
-            self.calibrated_volume,
-            self.aspirate_flowrate,
-            self.dispense_flowrate,
-            self.volume_calibration_curve,
-            self.aspirate_flowrate_calibration_curve,
-            self.dispense_flowrate_calibration_curve
-        ])
+        return any(
+            [
+                self.calibrated_volume,
+                self.aspirate_flowrate,
+                self.dispense_flowrate,
+                self.volume_calibration_curve,
+                self.aspirate_flowrate_calibration_curve,
+                self.dispense_flowrate_calibration_curve,
+            ]
+        )
 
     def _get_calibrated_volume(self, volume, tip_type):
         """Calculates the calibrated volume for a given volume and tip_type
@@ -189,9 +198,7 @@ class LiquidClass(object):
         elif self.volume_calibration_curve is not None:
             # pylint: disable=unsubscriptable-object
             calibration = self.volume_calibration_curve[tip_type]
-            volume_calibration = calibration.binned_calibration_for_volume(
-                volume
-            )
+            volume_calibration = calibration.binned_calibration_for_volume(volume)
             calibrated_volume = volume_calibration.calibrate_volume(volume)
         else:
             calibrated_volume = None
@@ -248,8 +255,7 @@ class LiquidClass(object):
         return flowrate
 
 
-class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin",
-                                      ["slope", "intercept"])):
+class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin", ["slope", "intercept"])):
     """Wrapper for slope and intercept parameters for linear fitting
     Holds information required to calibrate a volume for liquid handle step
     assuming a linear relationship between volume and calibrated volume.
@@ -314,16 +320,12 @@ class VolumeCalibration(object):
         TypeError
             Not all points on the calibration curve are of the correct type
         """
-        calibration_curve = list(
-            (parse_unit(bin, "uL"), point) for bin, point in args
-        )
+        calibration_curve = list((parse_unit(bin, "uL"), point) for bin, point in args)
 
         points = [point for _, point in calibration_curve]
         calibration_types = (VolumeCalibrationBin, dict)
         if not all(isinstance(_, calibration_types) for _ in points):
-            raise TypeError(
-                f"values {points} are not one of {calibration_types}"
-            )
+            raise TypeError(f"values {points} are not one of {calibration_types}")
 
         sorted_curve = list(sorted(calibration_curve, key=lambda k: k[0]))
 
@@ -352,8 +354,8 @@ class VolumeCalibration(object):
         volume = parse_unit(volume, "microliter")
 
         valid_bins = list(
-            point for _, point in
-            filter(lambda b: b[0] >= volume, self.calibration_curve)
+            point
+            for _, point in filter(lambda b: b[0] >= volume, self.calibration_curve)
         )
         if not valid_bins:
             raise RuntimeError(

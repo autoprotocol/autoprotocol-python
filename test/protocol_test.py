@@ -720,7 +720,7 @@ class TestFluorescence(object):
             p.fluorescence(test_plate, test_plate.well(0),
                            excitation="587:nanometer",
                            emission="610:nanometer",
-                           dataref="test_reading_%s" % i, gain=(i * 0.1))
+                           dataref=f"test_reading_{i}", gain=(i * 0.1))
             assert (p.instructions[i].gain == (i * 0.1))
 
         with pytest.raises(ValueError):
@@ -1141,9 +1141,9 @@ class TestMagneticTransfer(object):
     def test_head_compatibility(self, dummy_protocol):
         p = dummy_protocol
 
-        pcrs = [p.ref("pcr_%s" % cont_type, None, cont_type, discard=True)
+        pcrs = [p.ref(f"pcr_{cont_type}", None, cont_type, discard=True)
                 for cont_type in ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"]]
-        deeps = [p.ref("deep_%s" % cont_type, None, cont_type, discard=True)
+        deeps = [p.ref(f"deep_{cont_type}", None, cont_type, discard=True)
                  for cont_type in ["96-v-kf", "96-deep-kf", "96-deep"]]
 
         for i, pcr in enumerate(pcrs):
@@ -1160,9 +1160,9 @@ class TestMagneticTransfer(object):
                       new_instruction=n_i)
             assert len(p.instructions[-1].groups[0]) == i + 1
 
-        bad_pcrs = [p.ref("bad_pcr_%s" % cont_type, None,
+        bad_pcrs = [p.ref(f"bad_pcr_{cont_type}", None,
                           cont_type, discard=True) for cont_type in ["96-pcr"]]
-        bad_deeps = [p.ref("bad_deep_%s" % cont_type,
+        bad_deeps = [p.ref(f"bad_deep_{cont_type}",
                            None, cont_type, discard=True)
                      for cont_type in ["96-deep-kf", "96-deep"]]
 
@@ -1198,13 +1198,13 @@ class TestMagneticTransfer(object):
 
         for i in range(27, 96):
             p.mag_incubate(
-                "96-pcr", pcr, "30:minute", temperature="%s:celsius" % i)
+                "96-pcr", pcr, "30:minute", temperature=f"{i}:celsius")
             assert len(p.instructions[-1].groups[0]) == i - 26
 
     def test_frequency_valid(self, dummy_protocol):
         pcr = dummy_protocol.ref("pcr", None, "96-pcr", discard=True)
 
-        frequencies = ["{}:hertz".format(_) for _ in range(27, 96)]
+        frequencies = [f"{_}:hertz" for _ in range(27, 96)]
         for index, frequency in enumerate(frequencies):
             dummy_protocol.mag_mix(
                 "96-pcr", pcr, "30:second", frequency, center=1, amplitude=0
@@ -1355,7 +1355,7 @@ class TestMagneticTransfer(object):
     def test_mag_append(self, dummy_protocol):
         p = dummy_protocol
 
-        pcrs = [p.ref("pcr_%s" % i, None, "96-pcr", storage="cold_20")
+        pcrs = [p.ref(f"pcr_{i}", None, "96-pcr", storage="cold_20")
                 for i in range(7)]
 
         pcr = pcrs[0]
@@ -1462,7 +1462,7 @@ class TestMeasureConcentration(object):
             well.set_volume("150:microliter")
         for i, sample_class in enumerate(sample_classes):
             p.measure_concentration(wells=test_plate.well(i),
-                                    dataref="mc_test_%s" % sample_class,
+                                    dataref=f"mc_test_{sample_class}",
                                     measurement=sample_class,
                                     volume=Unit(2, "microliter"))
             assert (p.as_dict()["instructions"][i]["measurement"] ==
@@ -1483,7 +1483,7 @@ class TestMeasureMass(object):
     def test_measure_mass_list_containers(self):
         p = Protocol()
         test_plates = [p.ref(
-            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None,
+            f"test_plate_{i}", id=None, cont_type="96-flat", storage=None,
             discard=True) for i in range(5)]
         with pytest.raises(TypeError):
             p.measure_mass(test_plates, "test_ref")
@@ -1491,7 +1491,7 @@ class TestMeasureMass(object):
     def test_measure_mass_bad_list(self):
         p = Protocol()
         test_plates = [p.ref(
-            "test_plate_%s" % i, id=None, cont_type="96-flat", storage=None,
+            f"test_plate_{i}", id=None, cont_type="96-flat", storage=None,
             discard=True) for i in range(5)]
         test_plates.append("foo")
         with pytest.raises(TypeError):
@@ -1569,7 +1569,7 @@ class TestGelPurify(object):
         p = dummy_protocol
         sample_wells = p.ref("test_plate", None, "96-pcr",
                              discard=True).wells_from(0, 9)
-        extract_wells = [p.ref("extract_%s" % i, None, "micro-1.5",
+        extract_wells = [p.ref(f"extract_{i}", None, "micro-1.5",
                                storage="cold_4").well(0)for i in sample_wells]
         extract_too_many_samples = [
             {
@@ -1608,7 +1608,7 @@ class TestGelPurify(object):
         p = Protocol()
         sample_wells = p.ref("test_plate", None, "96-pcr",
                              discard=True).wells_from(0, 20)
-        extract_wells = [p.ref("extract_%s" % i, None, "micro-1.5",
+        extract_wells = [p.ref(f"extract_{i}", None, "micro-1.5",
                                storage="cold_4").well(0)for i in sample_wells]
         extract = [
             {
@@ -1633,7 +1633,7 @@ class TestGelPurify(object):
         p = dummy_protocol
         sample_wells = p.ref("test_plate", None, "96-pcr",
                              discard=True).wells_from(0, 8)
-        extract_wells = [p.ref("extract_%s" % i, None, "micro-1.5",
+        extract_wells = [p.ref(f"extract_{i}", None, "micro-1.5",
                                storage="cold_4").well(0)for i in sample_wells]
         extract = [
             {

@@ -81,7 +81,7 @@ def parse_unit(unit, accepted_unit=None):
         try:
             unit = Unit(unit)
         except (UnitStringError, UnitValueError):
-            raise TypeError("{} is not of type Unit/str".format(unit))
+            raise TypeError(f"{unit} is not of type Unit/str")
     if accepted_unit is not None:
         # Note: This is hacky. We should formalize the concept of base Units
         # in AP-Py
@@ -98,8 +98,8 @@ def parse_unit(unit, accepted_unit=None):
             accepted_unit = [parse_base_unit(accepted_unit)]
         if all([unit.dimensionality != a_u.dimensionality for a_u in
                 accepted_unit]):
-            raise TypeError("{} is not of the expected dimensionality "
-                            "{}".format(unit, accepted_unit))
+            raise TypeError(f"{unit} is not of the expected dimensionality "
+                            f"{accepted_unit}")
 
     return unit
 
@@ -129,7 +129,7 @@ def _validate_as_instance(item, target_type):
             item = _validate_as_instance(item(), target_type)
         except:
             raise TypeError(
-                "{} can't be parsed as a {}.".format(item, target_type)
+                f"{item} can't be parsed as a {target_type}."
             )
     return item
 
@@ -164,9 +164,9 @@ def _check_container_type_with_shape(container_type, shape):
 
     if container_type.is_tube and not is_single:
         raise ValueError(
-            "Tube container_type {} was specified with multi channel transfer "
-            "shape {}, but tubes only support single channel liquid handling."
-            "".format(container_type, shape)
+            f"Tube container_type {container_type} was specified with multi "
+            f"channel transfer shape {shape}, but tubes only support single "
+            f"channel liquid handling."
         )
 
     container_wells = container_type.well_count
@@ -179,20 +179,16 @@ def _check_container_type_with_shape(container_type, shape):
         )
         if not (rows_one_or_even and columns_one_or_even):
             raise ValueError(
-                "24 well container_type {} was specified, but multi channel "
-                "transfers in 24 well containers must have row and "
-                "column counts either equal to 1 or divisible by 2, but "
-                "{} was specified."
-                "".format(
-                    container_type.container_type, shape
-                )
+                f"24 well container_type {container_type.container_type} was "
+                f"specified, but multi channel transfers in 24 well "
+                f"containers must have row and column counts either equal to "
+                f"1 or divisible by 2, but {shape} was specified."
             )
 
     if shape["format"] == "SBS384" and container_wells < 384:
         raise ValueError(
-            "SBS384 transfers can only be executed in 384 well plates, but "
-            "container_type: {} has {} wells."
-            "".format(container_type, container_wells)
+            f"SBS384 transfers can only be executed in 384 well plates, but "
+            f"container_type: {container_type} has {container_wells} wells."
         )
 
     # check for valid multi channel shapes
@@ -206,19 +202,14 @@ def _check_container_type_with_shape(container_type, shape):
     elif is_selective:
         if shape["format"] != "SBS96":
             raise ValueError(
-                "{} formatted transfers require rows: {} and columns: {}, "
-                "but {} was specified."
-                "".format(
-                    shape["format"], format_rows, format_columns, shape
-                )
+                f"{shape['format']} formatted transfers require rows: "
+                f"{format_rows} and columns: {format_columns}, but {shape} was "
+                f"specified."
             )
     else:
         raise ValueError(
-            "Invalid transfer shape passed: only individual wells or "
-            "full rows/columns can be transferred. For {} format "
-            "a full row consists of {} columns and a full column consists "
-            "of {} rows, but {} was specified."
-            "".format(
-                shape["format"], format_columns, format_rows, shape
-            )
+            f"Invalid transfer shape passed: only individual wells or full "
+            f"rows/columns can be transferred. For {shape['format']} format "
+            f"a full row consists of {format_columns} columns and a full "
+            f"column consists of {format_rows} rows, but {shape} was specified."
         )

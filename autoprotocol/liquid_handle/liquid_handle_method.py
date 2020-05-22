@@ -162,7 +162,7 @@ class LiquidHandleMethod(object):
             ]
         else:
             raise RuntimeError(
-                "No tip types supported for shape: {}".format(self._shape)
+                f"No tip types supported for shape: {self._shape}"
             )
 
         return tip_types
@@ -203,9 +203,9 @@ class LiquidHandleMethod(object):
         valid_tips = list(filter(lambda t: t.volume >= total_vol, tips))
         if not valid_tips:
             raise RuntimeError(
-                "None of the TipTypes: {} allowed for this shape are "
-                "large enough to hold: {} (the target volume + overage)."
-                "".format(tips, total_vol)
+                f"None of the TipTypes: {tips} allowed for this shape are "
+                f"large enough to hold: {total_vol} (the target volume + "
+                f"overage)."
             )
         return valid_tips[0].name
 

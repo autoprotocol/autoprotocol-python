@@ -31,9 +31,10 @@ class Ref(object):
         self.container = container
 
     def __repr__(self):
-        return "Ref({}, {}, {})".format(self.name, self.container, self.opts)
+        return f"Ref({self.name}, {self.container}, {self.opts})"
 
 
+# noinspection PyCompatibility
 class Protocol(object):
     """
     A Protocol is a sequence of instructions to be executed, and a set of
@@ -133,7 +134,7 @@ class Protocol(object):
         self.propagate_properties = propagate_properties
 
     def __repr__(self):
-        return "Protocol({})".format(self.__dict__)
+        return f"Protocol({self.__dict__})"
 
     def container_type(self, shortname):
         """
@@ -163,8 +164,8 @@ class Protocol(object):
         elif shortname in _CONTAINER_TYPES:
             return _CONTAINER_TYPES[shortname]
         else:
-            raise ValueError("Unknown container type %s (known types=%s)" %
-                             (shortname, str(_CONTAINER_TYPES.keys())))
+            raise ValueError(f"Unknown container type {shortname}"
+                             f"(known types={str(_CONTAINER_TYPES.keys())})")
 
     # pragma pylint: disable=redefined-builtin
     def ref(self, name, id=None, cont_type=None, storage=None, discard=None,
@@ -264,7 +265,7 @@ class Protocol(object):
                 opts["new"] = cont_type.shortname
         except ValueError:
             raise RuntimeError(
-                "%s is not a recognized container type." % (cont_type)
+                f"{cont_type} is not a recognized container type."
             )
 
         if storage:
@@ -507,8 +508,8 @@ class Protocol(object):
                 constraint = parse_unit(constraint, 'minute')
                 if constraint < Unit(0, 'second'):
                     raise ValueError(
-                        "The timing constraint {} cannot be "
-                        "less than '0:second'".format(constraint)
+                        f"The timing constraint {constraint} cannot be "
+                        "less than '0:second'"
                     )
             return constraint
 
@@ -528,25 +529,25 @@ class Protocol(object):
             ACCEPTED_COST_FUNCTIONS = ["linear", "squared", "exponential"]
             if optimization_cost not in ACCEPTED_COST_FUNCTIONS:
                 raise ValueError(
-                    "'optimization_cost': {} has to be a member of "
-                    "{}".format(optimization_cost, ACCEPTED_COST_FUNCTIONS)
+                    f"'optimization_cost': {optimization_cost} has to be a "
+                    f"member of {ACCEPTED_COST_FUNCTIONS}"
                 )
 
         if more_than and less_than and more_than > less_than:
             raise ValueError(
-                "'more_than': {} cannot be greater than 'less_than': "
-                "{}".format(more_than, less_than)
+                f"'more_than': {more_than} cannot be greater than 'less_than': "
+                f"{less_than}"
             )
 
         if ideal and more_than and ideal < more_than:
             raise ValueError(
-                "'ideal': {} cannot be smaller than 'more_than': "
-                "{}".format(ideal, more_than)
+                f"'ideal': {ideal} cannot be smaller than 'more_than': "
+                f"{more_than}"
             )
         if ideal and less_than and ideal > less_than:
             raise ValueError(
-                "'ideal': {} cannot be greater than 'less_than': "
-                "{}".format(ideal, less_than)
+                f"'ideal': {ideal} cannot be greater than 'less_than': "
+                f"{less_than}"
             )
 
         for m in [from_dict, to_dict]:
@@ -557,39 +558,39 @@ class Protocol(object):
                     k = inst_string
                     if m["mark"] < 0:
                         raise ValueError(
-                            "The instruction 'mark' in {} must be greater "
-                            "than and equal to 0".format(m)
+                            f"The instruction 'mark' in {m} must be greater "
+                            f"than and equal to 0"
                         )
                 else:
                     raise TypeError(
-                        "The 'mark' in {} must be Container or Integer".format(m)
+                        f"The 'mark' in {m} must be Container or Integer"
                     )
             else:
-                raise KeyError("The {} dict must contain `mark`".format(m))
+                raise KeyError(f"The {m} dict must contain `mark`")
 
             if "state" in m:
                 if m["state"] in state_strings:
                     k += m["state"]
                 else:
                     raise TypeError(
-                        "The 'state' in {} must be in "
-                        "{}".format(m, ", ".join(state_strings))
+                        f"The 'state' in {m} must be in "
+                        f"{', '.join(state_strings)}"
                     )
             else:
-                raise KeyError("The {} dict must contain 'state'".format(m))
+                raise KeyError(f"The {m} dict must contain 'state'")
 
             keys.append(k)
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
                 raise RuntimeError(
-                    "The from_dict: {} and to_dict: {} are the "
-                    "same".format(from_dict, to_dict)
+                    f"The from_dict: {from_dict} and to_dict: {to_dict} are "
+                    f"the same"
                 )
             if from_dict["state"] == "end":
                 raise RuntimeError(
-                    "The from_dict: {} cannot come before the "
-                    "to_dict {}".format(from_dict, to_dict)
+                    f"The from_dict: {from_dict} cannot come before the "
+                    f"to_dict {to_dict}"
                 )
 
         from_time_point = {keys[0]: from_dict["mark"]}
@@ -1104,9 +1105,7 @@ class Protocol(object):
                 vol_errors.append(vol_d)
         if len(vol_errors) > 0:
             raise RuntimeError(
-                "Transfer volume has to be a multiple of the droplet size ({})."
-                "This is not true for the following volumes: {}"
-                .format(droplet_size, vol_errors)
+                f"Transfer volume has to be a multiple of the droplet size ({droplet_size}).This is not true for the following volumes: {vol_errors}"
             )
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
@@ -1347,11 +1346,11 @@ class Protocol(object):
         max_cycles_ind = 12
 
         if flowcell not in valid_flowcells:
-            raise ValueError("Illumina sequencing flowcell type must be one of:"
-                             " {}.".format(', '.join(valid_flowcells)))
+            raise ValueError(f"Illumina sequencing flowcell type must be one "
+                             f"of: {', '.join(valid_flowcells)}.")
         if sequencer not in valid_sequencers.keys():
-            raise ValueError("Illumina sequencer must be one of: {}."
-                             "".format(', '.join(valid_sequencers.keys())))
+            raise ValueError(f"Illumina sequencer must be one of: "
+                             f"{', '.join(valid_sequencers.keys())}.")
         if not isinstance(lanes, list):
             raise TypeError(
                 "Illumina sequencing lanes must be a list(dict)"
@@ -1373,37 +1372,26 @@ class Protocol(object):
                 raise TypeError("Each Illumina sequencing "
                                 "library_concentration must be a number.")
         if len(lanes) > valid_sequencers[sequencer]["max_lanes"]:
-            raise ValueError("The type of sequencer selected ({}) only has {} "
-                             "lane(s).  You specified {}. Please submit "
-                             "additional Illumina Sequencing instructions."
-                             "".format(sequencer,
-                                       valid_sequencers[
-                                           sequencer]["max_lanes"],
-                                       len(lanes)))
+            raise ValueError(f"The type of sequencer selected ({sequencer}) only has {valid_sequencers[sequencer]['max_lanes']} lane(s).  You specified {len(lanes)}. Please submit additional Illumina Sequencing instructions.")
         if mode not in valid_sequencers[sequencer]["modes"]:
-            raise ValueError("The type of sequencer selected ({}) has valid"
-                             " modes: {}.You specified: {}."
-                             "".format(sequencer,
-                                       ', '.join(valid_sequencers[
-                                                 sequencer]["modes"]),
-                                       mode)
+            raise ValueError(f"The type of sequencer selected ({sequencer}) has valid modes: {', '.join(valid_sequencers[sequencer]['modes'])}.You specified: {mode}."
                              )
         if index not in valid_indices:
-            raise ValueError("Illumina sequencing index must be one of: {}."
-                             "".format(', '.join(valid_indices)))
+            raise ValueError(f"Illumina sequencing index must be one of: "
+                             f"{', '.join(valid_indices)}.")
         if not isinstance(dataref, str):
-            raise TypeError("dataref: %s, must be a string" % dataref)
+            raise TypeError(f"dataref: {dataref}, must be a string")
         if not isinstance(library_size, int):
             raise TypeError(
-                "library_size: %s, must be an integer." % library_size
+                f"library_size: {library_size}, must be an integer."
             )
 
         if cycles:
             if not isinstance(cycles, dict):
                 raise TypeError("Cycles must be a dict.")
             if not all(c in valid_cycles for c in cycles.keys()):
-                raise KeyError("Valid cycle parameters are: {}".format(
-                    ', '.join(valid_cycles)))
+                raise KeyError(f"Valid cycle parameters are: "
+                               f"{', '.join(valid_cycles)}")
             if "read_1" not in cycles.keys():
                 raise ValueError(
                     "If specifying cycles, 'read_1' must be designated."
@@ -1417,17 +1405,14 @@ class Protocol(object):
                     if (cycles[read] >
                             valid_sequencers[sequencer]["max_cycles_read"]):
                         raise ValueError(
-                            "The maximum number of cycles for "
-                            "{} is {}.".format(
-                                read,
-                                valid_sequencers[sequencer]["max_cycles_read"])
+                            f"The maximum number of cycles for {read} is {valid_sequencers[sequencer]['max_cycles_read']}."
                         )
             for ind in ["index_1", "index_2"]:
                 if cycles.get(ind):
                     if cycles[ind] > max_cycles_ind:
                         raise ValueError(
-                            "The maximum number of cycles for "
-                            "{} is {}.".format(ind, max_cycles_ind)
+                            f"The maximum number of cycles for {ind} is "
+                            f"{max_cycles_ind}."
                         )
                 # set index 1 and 2 to default 0 if not otherwise specified
                 else:
@@ -1704,16 +1689,15 @@ class Protocol(object):
 
         if not isinstance(ref, Container):
             raise TypeError(
-                "ref must be a Container but it was {}.".format(type(ref)))
+                f"ref must be a Container but it was {type(ref)}."
+            )
 
         columns = Dispense.builders.columns(columns)
 
         ref_cols = list(range(ref.container_type.col_count))
         if not all(_["column"] in ref_cols for _ in columns):
             raise ValueError(
-                "Specified dispense columns: {} contains a column index that "
-                "is outside of the valid columns: {} for ref: {}."
-                "".format(columns, ref_cols, ref))
+                f"Specified dispense columns: {columns} contains a column index that is outside of the valid columns: {ref_cols} for ref: {ref}.")
 
         # pre-evaluate all parameters before making any changes to the Protocol
         if flowrate is not None:
@@ -1736,28 +1720,23 @@ class Protocol(object):
             step_size = parse_unit(step_size, "uL")
             if step_size not in _VALID_STEP_SIZES:
                 raise ValueError(
-                    "specified step_size was {} but it must be in {}"
-                    "".format(step_size, _VALID_STEP_SIZES))
+                    f"specified step_size was {step_size} but it must be in "
+                    f"{_VALID_STEP_SIZES}"
+                )
 
             for c in columns:
                 if c["volume"] % step_size != Unit("0:uL"):
                     raise ValueError(
-                        "Dispense volume must be a multiple of the step size "
-                        "{}, but column {} does not meet these requirements."
-                        "".format(step_size, c))
+                        f"Dispense volume must be a multiple of the step size {step_size}, but column {c} does not meet these requirements.")
 
             if pre_dispense is not None:
                 invalid_pre_dispense_range = pre_dispense < 2 * step_size
                 if invalid_pre_dispense_range and pre_dispense != Unit(0, "uL"):
                     raise ValueError(
-                        "Dispense pre_dispense must either be 0:uL or at "
-                        "least 2 * step_size: {} but it was {}."
-                        "".format(step_size, pre_dispense))
+                        f"Dispense pre_dispense must either be 0:uL or at least 2 * step_size: {step_size} but it was {pre_dispense}.")
                 if pre_dispense % step_size != Unit(0, "uL"):
                     raise ValueError(
-                        "Dispense pre_dispense must be a multiple of "
-                        "step_size: {} but it was {}."
-                        "".format(step_size, pre_dispense))
+                        f"Dispense pre_dispense must be a multiple of step_size: {step_size} but it was {pre_dispense}.")
 
         row_count = ref.container_type.row_count()
         if isinstance(reagent, Well):
@@ -1777,8 +1756,9 @@ class Protocol(object):
         else:
             if not isinstance(reagent, str):
                 raise TypeError(
-                    "reagent: {} must be a Well or string but it was: {}."
-                    "".format(reagent, type(reagent)))
+                    f"reagent: {reagent} must be a Well or string but it was: "
+                    f"{type(reagent)}."
+                )
             if is_resource_id:
                 reagent, resource_id, reagent_source = None, reagent, None
             else:
@@ -2045,7 +2025,7 @@ class Protocol(object):
         try:
             duration = Unit(duration)
         except ValueError as e:
-            raise ValueError("Duration must be a unit. %s" % e)
+            raise ValueError(f"Duration must be a unit. {e}")
 
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
@@ -2157,16 +2137,16 @@ class Protocol(object):
             )
         if speed <= Unit("0:rpm"):
             raise ValueError(
-                "Speed: {} must be more than 0 rpm.".format(speed)
+                f"Speed: {speed} must be more than 0 rpm."
             )
 
         if duration <= Unit("0:minute"):
             raise ValueError(
-                "Duration: {} must be longer than 0 minutes.".format(duration)
+                f"Duration: {duration} must be longer than 0 minutes."
             )
         if mode not in valid_modes:
             raise ValueError(
-                "Agitate mode must be one of {}".format(valid_modes)
+                f"Agitate mode must be one of {valid_modes}"
             )
         if mode == "stir_bar":
             if mode_params is None:
@@ -2176,8 +2156,8 @@ class Protocol(object):
                 )
             elif not set(mode_params.keys()) == set(valid_bar_mode_params):
                 raise ValueError(
-                    "Params for `stir_bar` must include {}"
-                    "".format(valid_bar_mode_params)
+                    f"Params for `stir_bar` must include "
+                    f"{valid_bar_mode_params}"
                 )
 
             wells = WellGroup(mode_params["wells"])
@@ -2191,8 +2171,7 @@ class Protocol(object):
                 )
             if shape not in valid_bar_shapes:
                 raise ValueError(
-                    "Param `bar_shape` must be one of {}"
-                    "".format(valid_bar_shapes)
+                    f"Param `bar_shape` must be one of {valid_bar_shapes}"
                 )
             if length <= Unit(0, "millimeter"):
                 raise ValueError(
@@ -2200,12 +2179,11 @@ class Protocol(object):
                 )
         elif mode != "stir_bar" and mode_params:
             raise ValueError(
-                "Mode {} does not need mode_params specified".format(mode)
+                f"Mode {mode} does not need mode_params specified"
             )
         elif mode in ["invert", "roll"] and not ref.container_type.is_tube:
             raise TypeError(
-                "Specified container {} cannot be inverted or rolled."
-                "".format(ref)
+                f"Specified container {ref} cannot be inverted or rolled."
             )
 
         return self._append_and_return(
@@ -2524,8 +2502,7 @@ class Protocol(object):
             raise TypeError("Ref must be of type Container.")
         if "thermocycle" not in ref.container_type.capabilities:
             raise ValueError(
-                "Container '{}' type '{}', cannot be thermocycled."
-                "".format(ref.name, ref.container_type.shortname)
+                f"Container '{ref.name}' type '{ref.container_type.shortname}', cannot be thermocycled."
             )
 
         groups = [Thermocycle.builders.group(**_) for _ in groups]
@@ -2543,9 +2520,8 @@ class Protocol(object):
             lid_temperature = parse_unit(lid_temperature)
             if not (_MIN_LID_TEMP <= lid_temperature <= _MAX_LID_TEMP):
                 raise ValueError(
-                    "Lid temperature {} has to be within [{}, {}]".format(
-                        lid_temperature, _MIN_LID_TEMP, _MAX_LID_TEMP
-                    )
+                    f"Lid temperature {lid_temperature} has to be within "
+                    f"[{_MIN_LID_TEMP}, {_MAX_LID_TEMP}]"
                 )
 
         self._add_seal(ref, "thermocycle")
@@ -2638,8 +2614,8 @@ class Protocol(object):
         allowed_uncovered = ["ambient"]
         if uncovered and (where not in allowed_uncovered or shaking):
             raise RuntimeError(
-                "If incubating uncovered, location must be in "
-                "{} and not shaking.".format(', '.join(allowed_uncovered))
+                f"If incubating uncovered, location must be in "
+                f"{', '.join(allowed_uncovered)} and not shaking."
             )
 
         if not isinstance(co2, Number):
@@ -2935,8 +2911,8 @@ class Protocol(object):
 
         if gain is not None and not (0 <= gain <= 1):
             raise ValueError(
-                "fluorescence gain set to %s must be between 0 and 1, "
-                "inclusive" % gain
+                f"fluorescence gain set to {gain} must be between 0 and 1, "
+                f"inclusive"
             )
 
         if incubate_before:
@@ -2945,8 +2921,8 @@ class Protocol(object):
         valid_detection_modes = ["top", "bottom"]
         if detection_mode and detection_mode not in valid_detection_modes:
             raise ValueError(
-                "Unknown value for 'detection_mode'.  Must be one of {}."
-                "".format(valid_detection_modes)
+                f"Unknown value for 'detection_mode'.  Must be one of "
+                f"{valid_detection_modes}."
             )
         if detection_mode == "bottom" and position_z:
             raise ValueError(
@@ -3003,10 +2979,7 @@ class Protocol(object):
             for k in position_z.keys():
                 if k not in valid_pos_z:
                     raise KeyError(
-                        "'position_z' keys can only be 'manual' "
-                        "or 'calculated_from_wells'. '{}' is not "
-                        "a recognized key."
-                        "".format(k)
+                        f"'position_z' keys can only be 'manual' or 'calculated_from_wells'. '{k}' is not a recognized key."
                     )
             if "manual" in position_z.keys():
                 try:
@@ -3415,14 +3388,14 @@ class Protocol(object):
         volume = Unit(volume)
         if volume <= Unit("0:microliter"):
             raise ValueError(
-                "Volume: %s, must be greater than 0:microliter" % volume
+                f"Volume: {volume}, must be greater than 0:microliter"
             )
 
         if not isinstance(ladder, str):
-            raise TypeError("Ladder: %s, must be a string" % ladder)
+            raise TypeError(f"Ladder: {ladder}, must be a string")
 
         if not isinstance(dataref, str):
-            raise TypeError("Datref: %s, must be a string" % dataref)
+            raise TypeError(f"Datref: {dataref}, must be a string")
 
         if not isinstance(extracts, list):
             extracts = [extracts]
@@ -3464,9 +3437,7 @@ class Protocol(object):
 
             if len(lane_set) > max_well:
                 raise RuntimeError(
-                    "The gel is not large enough to accomodate "
-                    "all lanes: gel has %s wells, %s lanes specified"
-                    "" % (max_well, len(lane_set))
+                    f"The gel is not large enough to accomodate all lanes: gel has {max_well} wells, {len(lane_set)} lanes specified"
                 )
 
             if None in lane_set:
@@ -3486,7 +3457,7 @@ class Protocol(object):
                 )
 
             if len(parsed_extracts) > 1:
-                dataref_gel = "%s_%s" % (dataref, pe[0]["gel"])
+                dataref_gel = f"{dataref}_{pe[0]['gel']}"
             else:
                 dataref_gel = dataref
 
@@ -3595,17 +3566,17 @@ class Protocol(object):
             raise TypeError("Container to seal must be of type Container.")
         if "seal" not in ref.container_type.capabilities:
             raise RuntimeError(
-                "Container '{}' type '{}', cannot be sealed."
-                "".format(ref.name, ref.container_type.shortname)
+                f"Container '{ref.name}' type '{ref.container_type.shortname}',"
+                f" cannot be sealed."
             )
         if type is None:
             type = ref.container_type.seal_types[0]
         if type not in SEAL_TYPES:
-            raise RuntimeError("{} is not a valid seal type".format(type))
+            raise RuntimeError(f"{type} is not a valid seal type")
         if ref.is_covered():
             raise RuntimeError("A container cannot be sealed over a lid.")
         if not (mode is None or mode in SEALING_MODES):
-            raise RuntimeError("{} is not a valid sealing mode".format(mode))
+            raise RuntimeError(f"{mode} is not a valid sealing mode")
         if temperature is not None or duration is not None:
             if mode == "adhesive":
                 raise RuntimeError(
@@ -3751,13 +3722,13 @@ class Protocol(object):
             raise TypeError("Container to cover must be of type Container.")
         if "cover" not in ref.container_type.capabilities:
             raise RuntimeError(
-                "Container '{}' type '{}', cannot be covered."
-                "".format(ref.name, ref.container_type.shortname)
+                f"Container '{ref.name}' type '{ref.container_type.shortname}',"
+                f" cannot be covered."
             )
         if lid is None:
             lid = ref.container_type.cover_types[0]
         if lid not in COVER_TYPES:
-            raise RuntimeError("%s is not a valid lid type" % lid)
+            raise RuntimeError(f"{lid} is not a valid lid type")
         if ref.is_sealed():
             raise RuntimeError("A container cannot be covered over a seal.")
         if retrieve_lid is not None and not isinstance(retrieve_lid, bool):
@@ -4209,8 +4180,8 @@ class Protocol(object):
             try:
                 Unit(s.get("volume"))
             except (ValueError, TypeError) as e:
-                raise ValueError("Each sample or control must indicate a "
-                                 "volume of type unit. %s" % e)
+                raise ValueError(f"Each sample or control must indicate a "
+                                 f"volume of type unit. {e}")
             if (s.get("captured_events") and not
                     isinstance(s.get("captured_events"), int)):
                 raise TypeError("captured_events is optional, if given it"
@@ -4978,9 +4949,9 @@ class Protocol(object):
         for d, v in zip(dests, volumes):
             d_max_vol = d.container.container_type.true_max_vol_ul
             if v > d_max_vol:
-                raise ValueError("The volume you are trying to provision ({}) "
-                                 "exceeds the maximum capacity of this well "
-                                 "({}).".format(v, d_max_vol))
+                raise ValueError(
+                    f"The volume you are trying to provision ({v}) exceeds the "
+                    f"maximum capacity of this well ({d_max_vol}).")
             self._remove_cover(d.container, "provision")
             dest_group = []
             if v > Unit(900, "microliter"):
@@ -5163,10 +5134,10 @@ class Protocol(object):
         """
         sonic_modes = ["bath", "horn"]
         if mode not in sonic_modes:
-            raise RuntimeError("{} is not a valid sonication mode".format(mode))
+            raise RuntimeError(f"{mode} is not a valid sonication mode")
         if not isinstance(mode_params, dict):
             raise TypeError(
-                "Invalid mode_params {}, must be a dict".format(mode_params)
+                f"Invalid mode_params {mode_params}, must be a dict"
             )
 
         parsed_mode_params = {}
@@ -5176,9 +5147,10 @@ class Protocol(object):
             valid_mode_params = ["sample_holder", "power"]
             sample_holder = mode_params.get("sample_holder")
             if sample_holder not in valid_sample_holders:
-                raise ValueError("'sample_holder' must be specified in "
-                                 "'mode_params' mode: {} and must be one of "
-                                 "{}.".format(mode, valid_sample_holders))
+                raise ValueError(
+                    f"'sample_holder' must be specified in 'mode_params' mode: "
+                    f"{mode} and must be one of {valid_sample_holders}."
+                )
             parsed_mode_params["sample_holder"] = sample_holder
             power = mode_params.get("power")
             if power:
@@ -5188,21 +5160,20 @@ class Protocol(object):
         if mode == "horn":
             valid_mode_params = ["duty_cycle", "amplitude"]
             if not all(k in mode_params for k in valid_mode_params):
-                raise ValueError("Incorrect mode_params.  All of {} must be "
-                                 "included in mode: {}"
-                                 "".format(valid_mode_params, mode))
+                raise ValueError(f"Incorrect mode_params.  All of "
+                                 f"{valid_mode_params} must be included in "
+                                 f"mode: {mode}")
             duty_cycle = mode_params["duty_cycle"]
             amplitude = mode_params["amplitude"]
             if not isinstance(duty_cycle, (int, float)):
                 raise TypeError(
-                    "Invalid duty_cycle {}, must be a decimal"
-                    "".format(duty_cycle)
+                    f"Invalid duty_cycle {duty_cycle}, must be a decimal"
                 )
             duty_cycle = float(duty_cycle)
             if not 0 <= duty_cycle <= 1:
                 raise ValueError(
-                    "Invalid duty_cycle {}, must be between 0 and 1"
-                    "(inclusive).".format(duty_cycle)
+                    f"Invalid duty_cycle {duty_cycle}, must be between 0 and "
+                    f"1 (inclusive)."
                 )
             parsed_mode_params["duty_cycle"] = duty_cycle
             parsed_amplitude = parse_unit(amplitude, "micrometer")
@@ -5387,9 +5358,8 @@ class Protocol(object):
             )
         valid_pressure_modes = ["positive", "negative"]
         if pressure_mode not in valid_pressure_modes:
-            raise ValueError("'pressure_mode': {} has to be one of {}"
-                             "".format(pressure_mode,
-                                       valid_pressure_modes))
+            raise ValueError(f"'pressure_mode': {pressure_mode} has to be one "
+                             f"of {valid_pressure_modes}")
         load_sample = SPE.builders.mobile_phase_params(is_sample=True,
                                                        **load_sample)
         SPE.builders.spe_params(elute, is_elute=True)
@@ -5496,11 +5466,10 @@ class Protocol(object):
         """
         valid_image_modes = ["top", "bottom", "side"]
         if not isinstance(ref, Container):
-            raise TypeError("image ref: {} has to be of type "
-                            "Container".format(ref))
+            raise TypeError(f"image ref: {ref} has to be of type Container")
         if mode not in valid_image_modes:
-            raise ValueError("specified mode: {} must be one of {}"
-                             "".format(mode, valid_image_modes))
+            raise ValueError(f"specified mode: {mode} must be one of "
+                             f"{valid_image_modes}")
         if not isinstance(dataref, str):
             raise TypeError("dataref must be of type String.")
         if not isinstance(num_images, int) or num_images <= 0:
@@ -5515,12 +5484,11 @@ class Protocol(object):
         if exposure:
             valid_exposure_params = ["shutter_speed", "iso", "aperture"]
             if not isinstance(exposure, dict):
-                raise TypeError("exposure must be a dict with "
-                                "optional keys: {}."
-                                "".format(valid_exposure_params))
+                raise TypeError(f"exposure must be a dict with optional keys: "
+                                f"{valid_exposure_params}.")
             if not all(k in valid_exposure_params for k in exposure):
-                raise ValueError("Invalid exposure param.  Valid params: {}."
-                                 "".format(valid_exposure_params))
+                raise ValueError(f"Invalid exposure param.  Valid params: "
+                                 f"{valid_exposure_params}.")
             shutter_speed = exposure.get("shutter_speed")
             if shutter_speed:
                 shutter_speed = parse_unit(shutter_speed, "millimeter/s")
@@ -5555,10 +5523,11 @@ class Protocol(object):
             elif container.cover in SEAL_TYPES:
                 self.unseal(container)
             else:
-                raise RuntimeError("The operation {} requires an uncovered "
-                                   "container, however, {} is not a "
-                                   "recognized cover or seal type."
-                                   "".format(action, container.cover))
+                raise RuntimeError(
+                    f"The operation {action} requires an uncovered container, "
+                    f"however, {container.cover} is not a recognized cover or "
+                    f"seal type."
+                )
 
     def _add_cover(self, container, action):
         if not container.container_type.is_tube:
@@ -5569,29 +5538,30 @@ class Protocol(object):
             elif "seal" in container.container_type.capabilities:
                 self.seal(container, container.container_type.seal_types[0])
             else:
-                raise RuntimeError("The operation {} requires a covered "
-                                   "container, however, {} does not have a "
-                                   "recognized cover or seal type."
-                                   "".format(action,
-                                             container.container_type.name))
+                raise RuntimeError(
+                    f"The operation {action} requires a covered container, "
+                    f"however, {container.container_type.name} does not have "
+                    f"a recognized cover or seal type."
+                )
 
     def _add_seal(self, container, action):
         if not container.container_type.is_tube:
             if container.is_sealed():
                 return
             elif container.is_covered():
-                raise RuntimeError("The operation {} requires a sealed "
-                                   "container, however, {} currently has"
-                                   "a lid which needs to be first removed."
-                                   "".format(action, container.name))
+                raise RuntimeError(
+                    f"The operation {action} requires a sealed container, "
+                    f"however, {container.name} currently hasa lid which needs "
+                    f"to be first removed."
+                )
             if "seal" in container.container_type.capabilities:
                 self.seal(container, container.container_type.seal_types[0])
             else:
-                raise RuntimeError("The operation {} requires a sealed "
-                                   "container, however, {} does not have a "
-                                   "recognized seal type."
-                                   "".format(action,
-                                             container.container_type.name))
+                raise RuntimeError(
+                    f"The operation {action} requires a sealed container, "
+                    f"however, {container.container_type.name} does not have "
+                    f"a recognized seal type."
+                )
 
     def _add_mag(self, sub_op, head, new_tip, new_instruction, sub_op_name):
         """
@@ -5762,9 +5732,7 @@ class Protocol(object):
 
                 if ref_name not in self.refs:
                     raise RuntimeError(
-                        "Parameters contain well references to "
-                        "a container that isn't referenced in this protocol: "
-                        "'%s'." % ref_name
+                        f"Parameters contain well references to a container that isn't referenced in this protocol: '{ref_name}'."
                     )
 
                 if v.rsplit("/")[1] == "all_wells":
@@ -5918,7 +5886,7 @@ class Protocol(object):
 
         """
         if not isinstance(container, Container):
-            raise TypeError("{} has to be of type Container".format(container))
+            raise TypeError(f"{container} has to be of type Container")
 
         return self._append_and_return(MeasureMass(container, dataref))
 
@@ -6298,8 +6266,7 @@ class Protocol(object):
 
         if num_intervals and not isinstance(num_intervals, int):
             raise TypeError(
-                "Invalid num_intervals {}, must be an int."
-                "".format(num_intervals)
+                f"Invalid num_intervals {num_intervals}, must be an int."
             )
 
         if temperature is not None:
@@ -6533,16 +6500,13 @@ class Protocol(object):
                 density = [density] * count
             elif len(density) != count:
                 raise ValueError(
-                    "the length of provided density: {} does "
-                    "not match the number of transports."
-                    "".format(len(density))
+                    f"the length of provided density: {len(density)} does not match the number of transports."
                 )
             density = [parse_unit(d, "mg/ml") for d in density]
             for d in density:
                 if d.magnitude <= 0:
                     raise ValueError(
-                        "Density: {} must be a value larger than 0."
-                        "".format(d)
+                        f"Density: {d} must be a value larger than 0."
                     )
         else:
             # if density is None, it should still be a list of None
@@ -6580,9 +6544,7 @@ class Protocol(object):
         )
         if not correct_parameter_counts:
             raise ValueError(
-                "Specified parameters {} could not all be interpreted as "
-                "the same length {}."
-                "".format(countable_parameters, correct_parameter_counts)
+                f"Specified parameters {countable_parameters} could not all be interpreted as the same length {correct_parameter_counts}."
             )
 
         # format shape
@@ -6613,9 +6575,7 @@ class Protocol(object):
             tip_types = [_.tip_type for _ in method]
             if not all(_ == tip_types[0] for _ in tip_types):
                 raise ValueError(
-                    "If one_tip is true and any tip_type is set, then all "
-                    "tip types must be the same but {} was specified."
-                    "".format(tip_types)
+                    f"If one_tip is true and any tip_type is set, then all tip types must be the same but {tip_types} was specified."
                 )
 
         # generate either a LiquidHandle location or instruction list
@@ -6827,9 +6787,7 @@ class Protocol(object):
         )
         if not correct_parameter_counts:
             raise ValueError(
-                "Specified parameters {} could not all be interpreted as "
-                "the same length {}."
-                "".format(countable_parameters, correct_parameter_counts)
+                f"Specified parameters {countable_parameters} could not all be interpreted as the same length {correct_parameter_counts}."
             )
 
         # format shape
@@ -6858,9 +6816,7 @@ class Protocol(object):
             tip_types = [_.tip_type for _ in method]
             if not all(_ == tip_types[0] for _ in tip_types):
                 raise ValueError(
-                    "If one_tip is true and any tip_type is set, then all "
-                    "tip types must be the same but {} was specified."
-                    "".format(tip_types)
+                    f"If one_tip is true and any tip_type is set, then all tip types must be the same but {tip_types} was specified."
                 )
 
         # generate either a LiquidHandle location or instruction list
@@ -6870,9 +6826,7 @@ class Protocol(object):
 
             if vol > max_tip_capacity:
                 raise ValueError(
-                    "Attempted mix volume {} is larger than the maximum "
-                    "capacity of {} for transfer shape {}."
-                    "".format(vol, max_tip_capacity, vol.shape))
+                    f"Attempted mix volume {vol} is larger than the maximum capacity of {max_tip_capacity} for transfer shape {vol.shape}.")
 
             self._remove_cover(wel.container, "liquid_handle mix")
             if one_tip is True:
@@ -7095,14 +7049,12 @@ class Protocol(object):
         )
         if not len(source_wells) == len(dest_wells):
             raise RuntimeError(
-                "Transfer source: {} and destination: {} WellGroups didn't "
-                "have the same number of wells.".format(
-                    source_wells, dest_wells
-                )
+                f"Transfer source: {source_wells} and destination: "
+                f"{dest_wells} WellGroups didn't have the same number of wells."
             )
         for source_well, dest_well in zip(source_wells, dest_wells):
             if self.propagate_properties:
-                dest_well.set_properties(source_well.properties)
+                dest_well.add_properties(source_well.properties)
 
             if source_well.volume is not None:
                 source_well.volume -= volume
@@ -7193,9 +7145,7 @@ class Protocol(object):
 
         if duration <= Unit("0:minute"):
             raise ValueError(
-                "Param `duration`: {} should be longer than 0 minute.".format(
-                    duration
-                )
+                f"Param `duration`: {duration} should be longer than 0 minute."
             )
 
         if mode_params:
@@ -7203,9 +7153,9 @@ class Protocol(object):
             if "condenser_temperature" in mode_params.keys():
                 if condenser_temp >= evaporator_temperature:
                     raise ValueError(
-                        "Param `condenser_temperature`: {} cannot be higher "
-                        "than the evaporator_temperature: {}"
-                        "".format(condenser_temp, evaporator_temperature)
+                        f"Param `condenser_temperature`: {condenser_temp} "
+                        "cannot be higher than the evaporator_temperature:"
+                        f" {evaporator_temperature}"
                     )
 
         return self._append_and_return(

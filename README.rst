@@ -41,9 +41,7 @@ Dev Env Setup
 -------------
 
 Installation:
-    Current Python version supported for development is :code:`v3.5.6`.
-
-    python_
+    Minimum Python version supported for development is :code:`v3.6`.
 
 Python Virtual Environment (Optional):
     Use of virtual environment to isolate development environment is

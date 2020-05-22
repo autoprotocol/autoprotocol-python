@@ -39,6 +39,7 @@ from .util import parse_unit, is_valid_well
 class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
     """General builders that apply to multiple instructions
     """
+
     def __init__(self):
         self.sbs_shapes = ["SBS96", "SBS384"]
 
@@ -84,7 +85,6 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
 
         return unique
 
-
     # pylint: disable=redefined-builtin
     def shape(self, rows=1, columns=1, format=None):
         """
@@ -127,8 +127,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
                     break
 
             if not format:
-                raise ValueError(
-                    "Invalid number of rows and/or columns specified")
+                raise ValueError("Invalid number of rows and/or columns specified")
 
         if format not in self.sbs_shapes:
             raise ValueError(
@@ -143,11 +142,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
                 f"format: {format}."
             )
 
-        return {
-            "rows": rows,
-            "columns": columns,
-            "format": format
-        }
+        return {"rows": rows, "columns": columns, "format": format}
 
 
 class ThermocycleBuilders(InstructionBuilders):
@@ -155,15 +150,23 @@ class ThermocycleBuilders(InstructionBuilders):
     These builders are meant for helping to construct the `groups`
     argument in the `Protocol.thermocycle` method
     """
+
     def __init__(self):
         super(ThermocycleBuilders, self).__init__()
         self.valid_dyes = {
-            "FAM", "SYBR",  # channel 1
-            "VIC", "HEX", "TET", "CALGOLD540",  # channel 2
-            "ROX", "TXR", "CALRED610",  # channel 3
-            "CY5", "QUASAR670",  # channel 4
+            "FAM",
+            "SYBR",  # channel 1
+            "VIC",
+            "HEX",
+            "TET",
+            "CALGOLD540",  # channel 2
+            "ROX",
+            "TXR",
+            "CALRED610",  # channel 3
+            "CY5",
+            "QUASAR670",  # channel 4
             "QUASAR705",  # channel 5
-            "FRET"  # channel 6
+            "FRET",  # channel 6
         }
 
     def dyes(self, **kwargs):
@@ -190,15 +193,13 @@ class ThermocycleBuilders(InstructionBuilders):
         for dye, wells in kwargs.items():
             if dye not in self.valid_dyes:
                 raise ValueError(
-                    f"dye {dye} is not in the set of valid dyes "
-                    f"{self.valid_dyes}"
+                    f"dye {dye} is not in the set of valid dyes " f"{self.valid_dyes}"
                 )
             if not isinstance(wells, list):
                 wells = [wells]
             if not all(isinstance(_, (int, str)) for _ in wells):
                 raise ValueError(
-                    f"dye {dye} had wells {wells} that were not an int, str "
-                    "or list"
+                    f"dye {dye} had wells {wells} that were not an int, str " "or list"
                 )
             dyes[dye] = wells
 
@@ -225,10 +226,7 @@ class ThermocycleBuilders(InstructionBuilders):
         Thermocycle.Builders.dyes : standard constructor for the dyes parameter
 
         """
-        dyes = reduce(
-            lambda x, y: x.union(y),
-            [set(well_map[k]) for k in well_map]
-        )
+        dyes = reduce(lambda x, y: x.union(y), [set(well_map[k]) for k in well_map])
 
         dye_map = {dye: [] for dye in dyes}
         for well in well_map:
@@ -283,12 +281,7 @@ class ThermocycleBuilders(InstructionBuilders):
         if rate:
             rate = parse_unit(rate, "second")
 
-        return {
-            "start": start,
-            "end": end,
-            "increment": increment,
-            "rate": rate
-        }
+        return {"start": start, "end": end, "increment": increment, "rate": rate}
 
     def group(self, steps, cycles=1):
         """
@@ -330,13 +323,12 @@ class ThermocycleBuilders(InstructionBuilders):
 
         # Reformatting to use temperature for gradient input
         def reformat_gradient(**kwargs):
-            if 'gradient' in kwargs:
-                kwargs['temperature'] = kwargs.pop('gradient')
+            if "gradient" in kwargs:
+                kwargs["temperature"] = kwargs.pop("gradient")
             return kwargs
 
         group_dict = dict(
-            cycles=cycles,
-            steps=[self.step(**reformat_gradient(**_)) for _ in steps]
+            cycles=cycles, steps=[self.step(**reformat_gradient(**_)) for _ in steps]
         )
 
         return group_dict
@@ -384,50 +376,57 @@ class ThermocycleBuilders(InstructionBuilders):
         """
         step_dict = dict()
         if isinstance(temperature, dict):
-            if set(temperature.keys()) != {'top', 'bottom'}:
+            if set(temperature.keys()) != {"top", "bottom"}:
                 raise ValueError(
                     f"{temperature} was specified, but only 'top' and 'bottom' "
                     f"keys are allowed for a temperature dictionary"
                 )
-            step_dict['gradient'] = dict(
-                top=parse_unit(temperature['top'], "celsius"),
-                bottom=parse_unit(temperature['bottom'], "celsius")
+            step_dict["gradient"] = dict(
+                top=parse_unit(temperature["top"], "celsius"),
+                bottom=parse_unit(temperature["bottom"], "celsius"),
             )
         else:
-            step_dict['temperature'] = parse_unit(temperature, 'celsius')
+            step_dict["temperature"] = parse_unit(temperature, "celsius")
 
-        duration = parse_unit(duration, 'second')
+        duration = parse_unit(duration, "second")
         if duration <= Unit("0:second"):
             raise ValueError("Step `duration` has to be at least 1 second")
-        step_dict['duration'] = duration
+        step_dict["duration"] = duration
 
         if read is not None:
             if not isinstance(read, bool):
                 raise TypeError(f"`read` {read} has to be of type bool")
-            step_dict['read'] = read
+            step_dict["read"] = read
 
         return step_dict
+
 
 class SPEBuilders(InstructionBuilders):
     """
     These builders are meant for helping to construct arguments for the
     `SPE` instruction.
     """
+
     def spe_params(self, params, is_elute=False):
         if not isinstance(params, list):
             raise ValueError("SPE mobile phase parameters {} must be a list.")
         parsed_params = []
         for param in params:
-            parsed_params.append(self.mobile_phase_params(is_elute=is_elute,
-                                                          **param))
+            parsed_params.append(self.mobile_phase_params(is_elute=is_elute, **param))
         return parsed_params
 
-
-
-    def mobile_phase_params(self, volume, loading_flowrate, settle_time,
-                            processing_time, flow_pressure,
-                            resource_id=None, is_sample=False,
-                            destination_well=None, is_elute=False):
+    def mobile_phase_params(
+        self,
+        volume,
+        loading_flowrate,
+        settle_time,
+        processing_time,
+        flow_pressure,
+        resource_id=None,
+        is_sample=False,
+        destination_well=None,
+        is_elute=False,
+    ):
         """
         Create a dictionary with mobile phase parameters which can be
         used as input for instructions.
@@ -481,25 +480,25 @@ class SPEBuilders(InstructionBuilders):
 
         processing_time = parse_unit(processing_time, "second")
         if processing_time <= Unit(0, "second"):
-            raise ValueError(f"processing_time: {processing_time} is not "
-                             "positive")
+            raise ValueError(f"processing_time: {processing_time} is not " "positive")
 
         flow_pressure = parse_unit(flow_pressure, "bar")
         if flow_pressure <= Unit(0, "bar"):
-            raise ValueError(f"flow_pressure: {flow_pressure} must be "
-                             f"positive.")
+            raise ValueError(f"flow_pressure: {flow_pressure} must be " f"positive.")
         loading_flowrate = parse_unit(loading_flowrate, "ul/s")
 
         if not is_sample:
             if not resource_id:
-                raise ValueError("A 'resource_id' must be included "
-                                 "for mobile_phase_params.")
+                raise ValueError(
+                    "A 'resource_id' must be included " "for mobile_phase_params."
+                )
             if not isinstance(resource_id, str):
                 raise TypeError("'resource_id' {} must be a string")
         if is_elute:
             if not destination_well:
-                raise ValueError("A 'destination_well' must be included "
-                                 "for elute parameter.")
+                raise ValueError(
+                    "A 'destination_well' must be included " "for elute parameter."
+                )
             if not isinstance(destination_well, Well):
                 raise TypeError("'destination_well' {} must be of type Well")
 
@@ -510,7 +509,7 @@ class SPEBuilders(InstructionBuilders):
             "flow_pressure": flow_pressure,
             "loading_flowrate": loading_flowrate,
             "resource_id": resource_id,
-            "destination_well": destination_well
+            "destination_well": destination_well,
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
@@ -523,11 +522,10 @@ class DispenseBuilders(InstructionBuilders):
     These builders are meant for helping to construct arguments in the
     `Protocol.dispense` method.
     """
+
     def __init__(self):
         super(DispenseBuilders, self).__init__()
-        self.SHAKE_PATHS = [
-            "landscape_linear"
-        ]
+        self.SHAKE_PATHS = ["landscape_linear"]
 
     @staticmethod
     # pragma pylint: disable=unused-argument
@@ -549,10 +547,12 @@ class DispenseBuilders(InstructionBuilders):
 
         position_dict = {
             name: parse_unit(position, "mm")
-            for name, position in locals().items() if position is not None
+            for name, position in locals().items()
+            if position is not None
         }
 
         return position_dict
+
     # pragma pylint: enable=unused-argument
 
     @staticmethod
@@ -571,10 +571,7 @@ class DispenseBuilders(InstructionBuilders):
             Column parameter of type {"column": int, "volume": Unit}
 
         """
-        return {
-            "column": int(column),
-            "volume": parse_unit(volume, "uL")
-        }
+        return {"column": int(column), "volume": parse_unit(volume, "uL")}
 
     def columns(self, columns):
         """
@@ -597,8 +594,7 @@ class DispenseBuilders(InstructionBuilders):
             Non-unique column indices
         """
         if not len(columns) > 0:
-            raise ValueError(
-                "There must be at least one column specified for columns.")
+            raise ValueError("There must be at least one column specified for columns.")
 
         column_list = [self.column(**_) for _ in columns]
 
@@ -643,7 +639,7 @@ class DispenseBuilders(InstructionBuilders):
             "duration": parse_unit(duration, "seconds"),
             "frequency": parse_unit(frequency, "hertz") if frequency else None,
             "path": path,
-            "amplitude": parse_unit(amplitude, "mm") if amplitude else None
+            "amplitude": parse_unit(amplitude, "mm") if amplitude else None,
         }
 
         return {k: v for k, v in shake_after.items() if v is not None}
@@ -654,31 +650,37 @@ class SpectrophotometryBuilders(InstructionBuilders):
     These builders are meant for helping to construct arguments for the
     `Spectrophotometry` instruction.
     """
+
     def __init__(self):
         super(SpectrophotometryBuilders, self).__init__()
         self.MODES = {
             "absorbance": self.absorbance_mode_params,
             "fluorescence": self.fluorescence_mode_params,
             "luminescence": self.luminescence_mode_params,
-            "shake": self.shake_mode_params
+            "shake": self.shake_mode_params,
         }
 
         self.READ_POSITIONS = ["top", "bottom"]
 
         self.SHAKE_PATHS = [
-            "portrait_linear", "landscape_linear",
-            "cw_orbital", "ccw_orbital",
-            "portrait_down_double_orbital", "landscape_down_double_orbital",
-            "portrait_up_double_orbital", "landscape_up_double_orbital",
-            "cw_diamond", "ccw_diamond"
+            "portrait_linear",
+            "landscape_linear",
+            "cw_orbital",
+            "ccw_orbital",
+            "portrait_down_double_orbital",
+            "landscape_down_double_orbital",
+            "portrait_up_double_orbital",
+            "landscape_up_double_orbital",
+            "cw_diamond",
+            "ccw_diamond",
         ]
 
-        self.Z_REFERENCES = ["plate_bottom", "plate_top", "well_bottom",
-                             "well_top"]
+        self.Z_REFERENCES = ["plate_bottom", "plate_top", "well_bottom", "well_top"]
 
-        self.Z_HEURISTICS = ["max_mean_read_without_saturation",
-                             "closest_distance_without_saturation"]
-
+        self.Z_HEURISTICS = [
+            "max_mean_read_without_saturation",
+            "closest_distance_without_saturation",
+        ]
 
     @staticmethod
     def wavelength_selection(shortpass=None, longpass=None, ideal=None):
@@ -699,12 +701,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
 
         selection = {
-            "shortpass":
-                parse_unit(shortpass, "nanometer") if shortpass else None,
-            "longpass":
-                parse_unit(longpass, "nanometer") if longpass else None,
-            "ideal":
-                parse_unit(ideal, "nanometer") if ideal else None,
+            "shortpass": parse_unit(shortpass, "nanometer") if shortpass else None,
+            "longpass": parse_unit(longpass, "nanometer") if longpass else None,
+            "ideal": parse_unit(ideal, "nanometer") if ideal else None,
         }
 
         selection = {k: v for k, v in selection.items() if v is not None}
@@ -746,18 +745,20 @@ class SpectrophotometryBuilders(InstructionBuilders):
         """
         if mode not in self.MODES.keys():
             raise ValueError(
-                f"Invalid mode {mode}, must be in valid modes "
-                f"{self.MODES.keys()}."
+                f"Invalid mode {mode}, must be in valid modes " f"{self.MODES.keys()}."
             )
 
-        return {
-            "mode": mode,
-            "mode_params": self.MODES[mode](**mode_params)
-        }
+        return {"mode": mode, "mode_params": self.MODES[mode](**mode_params)}
 
-    def absorbance_mode_params(self, wells, wavelength, num_flashes=None,
-                               settle_time=None, read_position=None,
-                               position_z=None):
+    def absorbance_mode_params(
+        self,
+        wells,
+        wavelength,
+        num_flashes=None,
+        settle_time=None,
+        read_position=None,
+        position_z=None,
+    ):
         """
         Parameters
         ----------
@@ -800,20 +801,15 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if not isinstance(wavelength, list):
             wavelength = [wavelength]
 
-        wavelength = [
-            parse_unit(_, "nanometer") for _ in wavelength
-        ]
+        wavelength = [parse_unit(_, "nanometer") for _ in wavelength]
 
         if num_flashes is not None and not isinstance(num_flashes, int):
-            raise TypeError(
-                f"Invalid num_flashes {num_flashes}, must be an int"
-            )
+            raise TypeError(f"Invalid num_flashes {num_flashes}, must be an int")
 
         if settle_time is not None:
             settle_time = parse_unit(settle_time, "second")
 
-        if read_position is not None and read_position \
-                not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self.READ_POSITIONS:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
                 f"{self.READ_POSITIONS}."
@@ -828,18 +824,26 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "num_flashes": num_flashes,
             "settle_time": settle_time,
             "read_position": read_position,
-            "position_z": position_z
+            "position_z": position_z,
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
 
         return mode_params
 
-    def fluorescence_mode_params(self, wells, excitation, emission,
-                                 num_flashes=None, settle_time=None,
-                                 lag_time=None, integration_time=None,
-                                 gain=None, read_position=None,
-                                 position_z=None):
+    def fluorescence_mode_params(
+        self,
+        wells,
+        excitation,
+        emission,
+        num_flashes=None,
+        settle_time=None,
+        lag_time=None,
+        integration_time=None,
+        gain=None,
+        read_position=None,
+        position_z=None,
+    ):
         """
         Parameters
         ----------
@@ -899,9 +903,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
         emission = [self.wavelength_selection(**_) for _ in emission]
 
         if num_flashes is not None and not isinstance(num_flashes, int):
-            raise ValueError(
-                f"Invalid num_flashes {num_flashes}, must be an int"
-            )
+            raise ValueError(f"Invalid num_flashes {num_flashes}, must be an int")
 
         if settle_time is not None:
             settle_time = parse_unit(settle_time, "second")
@@ -914,17 +916,14 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if gain is not None:
             if not isinstance(gain, (int, float)):
-                raise TypeError(
-                    f"Invalid gain {gain}, must be an int"
-                )
+                raise TypeError(f"Invalid gain {gain}, must be an int")
             gain = float(gain)
             if not 0 <= gain <= 1:
                 raise ValueError(
                     f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
-        if read_position is not None and read_position \
-                not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self.READ_POSITIONS:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
                 f"{self.READ_POSITIONS}."
@@ -943,17 +942,23 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "integration_time": integration_time,
             "gain": gain,
             "read_position": read_position,
-            "position_z": position_z
+            "position_z": position_z,
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
 
         return mode_params
 
-    def luminescence_mode_params(self, wells, num_flashes=None,
-                                 settle_time=None, integration_time=None,
-                                 gain=None, read_position=None,
-                                 position_z=None):
+    def luminescence_mode_params(
+        self,
+        wells,
+        num_flashes=None,
+        settle_time=None,
+        integration_time=None,
+        gain=None,
+        read_position=None,
+        position_z=None,
+    ):
         """
         Parameters
         ----------
@@ -996,9 +1001,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             wells = WellGroup([wells])
 
         if num_flashes is not None and not isinstance(num_flashes, int):
-            raise TypeError(
-                f"Invalid num_flashes {num_flashes}, must be an int"
-            )
+            raise TypeError(f"Invalid num_flashes {num_flashes}, must be an int")
 
         if settle_time is not None:
             settle_time = parse_unit(settle_time, "second")
@@ -1008,17 +1011,14 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         if gain is not None:
             if not isinstance(gain, (int, float)):
-                raise TypeError(
-                    f"Invalid gain {gain}, must be an int"
-                )
+                raise TypeError(f"Invalid gain {gain}, must be an int")
             gain = float(gain)
             if not 0 <= gain <= 1:
                 raise ValueError(
                     f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
-        if read_position is not None and read_position \
-                not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self.READ_POSITIONS:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
                 f"{self.READ_POSITIONS}."
@@ -1034,15 +1034,16 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "integration_time": integration_time,
             "gain": gain,
             "read_position": read_position,
-            "position_z": position_z
+            "position_z": position_z,
         }
 
         mode_params = {k: v for k, v in mode_params.items() if v is not None}
 
         return mode_params
 
-    def shake_mode_params(self, duration=None, frequency=None, path=None,
-                          amplitude=None):
+    def shake_mode_params(
+        self, duration=None, frequency=None, path=None, amplitude=None
+    ):
         """
         Parameters
         ----------
@@ -1063,10 +1064,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             Formatted mode_params for a shake mode.
         """
         return self._shake(
-            duration=duration,
-            frequency=frequency,
-            path=path,
-            amplitude=amplitude
+            duration=duration, frequency=frequency, path=path, amplitude=amplitude
         )
 
     def shake_before(self, duration, frequency=None, path=None, amplitude=None):
@@ -1091,10 +1089,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
         duration = parse_unit(duration, "second")
 
         return self._shake(
-            duration=duration,
-            frequency=frequency,
-            path=path,
-            amplitude=amplitude
+            duration=duration, frequency=frequency, path=path, amplitude=amplitude
         )
 
     def _shake(self, duration=None, frequency=None, path=None, amplitude=None):
@@ -1119,7 +1114,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "duration": duration,
             "frequency": frequency,
             "path": path,
-            "amplitude": amplitude
+            "amplitude": amplitude,
         }
 
         params = {k: v for k, v in params.items() if v is not None}
@@ -1160,12 +1155,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if displacement is not None:
             displacement = parse_unit(displacement, "mm")
 
-        return {
-            "manual": {
-                "reference": reference,
-                "displacement": displacement
-            }
-        }
+        return {"manual": {"reference": reference, "displacement": displacement}}
 
     def position_z_calculated(self, wells, heuristic=None):
         """Helper for building position_z parameters for a calculated
@@ -1195,9 +1185,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
         """
         if any([not is_valid_well(well) for well in wells]):
-            raise ValueError(
-                "Only an iterable of wells is allowed"
-            )
+            raise ValueError("Only an iterable of wells is allowed")
 
         if heuristic is not None and heuristic not in self.Z_HEURISTICS:
             raise ValueError(
@@ -1205,35 +1193,27 @@ class SpectrophotometryBuilders(InstructionBuilders):
                 f"was specified"
             )
 
-        return {
-            "calculated_from_wells": {
-                "wells": wells,
-                "heuristic": heuristic
-            }
-        }
+        return {"calculated_from_wells": {"wells": wells, "heuristic": heuristic}}
 
     def _position_z(self, position_z):
         """
         Helper method for validating position_z params
         """
-        suggested_msg = "Please use either `position_z_manual` or " \
-                        "`position_z_calculated` functions to construct " \
-                        "the appropriate z-position."
+        suggested_msg = (
+            "Please use either `position_z_manual` or "
+            "`position_z_calculated` functions to construct "
+            "the appropriate z-position."
+        )
 
         if not isinstance(position_z, dict):
             raise TypeError(
-                f"Invalid position_z {position_z}, must be a dict. "
-                f"{suggested_msg}"
+                f"Invalid position_z {position_z}, must be a dict. " f"{suggested_msg}"
             )
 
         if "calculated_from_wells" in position_z:
-            return self.position_z_calculated(
-                **position_z["calculated_from_wells"]
-            )
+            return self.position_z_calculated(**position_z["calculated_from_wells"])
         elif "manual" in position_z:
-            return self.position_z_manual(
-                **position_z["manual"]
-            )
+            return self.position_z_manual(**position_z["manual"])
         else:
             raise ValueError(
                 f"Invalid position_z {position_z} specified. {suggested_msg}"
@@ -1249,7 +1229,10 @@ class LiquidHandleBuilders(InstructionBuilders):
         self.liquid_classes = ["air", "default", "viscous"]
         self.xy_max = 1
         self.z_references = [
-            "well_top", "well_bottom", "liquid_surface", "preceding_position"
+            "well_top",
+            "well_bottom",
+            "liquid_surface",
+            "preceding_position",
         ]
         self.z_detection_methods = ["capacitance", "pressure", "tracked"]
         self.dispense_modes = ["air_displacement", "positive_displacement"]
@@ -1280,28 +1263,28 @@ class LiquidHandleBuilders(InstructionBuilders):
             If transports are specified, but empty
         """
         if not (location is None or isinstance(location, (Well, str))):
-            raise TypeError(
-                f"Location {location} is not of type str or Well"
-            )
+            raise TypeError(f"Location {location} is not of type str or Well")
 
         if transports is not None:
             if not isinstance(transports, Iterable):
-                raise ValueError(
-                    f"Transports: {transports} is not iterable"
-                )
+                raise ValueError(f"Transports: {transports} is not iterable")
             transports = [self.transport(**_) for _ in transports]
             if len(transports) < 1:
                 raise ValueError(
                     f"transports {transports} must be nonempty if specified"
                 )
 
-        return {
-            "location": location,
-            "transports": transports
-        }
+        return {"location": location, "transports": transports}
 
-    def transport(self, volume=None, pump_override_volume=None,
-                  flowrate=None, delay_time=None, mode_params=None, density=None):
+    def transport(
+        self,
+        volume=None,
+        pump_override_volume=None,
+        flowrate=None,
+        delay_time=None,
+        mode_params=None,
+        density=None,
+    ):
         """Helper for building transports
 
         Parameters
@@ -1347,12 +1330,13 @@ class LiquidHandleBuilders(InstructionBuilders):
             "pump_override_volume": pump_override_volume,
             "flowrate": flowrate,
             "delay_time": delay_time,
-            "mode_params": mode_params
+            "mode_params": mode_params,
         }
 
     @staticmethod
-    def flowrate(target, initial=None, cutoff=None, acceleration=None,
-                 deceleration=None):
+    def flowrate(
+        target, initial=None, cutoff=None, acceleration=None, deceleration=None
+    ):
         """Helper for building flowrates
 
         Parameters
@@ -1388,11 +1372,17 @@ class LiquidHandleBuilders(InstructionBuilders):
             "initial": initial,
             "cutoff": cutoff,
             "acceleration": acceleration,
-            "deceleration": deceleration
+            "deceleration": deceleration,
         }
 
-    def mode_params(self, liquid_class=None, position_x=None, position_y=None,
-                    position_z=None, tip_position=None):
+    def mode_params(
+        self,
+        liquid_class=None,
+        position_x=None,
+        position_y=None,
+        position_z=None,
+        tip_position=None,
+    ):
         """Helper for building transport mode_params
 
         Mode params contain information about tip positioning and the
@@ -1435,12 +1425,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             )
 
         tip_position = self._merge_param_dicts(
-            dict(
-                position_x=position_x,
-                position_y=position_y,
-                position_z=position_z
-            ),
-            tip_position
+            dict(position_x=position_x, position_y=position_y, position_z=position_z),
+            tip_position,
         )
         position_x = tip_position.get("position_x")
         position_y = tip_position.get("position_y")
@@ -1460,8 +1446,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             "tip_position": {
                 "position_x": position_x,
                 "position_y": position_y,
-                "position_z": position_z
-            }
+                "position_z": position_z,
+            },
         }
 
     @staticmethod
@@ -1485,10 +1471,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         if acceleration is not None:
             acceleration = parse_unit(acceleration, "mm/s/s")
 
-        return {
-            "target": target,
-            "acceleration": acceleration
-        }
+        return {"target": target, "acceleration": acceleration}
 
     def position_xy(self, position=None, move_rate=None):
         """Helper for building position_x and position_y parameters
@@ -1515,9 +1498,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             If position is not in range
         """
         if not (position is None or isinstance(position, (float, int))):
-            raise TypeError(
-                f"position {position} is not of type float/int"
-            )
+            raise TypeError(f"position {position} is not of type float/int")
         if not (position is None or -self.xy_max <= position <= self.xy_max):
             raise ValueError(
                 f"position {position} was not in range {-self.xy_max} - "
@@ -1527,15 +1508,19 @@ class LiquidHandleBuilders(InstructionBuilders):
         if move_rate is not None:
             move_rate = self.move_rate(**move_rate)
 
-        return {
-            "position": position,
-            "move_rate": move_rate
-        }
+        return {"position": position, "move_rate": move_rate}
 
-    def position_z(self, reference=None, offset=None, move_rate=None,
-                   detection_method=None, detection_threshold=None,
-                   detection_duration=None, detection_fallback=None,
-                   detection=None):
+    def position_z(
+        self,
+        reference=None,
+        offset=None,
+        move_rate=None,
+        detection_method=None,
+        detection_threshold=None,
+        detection_duration=None,
+        detection_fallback=None,
+        detection=None,
+    ):
         """Helper for building position_z parameters
 
         Parameters
@@ -1598,9 +1583,9 @@ class LiquidHandleBuilders(InstructionBuilders):
                 method=detection_method,
                 threshold=detection_threshold,
                 duration=detection_duration,
-                fallback=detection_fallback
+                fallback=detection_fallback,
             ),
-            detection
+            detection,
         )
 
         if any(detection.values()) and not reference == "liquid_surface":
@@ -1638,7 +1623,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             "reference": reference,
             "offset": offset,
             "move_rate": move_rate,
-            "detection": detection
+            "detection": detection,
         }
 
     @staticmethod
@@ -1657,12 +1642,9 @@ class LiquidHandleBuilders(InstructionBuilders):
             mode_params for a LiquidHandle instruction
         """
 
-        return {
-            "tip_type": tip_type
-        }
+        return {"tip_type": tip_type}
 
-    def mix(self, volume, repetitions, initial_z,
-            asp_flowrate=None, dsp_flowrate=None):
+    def mix(self, volume, repetitions, initial_z, asp_flowrate=None, dsp_flowrate=None):
         """Helper for building mix params for Transfer LiquidHandleMethods
 
         Parameters
@@ -1705,7 +1687,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             "repetitions": repetitions,
             "initial_z": initial_z,
             "asp_flowrate": asp_flowrate,
-            "dsp_flowrate": dsp_flowrate
+            "dsp_flowrate": dsp_flowrate,
         }
 
     def blowout(self, volume, initial_z, flowrate=None):
@@ -1732,11 +1714,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         if flowrate is not None:
             flowrate = self.flowrate(**flowrate)
 
-        return {
-            "volume": volume,
-            "initial_z": initial_z,
-            "flowrate": flowrate
-        }
+        return {"volume": volume, "initial_z": initial_z, "flowrate": flowrate}
 
     def desired_mode(self, transports=None, mode=None):
         """Helper for selecting dispense mode based on liquid_class name
@@ -1823,7 +1801,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         liquid_class_to_dispense_mode = {
             "air": "air_displacement",
             "default": "air_displacement",
-            "viscous": "positive_displacement"
+            "viscous": "positive_displacement",
         }
         if mode:
             if mode not in self.dispense_modes:
@@ -1834,8 +1812,9 @@ class LiquidHandleBuilders(InstructionBuilders):
             return mode
 
         # get liquid_classes from transport input
-        liquid_classes = set([transport["mode_params"]["liquid_class"]
-                              for transport in transports])
+        liquid_classes = set(
+            [transport["mode_params"]["liquid_class"] for transport in transports]
+        )
         # remove automatically added 'air' (e.g. from blowout steps) and None
         # classes.
         other_classes = liquid_classes - {"air", None}
@@ -1846,9 +1825,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         for other_class in other_classes:
             # resolve mode for different other_class classes (except for None).
             if not isinstance(other_class, str):
-                raise TypeError(
-                    f"liquid_class: {other_class} is not of type str"
-                )
+                raise TypeError(f"liquid_class: {other_class} is not of type str")
             if other_class not in self.liquid_classes:
                 raise ValueError(
                     f"liquid_class: {other_class} must be one of the "
@@ -1882,8 +1859,10 @@ class LiquidHandleBuilders(InstructionBuilders):
 class PlateReaderBuilders(InstructionBuilders):
     """Helpers for building parameters for plate reading instructions
     """
-    def incubate_params(self, duration, shake_amplitude=None,
-                        shake_orbital=None, shaking=None):
+
+    def incubate_params(
+        self, duration, shake_amplitude=None, shake_orbital=None, shaking=None
+    ):
         """
         Create a dictionary with incubation parameters which can be used as
         input for instructions. Currently supports plate reader instructions and
@@ -1924,8 +1903,7 @@ class PlateReaderBuilders(InstructionBuilders):
             raise ValueError(f"duration: {duration} is not positive")
 
         shaking = self._merge_param_dicts(
-            dict(amplitude=shake_amplitude, orbital=shake_orbital),
-            shaking
+            dict(amplitude=shake_amplitude, orbital=shake_orbital), shaking
         )
         amplitude = shaking.get("amplitude")
         orbital = shaking.get("orbital")
@@ -1933,13 +1911,9 @@ class PlateReaderBuilders(InstructionBuilders):
         if (amplitude is not None) and (orbital is not None):
             amplitude = parse_unit(amplitude, "millimeter")
             if amplitude <= Unit(0, "millimeter"):
-                raise ValueError(
-                    f"shake_amplitude: {amplitude} is not positive"
-                )
+                raise ValueError(f"shake_amplitude: {amplitude} is not positive")
             if not isinstance(orbital, bool):
-                raise TypeError(
-                    f"shake_orbital: {orbital} is not a bool"
-                )
+                raise TypeError(f"shake_orbital: {orbital} is not a bool")
         elif (amplitude is not None) ^ (orbital is not None):
             raise ValueError(
                 f"shake_amplitude: {amplitude} and shake_orbital: {orbital} "
@@ -1948,10 +1922,7 @@ class PlateReaderBuilders(InstructionBuilders):
 
         return {
             "duration": duration,
-            "shaking": {
-                "amplitude": amplitude,
-                "orbital": orbital
-            }
+            "shaking": {"amplitude": amplitude, "orbital": orbital},
         }
 
 
@@ -1964,12 +1935,22 @@ class EvaporateBuilders(InstructionBuilders):
         super(EvaporateBuilders, self).__init__()
         self.valid_modes = ["rotate", "centrifuge", "vortex", "blowdown"]
         self.valid_gases = ["nitrogen", "argon", "helium"]
-        self.rotary_params = ["flask_volume", "rotation_speed",
-                              "vacuum_pressure", "condenser_temperature"]
-        self.centrifugal_params = ["spin_acceleration", "vacuum_pressure",
-                                   "condenser_temperature"]
-        self.vortex_params = ["vortex_speed", "vacuum_pressure",
-                              "condenser_temperature"]
+        self.rotary_params = [
+            "flask_volume",
+            "rotation_speed",
+            "vacuum_pressure",
+            "condenser_temperature",
+        ]
+        self.centrifugal_params = [
+            "spin_acceleration",
+            "vacuum_pressure",
+            "condenser_temperature",
+        ]
+        self.vortex_params = [
+            "vortex_speed",
+            "vacuum_pressure",
+            "condenser_temperature",
+        ]
         self.blowdown_params = ["gas", "blow_rate", "vortex_speed"]
 
     def get_mode_params(self, mode, mode_params):
@@ -2010,7 +1991,7 @@ class EvaporateBuilders(InstructionBuilders):
             "rotary": self.rotary_params,
             "centrifugal": self.centrifugal_params,
             "vortex": self.vortex_params,
-            "blowdown": self.blowdown_params
+            "blowdown": self.blowdown_params,
         }
         if mode not in self.valid_modes:
             raise ValueError(
@@ -2029,33 +2010,25 @@ class EvaporateBuilders(InstructionBuilders):
         speed_unit_dict = {
             "rotation_speed": "rpm",
             "vortex_speed": "rpm",
-            "spin_acceleration": "g"
+            "spin_acceleration": "g",
         }
         mode_param_output = {}
-        speed_param = [(k) for k in mode_params.keys()
-                       if k in speed_unit_dict.keys()]
+        speed_param = [(k) for k in mode_params.keys() if k in speed_unit_dict.keys()]
         if len(speed_param) > 1:
-            raise TypeError(
-                f"There are multiple speed parameters: {speed_param}."
-            )
+            raise TypeError(f"There are multiple speed parameters: {speed_param}.")
 
         for s in speed_param:
             if Unit(mode_params[s]).magnitude <= 0:
-                raise ValueError(
-                    f"{s} is less than or equal to 0."
-                )
+                raise ValueError(f"{s} is less than or equal to 0.")
             else:
-                mode_param_output[s] = parse_unit(
-                    mode_params[s], speed_unit_dict[s])
+                mode_param_output[s] = parse_unit(mode_params[s], speed_unit_dict[s])
 
         if "vacuum_pressure" in mode_params.keys():
             pressure = mode_params["vacuum_pressure"]
             if pressure is not None:
                 pressure = parse_unit(pressure, "torr")
                 if pressure <= Unit("0: torr"):
-                    raise ValueError(
-                        "vacuum_pressure cannot be lower than 0 torr."
-                    )
+                    raise ValueError("vacuum_pressure cannot be lower than 0 torr.")
                 else:
                     mode_param_output["vacuum_pressure"] = pressure
 
@@ -2085,6 +2058,7 @@ class EvaporateBuilders(InstructionBuilders):
 class GelPurifyBuilders(InstructionBuilders):
     """Helpers for building GelPurify instructions
     """
+
     def extract(self, source, band_list, lane=None, gel=None):
         """Helper for building extract params for gel_purify
 
@@ -2118,15 +2092,17 @@ class GelPurifyBuilders(InstructionBuilders):
 
         band_list = [self.band(**_) for _ in band_list]
 
-        return {
-            "source": source,
-            "band_list": band_list,
-            "lane": lane,
-            "gel": gel
-        }
+        return {"source": source, "band_list": band_list, "lane": lane, "gel": gel}
 
-    def band(self, elution_buffer, elution_volume, destination,
-             min_bp=None, max_bp=None, band_size_range=None):
+    def band(
+        self,
+        elution_buffer,
+        elution_volume,
+        destination,
+        min_bp=None,
+        max_bp=None,
+        band_size_range=None,
+    ):
         """Helper for building band params for gel_purify
 
         Parameters
@@ -2168,8 +2144,7 @@ class GelPurifyBuilders(InstructionBuilders):
             raise TypeError(f"destination: {destination} is not a Well")
 
         band_size_range = self._merge_param_dicts(
-            dict(min_bp=min_bp, max_bp=max_bp),
-            band_size_range
+            dict(min_bp=min_bp, max_bp=max_bp), band_size_range
         )
         min_bp = band_size_range.get("min_bp")
         max_bp = band_size_range.get("max_bp")
@@ -2181,18 +2156,13 @@ class GelPurifyBuilders(InstructionBuilders):
             raise TypeError(f"max_bp {max_bp} was not an int")
 
         if not min_bp < max_bp:
-            raise ValueError(
-                f"min_bp: {min_bp} is not less than max_bp: {max_bp}"
-            )
+            raise ValueError(f"min_bp: {min_bp} is not less than max_bp: {max_bp}")
 
         return {
             "destination": destination,
             "elution_volume": elution_volume,
             "elution_buffer": elution_buffer,
-            "band_size_range": {
-                "min_bp": min_bp,
-                "max_bp": max_bp
-            }
+            "band_size_range": {"min_bp": min_bp, "max_bp": max_bp},
         }
 
 
@@ -2200,6 +2170,7 @@ class GelPurifyBuilders(InstructionBuilders):
 class MagneticTransferBuilders(InstructionBuilders):
     """Helpers for building MagneticTransfer instruction parameters
     """
+
     @staticmethod
     def mag_dry(object, duration):
         """Helper for building mag_dry sub operations for MagneticTransfer
@@ -2229,14 +2200,10 @@ class MagneticTransferBuilders(InstructionBuilders):
         if not isinstance(object, Container):
             raise TypeError(f"object: {object} is not a Container")
         duration = parse_unit(duration, "seconds")
-        return {
-            "object": object,
-            "duration": duration
-        }
+        return {"object": object, "duration": duration}
 
     @staticmethod
-    def mag_incubate(object, duration, magnetize, tip_position,
-                     temperature=None):
+    def mag_incubate(object, duration, magnetize, tip_position, temperature=None):
         """Helper for building mag_incubate sub operations for MagneticTransfer
 
         Parameters
@@ -2278,9 +2245,7 @@ class MagneticTransferBuilders(InstructionBuilders):
             raise TypeError(f"magnetize: {magnetize} is not a bool")
         tip_position = float(tip_position)
         if tip_position < 0:
-            raise ValueError(
-                f"tip_position: {tip_position} must be >= 0"
-            )
+            raise ValueError(f"tip_position: {tip_position} must be >= 0")
         if temperature is not None:
             parse_unit(temperature, "celsius")
         return {
@@ -2288,12 +2253,13 @@ class MagneticTransferBuilders(InstructionBuilders):
             "duration": duration,
             "magnetize": magnetize,
             "tip_position": tip_position,
-            "temperature": temperature
+            "temperature": temperature,
         }
 
     @staticmethod
-    def mag_collect(object, cycles, pause_duration, bottom_position=None,
-                    temperature=None):
+    def mag_collect(
+        object, cycles, pause_duration, bottom_position=None, temperature=None
+    ):
         """Helper for building mag_collect sub operations for MagneticTransfer
 
         Parameters
@@ -2335,9 +2301,7 @@ class MagneticTransferBuilders(InstructionBuilders):
         pause_duration = parse_unit(pause_duration, "seconds")
         bottom_position = float(bottom_position)
         if bottom_position < 0:
-            raise ValueError(
-                f"bottom_position: {bottom_position} must be >= 0"
-            )
+            raise ValueError(f"bottom_position: {bottom_position} must be >= 0")
         if temperature is not None:
             parse_unit(temperature, "celsius")
         return {
@@ -2345,12 +2309,13 @@ class MagneticTransferBuilders(InstructionBuilders):
             "cycles": cycles,
             "pause_duration": pause_duration,
             "bottom_position": bottom_position,
-            "temperature": temperature
+            "temperature": temperature,
         }
 
     @staticmethod
-    def mag_release(object, duration, frequency, center=None, amplitude=None,
-                    temperature=None):
+    def mag_release(
+        object, duration, frequency, center=None, amplitude=None, temperature=None
+    ):
         """Helper for building mag_release sub operations for MagneticTransfer
 
         Parameters
@@ -2394,9 +2359,7 @@ class MagneticTransferBuilders(InstructionBuilders):
         if center is not None:
             center = float(center)
             if center < 0:
-                raise ValueError(
-                    f"center: {center} must be >= 0"
-                )
+                raise ValueError(f"center: {center} must be >= 0")
         if amplitude is not None:
             amplitude = float(amplitude)
         if center is not None and amplitude is not None and amplitude > center:
@@ -2412,12 +2375,19 @@ class MagneticTransferBuilders(InstructionBuilders):
             "frequency": frequency,
             "center": center,
             "amplitude": amplitude,
-            "temperature": temperature
+            "temperature": temperature,
         }
 
     @staticmethod
-    def mag_mix(object, duration, frequency, center=None, amplitude=None,
-                magnetize=None, temperature=None):
+    def mag_mix(
+        object,
+        duration,
+        frequency,
+        center=None,
+        amplitude=None,
+        magnetize=None,
+        temperature=None,
+    ):
         """Helper for building mag_mix sub operations for MagneticTransfer
 
         Parameters
@@ -2466,9 +2436,7 @@ class MagneticTransferBuilders(InstructionBuilders):
         if center is not None:
             center = float(center)
             if center < 0:
-                raise ValueError(
-                    f"center: {center} must be >= 0"
-                )
+                raise ValueError(f"center: {center} must be >= 0")
         if amplitude is not None:
             amplitude = float(amplitude)
         if center is not None and amplitude is not None and amplitude > center:
@@ -2488,7 +2456,7 @@ class MagneticTransferBuilders(InstructionBuilders):
             "center": center,
             "amplitude": amplitude,
             "magnetize": magnetize,
-            "temperature": temperature
+            "temperature": temperature,
         }
 
 
@@ -2496,6 +2464,7 @@ class FlowCytometryBuilders(InstructionBuilders):
     """
     Builders for FlowCytometry instructions.
     """
+
     def __init__(self):
         super(FlowCytometryBuilders, self).__init__()
         self.excitation = None
@@ -2536,7 +2505,8 @@ class FlowCytometryBuilders(InstructionBuilders):
             raise TypeError("channels must be a list of dict.")
 
         if area_scaling_factor is not None and not isinstance(
-                area_scaling_factor, Number):
+            area_scaling_factor, Number
+        ):
             raise TypeError("area_scaling_factor must be a number.")
 
         if power is not None:
@@ -2555,8 +2525,14 @@ class FlowCytometryBuilders(InstructionBuilders):
             "channels": channels,
         }
 
-    def channel(self, emission_filter, detector_gain, measurements=None,
-                trigger_threshold=None, trigger_logic=None):
+    def channel(
+        self,
+        emission_filter,
+        detector_gain,
+        measurements=None,
+        trigger_threshold=None,
+        trigger_logic=None,
+    ):
         """
         Generates a dict of channel parameters.
 
@@ -2586,8 +2562,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         dict
             A dict of channel parameters.
         """
-        if trigger_threshold is not None and not isinstance(
-                trigger_threshold, int):
+        if trigger_threshold is not None and not isinstance(trigger_threshold, int):
             raise TypeError("trigger_threshold must be of type int.")
 
         trigger_modes = ("and", "or")
@@ -2607,7 +2582,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic
+            "trigger_logic": trigger_logic,
         }
 
     def emission_filter(self, channel_name, shortpass=None, longpass=None):
@@ -2635,11 +2610,12 @@ class FlowCytometryBuilders(InstructionBuilders):
             A dict of emission_filter params.
         """
         gating_modes = ("FSC", "SSC")
-        if channel_name in gating_modes and (shortpass or longpass or
-                                             self.excitation):
-            raise ValueError(f"Cannot specify shortpass/longpass/excitation "
-                             f"parameters if channel_name is one "
-                             f"{gating_modes}")
+        if channel_name in gating_modes and (shortpass or longpass or self.excitation):
+            raise ValueError(
+                f"Cannot specify shortpass/longpass/excitation "
+                f"parameters if channel_name is one "
+                f"{gating_modes}"
+            )
 
         if shortpass is not None:
             shortpass = parse_unit(shortpass, "nanometers")
@@ -2650,7 +2626,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         return {
             "channel_name": channel_name,
             "shortpass": shortpass,
-            "longpass": longpass
+            "longpass": longpass,
         }
 
     @staticmethod
@@ -2678,19 +2654,21 @@ class FlowCytometryBuilders(InstructionBuilders):
             A dict of measurements params.
         """
 
-        if any(not isinstance(_, (bool, type(None)))
-               for _ in(area, height, width)):
+        if any(not isinstance(_, (bool, type(None))) for _ in (area, height, width)):
             raise TypeError("area, height, and width must be of type bool.")
 
-        return {
-            "area": area,
-            "height": height,
-            "width": width
-        }
+        return {"area": area, "height": height, "width": width}
 
-    def collection_conditions(self, acquisition_volume, flowrate, wait_time,
-                              mix_cycles, mix_volume, rinse_cycles,
-                              stop_criteria=None):
+    def collection_conditions(
+        self,
+        acquisition_volume,
+        flowrate,
+        wait_time,
+        mix_cycles,
+        mix_volume,
+        rinse_cycles,
+        stop_criteria=None,
+    ):
         """
         Generates a dict of collection_conditions parameters.
 
@@ -2746,7 +2724,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "wait_time": wait_time,
             "mix_cycles": mix_cycles,
             "mix_volume": mix_volume,
-            "rinse_cycles": rinse_cycles
+            "rinse_cycles": rinse_cycles,
         }
 
     @staticmethod
@@ -2782,8 +2760,4 @@ class FlowCytometryBuilders(InstructionBuilders):
         if time is not None:
             time = parse_unit(time, "s")
 
-        return {
-            "volume": volume,
-            "events": events,
-            "time": time
-        }
+        return {"volume": volume, "events": events, "time": time}

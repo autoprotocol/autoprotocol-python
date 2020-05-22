@@ -41,5 +41,3 @@ harness.seal_on_store()
 harness.Manifest
 ~~~~~~~~~~~~~~~~
 .. autoclass:: autoprotocol.harness.Manifest
-
-

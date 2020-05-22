@@ -14,6 +14,7 @@ class TipType(namedtuple("TipType", ["name", "volume"])):
     """
     The TipType class holds the properties of a TipType
     """
+
     def __new__(cls, name, volume):
         """
         Parameters

@@ -27,7 +27,7 @@ def dummy_type():
         shortname="dummy",
         col_count=5,
         dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter")
+        safe_min_volume_ul=Unit(30, "microliter"),
     )
 
 
@@ -49,8 +49,8 @@ def dummy_tube():
             shortname="dummy",
             col_count=1,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -72,8 +72,8 @@ def dummy_big():
             shortname="dummy",
             col_count=5,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -95,8 +95,8 @@ def dummy_96():
             shortname="dummy",
             col_count=12,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -118,8 +118,8 @@ def dummy_reservoir_row():
             shortname="dummy",
             col_count=1,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -141,8 +141,8 @@ def dummy_reservoir_column():
             shortname="dummy",
             col_count=12,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -164,8 +164,8 @@ def dummy_24():
             shortname="dummy",
             col_count=6,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -187,8 +187,8 @@ def dummy_384():
             shortname="dummy",
             col_count=24,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -210,8 +210,8 @@ def dummy_1536():
             shortname="dummy",
             col_count=48,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -233,8 +233,8 @@ def dummy_pathological():
             shortname="dummy",
             col_count=96,
             dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter")
-        )
+            safe_min_volume_ul=Unit(30, "microliter"),
+        ),
     )
 
 
@@ -258,6 +258,6 @@ def dummy_echo():
             dead_volume_ul=Unit(15, "microliter"),
             safe_min_volume_ul=Unit(15, "microliter"),
             true_max_vol_ul=Unit(135, "microliter"),
-            vendor="Labcyte"
-        )
+            vendor="Labcyte",
+        ),
     )

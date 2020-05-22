@@ -34,8 +34,8 @@ class Mix(LiquidHandleMethod):
     LiquidHandleMethod : base LiquidHandleMethod with reused functionality
     Protocol.mix : the standard interface for interacting with Mix
     """
-    def __init__(self, tip_type=None, blowout=True, repetitions=None,
-                 position_z=None):
+
+    def __init__(self, tip_type=None, blowout=True, repetitions=None, position_z=None):
         """
         Parameters
         ----------
@@ -69,9 +69,10 @@ class Mix(LiquidHandleMethod):
         return any(_ and _._has_calibration() for _ in liquids)
 
     def _calculate_overage_volume(self, volume):
-        calibration_overage = self._estimate_calibrated_volume(
-            volume, self._liquid, self.tip_type
-        ) - volume
+        calibration_overage = (
+            self._estimate_calibrated_volume(volume, self._liquid, self.tip_type)
+            - volume
+        )
 
         return calibration_overage
 
@@ -79,7 +80,7 @@ class Mix(LiquidHandleMethod):
         return LiquidHandle.builders.blowout(
             volume=Unit("5:ul"),
             initial_z=self.default_well_top_position_z(),
-            flowrate=None
+            flowrate=None,
         )
 
     def _mix_transports(self, volume):
@@ -144,22 +145,16 @@ class Mix(LiquidHandleMethod):
         position_z = self.position_z or self.default_position_z(volume)
 
         if not isinstance(repetitions, int):
-            raise TypeError(
-                f"Mix repetitions {repetitions} was not an int."
-            )
+            raise TypeError(f"Mix repetitions {repetitions} was not an int.")
         position_z = LiquidHandle.builders.position_z(**position_z)
         self._mix(
             volume=volume,
             repetitions=repetitions,
             initial_z=position_z,
-            asp_flowrate=self._liquid._get_aspirate_flowrate(
-                volume, self.tip_type
-            ),
-            dsp_flowrate=self._liquid._get_dispense_flowrate(
-                volume, self.tip_type
-            ),
+            asp_flowrate=self._liquid._get_aspirate_flowrate(volume, self.tip_type),
+            dsp_flowrate=self._liquid._get_dispense_flowrate(volume, self.tip_type),
             delay_time=self._liquid.delay_time,
-            liquid_class=self._liquid.name
+            liquid_class=self._liquid.name,
         )
 
     # pylint: disable=unused-argument

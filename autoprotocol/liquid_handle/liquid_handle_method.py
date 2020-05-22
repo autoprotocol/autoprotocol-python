@@ -150,20 +150,14 @@ class LiquidHandleMethod(object):
         if self._is_single_channel():
             tip_types = [
                 TipType("generic_1_50", Unit("50:ul")),
-                TipType("generic_1_1000", Unit("1000:ul"))
+                TipType("generic_1_1000", Unit("1000:ul")),
             ]
         elif self._shape["format"] == "SBS96":
-            tip_types = [
-                TipType("generic_96_180", Unit("180:ul"))
-            ]
+            tip_types = [TipType("generic_96_180", Unit("180:ul"))]
         elif self._shape["format"] == "SBS384":
-            tip_types = [
-                TipType("generic_384_30", Unit("30:ul"))
-            ]
+            tip_types = [TipType("generic_384_30", Unit("30:ul"))]
         else:
-            raise RuntimeError(
-                f"No tip types supported for shape: {self._shape}"
-            )
+            raise RuntimeError(f"No tip types supported for shape: {self._shape}")
 
         return tip_types
 
@@ -321,10 +315,18 @@ class LiquidHandleMethod(object):
         """
         return self._shape["rows"] == 1 and self._shape["columns"] == 1
 
-    def _aspirate_simple(self, volume, initial_z,
-                         position_x=None, position_y=None,
-                         calibrated_vol=None, flowrate=None, delay_time=None,
-                         liquid_class=None, density=None):
+    def _aspirate_simple(
+        self,
+        volume,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
+    ):
         """Helper function for generating aspirate transports
 
         Parameters
@@ -349,32 +351,41 @@ class LiquidHandleMethod(object):
             the density of liquid being aspirated
         """
 
-        followup_z = self._move_to_initial_position(
-            position_x, position_y, initial_z
-        )
+        followup_z = self._move_to_initial_position(position_x, position_y, initial_z)
 
         mode_params = LiquidHandle.builders.mode_params(
             position_x=position_x,
             position_y=position_y,
             position_z=followup_z,
-            liquid_class=liquid_class
+            liquid_class=liquid_class,
         )
 
-        self._transports += [LiquidHandle.builders.transport(
-            volume=-volume,
-            density=density,
-            # pylint: disable=invalid-unary-operand-type
-            pump_override_volume=-calibrated_vol if calibrated_vol else None,
-            flowrate=flowrate,
-            mode_params=mode_params,
-            delay_time=delay_time
-        )]
+        self._transports += [
+            LiquidHandle.builders.transport(
+                volume=-volume,
+                density=density,
+                # pylint: disable=invalid-unary-operand-type
+                pump_override_volume=-calibrated_vol if calibrated_vol else None,
+                flowrate=flowrate,
+                mode_params=mode_params,
+                delay_time=delay_time,
+            )
+        ]
 
-    def _aspirate_with_prime(self, volume, prime_vol, initial_z,
-                             position_x=None, position_y=None,
-                             calibrated_vol=None,
-                             asp_flowrate=None, dsp_flowrate=None,
-                             delay_time=None, liquid_class=None, density=None):
+    def _aspirate_with_prime(
+        self,
+        volume,
+        prime_vol,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        asp_flowrate=None,
+        dsp_flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
+    ):
         """Helper function for generating aspiration with priming
 
         Parameters
@@ -403,15 +414,13 @@ class LiquidHandleMethod(object):
             the density of liquid being aspirated
         """
 
-        followup_z = self._move_to_initial_position(
-            position_x, position_y, initial_z
-        )
+        followup_z = self._move_to_initial_position(position_x, position_y, initial_z)
 
         mode_params = LiquidHandle.builders.mode_params(
             position_x=position_x,
             position_y=position_y,
             position_z=followup_z,
-            liquid_class=liquid_class
+            liquid_class=liquid_class,
         )
 
         # Aspirate with priming volume
@@ -422,18 +431,16 @@ class LiquidHandleMethod(object):
                 pump_override_volume=-prime_vol,
                 flowrate=asp_flowrate,
                 mode_params=mode_params,
-                delay_time=delay_time
+                delay_time=delay_time,
             ),
             LiquidHandle.builders.transport(
                 volume=-volume,
                 density=density,
                 # pylint: disable=invalid-unary-operand-type
-                pump_override_volume=(
-                    -calibrated_vol if calibrated_vol else None
-                ),
+                pump_override_volume=(-calibrated_vol if calibrated_vol else None),
                 flowrate=asp_flowrate,
                 mode_params=mode_params,
-                delay_time=delay_time
+                delay_time=delay_time,
             ),
             LiquidHandle.builders.transport(
                 volume=prime_vol,
@@ -441,14 +448,22 @@ class LiquidHandleMethod(object):
                 pump_override_volume=prime_vol,
                 flowrate=dsp_flowrate,
                 mode_params=mode_params,
-                delay_time=delay_time
-            )
+                delay_time=delay_time,
+            ),
         ]
 
-    def _dispense_simple(self, volume, initial_z,
-                         position_x=None, position_y=None,
-                         calibrated_vol=None, flowrate=None, delay_time=None,
-                         liquid_class=None, density=None):
+    def _dispense_simple(
+        self,
+        volume,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
+    ):
         """Helper function for generating dispense transports
 
         Parameters
@@ -473,30 +488,38 @@ class LiquidHandleMethod(object):
             the density of liquid to be dispensed
         """
 
-        followup_z = self._move_to_initial_position(
-            position_x, position_y, initial_z
-        )
+        followup_z = self._move_to_initial_position(position_x, position_y, initial_z)
 
         mode_params = LiquidHandle.builders.mode_params(
             position_x=position_x,
             position_y=position_y,
             position_z=followup_z,
-            liquid_class=liquid_class
+            liquid_class=liquid_class,
         )
 
-        self._transports += [LiquidHandle.builders.transport(
-            volume=volume,
-            density=density,
-            pump_override_volume=calibrated_vol if calibrated_vol else None,
-            flowrate=flowrate,
-            mode_params=mode_params,
-            delay_time=delay_time
-        )]
+        self._transports += [
+            LiquidHandle.builders.transport(
+                volume=volume,
+                density=density,
+                pump_override_volume=calibrated_vol if calibrated_vol else None,
+                flowrate=flowrate,
+                mode_params=mode_params,
+                delay_time=delay_time,
+            )
+        ]
 
-    def _mix(self, volume, repetitions,
-             position_x=None, position_y=None, initial_z=None,
-             asp_flowrate=None, dsp_flowrate=None,
-             delay_time=None, liquid_class=None):
+    def _mix(
+        self,
+        volume,
+        repetitions,
+        position_x=None,
+        position_y=None,
+        initial_z=None,
+        asp_flowrate=None,
+        dsp_flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+    ):
         """Helper function for generating mix transports
 
         Parameters
@@ -522,36 +545,33 @@ class LiquidHandleMethod(object):
             the name of the liquid class being dispensed
         """
 
-        followup_z = self._move_to_initial_position(
-            position_x, position_y, initial_z
-        )
+        followup_z = self._move_to_initial_position(position_x, position_y, initial_z)
 
         mode_params = LiquidHandle.builders.mode_params(
             position_x=position_x,
             position_y=position_y,
             position_z=followup_z,
-            liquid_class=liquid_class
+            liquid_class=liquid_class,
         )
 
-        self._transports += (
-            [
-                LiquidHandle.builders.transport(
-                    volume=-volume,
-                    flowrate=asp_flowrate,
-                    mode_params=mode_params,
-                    delay_time=delay_time
-                ),
-                LiquidHandle.builders.transport(
-                    volume=volume,
-                    flowrate=dsp_flowrate,
-                    mode_params=mode_params,
-                    delay_time=delay_time
-                )
-            ] * repetitions
-        )
+        self._transports += [
+            LiquidHandle.builders.transport(
+                volume=-volume,
+                flowrate=asp_flowrate,
+                mode_params=mode_params,
+                delay_time=delay_time,
+            ),
+            LiquidHandle.builders.transport(
+                volume=volume,
+                flowrate=dsp_flowrate,
+                mode_params=mode_params,
+                delay_time=delay_time,
+            ),
+        ] * repetitions
 
-    def _move_to_initial_position(self, position_x=None, position_y=None,
-                                  position_z=None):
+    def _move_to_initial_position(
+        self, position_x=None, position_y=None, position_z=None
+    ):
         """Moves to a given position_z and then returns a followup one
 
         Takes an initial position_z and moves to it before returning a
@@ -587,7 +607,7 @@ class LiquidHandleMethod(object):
                     mode_params=LiquidHandle.builders.mode_params(
                         position_x=position_x,
                         position_y=position_y,
-                        position_z=position_z
+                        position_z=position_z,
                     )
                 )
             ]
@@ -606,9 +626,7 @@ class LiquidHandleMethod(object):
         """
         well_top_z = LiquidHandle.builders.transport(
             mode_params=LiquidHandle.builders.mode_params(
-                position_z=LiquidHandle.builders.position_z(
-                    reference="well_top"
-                )
+                position_z=LiquidHandle.builders.position_z(reference="well_top")
             )
         )
 
@@ -636,16 +654,14 @@ class LiquidHandleMethod(object):
         dict
             position_z to follow up at a non-sensing position
         """
-        preceding_z = LiquidHandle.builders.position_z(
-            reference="preceding_position"
-        )
+        preceding_z = LiquidHandle.builders.position_z(reference="preceding_position")
         if not position_z:
             followup_z = preceding_z
         elif position_z["reference"] == "liquid_surface":
             followup_z = LiquidHandle.builders.position_z(
                 reference="liquid_surface",
                 offset=position_z.get("offset"),
-                detection_method="tracked"
+                detection_method="tracked",
             )
         else:
             followup_z = preceding_z
@@ -670,10 +686,9 @@ class LiquidHandleMethod(object):
             self._aspirate_simple(
                 volume=pre_buffer,
                 initial_z=LiquidHandle.builders.position_z(
-                    reference="well_top",
-                    offset="1:mm"
+                    reference="well_top", offset="1:mm"
                 ),
-                liquid_class="air"
+                liquid_class="air",
             )
 
     def _calculate_pre_buffer(self, volume):
@@ -724,10 +739,7 @@ class LiquidHandleMethod(object):
 
         if blowout is not False:
             blowout_params = LiquidHandle.builders.blowout(**blowout)
-            self._dispense_simple(
-                liquid_class="air",
-                **blowout_params
-            )
+            self._dispense_simple(liquid_class="air", **blowout_params)
 
     def default_blowout(self, volume):
         """Default blowout behavior
@@ -762,7 +774,7 @@ class LiquidHandleMethod(object):
             reference="liquid_surface",
             offset="-1:mm",
             detection_method="capacitance",
-            detection_threshold=liquid.clld_threshold
+            detection_threshold=liquid.clld_threshold,
         )
 
     @staticmethod
@@ -775,9 +787,7 @@ class LiquidHandleMethod(object):
             position_z for tracking the liquid surface
         """
         return LiquidHandle.builders.position_z(
-            reference="liquid_surface",
-            detection_method="tracked",
-            offset="-1:mm"
+            reference="liquid_surface", detection_method="tracked", offset="-1:mm"
         )
 
     @staticmethod
@@ -789,9 +799,7 @@ class LiquidHandleMethod(object):
         dict
             position_z for the well bottom
         """
-        return LiquidHandle.builders.position_z(
-            reference="well_bottom"
-        )
+        return LiquidHandle.builders.position_z(reference="well_bottom")
 
     @staticmethod
     def default_well_top_position_z():
@@ -802,6 +810,4 @@ class LiquidHandleMethod(object):
         dict
             position_z for the well top
         """
-        return LiquidHandle.builders.position_z(
-            reference="well_top"
-        )
+        return LiquidHandle.builders.position_z(reference="well_top")

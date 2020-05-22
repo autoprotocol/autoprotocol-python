@@ -2,9 +2,13 @@
 Changelog
 =========
 
+* :support:`247` Add `black` as auto-formatter to pre-commit workflow
 * :support:`245` Add expected propagate_properties behavior tests
 * :bug:`244 major` Revert Protocol.propagate_properties to use Well.add_properties
 * :feature:`239` Add `absorbance` and `fluorescence` capabilities to 96-well-v-bottom container type
+* :support:`243` Update docs with environment setup and testing
+* :support:`243` Restructure travis.yml jobs structure to separate out each stage
+* :support:`243` Add basic pre-commit infrastructure, shift pylint inside pre-commit
 * :support:`241` Deprecate support for Python 3.5, add support for Python 3.8
 * :feature:`238` Add 96-well-v-bottom container type
 

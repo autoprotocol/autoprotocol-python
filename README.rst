@@ -37,17 +37,6 @@ Alternatively to get more up-to-date features:
 
 check the changelog_ for information about features included on `master` but not yet released.
 
-Dev Env Setup
--------------
-
-Installation:
-    Minimum Python version supported for development is :code:`v3.6`.
-
-Python Virtual Environment (Optional):
-    Use of virtual environment to isolate development environment is
-    highly recommended. There are several tools available such as
-    conda_ and pyenv_.
-
 Building a Protocol
 -------------------
 
@@ -135,6 +124,3 @@ For more information, see CONTRIBUTING_.
 .. _changelog: http://autoprotocol-python.readthedocs.io/en/latest/changelog.html
 .. _CONTRIBUTING: http://autoprotocol-python.readthedocs.io/en/latest/CONTRIBUTING.html
 .. _documentation: http://autoprotocol-python.readthedocs.org/en/latest/
-.. _python: https://www.python.org/downloads/release/python-356/
-.. _pyenv: https://github.com/pyenv/pyenv#installation
-.. _conda: https://docs.conda.io/projects/conda/en/latest/user-guide/install/

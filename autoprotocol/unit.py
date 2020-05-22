@@ -44,7 +44,8 @@ def to_decimal(number):
     else:
         raise ValueError(
             f"Tried to cast {number} to decimal but it was of non-numeric type "
-            f"{type(number)}.")
+            f"{type(number)}."
+        )
     return decimal
 
 
@@ -58,18 +59,19 @@ class DecimalUnitRegistry(UnitRegistry):
 
     def _get_root_units(self, input_units, check_nonmult=True):
         if not input_units:
-            return Decimal('1'), UnitsContainer()
+            return Decimal("1"), UnitsContainer()
 
         # The cache is only done for check_nonmult=True
         if check_nonmult and input_units in self._root_units_cache:
             return self._root_units_cache[input_units]
 
-        accumulators = [Decimal('1'), defaultdict(Decimal)]
-        self._get_root_units_recurse(input_units, Decimal('1'), accumulators)
+        accumulators = [Decimal("1"), defaultdict(Decimal)]
+        self._get_root_units_recurse(input_units, Decimal("1"), accumulators)
 
         factor = accumulators[0]
-        units = UnitsContainer(dict(
-            (k, v) for k, v in accumulators[1].items() if v != Decimal('0')))
+        units = UnitsContainer(
+            dict((k, v) for k, v in accumulators[1].items() if v != Decimal("0"))
+        )
 
         if check_nonmult:
             for unit in units.keys():
@@ -89,16 +91,15 @@ class DecimalUnitRegistry(UnitRegistry):
             if reg.is_base:
                 accumulators[1][key] += exp2
             else:
-                accumulators[0] *= (to_decimal(reg._converter.scale) ** exp2)
+                accumulators[0] *= to_decimal(reg._converter.scale) ** exp2
                 if reg.reference is not None:
-                    self._get_root_units_recurse(
-                        reg.reference, exp2, accumulators)
+                    self._get_root_units_recurse(reg.reference, exp2, accumulators)
 
 
 # Preload UnitRegistry (Use default Pints definition file as a base)
 _UnitRegistry = DecimalUnitRegistry()
 
-'''Map string representation of Pint units over to Autoprotocol format'''
+"""Map string representation of Pint units over to Autoprotocol format"""
 # Map Temperature Unit names
 _UnitRegistry._units["degC"]._name = "celsius"
 _UnitRegistry._units["celsius"]._name = "celsius"
@@ -109,8 +110,8 @@ _UnitRegistry._units["rankine"]._name = "rankine"
 # Map Speed Unit names
 _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
-'''Add support for Molarity Unit'''
-_UnitRegistry.define('molar = mole/liter = M')
+"""Add support for Molarity Unit"""
+_UnitRegistry.define("molar = mole/liter = M")
 # pragma pylint: enable=protected-access
 
 
@@ -127,18 +128,23 @@ class UnitError(Exception):
 
 
 class UnitStringError(UnitError):
-    message_text = ("Invalid format '%s'; when building a Unit from a string "
-                    "it must be formatted as '1:meter'.")
+    message_text = (
+        "Invalid format '%s'; when building a Unit from a string "
+        "it must be formatted as '1:meter'."
+    )
 
 
 class UnitValueError(UnitError):
-    message_text = ("Invalid value '%s'; when building a Unit "
-                    "the value must be numeric.")
+    message_text = (
+        "Invalid value '%s'; when building a Unit " "the value must be numeric."
+    )
 
 
 class UnitUnitsError(UnitError):
-    message_text = ("Invalid value '%s'; when building a Unit "
-                    "the units must be in the UnitRegistry.")
+    message_text = (
+        "Invalid value '%s'; when building a Unit "
+        "the units must be in the UnitRegistry."
+    )
 
 
 class Unit(_Quantity):
@@ -178,6 +184,7 @@ class Unit(_Quantity):
             0.036:liter / hour
 
     """
+
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False
@@ -270,7 +277,8 @@ class Unit(_Quantity):
         except ValueError:
             raise RuntimeError(
                 f"Tried to set Unit's magnitude {magnitude} but it was of type "
-                f"{type(magnitude)}. Magnitudes must be numeric.")
+                f"{type(magnitude)}. Magnitudes must be numeric."
+            )
 
     @staticmethod
     def fromstring(s):

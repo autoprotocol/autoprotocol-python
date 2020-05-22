@@ -15,15 +15,31 @@ from .container import Well
 from .unit import Unit
 
 
-class ContainerType(namedtuple("ContainerType",
-                               ["name", "is_tube", "well_count",
-                                "well_depth_mm", "well_volume_ul",
-                                "well_coating", "sterile", "cover_types",
-                                "seal_types", "capabilities",
-                                "shortname", "col_count", "dead_volume_ul",
-                                "safe_min_volume_ul", "true_max_vol_ul",
-                                "vendor", "cat_no",
-                                "prioritize_seal_or_cover"])):
+class ContainerType(
+    namedtuple(
+        "ContainerType",
+        [
+            "name",
+            "is_tube",
+            "well_count",
+            "well_depth_mm",
+            "well_volume_ul",
+            "well_coating",
+            "sterile",
+            "cover_types",
+            "seal_types",
+            "capabilities",
+            "shortname",
+            "col_count",
+            "dead_volume_ul",
+            "safe_min_volume_ul",
+            "true_max_vol_ul",
+            "vendor",
+            "cat_no",
+            "prioritize_seal_or_cover",
+        ],
+    )
+):
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
@@ -74,27 +90,54 @@ class ContainerType(namedtuple("ContainerType",
         "seal" or "cover", determines whether to prioritize sealing or covering
         defaults to "seal"
     """
-    def __new__(cls, name, is_tube, well_count,
-                well_depth_mm, well_volume_ul,
-                well_coating, sterile, cover_types,
-                seal_types, capabilities,
-                shortname, col_count, dead_volume_ul,
-                safe_min_volume_ul, true_max_vol_ul=None,
-                vendor=None, cat_no=None, prioritize_seal_or_cover="seal"):
+
+    def __new__(
+        cls,
+        name,
+        is_tube,
+        well_count,
+        well_depth_mm,
+        well_volume_ul,
+        well_coating,
+        sterile,
+        cover_types,
+        seal_types,
+        capabilities,
+        shortname,
+        col_count,
+        dead_volume_ul,
+        safe_min_volume_ul,
+        true_max_vol_ul=None,
+        vendor=None,
+        cat_no=None,
+        prioritize_seal_or_cover="seal",
+    ):
         true_max_vol_ul = true_max_vol_ul or well_volume_ul
-        assert true_max_vol_ul >= well_volume_ul, \
-            f"{name} does not contain valid true_max_vol_ul: " \
+        assert true_max_vol_ul >= well_volume_ul, (
+            f"{name} does not contain valid true_max_vol_ul: "
             f"{true_max_vol_ul} and well_volume_ul {well_volume_ul}"
-        return super(ContainerType, cls).__new__(cls, name, is_tube, well_count,
-                                                 well_depth_mm, well_volume_ul,
-                                                 well_coating, sterile,
-                                                 cover_types, seal_types,
-                                                 capabilities, shortname,
-                                                 col_count, dead_volume_ul,
-                                                 safe_min_volume_ul,
-                                                 true_max_vol_ul, vendor,
-                                                 cat_no,
-                                                 prioritize_seal_or_cover)
+        )
+        return super(ContainerType, cls).__new__(
+            cls,
+            name,
+            is_tube,
+            well_count,
+            well_depth_mm,
+            well_volume_ul,
+            well_coating,
+            sterile,
+            cover_types,
+            seal_types,
+            capabilities,
+            shortname,
+            col_count,
+            dead_volume_ul,
+            safe_min_volume_ul,
+            true_max_vol_ul,
+            vendor,
+            cat_no,
+            prioritize_seal_or_cover,
+        )
 
     def well_from_coordinates(self, row, column):
         """
@@ -121,9 +164,7 @@ class ContainerType(namedtuple("ContainerType",
             if the specified column is outside the bounds of the container_type
         """
         if row >= self.row_count():
-            raise ValueError(
-                f"0-indexed row {row} is outside of the bounds of {self}"
-            )
+            raise ValueError(f"0-indexed row {row} is outside of the bounds of {self}")
 
         if column >= self.col_count:
             raise ValueError(
@@ -177,16 +218,18 @@ class ContainerType(namedtuple("ContainerType",
             return [self.robotize(well) for well in well_ref]
 
         if not isinstance(well_ref, (str, int, Well)):
-            raise TypeError(f"ContainerType.robotize(): Well reference "
-                            f"({well_ref}) given is not of type 'str', 'int', "
-                            f"or 'Well'.")
+            raise TypeError(
+                f"ContainerType.robotize(): Well reference "
+                f"({well_ref}) given is not of type 'str', 'int', "
+                f"or 'Well'."
+            )
 
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
         well_ref = str(well_ref)
         m = re.match(r"([a-z])(\d+)$", well_ref, re.I)
         if m:
-            row = ord(m.group(1).upper()) - ord('A')
+            row = ord(m.group(1).upper()) - ord("A")
             col = int(m.group(2)) - 1
             return self.well_from_coordinates(row, col)
         else:
@@ -195,12 +238,16 @@ class ContainerType(namedtuple("ContainerType",
                 well_num = int(m.group(0))
                 # Check bounds
                 if well_num >= self.well_count or well_num < 0:
-                    raise ValueError("ContainerType.robotize(): Well number "
-                                     "given exceeds container dimensions.")
+                    raise ValueError(
+                        "ContainerType.robotize(): Well number "
+                        "given exceeds container dimensions."
+                    )
                 return well_num
             else:
-                raise ValueError("ContainerType.robotize(): Well must be in "
-                                 "'A1' format or be an integer.")
+                raise ValueError(
+                    "ContainerType.robotize(): Well must be in "
+                    "'A1' format or be an integer."
+                )
 
     def humanize(self, well_ref):
         """
@@ -244,17 +291,23 @@ class ContainerType(namedtuple("ContainerType",
             return [self.humanize(well) for well in well_ref]
 
         if not isinstance(well_ref, (int, str)):
-            raise TypeError("ContainerType.humanize(): Well reference given "
-                            "is not of type 'int' or 'str'.")
+            raise TypeError(
+                "ContainerType.humanize(): Well reference given "
+                "is not of type 'int' or 'str'."
+            )
         try:
             well_ref = int(well_ref)
         except:
-            raise TypeError("ContainerType.humanize(): Well reference given"
-                            "is not parseable into 'int' format.")
+            raise TypeError(
+                "ContainerType.humanize(): Well reference given"
+                "is not parseable into 'int' format."
+            )
         # Check bounds
         if well_ref >= self.well_count or well_ref < 0:
-            raise ValueError("ContainerType.humanize(): Well reference "
-                             "given exceeds container dimensions.")
+            raise ValueError(
+                "ContainerType.humanize(): Well reference "
+                "given exceeds container dimensions."
+            )
         row, col = self.decompose(well_ref)
         return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
@@ -280,8 +333,7 @@ class ContainerType(namedtuple("ContainerType",
 
         """
         if not isinstance(idx, (int, str, Well)):
-            raise TypeError("Well index given is not of type 'int' or "
-                            "'str'.")
+            raise TypeError("Well index given is not of type 'int' or " "'str'.")
         idx = self.robotize(idx)
         return (idx // self.col_count, idx % self.col_count)
 
@@ -305,17 +357,25 @@ FLAT384 = ContainerType(
     cover_types=["standard", "universal"],
     seal_types=["ultra-clear", "foil"],
     prioritize_seal_or_cover="cover",
-    capabilities=["liquid_handle", "spin", "absorbance",
-                  "fluorescence", "luminescence",
-                  "incubate", "gel_separate",
-                  "gel_purify", "cover",
-                  "dispense", "seal"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+        "seal",
+    ],
     shortname="384-flat",
     col_count=24,
     dead_volume_ul=Unit(7, "microliter"),
     safe_min_volume_ul=Unit(15, "microliter"),
     vendor="Corning",
-    cat_no="3706"
+    cat_no="3706",
 )
 
 
@@ -330,16 +390,22 @@ PCR384 = ContainerType(
     is_tube=False,
     cover_types=None,
     seal_types=["ultra-clear", "foil"],
-    capabilities=["liquid_handle", "spin", "thermocycle",
-                  "incubate", "gel_separate",
-                  "gel_purify",
-                  "seal", "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "thermocycle",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "seal",
+        "dispense",
+    ],
     shortname="384-pcr",
     col_count=24,
     dead_volume_ul=Unit(2, "microliter"),
     safe_min_volume_ul=Unit(3, "microliter"),
     vendor="Eppendorf",
-    cat_no="951020539"
+    cat_no="951020539",
 )
 
 #:
@@ -354,16 +420,14 @@ ECHO384 = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin",
-                  "incubate", "dispense",
-                  "cover"],
+    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
     shortname="384-echo",
     col_count=24,
     dead_volume_ul=Unit(15, "microliter"),
     safe_min_volume_ul=Unit(15, "microliter"),
     true_max_vol_ul=Unit(135, "microliter"),
     vendor="Labcyte",
-    cat_no="PP-0200"
+    cat_no="PP-0200",
 )
 
 #:
@@ -377,17 +441,24 @@ FLAT384WHITELV = ContainerType(
     is_tube=False,
     cover_types=["standard", "universal"],
     seal_types=None,
-    capabilities=["absorbance", "cover", "dispense",
-                  "fluorescence", "image_plate",
-                  "incubate", "luminescence",
-                  "liquid_handle", "spin",
-                  "uncover"],
+    capabilities=[
+        "absorbance",
+        "cover",
+        "dispense",
+        "fluorescence",
+        "image_plate",
+        "incubate",
+        "luminescence",
+        "liquid_handle",
+        "spin",
+        "uncover",
+    ],
     shortname="384-flat-white-white-lv",
     col_count=24,
     dead_volume_ul=Unit(5, "microliter"),
     safe_min_volume_ul=Unit(15, "microliter"),
     vendor="Corning",
-    cat_no="3824"
+    cat_no="3824",
 )
 
 #:
@@ -401,17 +472,24 @@ FLAT384WHITETC = ContainerType(
     is_tube=False,
     cover_types=["standard", "universal"],
     seal_types=None,
-    capabilities=["absorbance", "cover", "dispense",
-                  "fluorescence", "image_plate",
-                  "incubate", "luminescence",
-                  "liquid_handle", "spin",
-                  "uncover"],
+    capabilities=[
+        "absorbance",
+        "cover",
+        "dispense",
+        "fluorescence",
+        "image_plate",
+        "incubate",
+        "luminescence",
+        "liquid_handle",
+        "spin",
+        "uncover",
+    ],
     shortname="384-flat-white-white-tc",
     col_count=24,
     dead_volume_ul=Unit(20, "microliter"),
     safe_min_volume_ul=Unit(30, "microliter"),
     vendor="Corning",
-    cat_no="3570"
+    cat_no="3570",
 )
 
 #:
@@ -425,17 +503,25 @@ FLAT384CLEAR = ContainerType(
     is_tube=False,
     cover_types=["standard", "universal", "low_evaporation"],
     seal_types=["ultra-clear", "foil"],
-    capabilities=["incubate", "seal", "image_plate",
-                  "dispense", "spin",
-                  "absorbance", "cover",
-                  "fluorescence", "luminescence",
-                  "liquid_handle", "uncover"],
+    capabilities=[
+        "incubate",
+        "seal",
+        "image_plate",
+        "dispense",
+        "spin",
+        "absorbance",
+        "cover",
+        "fluorescence",
+        "luminescence",
+        "liquid_handle",
+        "uncover",
+    ],
     shortname="384-flat-clear-clear",
     col_count=24,
     dead_volume_ul=Unit(5, "microliter"),
     safe_min_volume_ul=Unit(20, "microliter"),
     vendor="Corning",
-    cat_no="3700"
+    cat_no="3700",
 )
 
 #:
@@ -449,17 +535,24 @@ FLAT96 = ContainerType(
     is_tube=False,
     cover_types=["low_evaporation", "standard", "universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "spin", "absorbance",
-                  "fluorescence", "luminescence",
-                  "incubate", "gel_separate",
-                  "gel_purify", "cover",
-                  "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+    ],
     shortname="96-flat",
     col_count=12,
     dead_volume_ul=Unit(25, "microliter"),
     safe_min_volume_ul=Unit(65, "microliter"),
     vendor="Corning",
-    cat_no="3632"
+    cat_no="3632",
 )
 
 #:
@@ -473,17 +566,24 @@ FLAT96UV = ContainerType(
     is_tube=False,
     cover_types=["low_evaporation", "standard", "universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "spin", "absorbance",
-                  "fluorescence", "luminescence",
-                  "incubate", "gel_separate",
-                  "gel_purify", "cover",
-                  "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+    ],
     shortname="96-flat-uv",
     col_count=12,
     dead_volume_ul=Unit(25, "microliter"),
     safe_min_volume_ul=Unit(65, "microliter"),
     vendor="Corning",
-    cat_no="3635"
+    cat_no="3635",
 )
 
 #:
@@ -497,16 +597,23 @@ PCR96 = ContainerType(
     is_tube=False,
     cover_types=None,
     seal_types=["ultra-clear", "foil"],
-    capabilities=["liquid_handle", "sangerseq", "spin",
-                  "thermocycle", "incubate",
-                  "gel_separate", "gel_purify",
-                  "seal", "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "sangerseq",
+        "spin",
+        "thermocycle",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "seal",
+        "dispense",
+    ],
     shortname="96-pcr",
     col_count=12,
     dead_volume_ul=Unit(3, "microliter"),
     safe_min_volume_ul=Unit(5, "microliter"),
     vendor="Eppendorf",
-    cat_no="951020619"
+    cat_no="951020619",
 )
 
 #:
@@ -520,17 +627,22 @@ DEEP96 = ContainerType(
     cover_types=["standard", "universal"],
     seal_types=["breathable"],
     prioritize_seal_or_cover="cover",
-    capabilities=["liquid_handle", "incubate",
-                  "gel_separate", "gel_purify",
-                  "cover", "dispense",
-                  "seal"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+        "seal",
+    ],
     shortname="96-deep",
     is_tube=False,
     col_count=12,
     dead_volume_ul=Unit(5, "microliter"),
     safe_min_volume_ul=Unit(30, "microliter"),
     vendor="Corning",
-    cat_no="3961"
+    cat_no="3961",
 )
 
 #:
@@ -543,18 +655,25 @@ V96KF = ContainerType(
     sterile=False,
     cover_types=["standard"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate",
-                  "gel_separate", "mag_dry",
-                  "mag_incubate", "mag_collect",
-                  "mag_release", "mag_mix",
-                  "cover", "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "gel_separate",
+        "mag_dry",
+        "mag_incubate",
+        "mag_collect",
+        "mag_release",
+        "mag_mix",
+        "cover",
+        "dispense",
+    ],
     shortname="96-v-kf",
     is_tube=False,
     col_count=12,
     dead_volume_ul=Unit(20, "microliter"),
     safe_min_volume_ul=Unit(20, "microliter"),
     vendor="Fisher",
-    cat_no="22-387-030"
+    cat_no="22-387-030",
 )
 
 #:
@@ -567,18 +686,25 @@ DEEP96KF = ContainerType(
     sterile=False,
     cover_types=["standard"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate",
-                  "gel_separate", "mag_dry",
-                  "mag_incubate", "mag_collect",
-                  "mag_release", "mag_mix",
-                  "cover", "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "gel_separate",
+        "mag_dry",
+        "mag_incubate",
+        "mag_collect",
+        "mag_release",
+        "mag_mix",
+        "cover",
+        "dispense",
+    ],
     shortname="96-deep-kf",
     is_tube=False,
     col_count=12,
     dead_volume_ul=Unit(50, "microliter"),
     safe_min_volume_ul=Unit(50, "microliter"),
     vendor="Fisher",
-    cat_no="22-387-031"
+    cat_no="22-387-031",
 )
 
 #:
@@ -590,13 +716,7 @@ V96CC = ContainerType(
     well_coating=None,
     sterile=True,
     is_tube=False,
-    cover_types=[
-        "standard",
-        "universal",
-        "low_evaporation",
-        "ultra-clear",
-        "foil"
-    ],
+    cover_types=["standard", "universal", "low_evaporation", "ultra-clear", "foil"],
     seal_types=None,
     capabilities=[
         "dispense",
@@ -613,7 +733,7 @@ V96CC = ContainerType(
         "dispense-destination",
         "envision",
         "absorbance",
-        "fluorescence"
+        "fluorescence",
     ],
     shortname="96-well-v-bottom",
     col_count=12,
@@ -621,7 +741,7 @@ V96CC = ContainerType(
     safe_min_volume_ul=Unit(5.0, "microliter"),
     true_max_vol_ul=Unit(320.0, "microliter"),
     vendor="Corning",
-    cat_no="3894"
+    cat_no="3894",
 )
 
 #:
@@ -634,16 +754,21 @@ DEEP24 = ContainerType(
     sterile=False,
     cover_types=None,
     seal_types=["foil", "breathable"],
-    capabilities=["liquid_handle", "incubate",
-                  "gel_separate", "gel_purify",
-                  "dispense", "seal"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "dispense",
+        "seal",
+    ],
     shortname="24-deep",
     is_tube=False,
     col_count=6,
     dead_volume_ul=Unit(15, "microliter"),
     safe_min_volume_ul=Unit(60, "microliter"),
     vendor="E&K Scientific",
-    cat_no="EK-2053-S"
+    cat_no="EK-2053-S",
 )
 
 #:
@@ -656,16 +781,14 @@ MICRO2 = ContainerType(
     sterile=False,
     cover_types=None,
     seal_types=None,
-    capabilities=["liquid_handle", "gel_separate",
-                  "gel_purify", "incubate", "spin"],
+    capabilities=["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
     shortname="micro-2.0",
     is_tube=True,
     col_count=1,
     dead_volume_ul=Unit(5, "microliter"),
     safe_min_volume_ul=Unit(40, "microliter"),
     vendor="E&K Scientific",
-    cat_no="280200"
-
+    cat_no="280200",
 )
 
 #:
@@ -678,15 +801,14 @@ MICRO15 = ContainerType(
     sterile=False,
     cover_types=None,
     seal_types=None,
-    capabilities=["liquid_handle", "gel_separate",
-                  "gel_purify", "incubate", "spin"],
+    capabilities=["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
     shortname="micro-1.5",
     is_tube=True,
     col_count=1,
     dead_volume_ul=Unit(20, "microliter"),
     safe_min_volume_ul=Unit(20, "microliter"),
     vendor="USA Scientific",
-    cat_no="1615-5500"
+    cat_no="1615-5500",
 )
 
 #:
@@ -706,7 +828,7 @@ FLAT6 = ContainerType(
     dead_volume_ul=Unit(400, "microliter"),
     safe_min_volume_ul=Unit(600, "microliter"),
     vendor="Eppendorf",
-    cat_no="30720016"
+    cat_no="30720016",
 )
 
 #:
@@ -726,7 +848,7 @@ FLAT1 = ContainerType(
     dead_volume_ul=Unit(36000, "microliter"),
     safe_min_volume_ul=Unit(40000, "microliter"),
     vendor="Fisher",
-    cat_no="267060"
+    cat_no="267060",
 )
 
 #:
@@ -746,7 +868,7 @@ FLAT6TC = ContainerType(
     dead_volume_ul=Unit(400, "microliter"),
     safe_min_volume_ul=Unit(600, "microliter"),
     vendor="Eppendorf",
-    cat_no="30720113"
+    cat_no="30720113",
 )
 
 #:
@@ -760,15 +882,14 @@ RESSW96HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover",
-                  "dispense", "liquid_handle"],
+    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
     shortname="res-sw96-hp",
     col_count=1,
     dead_volume_ul=Unit(25, "milliliter"),
     safe_min_volume_ul=Unit(30, "milliliter"),
     true_max_vol_ul=Unit(280.0, "milliliter"),
     vendor="Axygen",
-    cat_no="res-sw96-hp"
+    cat_no="res-sw96-hp",
 )
 
 #:
@@ -782,15 +903,14 @@ RESMW8HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover",
-                  "dispense", "liquid_handle"],
+    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
     shortname="res-mw8-hp",
     col_count=1,
     dead_volume_ul=Unit(2.5, "milliliter"),
     safe_min_volume_ul=Unit(5, "milliliter"),
     true_max_vol_ul=Unit(32.0, "milliliter"),
     vendor="Axygen",
-    cat_no="res-mw8-hp"
+    cat_no="res-mw8-hp",
 )
 
 #:
@@ -804,15 +924,14 @@ RESMW12HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover",
-                  "dispense", "liquid_handle"],
+    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
     shortname="res-mw12-hp",
     col_count=12,
     dead_volume_ul=Unit(1.8, "milliliter"),
     safe_min_volume_ul=Unit(5, "milliliter"),
     true_max_vol_ul=Unit(21.0, "milliliter"),
     vendor="Axygen",
-    cat_no="res-mw12-hp"
+    cat_no="res-mw12-hp",
 )
 
 #:
@@ -826,17 +945,24 @@ FLAT96CLEARTC = ContainerType(
     is_tube=False,
     cover_types=["low_evaporation", "standard", "universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "spin", "absorbance",
-                  "fluorescence", "luminescence",
-                  "incubate", "gel_separate",
-                  "gel_purify", "cover",
-                  "dispense"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+    ],
     shortname="96-flat-clear-clear-tc",
     col_count=12,
     dead_volume_ul=Unit(25, "microliter"),
     safe_min_volume_ul=Unit(65, "microliter"),
     vendor="Eppendorf",
-    cat_no="0030730119"
+    cat_no="0030730119",
 )
 
 #:
@@ -850,18 +976,30 @@ V384CLEAR = ContainerType(
     is_tube=False,
     cover_types=["universal", "standard"],
     seal_types=["ultra-clear", "foil"],
-    capabilities=["incubate", "seal", "image_plate",
-                  "liquid_handle", "dispense", "spin",
-                  "mag_dry", "mag_incubate", "mag_collect",
-                  "mag_release", "mag_mix", "absorbance",
-                  "fluorescence", "luminescence", "cover",
-                  "thermocycle"],
+    capabilities=[
+        "incubate",
+        "seal",
+        "image_plate",
+        "liquid_handle",
+        "dispense",
+        "spin",
+        "mag_dry",
+        "mag_incubate",
+        "mag_collect",
+        "mag_release",
+        "mag_mix",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "cover",
+        "thermocycle",
+    ],
     shortname="384-v-clear-clear",
     col_count=24,
     dead_volume_ul=Unit(13, "microliter"),
     safe_min_volume_ul=Unit(18, "microliter"),
     vendor="Greiner",
-    cat_no="781280"
+    cat_no="781280",
 )
 
 #:
@@ -875,18 +1013,30 @@ ROUND384CLEAR = ContainerType(
     is_tube=False,
     cover_types=["universal", "standard"],
     seal_types=["ultra-clear", "foil"],
-    capabilities=["incubate", "seal", "image_plate",
-                  "liquid_handle", "dispense", "spin",
-                  "mag_dry", "mag_incubate", "mag_collect",
-                  "mag_release", "mag_mix", "absorbance",
-                  "fluorescence", "luminescence", "cover",
-                  "thermocycle"],
+    capabilities=[
+        "incubate",
+        "seal",
+        "image_plate",
+        "liquid_handle",
+        "dispense",
+        "spin",
+        "mag_dry",
+        "mag_incubate",
+        "mag_collect",
+        "mag_release",
+        "mag_mix",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "cover",
+        "thermocycle",
+    ],
     shortname="384-round-clear-clear",
     col_count=24,
     dead_volume_ul=Unit(15, "microliter"),
     safe_min_volume_ul=Unit(20, "microliter"),
     vendor="Corning",
-    cat_no="3657"
+    cat_no="3657",
 )
 
 #:
@@ -900,15 +1050,14 @@ RESSW384LP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover",
-                  "dispense", "liquid_handle"],
+    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
     shortname="res-sw384-lp",
     col_count=1,
     dead_volume_ul=Unit(10, "milliliter"),
     safe_min_volume_ul=Unit(30, "milliliter"),
     true_max_vol_ul=Unit(92, "milliliter"),
     vendor="Axygen",
-    cat_no="res-sw384-lp"
+    cat_no="res-sw384-lp",
 )
 
 #:
@@ -923,15 +1072,13 @@ ECHO384LDV = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin",
-                  "incubate", "dispense",
-                  "cover"],
+    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
     shortname="384-echo-ldv",
     col_count=24,
     dead_volume_ul=Unit(2.5, "microliter"),
     safe_min_volume_ul=Unit(2.5, "microliter"),
     vendor="Labcyte",
-    cat_no="LP-0200"
+    cat_no="LP-0200",
 )
 
 #:
@@ -946,15 +1093,13 @@ ECHO384LDVPLUS = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin",
-                  "incubate", "dispense",
-                  "cover"],
+    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
     shortname="384-echo-ldv-plus",
     col_count=24,
     dead_volume_ul=Unit(4.5, "microliter"),
     safe_min_volume_ul=Unit(4.5, "microliter"),
     vendor="Labcyte",
-    cat_no="LPL-0200"
+    cat_no="LPL-0200",
 )
 
 #:
@@ -968,17 +1113,25 @@ FLAT384WHITECLEAR = ContainerType(
     is_tube=False,
     cover_types=["standard", "universal"],
     seal_types=["breathable", "ultra-clear"],
-    capabilities=["liquid_handle", "spin", "absorbance",
-                  "fluorescence", "luminescence",
-                  "incubate", "gel_separate",
-                  "gel_purify", "cover",
-                  "dispense", "seal"],
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+        "seal",
+    ],
     shortname="384-flat-white-clear",
     col_count=24,
     dead_volume_ul=Unit(7, "microliter"),
     safe_min_volume_ul=Unit(15, "microliter"),
     vendor="Corning",
-    cat_no="3763"
+    cat_no="3763",
 )
 
 _CONTAINER_TYPES = {
@@ -1010,5 +1163,5 @@ _CONTAINER_TYPES = {
     "384-echo-ldv": ECHO384LDV,
     "384-echo-ldv-plus": ECHO384LDVPLUS,
     "384-flat-white-clear": FLAT384WHITECLEAR,
-    "96-well-v-bottom": V96CC
+    "96-well-v-bottom": V96CC,
 }

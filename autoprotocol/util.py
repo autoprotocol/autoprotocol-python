@@ -33,6 +33,7 @@ def is_valid_well(well):
         Returns True if param is of type Well, WellGroup or list of type Well.
     """
     from autoprotocol.container import Well, WellGroup
+
     if not isinstance(well, (Well, WellGroup, list)):
         return False
     if isinstance(well, list):
@@ -96,10 +97,10 @@ def parse_unit(unit, accepted_unit=None):
             accepted_unit = [parse_base_unit(a_u) for a_u in accepted_unit]
         else:
             accepted_unit = [parse_base_unit(accepted_unit)]
-        if all([unit.dimensionality != a_u.dimensionality for a_u in
-                accepted_unit]):
-            raise TypeError(f"{unit} is not of the expected dimensionality "
-                            f"{accepted_unit}")
+        if all([unit.dimensionality != a_u.dimensionality for a_u in accepted_unit]):
+            raise TypeError(
+                f"{unit} is not of the expected dimensionality " f"{accepted_unit}"
+            )
 
     return unit
 
@@ -128,9 +129,7 @@ def _validate_as_instance(item, target_type):
         try:
             item = _validate_as_instance(item(), target_type)
         except:
-            raise TypeError(
-                f"{item} can't be parsed as a {target_type}."
-            )
+            raise TypeError(f"{item} can't be parsed as a {target_type}.")
     return item
 
 
@@ -171,12 +170,8 @@ def _check_container_type_with_shape(container_type, shape):
 
     container_wells = container_type.well_count
     if container_wells == 24:
-        rows_one_or_even = (
-            shape["rows"] == 1 or shape["rows"] % 2 == 0
-        )
-        columns_one_or_even = (
-            shape["columns"] == 1 or shape["columns"] % 2 == 0
-        )
+        rows_one_or_even = shape["rows"] == 1 or shape["rows"] % 2 == 0
+        columns_one_or_even = shape["columns"] == 1 or shape["columns"] % 2 == 0
         if not (rows_one_or_even and columns_one_or_even):
             raise ValueError(
                 f"24 well container_type {container_type.container_type} was "

@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`247` Add `black` as auto-formatter to pre-commit workflow
 * :bug:`244` Revert Protocol.propagate_properties to use Well.add_properties
 * :feature:`239` Add `absorbance` and `fluorescence` capabilities to 96-well-v-bottom container type
 * :support:`243` Update docs with environment setup and testing

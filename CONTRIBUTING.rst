@@ -47,6 +47,8 @@ Testing:
 
 Linting and Formatting:
     We use pre-commit_ as our linting and auto-formatting framework.
+    Lint is checked with pylint_ and auto-formatting is done with
+    black_.
     This is automatically executed as part of the `git commit` and
     `git push` workflows. You may also execute it manually by using
     the snippet below.
@@ -105,4 +107,6 @@ Instruction_
 .. _tox: https://tox.readthedocs.io/en/latest/
 .. _pytest: https://docs.pytest.org/en/latest/
 .. _pre-commit: https://pre-commit.com/
+.. _pylint: https://www.pylint.org/
+.. _black: https://black.readthedocs.io/en/stable/
 .. _sphinx: https://www.sphinx-doc.org/en/master/

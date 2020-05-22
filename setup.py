@@ -51,7 +51,7 @@ setup(
     license="BSD",
     maintainer_email="support@strateos.com",
     version=__version__,  # pylint: disable=undefined-variable
-    install_requires=["Pint==0.8.1"],
+    install_requires=["Pint==0.9"],
     python_requires=">=3.6",
     tests_require=test_deps,
     extras_require={"docs": doc_deps, "test": test_deps},

@@ -1,0 +1,25 @@
+{
+  "instructions": [
+    {
+      "op": "uncover",
+      "object": "w1"
+    },
+    {
+      "op": "provision",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w1/0"
+        }
+      ],
+      "resource_id": "rs17gmh5wafm5p"
+    }
+  ],
+  "refs": {
+    "w1": {
+      "discard": true,
+      "new": "96-pcr",
+      "cover": "standard"
+    }
+  }
+}

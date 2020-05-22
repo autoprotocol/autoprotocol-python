@@ -5008,8 +5008,9 @@ class Protocol(object):
                     d.container):
                 self.instructions[-1].to.append(xfer)
             else:
-                return self._append_and_return(Provision(resource_id,
+                self._append_and_return(Provision(resource_id,
                                                          dest_group))
+        return self
 
     def flash_freeze(self, container, duration):
         """

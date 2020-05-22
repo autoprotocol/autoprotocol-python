@@ -1,0 +1,20 @@
+{
+  "instructions": [
+    {
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w1/0"
+        }
+      ],
+      "op": "provision"
+    }
+  ],
+  "refs": {
+    "w1": {
+      "new": "96-pcr",
+      "discard": true
+    }
+  }
+}

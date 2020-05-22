@@ -1,0 +1,48 @@
+{
+  "instructions": [
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w1/0"
+        }
+      ]
+    },
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w2/0"
+        }
+      ]
+    },
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w3/0"
+        }
+      ]
+    }
+  ],
+  "refs": {
+    "w1": {
+      "discard": true,
+      "new": "96-pcr"
+    },
+    "w2": {
+      "discard": true,
+      "new": "96-pcr"
+    },
+    "w3": {
+      "discard": true,
+      "new": "96-pcr"
+    }
+  }
+}

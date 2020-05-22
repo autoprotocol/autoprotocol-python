@@ -1,0 +1,24 @@
+{
+  "instructions": [
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "900:microliter",
+          "well": "w1/0"
+        },
+        {
+          "volume": "600:microliter",
+          "well": "w1/0"
+        }
+      ]
+    }
+  ],
+  "refs": {
+    "w1": {
+      "discard": true,
+      "new": "micro-2.0"
+    }
+  }
+}

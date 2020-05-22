@@ -12,5 +12,3 @@ ${4:"call another_stepthermo for more steps"}
 	<scope>source.json</scope>
   <description>adds step w/temp + time</description>
 </snippet>
-
-

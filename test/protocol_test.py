@@ -3300,11 +3300,12 @@ class TestTransferVolume(object):
             self.container.well(0),
             self.container.well(1),
             Unit("5:uL"),
-            shape=Instruction.builders.shape()
+            shape=Instruction.builders.shape(),
         )
-        assert(
-            self.container.well(1).properties == {'bar': 'foo1', 'foo': ['bar1', 'bar0']}
-        )
+        assert self.container.well(1).properties == {
+            "bar": "foo1",
+            "foo": ["bar1", "bar0"],
+        }
 
 
 class TestEvaporate(object):

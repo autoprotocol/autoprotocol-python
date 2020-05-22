@@ -2766,7 +2766,7 @@ class TestTransferVolume(object):
         """Expected behavior when propagating properties to wells with prior properties."""
         self.p.propagate_properties = True
         self.container.well(0).set_properties({"foo": ["bar0"], "bar": "foo1"})
-        self.container.well(1).set_properties({"foo": ["bar1"], "bar":"foo2"})
+        self.container.well(1).set_properties({"foo": ["bar1"], "bar": "foo2"})
         self.p._transfer_volume(
             self.container.well(0),
             self.container.well(1),

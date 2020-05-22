@@ -38,3 +38,4 @@ doctrees/
 .eggs/
 docs/make.bat
 .pytest_cache/
+.idea/

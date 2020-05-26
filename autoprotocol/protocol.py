@@ -4920,12 +4920,6 @@ class Protocol(object):
         ValueError
             Volume to provision exceeds max capacity of well
 
-        Returns
-        -------
-        Provision
-            Returns the :py:class:`autoprotocol.instruction.Provision`
-            instruction created from the specified parameters
-
         """
         # Check valid well inputs
         if not is_valid_well(dests):

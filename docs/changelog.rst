@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`248` Bump Pint version to 0.9
 * :support:`247` Add `black` as auto-formatter to pre-commit workflow
 * :support:`245` Add expected propagate_properties behavior tests
 * :bug:`244 major` Revert Protocol.propagate_properties to use Well.add_properties

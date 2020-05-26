@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`249` Update documentation dependencies, notably Sphinx to >=2.4
 * :feature:`248` Bump Pint version to 0.9
 * :support:`247` Add `black` as auto-formatter to pre-commit workflow
 * :support:`245` Add expected propagate_properties behavior tests

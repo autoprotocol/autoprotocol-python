@@ -4981,7 +4981,6 @@ class Protocol(object):
             else:
                 self._append_and_return(Provision(resource_id,
                                                          dest_group))
-        return self
 
     def flash_freeze(self, container, duration):
         """

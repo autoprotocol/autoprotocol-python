@@ -1,9 +1,8 @@
-import pytest
 import json
+from test.test_util import TestUtils
+import pytest
 
 from autoprotocol.protocol import Protocol
-
-from test.test_util import TestUtils
 
 
 class TestProvision(object):
@@ -22,16 +21,7 @@ class TestProvision(object):
         with pytest.raises(ValueError):
             self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
 
-    # TODO - If all container-types defined in `container_type.py` are of type Well, then code lines
-    # TODO - between 4960-4962 in protocol.py doesn't make any sense
-    # def test_attempt_to_provision_with_unsupported_container_type(self):
-    #     p = Protocol()
-    #     w1 = p.ref("w1", None, cont_type="micro-1.5", discard=True) \
-    #         .well(0).set_volume("2:microliter")
-    #     with pytest.raises(TypeError):
-    #         p.provision("rs17gmh5wafm5p", w1, "50:microliter")
-
-    def test_with_invalid_resourceId(self):
+    def test_with_invalid_resource_id(self):
         with pytest.raises(TypeError):
             self.p.provision(100, self.w1, "50:microliter")
 
@@ -39,12 +29,6 @@ class TestProvision(object):
         volumes = ["50:microliter", "20:microliter"]
         with pytest.raises(RuntimeError):
             self.p.provision("rs17gmh5wafm5p", self.w1, volumes)
-
-    # TODO - This test should pass as there is no definition of `ml` in http://autoprotocol.org/specification/.
-    # TODO - Since the current code is able to translate `ml` to `microliter`, this test case is failing
-    # def test_with_invalid_unit(self):
-    #     with pytest.raises(TypeError):
-    #         self.p.provision("rs17gmh5wafm5p", self.w1, "20:ml")
 
     def test_with_volume_above_max(self):
         with pytest.raises(ValueError):
@@ -103,6 +87,7 @@ class TestProvision(object):
         w1 = p.ref("w1", None, cont_type="micro-2.0", discard=True) \
             .well(0).set_volume("2:microliter")
         p.provision("rs17gmh5wafm5p", w1, "1500:microliter")
+
         actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('split_provisions_by_volume.json')
         assert (expected_protocol_as_json == actual_protocol_as_json)

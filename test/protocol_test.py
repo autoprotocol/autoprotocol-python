@@ -3291,6 +3291,22 @@ class TestTransferVolume(object):
         )
         assert self.container.well(1).properties == self.container.well(0).properties
 
+    def test_can_append_properties(self):
+        """Expected behavior when propagating properties to wells with prior properties."""
+        self.p.propagate_properties = True
+        self.container.well(0).set_properties({"foo": ["bar0"], "bar": "foo1"})
+        self.container.well(1).set_properties({"foo": ["bar1"], "bar": "foo2"})
+        self.p._transfer_volume(
+            self.container.well(0),
+            self.container.well(1),
+            Unit("5:uL"),
+            shape=Instruction.builders.shape(),
+        )
+        assert self.container.well(1).properties == {
+            "bar": "foo1",
+            "foo": ["bar1", "bar0"],
+        }
+
 
 class TestEvaporate(object):
     p = Protocol()

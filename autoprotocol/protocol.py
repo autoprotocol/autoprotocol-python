@@ -1769,7 +1769,8 @@ class Protocol(object):
             if is_resource_id:
                 reagent, resource_id, reagent_source = None, reagent, None
             else:
-                reagent, resource_id, reagent_source = reagent, None, None
+                # reagent remains unchanged
+                resource_id, reagent_source = None, None
 
         self._remove_cover(ref, "dispense to")
 

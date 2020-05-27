@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`250` Bump test dependencies, notably pytest to >=5.4, pylint to 2.5.2 and tox >=3.15
 * :support:`249` Update documentation dependencies, notably Sphinx to >=2.4
 * :feature:`248` Bump Pint version to 0.9
 * :support:`247` Add `black` as auto-formatter to pre-commit workflow

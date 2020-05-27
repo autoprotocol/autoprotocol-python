@@ -4,7 +4,6 @@ import pytest
 
 from autoprotocol.protocol import Protocol
 
-
 class TestProvision(object):
     p = Protocol()
     w1 = p.ref("w1", None, cont_type="96-pcr", discard=True) \
@@ -12,7 +11,7 @@ class TestProvision(object):
 
     def test_provision_well_capacity(self):
         self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(self.p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(self.p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('expected_provision.json')
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
@@ -44,7 +43,7 @@ class TestProvision(object):
             .well(0).set_volume("2:microliter")
         wells = [w1, w2, w3]
         p.provision("rs17gmh5wafm5p", wells, "50:microliter")
-        actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('provision_multiple_wells.json')
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
@@ -57,7 +56,7 @@ class TestProvision(object):
             .well(0).set_volume("2:microliter")
         wells = [w1, w2]
         p.provision("rs17gmh5wafm5p", wells, "1500:microliter")
-        actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('provision_multiple_wells_with_diff_cont_types.json')
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
@@ -67,7 +66,7 @@ class TestProvision(object):
         w1 = p.ref("w1", None, cont_type="96-pcr", discard=True, cover="standard") \
             .well(0).set_volume("2:microliter")
         p.provision("rs17gmh5wafm5p", w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('provision_with_cover.json')
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
@@ -77,7 +76,7 @@ class TestProvision(object):
         w1 = p.ref("w1", None, cont_type="96-pcr", discard=True, cover="foil") \
             .well(0).set_volume("2:microliter")
         p.provision("rs17gmh5wafm5p", w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('provision_with_seal.json')
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
@@ -88,6 +87,6 @@ class TestProvision(object):
             .well(0).set_volume("2:microliter")
         p.provision("rs17gmh5wafm5p", w1, "1500:microliter")
 
-        actual_protocol_as_json = json.dumps(p.as_dict(), indent=2, sort_keys=True)
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
         expected_protocol_as_json = TestUtils.read_json_file('split_provisions_by_volume.json')
         assert (expected_protocol_as_json == actual_protocol_as_json)

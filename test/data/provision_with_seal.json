@@ -1,5 +1,4 @@
-{
-  "instructions": [
+[
     {
       "op": "unseal",
       "object": "w1"
@@ -14,12 +13,4 @@
         }
       ]
     }
-  ],
-  "refs": {
-    "w1": {
-      "discard": true,
-      "new": "96-pcr",
-      "cover": "foil"
-    }
-  }
-}
+  ]

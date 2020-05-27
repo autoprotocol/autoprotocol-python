@@ -1,5 +1,4 @@
-{
-  "instructions": [
+[
     {
       "resource_id": "rs17gmh5wafm5p",
       "to": [
@@ -10,11 +9,4 @@
       ],
       "op": "provision"
     }
-  ],
-  "refs": {
-    "w1": {
-      "new": "96-pcr",
-      "discard": true
-    }
-  }
-}
+  ]

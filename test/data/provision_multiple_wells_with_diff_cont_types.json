@@ -1,5 +1,4 @@
-{
-  "instructions": [
+[
     {
       "op": "provision",
       "resource_id": "rs17gmh5wafm5p",
@@ -28,15 +27,4 @@
         }
       ]
     }
-  ],
-  "refs": {
-    "w1": {
-      "discard": true,
-      "new": "1-flat"
-    },
-    "w2": {
-      "discard": true,
-      "new": "6-flat-tc"
-    }
-  }
-}
+  ]

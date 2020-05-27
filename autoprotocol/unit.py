@@ -135,9 +135,7 @@ class UnitStringError(UnitError):
 
 
 class UnitValueError(UnitError):
-    message_text = (
-        "Invalid value '%s'; when building a Unit " "the value must be numeric."
-    )
+    message_text = "Invalid value '%s'; when building a Unit the value must be numeric."
 
 
 class UnitUnitsError(UnitError):

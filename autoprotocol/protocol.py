@@ -5068,7 +5068,7 @@ class Protocol(object):
         Returns
         -------
         list(Provision)
-            Provision instruction object(s) to be appended and returned
+            :py:class:`autoprotocol.instruction.Provision` instruction object(s) to be appended and returned
 
         """
         # Check valid well inputs

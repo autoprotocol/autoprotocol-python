@@ -1,0 +1,16 @@
+[
+  {
+    "op": "provision",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "volume": "50:microliter",
+        "well": "w1/0"
+      },
+      {
+        "volume": "50:microliter",
+        "well": "w1/0"
+      }
+    ]
+  }
+]

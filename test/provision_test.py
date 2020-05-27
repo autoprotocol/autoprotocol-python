@@ -48,6 +48,17 @@ class TestProvision(object):
 
         assert (expected_protocol_as_json == actual_protocol_as_json)
 
+    def test_with_consecutive_repeated_wells(self):
+        p = Protocol()
+        w1 = p.ref("w1", None, cont_type="96-pcr", discard=True) \
+            .well(0).set_volume("2:microliter")
+        wells = [w1,  w1]
+        p.provision("rs17gmh5wafm5p", wells, "50:microliter")
+        actual_protocol_as_json = json.dumps(p.as_dict()['instructions'], indent=2, sort_keys=True)
+        expected_protocol_as_json = TestUtils.read_json_file('provision_with_consecutive_repeated_wells.json')
+
+        assert (expected_protocol_as_json == actual_protocol_as_json)
+
     def test_with_multiple_wells_with_different_cont_types(self):
         p = Protocol()
         w1 = p.ref("w1", None, cont_type="1-flat", discard=True) \

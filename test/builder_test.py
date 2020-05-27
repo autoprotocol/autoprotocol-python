@@ -1,8 +1,13 @@
 # pragma pylint: disable=missing-docstring
 
 import pytest
-from autoprotocol.instruction import Thermocycle, Dispense, \
-    Spectrophotometry, Evaporate, SPE
+from autoprotocol.instruction import (
+    Thermocycle,
+    Dispense,
+    Spectrophotometry,
+    Evaporate,
+    SPE,
+)
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
@@ -43,12 +48,12 @@ class TestDispenseBuilders(object):
         {"column": 1, "volume": Unit("20:microliter")},
         {"column": 2, "volume": Unit("30:microliter")},
         {"column": 3, "volume": Unit("40:microliter")},
-        {"column": 4, "volume": Unit("50:microliter")}
+        {"column": 4, "volume": Unit("50:microliter")},
     ]
 
     def test_column(self):
         for column in self.columns_reference:
-            assert(column == Dispense.builders.column(**column))
+            assert column == Dispense.builders.column(**column)
 
         with pytest.raises(TypeError):
             Dispense.builders.column(0, 5)
@@ -58,7 +63,7 @@ class TestDispenseBuilders(object):
 
     def test_columns(self):
         cols = Dispense.builders.columns(self.columns_reference)
-        assert(cols == self.columns_reference)
+        assert cols == self.columns_reference
 
         with pytest.raises(TypeError):
             Dispense.builders.columns([{"column": 0}])
@@ -70,43 +75,40 @@ class TestDispenseBuilders(object):
             Dispense.builders.columns([{"column": "Zero", "volume": "5:uL"}])
 
         with pytest.raises(ValueError):
-            Dispense.builders.columns([
-                {"column": 0, "volume": "10:uL"},
-                {"column": 0, "volume": "10:uL"}
-            ])
+            Dispense.builders.columns(
+                [{"column": 0, "volume": "10:uL"}, {"column": 0, "volume": "10:uL"}]
+            )
 
         with pytest.raises(ValueError):
             Dispense.builders.columns([])
 
     def test_nozzle_position(self):
-        assert(Dispense.builders.nozzle_position() == {})
+        assert Dispense.builders.nozzle_position() == {}
 
         reference = {
             "position_x": Unit(-3, "mm"),
             "position_y": Unit(3, "mm"),
-            "position_z": Unit(5, "mm")
+            "position_z": Unit(5, "mm"),
         }
         pos = Dispense.builders.nozzle_position("-3:mm", "3:mm", "5:mm")
-        assert(pos == reference)
+        assert pos == reference
 
     def test_shake_after(self):
-        assert(
-            Dispense.builders.shake_after(
-                "5:second", "10:hertz", "landscape_linear", "1:mm"
-            ) == {
-                "duration": Unit(5, "second"),
-                "frequency": Unit(10, "hertz"),
-                "path": "landscape_linear",
-                "amplitude": Unit(1, "millimeter")
-            }
-        )
+        assert Dispense.builders.shake_after(
+            "5:second", "10:hertz", "landscape_linear", "1:mm"
+        ) == {
+            "duration": Unit(5, "second"),
+            "frequency": Unit(10, "hertz"),
+            "path": "landscape_linear",
+            "amplitude": Unit(1, "millimeter"),
+        }
         with pytest.raises(ValueError):
             Dispense.builders.shake_after("5:second", path="foo")
 
 
 class TestThermocycleBuilders(object):
     def test_group_input(self):
-        step = Thermocycle.builders.step('1:celsius', '1:s')
+        step = Thermocycle.builders.step("1:celsius", "1:s")
         with pytest.raises(TypeError):
             Thermocycle.builders.group(1, 1)
         with pytest.raises(TypeError):
@@ -121,66 +123,55 @@ class TestThermocycleBuilders(object):
             Thermocycle.builders.group([{}], 1)
 
     def test_group_output(self):
-        step = Thermocycle.builders.step('1:celsius', '1:s')
-        g = Thermocycle.builders.group(
-            [step],
-            1
-        )
-        assert (g['cycles'] == 1)
-        assert (g['steps'] == [step])
+        step = Thermocycle.builders.step("1:celsius", "1:s")
+        g = Thermocycle.builders.group([step], 1)
+        assert g["cycles"] == 1
+        assert g["steps"] == [step]
 
     def test_step_input(self):
         with pytest.raises(TypeError):
-            Thermocycle.builders.step('1:s', '1:celsius')
+            Thermocycle.builders.step("1:s", "1:celsius")
         with pytest.raises(TypeError):
-            Thermocycle.builders.step('1:celsius', '1:s', "yes")
+            Thermocycle.builders.step("1:celsius", "1:s", "yes")
         # Test gradient format
         with pytest.raises(ValueError):
-            Thermocycle.builders.step({'top': '1:celsius'}, '1:s')
+            Thermocycle.builders.step({"top": "1:celsius"}, "1:s")
         with pytest.raises(ValueError):
-            Thermocycle.builders.step({'bottom': '1:celsius'}, '1:s')
+            Thermocycle.builders.step({"bottom": "1:celsius"}, "1:s")
         with pytest.raises(ValueError):
-            Thermocycle.builders.step({'top': '1:celsius',
-                                       'bottom': '1:celsius',
-                                       'middle': '1:celsius'},
-                                      '1:s')
+            Thermocycle.builders.step(
+                {"top": "1:celsius", "bottom": "1:celsius", "middle": "1:celsius"},
+                "1:s",
+            )
 
     def test_step_output(self):
-        s = Thermocycle.builders.step('1:celsius', '1:s', True)
-        assert(s == {
-            'temperature': Unit('1:celsius'),
-            'duration': Unit('1:s'),
-            'read': True
-        })
+        s = Thermocycle.builders.step("1:celsius", "1:s", True)
+        assert s == {
+            "temperature": Unit("1:celsius"),
+            "duration": Unit("1:s"),
+            "read": True,
+        }
         # Test Gradient
-        s = Thermocycle.builders.step({'top': '1:celsius',
-                                       'bottom': '0:celsius'},
-                                      '1:s', True)
-        assert (s == {
-            'gradient': {'top': Unit('1:celsius'),
-                         'bottom': Unit('0:celsius')},
-            'duration': Unit('1:s'),
-            'read': True
-        })
+        s = Thermocycle.builders.step(
+            {"top": "1:celsius", "bottom": "0:celsius"}, "1:s", True
+        )
+        assert s == {
+            "gradient": {"top": Unit("1:celsius"), "bottom": Unit("0:celsius")},
+            "duration": Unit("1:s"),
+            "read": True,
+        }
 
     def test_dyes_valid(self):
-        dye_builder = Thermocycle.builders.dyes(
-            FRET=1,
-            FAM=[1, 2]
-        )
+        dye_builder = Thermocycle.builders.dyes(FRET=1, FAM=[1, 2])
         assert dye_builder == {"FRET": [1], "FAM": [1, 2]}
 
     def test_dyes_invalid_dye(self):
         with pytest.raises(ValueError):
-            Thermocycle.builders.dyes(
-                FOO=1
-            )
+            Thermocycle.builders.dyes(FOO=1)
 
     def test_dyes_invalid_well(self):
         with pytest.raises(ValueError):
-            Thermocycle.builders.dyes(
-                FRET={}
-            )
+            Thermocycle.builders.dyes(FRET={})
 
 
 def cast_values_as_units(params):
@@ -191,6 +182,7 @@ def cast_values_as_units(params):
         except UnitError:
             pass
         return item
+
     return {k: to_unit(v) for k, v in params.items()}
 
 
@@ -203,49 +195,39 @@ def merge_dicts(*dicts):
 
 class TestSpectrophotometryBuilders(object):
     wells = [Well("foo", 0)]
-    filter_selection = {
-        "shortpass": "500:nanometer",
-        "longpass": "600:nanometer"
-    }
-    monochromator_selection = {
-        "ideal": "550:nanometer"
-    }
+    filter_selection = {"shortpass": "500:nanometer", "longpass": "600:nanometer"}
+    monochromator_selection = {"ideal": "550:nanometer"}
     shake = {
         "duration": "10:minute",
         "frequency": "3:hertz",
         "path": "ccw_orbital",
-        "amplitude": "4:millimeter"
+        "amplitude": "4:millimeter",
     }
     position_z_manual = {
-        "manual": {
-            "reference": "plate_bottom",
-            "displacement": Unit("15:mm")
-        }
+        "manual": {"reference": "plate_bottom", "displacement": Unit("15:mm")}
     }
     position_z_calculated = {
         "calculated_from_wells": {
             "wells": wells,
-            "heuristic": "max_mean_read_without_saturation"
+            "heuristic": "max_mean_read_without_saturation",
         }
     }
 
-    luminescence_req = {
-        "wells": wells
-    }
+    luminescence_req = {"wells": wells}
     luminescence_opt = {
         "num_flashes": 9,
         "settle_time": "1:seconds",
         "integration_time": "4:seconds",
         "gain": 0.2,
         "read_position": "top",
-        "position_z": position_z_manual
+        "position_z": position_z_manual,
     }
     luminescence = merge_dicts(luminescence_req, luminescence_opt)
 
     fluorescence_req = {
         "wells": wells,
         "excitation": [cast_values_as_units(filter_selection)],
-        "emission": [cast_values_as_units(monochromator_selection)]
+        "emission": [cast_values_as_units(monochromator_selection)],
     }
     fluorescence_opt = {
         "num_flashes": 9,
@@ -254,114 +236,82 @@ class TestSpectrophotometryBuilders(object):
         "integration_time": "4:seconds",
         "gain": 0.2,
         "read_position": "top",
-        "position_z": position_z_calculated
+        "position_z": position_z_calculated,
     }
     fluorescence = merge_dicts(fluorescence_req, fluorescence_opt)
 
-    absorbance_req = {
-        "wells": wells,
-        "wavelength": [Unit("600:nanometer")]
-    }
+    absorbance_req = {"wells": wells, "wavelength": [Unit("600:nanometer")]}
     absorbance_opt = {
         "num_flashes": 6,
         "settle_time": "100:seconds",
         "read_position": "top",
-        "position_z": position_z_manual
+        "position_z": position_z_manual,
     }
     absorbance = merge_dicts(absorbance_req, absorbance_opt)
 
     def test_groups(self):
-        absorbance = Spectrophotometry.builders.group(
-            "absorbance",
-            self.absorbance
-        )
+        absorbance = Spectrophotometry.builders.group("absorbance", self.absorbance)
 
         fluorescence = Spectrophotometry.builders.group(
-            "fluorescence",
-            self.fluorescence
+            "fluorescence", self.fluorescence
         )
 
         luminescence = Spectrophotometry.builders.group(
-            "luminescence",
-            self.luminescence
+            "luminescence", self.luminescence
         )
 
-        shake = Spectrophotometry.builders.group(
-            "shake",
-            self.shake
-        )
+        shake = Spectrophotometry.builders.group("shake", self.shake)
         Spectrophotometry.builders.groups(
             [absorbance, fluorescence, luminescence, shake]
         )
 
     def test_absorbance_mode_params(self):
-        assert(
-            Spectrophotometry.builders.absorbance_mode_params(
-                **self.absorbance) ==
-            cast_values_as_units(self.absorbance)
-        )
+        assert Spectrophotometry.builders.absorbance_mode_params(
+            **self.absorbance
+        ) == cast_values_as_units(self.absorbance)
 
     def test_fluorescence_mode_params(self):
-        assert(
-            Spectrophotometry.builders.fluorescence_mode_params(
-                **self.fluorescence) ==
-            cast_values_as_units(self.fluorescence)
-        )
+        assert Spectrophotometry.builders.fluorescence_mode_params(
+            **self.fluorescence
+        ) == cast_values_as_units(self.fluorescence)
 
     def test_luminescence_mode_params(self):
-        assert(
-            Spectrophotometry.builders.luminescence_mode_params(
-                **self.luminescence) ==
-            cast_values_as_units(self.luminescence)
-        )
+        assert Spectrophotometry.builders.luminescence_mode_params(
+            **self.luminescence
+        ) == cast_values_as_units(self.luminescence)
 
     def test_shake_params(self):
         # pylint: disable=protected-access
-        assert(
-            Spectrophotometry.builders._shake(**self.shake) ==
-            cast_values_as_units(self.shake)
+        assert Spectrophotometry.builders._shake(**self.shake) == cast_values_as_units(
+            self.shake
         )
-        assert(
-            Spectrophotometry.builders.shake_mode_params(**self.shake) ==
-            cast_values_as_units(self.shake)
-        )
-        assert(
-            Spectrophotometry.builders.shake_before(**self.shake) ==
-            cast_values_as_units(self.shake)
-        )
+        assert Spectrophotometry.builders.shake_mode_params(
+            **self.shake
+        ) == cast_values_as_units(self.shake)
+        assert Spectrophotometry.builders.shake_before(
+            **self.shake
+        ) == cast_values_as_units(self.shake)
 
     def test_position_z_params(self):
-        assert(
-            Spectrophotometry.builders._position_z(self.position_z_manual) ==
-            cast_values_as_units(self.position_z_manual)
-        )
-        assert(
-            Spectrophotometry.builders._position_z(self.position_z_calculated)
-            == cast_values_as_units(self.position_z_calculated)
-        )
+        assert Spectrophotometry.builders._position_z(
+            self.position_z_manual
+        ) == cast_values_as_units(self.position_z_manual)
+        assert Spectrophotometry.builders._position_z(
+            self.position_z_calculated
+        ) == cast_values_as_units(self.position_z_calculated)
 
     def test_wavelength_selection(self):
-        assert(
-            Spectrophotometry.builders.wavelength_selection(
-                **self.filter_selection) ==
-            cast_values_as_units(self.filter_selection)
-        )
-        assert(
-            Spectrophotometry.builders.wavelength_selection(
-                **self.monochromator_selection) ==
-            cast_values_as_units(self.monochromator_selection)
-        )
+        assert Spectrophotometry.builders.wavelength_selection(
+            **self.filter_selection
+        ) == cast_values_as_units(self.filter_selection)
+        assert Spectrophotometry.builders.wavelength_selection(
+            **self.monochromator_selection
+        ) == cast_values_as_units(self.monochromator_selection)
 
     def test_optional_params(self):
-        Spectrophotometry.builders.fluorescence_mode_params(
-            **self.fluorescence_req
-        )
-        Spectrophotometry.builders.luminescence_mode_params(
-            **self.luminescence_req
-        )
-        Spectrophotometry.builders.absorbance_mode_params(
-            **self.absorbance_req
-        )
+        Spectrophotometry.builders.fluorescence_mode_params(**self.fluorescence_req)
+        Spectrophotometry.builders.luminescence_mode_params(**self.luminescence_req)
+        Spectrophotometry.builders.absorbance_mode_params(**self.absorbance_req)
 
 
 # pylint: disable=too-few-public-methods
@@ -369,17 +319,21 @@ class TestEvaporateBuilders(object):
     # pylint: disable=no-self-use
     def test_get_mode_params(self):
         with pytest.raises(ValueError):
-            Evaporate.builders.get_mode_params(mode="vortex", mode_params={
-                "gas": "nitrogen"})
+            Evaporate.builders.get_mode_params(
+                mode="vortex", mode_params={"gas": "nitrogen"}
+            )
         with pytest.raises(ValueError):
-            Evaporate.builders.get_mode_params(mode="vortex", mode_params={
-                "vortex_speed":Unit("200:ml/sec")})
+            Evaporate.builders.get_mode_params(
+                mode="vortex", mode_params={"vortex_speed": Unit("200:ml/sec")}
+            )
         test1 = Evaporate.builders.get_mode_params(
-            mode="blowdown", mode_params={
+            mode="blowdown",
+            mode_params={
                 "gas": "nitrogen",
                 "vortex_speed": Unit("200:rpm"),
-                "blow_rate": "200:uL/sec"
-            })
+                "blow_rate": "200:uL/sec",
+            },
+        )
         assert test1["gas"] == "nitrogen"
 
 
@@ -392,8 +346,9 @@ class TestSPEBuilders(object):
                 "settle_time": "2:second",
                 "processing_time": "1:minute",
                 "flow_pressure": "2:bar",
-                "resource_id": "solvent_b"
-            }),
+                "resource_id": "solvent_b",
+            }
+        ),
         cast_values_as_units(
             {
                 "volume": "10:milliliter",
@@ -401,28 +356,28 @@ class TestSPEBuilders(object):
                 "settle_time": "2:minute",
                 "processing_time": "3:minute",
                 "flow_pressure": "2:bar",
-                "resource_id": "solvent_a"
-            })
+                "resource_id": "solvent_a",
+            }
+        ),
     ]
     sample_reference = {
         "volume": "10:microliter",
         "loading_flowrate": "23:ul/second",
         "settle_time": "2:second",
         "processing_time": "1:minute",
-        "flow_pressure": "2:bar"
+        "flow_pressure": "2:bar",
     }
-
 
     def test_mobile_phase_builder(self):
         for param in self.mobile_phase_reference:
-            assert(param ==
-                   SPE.builders.mobile_phase_params(**param))
-    def test_spe_phase_builder(self):
-        assert(self.mobile_phase_reference ==
-               SPE.builders.spe_params(self.mobile_phase_reference))
+            assert param == SPE.builders.mobile_phase_params(**param)
 
+    def test_spe_phase_builder(self):
+        assert self.mobile_phase_reference == SPE.builders.spe_params(
+            self.mobile_phase_reference
+        )
 
     def test_sample_builder(self):
-        assert(cast_values_as_units(self.sample_reference) ==
-               SPE.builders.mobile_phase_params(is_sample=True,
-                                                **self.sample_reference))
+        assert cast_values_as_units(
+            self.sample_reference
+        ) == SPE.builders.mobile_phase_params(is_sample=True, **self.sample_reference)

@@ -10,9 +10,14 @@
    :target: https://travis-ci.org/autoprotocol/autoprotocol-python
    :alt: Build Status
 
+.. image:: https://codecov.io/gh/autoprotocol/autoprotocol-python/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/autoprotocol/autoprotocol-python
+   :alt: Code Coverage
+
 .. image:: https://badges.gitter.im/autoprotocol/autoprotocol-python.svg
    :target: https://gitter.im/autoprotocol/autoprotocol-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
    :alt: Gitter Chat
+
 
 Autoprotocol_ is the standard way to express experiments in life science. This repository contains a python library for generating Autoprotocol.
 

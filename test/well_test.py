@@ -3,11 +3,13 @@ import warnings
 import pytest
 from autoprotocol.container import Container
 
+
 class HasDummyWell(object):
     @pytest.fixture(autouse=True)
     def make_wells(self, dummy_type):
         self.container = Container(id=None, container_type=dummy_type)
         self.well = self.container.well(0)
+
 
 class TestValidateProperties(HasDummyWell):
     def test_rejects_incorrect_types(self):

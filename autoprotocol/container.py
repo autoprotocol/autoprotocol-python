@@ -45,12 +45,14 @@ class Well(object):
         if not isinstance(properties, dict):
             raise TypeError(
                 f"Aliquot properties {properties} are of type "
-                f"{type(properties)}, they should be a `dict`.")
+                f"{type(properties)}, they should be a `dict`."
+            )
         for key, value in properties.items():
             if not isinstance(key, str):
                 raise TypeError(
                     f"Aliquot property {key} : {value} has a key of type "
-                    f"{type(key)}, it should be a 'str'.")
+                    f"{type(key)}, it should be a 'str'."
+                )
             try:
                 json.dumps(value)
             except TypeError:
@@ -100,8 +102,7 @@ class Well(object):
         for key, value in properties.items():
             if key in self.properties:
                 values_are_lists = all(
-                    isinstance(_, list)
-                    for _ in [value, self.properties[key]]
+                    isinstance(_, list) for _ in [value, self.properties[key]]
                 )
                 if values_are_lists:
                     self.properties[key].extend(value)
@@ -137,13 +138,15 @@ class Well(object):
         if not isinstance(vol, str) and not isinstance(vol, Unit):
             raise TypeError(
                 f"Volume {vol} is of type {type(vol)}, it should be either "
-                f"'str' or 'Unit'.")
+                f"'str' or 'Unit'."
+            )
         v = Unit(vol)
         max_vol = self.container.container_type.true_max_vol_ul
         if v > max_vol:
             raise ValueError(
                 f"Theoretical volume {v} to be set exceeds maximum well "
-                f"volume {max_vol}.")
+                f"volume {max_vol}."
+            )
         self.volume = v
         return self
 
@@ -204,8 +207,7 @@ class Well(object):
         Return a string representation of a Well.
 
         """
-        return f"Well({str(self.container)}, {str(self.index)}, " \
-               f"{str(self.volume)})"
+        return f"Well({str(self.container)}, {str(self.index)}, " f"{str(self.volume)})"
 
 
 class WellGroup(object):
@@ -317,7 +319,8 @@ class WellGroup(object):
         for w in self.wells:
             assert w.container == self.wells[0].container, (
                 "All wells in WellGroup must belong to the same container to "
-                "get their indices.")
+                "get their indices."
+            )
             indices.append(w.humanize())
 
         return indices
@@ -368,8 +371,7 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (WellGroup, list)):
-            raise TypeError("Input given is not of type 'WellGroup' or "
-                            "'list'.")
+            raise TypeError("Input given is not of type 'WellGroup' or " "'list'.")
         else:
             if not all(isinstance(well, Well) for well in other):
                 raise TypeError("Input given is not of type 'Well'.")
@@ -417,8 +419,13 @@ class WellGroup(object):
         if not isinstance(prop, str):
             raise TypeError(f"property is not a string: {prop!r}")
         if val is not None:
-            return WellGroup([w for w in self.wells if prop in w.properties and
-                             w.properties[prop] is val])
+            return WellGroup(
+                [
+                    w
+                    for w in self.wells
+                    if prop in w.properties and w.properties[prop] is val
+                ]
+            )
         else:
             return WellGroup([w for w in self.wells if prop in w.properties])
 
@@ -545,8 +552,7 @@ class WellGroup(object):
 
         """
         if not isinstance(other, (Well, WellGroup)):
-            raise TypeError("You can only add a Well or WellGroups "
-                            "together.")
+            raise TypeError("You can only add a Well or WellGroups " "together.")
         if isinstance(other, Well):
             return WellGroup(self.wells + [other])
         else:
@@ -588,15 +594,13 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None,
-                 cover=None):
+    def __init__(self, id, container_type, name=None, storage=None, cover=None):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
         self.cover = cover
-        self._wells = [Well(self, idx)
-                       for idx in range(container_type.well_count)]
+        self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")
 
@@ -622,8 +626,7 @@ class Container(object):
             index given is not of the right type
         """
         if not isinstance(i, (int, str)):
-            raise TypeError("Well reference given is not of type 'int' or "
-                            "'str'.")
+            raise TypeError("Well reference given is not of type 'int' or " "'str'.")
         return self._wells[self.robotize(i)]
 
     def well_from_coordinates(self, row, column):
@@ -666,8 +669,9 @@ class Container(object):
         if self.container_type.is_tube:
             return self.well(0)
         else:
-            raise AttributeError(f"{self} is a {self.container_type.shortname} "
-                                 f"and is not a tube")
+            raise AttributeError(
+                f"{self} is a {self.container_type.shortname} " f"and is not a tube"
+            )
 
     def wells(self, *args):
         """
@@ -701,8 +705,9 @@ class Container(object):
                 wells.extend([a])
         for w in wells:
             if not isinstance(w, (str, int, list)):
-                raise TypeError("Well reference given is not of type"
-                                " 'int', 'str' or 'list'.")
+                raise TypeError(
+                    "Well reference given is not of type" " 'int', 'str' or 'list'."
+                )
 
         return WellGroup([self.well(w) for w in wells])
 
@@ -716,8 +721,9 @@ class Container(object):
 
         """
         if not isinstance(well_ref, (str, int, Well, list)):
-            raise TypeError("Well reference given is not of type 'str' "
-                            "'int', 'Well' or 'list'.")
+            raise TypeError(
+                "Well reference given is not of type 'str' " "'int', 'Well' or 'list'."
+            )
         return self.container_type.robotize(well_ref)
 
     def humanize(self, well_ref):
@@ -730,8 +736,9 @@ class Container(object):
 
         """
         if not isinstance(well_ref, (int, str, list)):
-            raise TypeError("Well reference given is not of type 'int',"
-                            "'str' or 'list'.")
+            raise TypeError(
+                "Well reference given is not of type 'int'," "'str' or 'list'."
+            )
         return self.container_type.humanize(well_ref)
 
     def decompose(self, well_ref):
@@ -744,8 +751,9 @@ class Container(object):
 
         """
         if not isinstance(well_ref, (int, str, Well)):
-            raise TypeError("Well reference given is not of type 'int', "
-                            "'str' or Well.")
+            raise TypeError(
+                "Well reference given is not of type 'int', " "'str' or Well."
+            )
         return self.container_type.decompose(well_ref)
 
     def all_wells(self, columnwise=False):
@@ -767,9 +775,13 @@ class Container(object):
         if columnwise:
             num_cols = self.container_type.col_count
             num_rows = self.container_type.well_count // num_cols
-            return WellGroup([self._wells[row * num_cols + col]
-                              for col in range(num_cols)
-                              for row in range(num_rows)])
+            return WellGroup(
+                [
+                    self._wells[row * num_cols + col]
+                    for col in range(num_cols)
+                    for row in range(num_rows)
+                ]
+            )
         else:
             return WellGroup(self._wells)
 
@@ -836,8 +848,9 @@ class Container(object):
             Incorrect input types, e.g. `num` has to be of type int
         """
         if not isinstance(start, (str, int, Well)):
-            raise TypeError("Well reference given is not of type 'str',"
-                            "'int', or 'Well'.")
+            raise TypeError(
+                "Well reference given is not of type 'str'," "'int', or 'Well'."
+            )
         if not isinstance(num, int):
             raise TypeError("Number of wells given is not of type 'int'.")
 
@@ -846,7 +859,7 @@ class Container(object):
             row, col = self.decompose(start)
             num_rows = self.container_type.row_count()
             start = col * num_rows + row
-        return WellGroup(self.all_wells(columnwise).wells[start:start + num])
+        return WellGroup(self.all_wells(columnwise).wells[start : start + num])
 
     def is_sealed(self):
         """
@@ -898,22 +911,26 @@ class Container(object):
         # n_wells: n_cols
         allowed_layouts = {96: 12, 384: 24}
         n_wells = self.container_type.well_count
-        if (n_wells not in allowed_layouts or
-                self.container_type.col_count != allowed_layouts[n_wells]):
-            raise ValueError("Quadrant is only defined for standard 96 and "
-                             "384-well plates")
+        if (
+            n_wells not in allowed_layouts
+            or self.container_type.col_count != allowed_layouts[n_wells]
+        ):
+            raise ValueError(
+                "Quadrant is only defined for standard 96 and " "384-well plates"
+            )
 
         if n_wells == 96:
             if quad == 0:
                 return WellGroup(self._wells)
             else:
                 raise ValueError(
-                    "0 or 'A1' is the only valid quadrant for a 96-well "
-                    "plate.")
+                    "0 or 'A1' is the only valid quadrant for a 96-well " "plate."
+                )
 
         if quad not in [0, 1, 2, 3]:
-            raise ValueError(f"Invalid quadrant {quad} for plate type "
-                             f"{str(self.name)}")
+            raise ValueError(
+                f"Invalid quadrant {quad} for plate type " f"{str(self.name)}"
+            )
 
         start_well = [0, 1, 24, 25]
         wells = []
@@ -946,8 +963,10 @@ class Container(object):
 
         """
         if not isinstance(storage, str):
-            raise TypeError(f"Storage condition given ({storage}) is not of "
-                            f"type str. {type(storage)}.")
+            raise TypeError(
+                f"Storage condition given ({storage}) is not of "
+                f"type str. {type(storage)}."
+            )
 
         self.storage = storage
         return self
@@ -1051,10 +1070,9 @@ class Container(object):
                 f"container: {self}"
             )
 
-        return WellGroup([
-            self.well_from_coordinates(x, y)
-            for x in well_rows for y in well_cols
-        ])
+        return WellGroup(
+            [self.well_from_coordinates(x, y) for x in well_rows for y in well_cols]
+        )
 
     def __repr__(self):
         """
@@ -1062,5 +1080,7 @@ class Container(object):
         (ex. Container('my_plate'))
 
         """
-        return f"Container({str(self.name)}" \
-               f"{', cover=' + self.cover if self.cover else ''})"
+        return (
+            f"Container({str(self.name)}"
+            f"{', cover=' + self.cover if self.cover else ''})"
+        )

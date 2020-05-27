@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`252` Switch to using .readthedocs.yml for docs build config
 * :support:`251` Add code coverage badge
 * :support:`250` Bump test dependencies, notably pytest to >=5.4, pylint to 2.5.2 and tox >=3.15
 * :support:`249` Update documentation dependencies, notably Sphinx to >=2.4

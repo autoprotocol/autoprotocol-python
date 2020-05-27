@@ -15,12 +15,14 @@ class TestProvision(object):
 
     def test_provision_well_capacity(self):
         self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             self.p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file("expected_provision.json")
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "expected_provision.json"
+        )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_attempt_to_provision_more_than_well_capacity(self):
         with pytest.raises(ValueError):
@@ -58,14 +60,14 @@ class TestProvision(object):
         )
         wells = [w1, w2, w3]
         p.provision("rs17gmh5wafm5p", wells, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "provision_multiple_wells.json"
         )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_with_consecutive_repeated_wells(self):
         p = Protocol()
@@ -76,14 +78,14 @@ class TestProvision(object):
         )
         wells = [w1, w1]
         p.provision("rs17gmh5wafm5p", wells, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "provision_with_consecutive_repeated_wells.json"
         )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_with_repeated_wells_but_discontinious(self):
         p = Protocol()
@@ -99,14 +101,14 @@ class TestProvision(object):
         )
         wells = [w1, w2, w1]
         p.provision("rs17gmh5wafm5p", wells, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "provision_with_repeated_wells_but_discontinious.json"
         )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_with_multiple_wells_with_different_cont_types(self):
         p = Protocol()
@@ -122,14 +124,14 @@ class TestProvision(object):
         )
         wells = [w1, w2]
         p.provision("rs17gmh5wafm5p", wells, "1500:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "provision_multiple_wells_with_diff_cont_types.json"
         )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_provision_with_covered_container(self):
         p = Protocol()
@@ -139,14 +141,14 @@ class TestProvision(object):
             .set_volume("2:microliter")
         )
         p.provision("rs17gmh5wafm5p", w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "provision_with_cover.json"
         )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_provision_with_sealed_container(self):
         p = Protocol()
@@ -156,12 +158,14 @@ class TestProvision(object):
             .set_volume("2:microliter")
         )
         p.provision("rs17gmh5wafm5p", w1, "50:microliter")
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file("provision_with_seal.json")
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision_with_seal.json"
+        )
 
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_for_multiple_dispenses_of_resource_in_containers_larger_than_900ml(self):
         p = Protocol()
@@ -172,10 +176,10 @@ class TestProvision(object):
         )
         p.provision("rs17gmh5wafm5p", w1, "1500:microliter")
 
-        actual_protocol_as_json = json.dumps(
+        actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
         )
-        expected_protocol_as_json = TestUtils.read_json_file(
+        expected_instruction_as_json = TestUtils.read_json_file(
             "split_provisions_by_volume.json"
         )
-        assert expected_protocol_as_json == actual_protocol_as_json
+        assert expected_instruction_as_json == actual_instruction_as_json

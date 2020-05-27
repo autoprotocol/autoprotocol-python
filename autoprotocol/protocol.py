@@ -5067,7 +5067,7 @@ class Protocol(object):
 
         Returns
         -------
-        Provision
+        list(Provision)
             Provision instruction object(s) to be appended and returned
 
         """

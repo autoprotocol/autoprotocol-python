@@ -5065,6 +5065,11 @@ class Protocol(object):
         ValueError
             Volume to provision exceeds max capacity of well
 
+        Returns
+        -------
+        list
+            Provision instruction object(s) to be appended and returned
+
         """
         # Check valid well inputs
         if not is_valid_well(dests):
@@ -5089,6 +5094,7 @@ class Protocol(object):
         for v in volumes:
             if not isinstance(v, (str, Unit)):
                 raise TypeError("Volume must be a string or Unit.")
+        provision_instructions_to_return: Provision = []
         for d, v in zip(dests, volumes):
             d_max_vol = d.container.container_type.true_max_vol_ul
             if v > d_max_vol:
@@ -5100,9 +5106,13 @@ class Protocol(object):
             dest_group = []
             if v > Unit(900, "microliter"):
                 diff = v - Unit(900, "microliter")
-                self.provision(resource_id, d, Unit(900, "microliter"))
+                provision_instructions_to_return.append(
+                    self.provision(resource_id, d, Unit(900, "microliter"))
+                )
                 while diff > Unit(0.0, "microliter"):
-                    self.provision(resource_id, d, diff)
+                    provision_instructions_to_return.append(
+                        self.provision(resource_id, d, diff)
+                    )
                     diff -= diff
                 continue
 
@@ -5124,7 +5134,10 @@ class Protocol(object):
             ):
                 self.instructions[-1].to.append(xfer)
             else:
-                self._append_and_return(Provision(resource_id, dest_group))
+                provision_instructions_to_return.append(
+                    self._append_and_return(Provision(resource_id, dest_group))
+                )
+        return provision_instructions_to_return
 
     def flash_freeze(self, container, duration):
         """

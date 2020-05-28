@@ -1,0 +1,30 @@
+[
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "900:microliter",
+          "well": "w1/0"
+        },
+        {
+          "volume": "600:microliter",
+          "well": "w1/0"
+        }
+      ]
+    },
+    {
+      "op": "provision",
+      "resource_id": "rs17gmh5wafm5p",
+      "to": [
+        {
+          "volume": "900:microliter",
+          "well": "w2/0"
+        },
+        {
+          "volume": "600:microliter",
+          "well": "w2/0"
+        }
+      ]
+    }
+  ]

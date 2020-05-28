@@ -1,0 +1,16 @@
+[
+    {
+      "op": "uncover",
+      "object": "w1"
+    },
+    {
+      "op": "provision",
+      "to": [
+        {
+          "volume": "50:microliter",
+          "well": "w1/0"
+        }
+      ],
+      "resource_id": "rs17gmh5wafm5p"
+    }
+  ]

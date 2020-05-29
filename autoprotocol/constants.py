@@ -35,3 +35,9 @@ SPREAD_PATH = [
     (0.6243159222654036, -0.14191423819668741),
     (0.563207308766221, 0.5152506858187523),
 ]
+
+MEASUREMENT_MODES = ["mass", "volume"]
+
+VOLUMETRIC_UNITS = ["liter", "milliliter", "microliter"]
+
+MASS_UNITS = ["gram", "milligram", "microgram"]

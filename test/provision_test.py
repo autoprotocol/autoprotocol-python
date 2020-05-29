@@ -183,3 +183,20 @@ class TestProvision(object):
             "split_provisions_by_volume.json"
         )
         assert expected_instruction_as_json == actual_instruction_as_json
+
+    def test_provision_well_with_mass(self):
+        p = Protocol()
+        w1 = (
+            p.ref("w1", None, cont_type="96-pcr", discard=True)
+            .well(0)
+            .set_volume("2:microliter")
+        )
+        p.provision("rs17gmh5wafm5p", w1, "50:ug")
+        actual_instruction_as_json = json.dumps(
+            p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision_for_mass.json"
+        )
+
+        assert expected_instruction_as_json == actual_instruction_as_json

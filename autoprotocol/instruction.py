@@ -9,6 +9,7 @@ Contains all the Autoprotocol Instruction objects
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 from .builders import *  # pylint: disable=unused-wildcard-import
+from .constants import *  # pylint: disable=unused-wildcard-import
 
 
 class Instruction(object):
@@ -1372,6 +1373,8 @@ class Provision(Instruction):
       Resource ID from catalog.
     dests : list(dict)
       Destination(s) for specified resource, together with volume information
+    measurement_mode : str
+      Measurement mode. Possible values are :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
 
     Raises
     ------
@@ -1385,9 +1388,17 @@ class Provision(Instruction):
 
     """
 
-    def __init__(self, resource_id, dests):
+    def __init__(self, resource_id, dests, measurement_mode="volume"):
+        if measurement_mode not in MEASUREMENT_MODES:
+            raise RuntimeError(f"{measurement_mode} is not a valid measurement mode")
+
         super(Provision, self).__init__(
-            op="provision", data={"resource_id": resource_id, "to": dests}
+            op="provision",
+            data={
+                "resource_id": resource_id,
+                "measurement_mode": measurement_mode,
+                "to": dests,
+            },
         )
 
 

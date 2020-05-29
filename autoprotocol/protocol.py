@@ -5034,7 +5034,7 @@ class Protocol(object):
         """
         return self._append_and_return(ImagePlate(ref, mode, dataref))
 
-    def provision(self, resource_id, dests, volumes):
+    def provision(self, resource_id, dests, amounts):
         """
         Provision a commercial resource from a catalog into the specified
         destination well(s).  A new tip is used for each destination well
@@ -5046,10 +5046,10 @@ class Protocol(object):
           Resource ID from catalog.
         dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
-        volumes : str or Unit or list(str) or list(Unit)
-          Volume(s) to transfer of the resource to each destination well.  If
-          one volume of specified, each destination well recieve that volume of
-          the resource.  If destinations should recieve different volumes, each
+        amounts : str or Unit or list(str) or list(Unit)
+          Volume(s)/Mass(es) to transfer of the resource to each destination well.  If
+          one volume/mass is specified, each destination well receive that volume/mass of
+          the resource.  If destinations should receive different volumes/mass, each
           one should be specified explicitly in a list matching the order of the
           specified destinations.
 
@@ -5058,12 +5058,12 @@ class Protocol(object):
         TypeError
             If resource_id is not a string.
         RuntimeError
-            If length of the list of volumes specified does not match the number
+            If length of the list of volumes/masses specified does not match the number
             of destination wells specified.
         TypeError
-            If volume is not specified as a string or Unit (or a list of either)
+            If volume/mass is not specified as a string or Unit (or a list of either)
         ValueError
-            Volume to provision exceeds max capacity of well
+            If provided amount is volume and the provision exceeds max capacity of well
 
         Returns
         -------
@@ -5071,6 +5071,7 @@ class Protocol(object):
             :py:class:`autoprotocol.instruction.Provision` instruction object(s) to be appended and returned
 
         """
+
         # Check valid well inputs
         if not is_valid_well(dests):
             raise TypeError(
@@ -5080,51 +5081,62 @@ class Protocol(object):
         dests = WellGroup(dests)
         if not isinstance(resource_id, str):
             raise TypeError("Resource ID must be a string.")
-        if not isinstance(volumes, list):
-            volumes = [Unit(volumes)] * len(dests)
+        if not isinstance(amounts, list):
+            amounts = [Unit(amounts)] * len(dests)
         else:
-            if len(volumes) != len(dests):
+            if len(amounts) != len(dests):
                 raise RuntimeError(
                     "To provision a resource into multiple "
-                    "destinations with multiple volumes, the  "
-                    "list of volumes must correspond with the "
+                    "destinations with multiple volumes/masses, the  "
+                    "list of volumes/masses must correspond with the "
                     "destinations in length and in order."
                 )
-            volumes = [Unit(v) for v in volumes]
-        for v in volumes:
-            if not isinstance(v, (str, Unit)):
-                raise TypeError("Volume must be a string or Unit.")
+            amounts = [Unit(v) for v in amounts]
+        unique_measure_modes = set()
+        for amount in amounts:
+            if not isinstance(amount, (str, Unit)):
+                raise TypeError("Volume/Mass must be a string or Unit.")
+            if amount.unit in VOLUMETRIC_UNITS:
+                unique_measure_modes.add("volume")
+            elif amount.unit in MASS_UNITS:
+                unique_measure_modes.add("mass")
+
+        if len(unique_measure_modes) != 1:
+            raise ValueError("Received amounts with more than one measurement mode")
+        measurement_mode = unique_measure_modes.pop()
         provision_instructions_to_return: Provision = []
-        for d, v in zip(dests, volumes):
-            d_max_vol = d.container.container_type.true_max_vol_ul
-            if v > d_max_vol:
-                raise ValueError(
-                    f"The volume you are trying to provision ({v}) exceeds the "
-                    f"maximum capacity of this well ({d_max_vol})."
-                )
-            self._remove_cover(d.container, "provision")
-            dest_group = []
-            if v > Unit(900, "microliter"):
-                diff = v - Unit(900, "microliter")
-                provision_instructions_to_return.append(
-                    self.provision(resource_id, d, Unit(900, "microliter"))
-                )
-                while diff > Unit(0.0, "microliter"):
-                    provision_instructions_to_return.append(
-                        self.provision(resource_id, d, diff)
-                    )
-                    diff -= diff
-                continue
+
+        for d, amount in zip(dests, amounts):
 
             xfer = {}
             xfer["well"] = d
-            xfer["volume"] = v
+            xfer[measurement_mode] = amount
 
-            if d.volume:
-                d.volume += v
-            else:
-                d.set_volume(v)
-            dest_group.append(xfer)
+            if measurement_mode == "volume":
+                d_max_vol = d.container.container_type.true_max_vol_ul
+                if amount > d_max_vol:
+                    raise ValueError(
+                        f"The volume you are trying to provision ({amount}) exceeds the "
+                        f"maximum capacity of this well ({d_max_vol})."
+                    )
+                if amount > Unit(900, "microliter"):
+                    diff = amount - Unit(900, "microliter")
+                    provision_instructions_to_return.append(
+                        self.provision(resource_id, d, Unit(900, "microliter"))
+                    )
+                    while diff > Unit(0.0, "microliter"):
+                        provision_instructions_to_return.append(
+                            self.provision(resource_id, d, diff)
+                        )
+                        diff -= diff
+                    continue
+
+                if d.volume:
+                    d.volume += amount
+                else:
+                    d.set_volume(amount)
+            self._remove_cover(d.container, "provision")
+            dest_group = [xfer]
 
             if (
                 self.instructions
@@ -5135,7 +5147,9 @@ class Protocol(object):
                 self.instructions[-1].to.append(xfer)
             else:
                 provision_instructions_to_return.append(
-                    self._append_and_return(Provision(resource_id, dest_group))
+                    self._append_and_return(
+                        Provision(resource_id, dest_group, measurement_mode)
+                    )
                 )
         return provision_instructions_to_return
 

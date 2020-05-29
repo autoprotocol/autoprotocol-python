@@ -5,6 +5,7 @@
     },
     {
       "op": "provision",
+      "measurement_mode": "volume",
       "to": [
         {
           "volume": "50:microliter",

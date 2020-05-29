@@ -1,6 +1,7 @@
 [
     {
       "resource_id": "rs17gmh5wafm5p",
+      "measurement_mode": "volume",
       "to": [
         {
           "volume": "50:microliter",

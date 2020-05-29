@@ -2738,9 +2738,9 @@ class TestDyeTest(object):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
-        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), "10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
-        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), "10:microliter")
         _convert_provision_instructions(p1, 3, 3)
 
         assert p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz"

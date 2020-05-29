@@ -5034,7 +5034,7 @@ class Protocol(object):
         """
         return self._append_and_return(ImagePlate(ref, mode, dataref))
 
-    def provision(self, resource_id, dests, amounts):
+    def provision(self, resource_id, dests, volumes):
         """
         Provision a commercial resource from a catalog into the specified
         destination well(s).  A new tip is used for each destination well
@@ -5046,10 +5046,10 @@ class Protocol(object):
           Resource ID from catalog.
         dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
-        amounts : str or Unit or list(str) or list(Unit)
-          Volume(s)/Mass(es) to transfer of the resource to each destination well.  If
+        volumes : str or Unit or list(str) or list(Unit)
+          Volume(s) or Mass(es) to transfer of the resource to each destination well.  If
           one volume/mass is specified, each destination well receive that volume/mass of
-          the resource.  If destinations should receive different volumes/mass, each
+          the resource.  If destinations should receive different volumes or mass, each
           one should be specified explicitly in a list matching the order of the
           specified destinations.
 
@@ -5058,10 +5058,10 @@ class Protocol(object):
         TypeError
             If resource_id is not a string.
         RuntimeError
-            If length of the list of volumes/masses specified does not match the number
+            If length of the list of volumes or masses specified does not match the number
             of destination wells specified.
         TypeError
-            If volume/mass is not specified as a string or Unit (or a list of either)
+            If volume or mass is not specified as a string or Unit (or a list of either)
         ValueError
             If provided amount is volume and the provision exceeds max capacity of well
 
@@ -5079,34 +5079,28 @@ class Protocol(object):
                 "list of Wells, or WellGroup."
             )
         dests = WellGroup(dests)
+
         if not isinstance(resource_id, str):
             raise TypeError("Resource ID must be a string.")
-        if not isinstance(amounts, list):
-            amounts = [Unit(amounts)] * len(dests)
+
+        if not isinstance(volumes, list):
+            volumes = [Unit(volumes)] * len(dests)
         else:
-            if len(amounts) != len(dests):
+            if len(volumes) != len(dests):
                 raise RuntimeError(
                     "To provision a resource into multiple "
-                    "destinations with multiple volumes/masses, the  "
-                    "list of volumes/masses must correspond with the "
+                    "destinations with multiple volumes or masses, the  "
+                    "list of volumes or masses must correspond with the "
                     "destinations in length and in order."
                 )
-            amounts = [Unit(v) for v in amounts]
-        unique_measure_modes = set()
-        for amount in amounts:
-            if not isinstance(amount, (str, Unit)):
-                raise TypeError("Volume/Mass must be a string or Unit.")
-            if amount.unit in VOLUMETRIC_UNITS:
-                unique_measure_modes.add("volume")
-            elif amount.unit in MASS_UNITS:
-                unique_measure_modes.add("mass")
+            volumes = [Unit(v) for v in volumes]
 
-        if len(unique_measure_modes) != 1:
-            raise ValueError("Received amounts with more than one measurement mode")
-        measurement_mode = unique_measure_modes.pop()
+        measurement_mode = self._identify_measurement_mode(volumes)
+
         provision_instructions_to_return: Provision = []
-
-        for d, amount in zip(dests, amounts):
+        for d, amount in zip(dests, volumes):
+            if d.container.is_covered() or d.container.is_sealed():
+                self._remove_cover(d.container, "provision")
 
             xfer = {}
             xfer["well"] = d
@@ -5135,7 +5129,7 @@ class Protocol(object):
                     d.volume += amount
                 else:
                     d.set_volume(amount)
-            self._remove_cover(d.container, "provision")
+
             dest_group = [xfer]
 
             if (
@@ -5152,6 +5146,24 @@ class Protocol(object):
                     )
                 )
         return provision_instructions_to_return
+
+    def _identify_measurement_mode(self, volumes):
+        unique_measure_modes = set()
+        for amount in volumes:
+            if not isinstance(amount, (str, Unit)):
+                raise TypeError(f"Provided amount {amount} is not supported.")
+            if amount.unit.endswith("liter"):
+                unique_measure_modes.add("volume")
+            elif amount.unit.endswith("gram"):
+                unique_measure_modes.add("mass")
+            else:
+                raise ValueError(
+                    f"Provisioning of resources with measurement unit of {amount.unit} is not supported."
+                )
+        if len(unique_measure_modes) != 1:
+            raise ValueError("Received amounts with more than one measurement mode")
+        measurement_mode = unique_measure_modes.pop()
+        return measurement_mode
 
     def flash_freeze(self, container, duration):
         """

@@ -174,7 +174,7 @@ class TestProvision(object):
             .well(0)
             .set_volume("2:microliter")
         )
-        p.provision("rs17gmh5wafm5p", w1, "1500:microliter")
+        p.provision("rs17gmh5wafm5p", w1, volumes="1500:microliter")
 
         actual_instruction_as_json = json.dumps(
             p.as_dict()["instructions"], indent=2, sort_keys=True
@@ -200,3 +200,28 @@ class TestProvision(object):
         )
 
         assert expected_instruction_as_json == actual_instruction_as_json
+
+    def test_provision_wells_with_amounts_of_varying_measurement_modes(self):
+        p = Protocol()
+        w1 = (
+            p.ref("w1", None, cont_type="96-pcr", discard=True)
+            .well(0)
+            .set_volume("2:microliter")
+        )
+        w2 = (
+            p.ref("w2", None, cont_type="96-pcr", discard=True)
+            .well(0)
+            .set_volume("2:microliter")
+        )
+        with pytest.raises(ValueError):
+            p.provision("rs17gmh5wafm5p", [w1, w2], ["50:microgram", "50:microliter"])
+
+    def test_provision_well_with_neither_mass_nor_volume(self):
+        p = Protocol()
+        w1 = (
+            p.ref("w1", None, cont_type="96-pcr", discard=True)
+            .well(0)
+            .set_volume("2:microliter")
+        )
+        with pytest.raises(ValueError):
+            p.provision("rs17gmh5wafm5p", w1, ["50:meter^2"])

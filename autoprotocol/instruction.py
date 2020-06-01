@@ -9,7 +9,7 @@ Contains all the Autoprotocol Instruction objects
 
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 from .builders import *  # pylint: disable=unused-wildcard-import
-from .constants import *  # pylint: disable=unused-wildcard-import
+from .constants import PROVISION_MEASUREMENT_MODES
 
 
 class Instruction(object):

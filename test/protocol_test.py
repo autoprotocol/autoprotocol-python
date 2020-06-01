@@ -2738,7 +2738,7 @@ class TestDyeTest(object):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
-        p1.provision("rs18s8x4qbsvjz", c1.well(0), "10:microliter")
+        p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), "10:microliter")
         _convert_provision_instructions(p1, 3, 3)
@@ -3031,21 +3031,6 @@ class TestSonicate(object):
                 frequency="25:kilohertz",
                 temperature="4:celsius",
             )
-
-
-class TestProvision(object):
-    p = Protocol()
-    w1 = (
-        p.ref("w1", None, cont_type="96-pcr", discard=True)
-        .well(0)
-        .set_volume("2:microliter")
-    )
-
-    def test_provision_well_capacity(self):
-        self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter")
-        assert self.p.instructions[-1].op == "provision"
-        with pytest.raises(ValueError):
-            self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
 
 
 class TestImage(object):

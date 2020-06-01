@@ -1,7 +1,7 @@
 [
   {
-    "measurement_mode": "mass",
     "op": "provision",
+    "measurement_mode": "mass",
     "resource_id": "rs17gmh5wafm5p",
     "to": [
       {

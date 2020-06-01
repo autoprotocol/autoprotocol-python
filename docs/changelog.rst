@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :support:`255` Add support for provisioning mass based resources
+* :feature:`255` Add support for provisioning of resources by mass
 
 * :release:`7.0.0 <2020-05-28>`
 * :bug:`253 major` Provision instruction for multiple wells is not including all wells in the request

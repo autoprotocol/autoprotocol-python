@@ -6,12 +6,12 @@
     {
       "op": "provision",
       "measurement_mode": "volume",
+      "resource_id": "rs17gmh5wafm5p",
       "to": [
         {
           "volume": "50:microliter",
           "well": "w1/0"
         }
-      ],
-      "resource_id": "rs17gmh5wafm5p"
+      ]
     }
   ]

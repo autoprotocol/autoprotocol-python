@@ -1383,6 +1383,7 @@ class Provision(Instruction):
     RuntimeError
       If length of the list of volumes specified does not match the number of
       destination wells specified.
+      If the measurement mode is not supported.
     TypeError
       If volume is not specified as a string or Unit (or a list of either)
 

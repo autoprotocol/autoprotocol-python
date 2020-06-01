@@ -1389,8 +1389,10 @@ class Provision(Instruction):
     """
 
     def __init__(self, resource_id, dests, measurement_mode="volume"):
-        if measurement_mode not in MEASUREMENT_MODES:
-            raise RuntimeError(f"{measurement_mode} is not a valid measurement mode")
+        if measurement_mode not in PROVISION_MEASUREMENT_MODES:
+            raise RuntimeError(
+                f"{measurement_mode} is not a valid measurement mode for provisioning"
+            )
 
         super(Provision, self).__init__(
             op="provision",

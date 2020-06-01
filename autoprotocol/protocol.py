@@ -5048,7 +5048,7 @@ class Protocol(object):
           Destination(s) for specified resource.
         volumes : str or Unit or list(str) or list(Unit)
           Volume(s) or Mass(es) to transfer of the resource to each destination well.  If
-          one volume/mass is specified, each destination well receive that volume/mass of
+          one volume or mass is specified, each destination well receive that volume or mass of
           the resource.  If destinations should receive different volumes or mass, each
           one should be specified explicitly in a list matching the order of the
           specified destinations.
@@ -5150,11 +5150,12 @@ class Protocol(object):
     def _identify_measurement_mode(self, volumes):
         unique_measure_modes = set()
         for amount in volumes:
+            print(amount.dimensionality)
             if not isinstance(amount, (str, Unit)):
                 raise TypeError(f"Provided amount {amount} is not supported.")
-            if amount.unit.endswith("liter"):
+            if amount.dimensionality == Unit(1, "liter").dimensionality:
                 unique_measure_modes.add("volume")
-            elif amount.unit.endswith("gram"):
+            elif amount.dimensionality == Unit(1, "gram").dimensionality:
                 unique_measure_modes.add("mass")
             else:
                 raise ValueError(

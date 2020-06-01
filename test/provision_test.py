@@ -214,7 +214,7 @@ class TestProvision(object):
             .set_volume("2:microliter")
         )
         with pytest.raises(ValueError):
-            p.provision("rs17gmh5wafm5p", [w1, w2], ["50:microgram", "50:microliter"])
+            p.provision("rs17gmh5wafm5p", [w1, w2], ["50:lb", "50:gallon"])
 
     def test_provision_well_with_neither_mass_nor_volume(self):
         p = Protocol()

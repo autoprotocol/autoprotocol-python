@@ -5034,7 +5034,7 @@ class Protocol(object):
         """
         return self._append_and_return(ImagePlate(ref, mode, dataref))
 
-    def provision(self, resource_id, dests, volumes=None, amounts=None):
+    def provision(self, resource_id, dests, amounts=None, volumes=None):
         """
         Provision a commercial resource from a catalog into the specified
         destination well(s).  A new tip is used for each destination well
@@ -5046,13 +5046,6 @@ class Protocol(object):
           Resource ID from catalog.
         dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
-        volumes : str or Unit or list(str) or list(Unit)
-          Volume to transfer of the resource to each destination well.  If
-          one volume is specified, each destination well receive that volume of the resource.
-          If destinations should receive different volumes, each
-          one should be specified explicitly in a list matching the order of the
-          specified destinations.
-          Note: If value is provided for this field, value for 'amounts' must be skipped
         amounts : str or Unit or list(str) or list(Unit)
           Mass(es) to transfer of the resource to each destination well.  If
           one mass is specified, each destination well receive that mass of
@@ -5060,6 +5053,13 @@ class Protocol(object):
           one should be specified explicitly in a list matching the order of the
           specified destinations.
           Note: If value is provided for this field, value for 'volumes' must be skipped
+        volumes : str or Unit or list(str) or list(Unit)
+          Volume to transfer of the resource to each destination well.  If
+          one volume is specified, each destination well receive that volume of the resource.
+          If destinations should receive different volumes, each
+          one should be specified explicitly in a list matching the order of the
+          specified destinations.
+          Note: If value is provided for this field, value for 'amounts' must be skipped
 
         Raises
         ------
@@ -5115,7 +5115,7 @@ class Protocol(object):
                 )
             provision_amounts = [Unit(v) for v in provision_amounts]
 
-        measurement_mode = self._identify_measurement_mode(provision_amounts)
+        measurement_mode = self._identify_provision_mode(provision_amounts)
 
         provision_instructions_to_return: Provision = []
         for d, amount in zip(dests, provision_amounts):
@@ -5165,10 +5165,9 @@ class Protocol(object):
                 )
         return provision_instructions_to_return
 
-    def _identify_measurement_mode(self, provision_amounts):
+    def _identify_provision_mode(self, provision_amounts):
         unique_measure_modes = set()
         for amount in provision_amounts:
-            print(amount.dimensionality)
             if not isinstance(amount, (str, Unit)):
                 raise TypeError(f"Provided amount {amount} is not supported.")
             if amount.dimensionality == Unit(1, "liter").dimensionality:

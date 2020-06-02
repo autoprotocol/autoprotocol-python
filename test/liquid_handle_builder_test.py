@@ -291,6 +291,16 @@ class TestLiquidHandleBuilder(object):
                 ),
             ),
         ]
+        transports_no_mode_params = [
+            LiquidHandle.builders.transport(
+                volume=Unit(1, "uL"),
+                density=None,
+                pump_override_volume=Unit(2, "uL"),
+                flowrate=LiquidHandle.builders.flowrate(target=Unit(10, "uL/s")),
+                delay_time=Unit(0.5, "s"),
+                mode_params=None,
+            )
+        ]
         transports_invalid = [
             LiquidHandle.builders.transport(
                 volume=Unit(1, "uL"),
@@ -326,6 +336,7 @@ class TestLiquidHandleBuilder(object):
             "transports": transports_viscous,
             "mode": "air_displacement",
         }
+        mode_no_mode_params = {"transports": transports_no_mode_params, "mode": None}
         assert LiquidHandle.builders.desired_mode(**mode_air) == "air_displacement"
         assert (
             LiquidHandle.builders.desired_mode(**mode_viscous)
@@ -334,6 +345,10 @@ class TestLiquidHandleBuilder(object):
         assert LiquidHandle.builders.desired_mode(**mode_none) == "air_displacement"
         assert (
             LiquidHandle.builders.desired_mode(**mode_viscous_air) == "air_displacement"
+        )
+        assert (
+            LiquidHandle.builders.desired_mode(**mode_no_mode_params)
+            == "air_displacement"
         )
         # failure tests
         with pytest.raises(ValueError):

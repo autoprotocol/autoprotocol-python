@@ -3,6 +3,7 @@ Changelog
 =========
 
 * :release:`7.0.0 <2020-05-28>`
+* :bug:`255 major` Update desired_mode method in LiquidHandle to allow for cases where mode_param is empty
 * :bug:`253 major` Provision instruction for multiple wells is not including all wells in the request
 * :support:`252` Switch to using .readthedocs.yml for docs build config
 * :support:`251` Add code coverage badge

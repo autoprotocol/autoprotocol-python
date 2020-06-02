@@ -1812,9 +1812,13 @@ class LiquidHandleBuilders(InstructionBuilders):
             return mode
 
         # get liquid_classes from transport input
-        liquid_classes = set(
-            [transport["mode_params"]["liquid_class"] for transport in transports]
-        )
+        mode_params = [transport["mode_params"] for transport in transports]
+        if all(mode_param is None for mode_param in mode_params):
+            liquid_classes = {None}
+        else:
+            liquid_classes = set(
+                [mode_param["liquid_class"] for mode_param in mode_params]
+            )
         # remove automatically added 'air' (e.g. from blowout steps) and None
         # classes.
         other_classes = liquid_classes - {"air", None}

@@ -1,0 +1,24 @@
+[
+  {
+    "op": "provision",
+    "measurement_mode": "mass",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "mass": "50:microgram",
+        "well": "w1/0"
+      }
+    ]
+  },
+  {
+    "op": "provision",
+    "measurement_mode": "mass",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "mass": "25:milligram",
+        "well": "w2/0"
+      }
+    ]
+  }
+]

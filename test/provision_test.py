@@ -79,7 +79,7 @@ class TestProvision(object):
 
         assert expected_instruction_as_json == actual_instruction_as_json
 
-    def test_with_repeated_wells_but_discontinious(self):
+    def test_with_repeated_wells_but_discontinuous(self):
         w2 = (
             self.p.ref("w2", None, cont_type="96-pcr", discard=True)
             .well(0)
@@ -91,7 +91,7 @@ class TestProvision(object):
             self.p.as_dict()["instructions"], indent=2, sort_keys=True
         )
         expected_instruction_as_json = TestUtils.read_json_file(
-            "provision_with_repeated_wells_but_discontinious.json"
+            "provision_with_repeated_wells_but_discontinuous.json"
         )
 
         assert expected_instruction_as_json == actual_instruction_as_json
@@ -177,6 +177,22 @@ class TestProvision(object):
         )
         expected_instruction_as_json = TestUtils.read_json_file(
             "provision_for_mass.json"
+        )
+
+        assert expected_instruction_as_json == actual_instruction_as_json
+
+    def test_provision_multiple_wells_with_diff_masses(self):
+        w2 = (
+            self.p.ref("w2", None, cont_type="96-pcr", discard=True)
+            .well(0)
+            .set_volume("2:microliter")
+        )
+        self.p.provision("rs17gmh5wafm5p", [self.w1, w2], ["50:ug", "25:mg"])
+        actual_instruction_as_json = json.dumps(
+            self.p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision_with_more_than_one_mass.json"
         )
 
         assert expected_instruction_as_json == actual_instruction_as_json

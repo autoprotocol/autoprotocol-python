@@ -5047,32 +5047,34 @@ class Protocol(object):
         dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
         amounts : str or Unit or list(str) or list(Unit)
-          Mass(es) to transfer of the resource to each destination well.  If
-          one mass is specified, each destination well receive that mass of
-          the resource.  If destinations should receive different mass, each
+          Volume(s) or Mass(es) to transfer of the resource to each destination well.  If
+          one volume or mass is specified, each destination well receive that volume or mass of
+          the resource.  If destinations should receive different volume or mass, each
           one should be specified explicitly in a list matching the order of the
           specified destinations.
-          Note: If value is provided for this field, value for 'volumes' must be skipped
+          Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
         volumes : str or Unit or list(str) or list(Unit)
           Volume to transfer of the resource to each destination well.  If
           one volume is specified, each destination well receive that volume of the resource.
           If destinations should receive different volumes, each
           one should be specified explicitly in a list matching the order of the
           specified destinations.
-          Note: If value is provided for this field, value for 'amounts' must be skipped
+          Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
 
         Raises
         ------
         TypeError
             If resource_id is not a string.
+        TypeError
+            If the unit provided is not supported
+        TypeError
+            If volume or mass is not specified as a string or Unit (or a list of either)
         RuntimeError
             If length of the list of volumes or masses specified does not match the number
             of destination wells specified.
-        TypeError
-            If the unit provided is not supported
-            If volume or mass is not specified as a string or Unit (or a list of either)
         ValueError
             If the resource measurement mode is volume and the provision exceeds max capacity of well.
+        ValueError
             If the provisioning of volumes or amounts are not supported.
 
         Returns
@@ -5095,7 +5097,7 @@ class Protocol(object):
 
         if (volumes is None and amounts is None) or (volumes and amounts):
             raise ValueError(
-                "Either volumes or amounts should have value/s, but not both."
+                "Either volumes or amounts should have value(s), but not both."
             )
 
         if volumes:
@@ -5113,7 +5115,9 @@ class Protocol(object):
                     "list of volumes or masses must correspond with the "
                     "destinations in length and in order."
                 )
-            provision_amounts = [Unit(v) for v in provision_amounts]
+            provision_amounts = [
+                parse_unit(v, ["liter", "gram"]) for v in provision_amounts
+            ]
 
         measurement_mode = self._identify_provision_mode(provision_amounts)
 
@@ -5168,7 +5172,7 @@ class Protocol(object):
     def _identify_provision_mode(self, provision_amounts):
         unique_measure_modes = set()
         for amount in provision_amounts:
-            if not isinstance(amount, (str, Unit)):
+            if not isinstance(amount, Unit):
                 raise TypeError(f"Provided amount {amount} is not supported.")
             if amount.dimensionality == Unit(1, "liter").dimensionality:
                 unique_measure_modes.add("volume")

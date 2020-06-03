@@ -3033,21 +3033,6 @@ class TestSonicate(object):
             )
 
 
-class TestProvision(object):
-    p = Protocol()
-    w1 = (
-        p.ref("w1", None, cont_type="96-pcr", discard=True)
-        .well(0)
-        .set_volume("2:microliter")
-    )
-
-    def test_provision_well_capacity(self):
-        self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter")
-        assert self.p.instructions[-1].op == "provision"
-        with pytest.raises(ValueError):
-            self.p.provision("rs17gmh5wafm5p", self.w1, "500:microliter")
-
-
 class TestImage(object):
     p = Protocol()
     c1 = p.ref("c1", cont_type="96-pcr", discard=True)

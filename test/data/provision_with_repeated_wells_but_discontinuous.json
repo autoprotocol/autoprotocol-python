@@ -1,0 +1,35 @@
+[
+  {
+    "op": "provision",
+    "measurement_mode": "volume",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "volume": "50:microliter",
+        "well": "w1/0"
+      }
+    ]
+  },
+  {
+    "op": "provision",
+    "measurement_mode": "volume",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "volume": "50:microliter",
+        "well": "w2/0"
+      }
+    ]
+  },
+  {
+    "op": "provision",
+    "measurement_mode": "volume",
+    "resource_id": "rs17gmh5wafm5p",
+    "to": [
+      {
+        "volume": "50:microliter",
+        "well": "w1/0"
+      }
+    ]
+  }
+]

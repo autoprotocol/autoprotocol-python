@@ -5,6 +5,7 @@
     },
     {
       "op": "provision",
+      "measurement_mode": "volume",
       "resource_id": "rs17gmh5wafm5p",
       "to": [
         {

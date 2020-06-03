@@ -3,7 +3,7 @@ Changelog
 =========
 
 * :release:`7.0.1 <2020-06-02>`
-* :bug:`255 major` Update desired_mode method in LiquidHandle to allow for cases where mode_param is empty
+* :bug:`255` Update desired_mode method in LiquidHandle to allow for cases where mode_param is empty
 
 * :release:`7.0.0 <2020-05-28>`
 * :bug:`253 major` Provision instruction for multiple wells is not including all wells in the request

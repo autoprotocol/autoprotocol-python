@@ -126,11 +126,12 @@ class Protocol(object):
             }
     """
 
-    def __init__(self, refs=None, instructions=None, propagate_properties=False):
+    def __init__(self, refs=None, instructions=None, propagate_properties=False, time_constraints=None):
         super(Protocol, self).__init__()
         self.refs = refs or {}
         self.instructions = instructions or []
         self.propagate_properties = propagate_properties
+        self.time_constraints = time_constraints or []
 
     def __repr__(self):
         return f"Protocol({self.__dict__})"

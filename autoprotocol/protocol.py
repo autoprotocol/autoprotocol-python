@@ -499,13 +499,6 @@ class Protocol(object):
 
         state_strings = ["start", "end"]
 
-        def add_time_constraint_internal(time_const):
-            setattr(
-                self,
-                "time_constraints",
-                (getattr(self, "time_constraints", []) + [time_const]),
-            )
-
         keys = []
 
         # Move the 4th param to mirror if the caller used the syntax
@@ -604,26 +597,19 @@ class Protocol(object):
         to_time_point = {keys[1]: to_dict["mark"]}
 
         if less_than is not None:
-            add_time_constraint_internal(
-                {"from": from_time_point, "to": to_time_point, "less_than": less_than,}
-            )
-
+            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "less_than": less_than}]
             if mirror:
                 self.add_time_constraint(to_dict, from_dict, less_than, mirror=False)
 
         if more_than is not None:
-            add_time_constraint_internal(
-                {"from": from_time_point, "to": to_time_point, "more_than": more_than}
-            )
+            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "more_than": more_than}]
 
         if ideal is not None:
             ideal_dict = dict(value=ideal)
             if optimization_cost is not None:
                 ideal_dict["optimization_cost"] = optimization_cost
 
-            add_time_constraint_internal(
-                {"from": from_time_point, "to": to_time_point, "ideal": ideal_dict}
-            )
+            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "ideal": ideal_dict}]
 
     def get_instruction_index(self):
         """Get index of the last appended instruction

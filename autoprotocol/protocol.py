@@ -49,6 +49,8 @@ class Protocol(object):
     propagate_properties : bool, optional
         Whether liquid handling operations should propagate aliquot properties
         from source to destination wells.
+    time_constraints : List(time_constraints)
+        Pre-existing time_constraints that the protocol should be populated with.
 
     Examples
     --------

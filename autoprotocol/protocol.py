@@ -126,7 +126,13 @@ class Protocol(object):
             }
     """
 
-    def __init__(self, refs=None, instructions=None, propagate_properties=False, time_constraints=None):
+    def __init__(
+        self,
+        refs=None,
+        instructions=None,
+        propagate_properties=False,
+        time_constraints=None,
+    ):
         super(Protocol, self).__init__()
         self.refs = refs or {}
         self.instructions = instructions or []
@@ -597,19 +603,25 @@ class Protocol(object):
         to_time_point = {keys[1]: to_dict["mark"]}
 
         if less_than is not None:
-            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "less_than": less_than}]
+            self.time_constraints += [
+                {"from": from_time_point, "to": to_time_point, "less_than": less_than}
+            ]
             if mirror:
                 self.add_time_constraint(to_dict, from_dict, less_than, mirror=False)
 
         if more_than is not None:
-            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "more_than": more_than}]
+            self.time_constraints += [
+                {"from": from_time_point, "to": to_time_point, "more_than": more_than}
+            ]
 
         if ideal is not None:
             ideal_dict = dict(value=ideal)
             if optimization_cost is not None:
                 ideal_dict["optimization_cost"] = optimization_cost
 
-            self.time_constraints += [{"from": from_time_point, "to": to_time_point, "ideal": ideal_dict}]
+            self.time_constraints += [
+                {"from": from_time_point, "to": to_time_point, "ideal": ideal_dict}
+            ]
 
     def get_instruction_index(self):
         """Get index of the last appended instruction

@@ -448,6 +448,8 @@ class TestTimeConstraints(object):
         p.cover(plate_2)
         time_point_2 = p.get_instruction_index()
 
+        assert not p.as_dict()["time_constraints"]
+
         p.add_time_constraint(
             {"mark": time_point_1, "state": "start"},
             {"mark": time_point_1, "state": "end"},

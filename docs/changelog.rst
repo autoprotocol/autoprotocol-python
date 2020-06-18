@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`258` Add time_constraints value to the Protocol attributes
 * :feature:`254` Add support for provisioning of resources by mass
 
 * :release:`7.0.1 <2020-06-02>`

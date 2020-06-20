@@ -42,12 +42,6 @@ class TestProtocolBasic(object):
         resource = protocol.ref("resource", None, "96-flat", discard=True)
         pcr = protocol.ref("pcr", None, "96-flat", discard=True)
         bacteria = protocol.ref("bacteria", None, "96-flat", discard=True)
-        # Test for correct number of refs
-        assert len(protocol.as_dict()["refs"]) == 3
-        assert protocol.as_dict()["refs"]["resource"] == {
-            "new": "96-flat",
-            "discard": True,
-        }
 
         bacteria_wells = WellGroup(
             [
@@ -70,6 +64,12 @@ class TestProtocolBasic(object):
             "5:microliter",
             one_tip=True,
         )
+        # Test for correct number of refs
+        assert len(protocol.as_dict()["refs"]) == 3
+        assert protocol.as_dict()["refs"]["resource"] == {
+            "new": "96-flat",
+            "discard": True,
+        }
 
         assert len(protocol.instructions) == 2
         assert protocol.instructions[0].op == "liquid_handle"
@@ -126,7 +126,8 @@ class TestRef(object):
     # pragma pylint: disable=expression-not-assigned
     def test_storage_condition_change(self, dummy_protocol):
         p = dummy_protocol
-        c1 = p.ref("discard_test", None, "micro-2.0", storage="cold_20")
+        c1 = p.ref("discard_test", None, "96-flat", storage="cold_20")
+        p.cover(c1)
         assert p.refs["discard_test"].opts["store"]["where"] == "cold_20"
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["discard"]
@@ -144,7 +145,8 @@ class TestRef(object):
             for covers in filter(None, [ct.cover_types, ct.seal_types]):
                 for cover in covers:
                     p = Protocol()
-                    p.ref(name + cover, cont_type=name, cover=cover, discard=True)
+                    c = p.ref(name + cover, cont_type=name, cover=cover, discard=True)
+                    p.image(c, "top", "image")
                     ref = list(p.as_dict()["refs"].values())[0]
                     assert ref["cover"] == cover
 
@@ -371,9 +373,13 @@ class TestRefify(object):
                 }
             ],
         }
-
+        # if refs or instructions is empty, raise error
+        with pytest.raises(RuntimeError):
+            dummy_protocol.as_dict()
         a = dummy_protocol.ref("test", cont_type="96-flat", discard=True)
         dummy_protocol.incubate(a, "ambient", "5:minute")
+        # time_constraints is not serialized if empty
+        assert "time_constraints" not in dummy_protocol.as_dict().keys()
         dummy_protocol.add_time_constraint(
             {"mark": 0, "state": "end"}, {"mark": 1, "state": "start"}, ideal="5:second"
         )
@@ -383,8 +389,9 @@ class TestRefify(object):
 class TestOuts(object):
     def test_outs(self, dummy_protocol):
         p = dummy_protocol
-        assert "outs" not in p.as_dict()
         plate = p.ref("plate", None, "96-pcr", discard=True)
+        p.seal(plate)
+        assert "outs" not in p.as_dict()
         plate.well(0).set_name("test_well")
         plate.well(0).set_properties({"test": "foo"})
         assert plate.well(0).name == "test_well"
@@ -447,8 +454,6 @@ class TestTimeConstraints(object):
         time_point_1 = p.get_instruction_index()
         p.cover(plate_2)
         time_point_2 = p.get_instruction_index()
-
-        assert not p.as_dict()["time_constraints"]
 
         p.add_time_constraint(
             {"mark": time_point_1, "state": "start"},

@@ -889,8 +889,14 @@ class Protocol(object):
             for a in dir(self)
             if not a.startswith("__") and not callable(getattr(self, a))
         ]
-
-        explicit_props = ["outs", "refs", "instructions", "time_constraints"]
+        # if either refs or instructions is empty raise error
+        if not self.refs or not self.instructions:
+            raise RuntimeError("there must be at least one instruction and a ref")
+        # time_constraints is an optional attribute and should not be serialized if value is []
+        if not self.time_constraints:
+            explicit_props = ["outs", "refs", "instructions"]
+        else:
+            explicit_props = ["outs", "refs", "instructions", "time_constraints"]
 
         return {
             attr: self._refify(getattr(self, attr))

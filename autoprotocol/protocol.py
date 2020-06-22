@@ -857,6 +857,10 @@ class Protocol(object):
             "time_constraints" and "outs", each of which contain the
             "refified" contents of their corresponding Protocol attribute.
 
+        Raises
+        ------
+        RuntimeError
+            If either refs or instructions attribute is empty
         """
         outs = {}
         # pragma pylint: disable=protected-access

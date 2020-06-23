@@ -896,11 +896,14 @@ class Protocol(object):
         # if either refs or instructions is empty raise error
         if not self.refs or not self.instructions:
             raise RuntimeError("there must be at least one instruction and a ref")
-        # time_constraints is an optional attribute and should not be serialized if value is []
-        if not self.time_constraints:
-            explicit_props = ["outs", "refs", "instructions"]
-        else:
-            explicit_props = ["outs", "refs", "instructions", "time_constraints"]
+
+        explicit_props = ["outs", "refs", "instructions"]
+        # attributes that are always serialized.
+        optional_props = ["time_constraints"]
+        # optional attributes that are serialized only when there are values
+        for prop in optional_props:
+            if getattr(self, prop):
+                explicit_props.append(prop)
 
         return {
             attr: self._refify(getattr(self, attr))

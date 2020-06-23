@@ -49,6 +49,8 @@ class Protocol(object):
     propagate_properties : bool, optional
         Whether liquid handling operations should propagate aliquot properties
         from source to destination wells.
+    time_constraints : List(time_constraints)
+        Pre-existing time_constraints that the protocol should be populated with.
 
     Examples
     --------
@@ -126,11 +128,18 @@ class Protocol(object):
             }
     """
 
-    def __init__(self, refs=None, instructions=None, propagate_properties=False):
+    def __init__(
+        self,
+        refs=None,
+        instructions=None,
+        propagate_properties=False,
+        time_constraints=None,
+    ):
         super(Protocol, self).__init__()
         self.refs = refs or {}
         self.instructions = instructions or []
         self.propagate_properties = propagate_properties
+        self.time_constraints = time_constraints or []
 
     def __repr__(self):
         return f"Protocol({self.__dict__})"
@@ -498,13 +507,6 @@ class Protocol(object):
 
         state_strings = ["start", "end"]
 
-        def add_time_constraint_internal(time_const):
-            setattr(
-                self,
-                "time_constraints",
-                (getattr(self, "time_constraints", []) + [time_const]),
-            )
-
         keys = []
 
         # Move the 4th param to mirror if the caller used the syntax
@@ -603,26 +605,25 @@ class Protocol(object):
         to_time_point = {keys[1]: to_dict["mark"]}
 
         if less_than is not None:
-            add_time_constraint_internal(
-                {"from": from_time_point, "to": to_time_point, "less_than": less_than,}
-            )
-
+            self.time_constraints += [
+                {"from": from_time_point, "to": to_time_point, "less_than": less_than}
+            ]
             if mirror:
                 self.add_time_constraint(to_dict, from_dict, less_than, mirror=False)
 
         if more_than is not None:
-            add_time_constraint_internal(
+            self.time_constraints += [
                 {"from": from_time_point, "to": to_time_point, "more_than": more_than}
-            )
+            ]
 
         if ideal is not None:
             ideal_dict = dict(value=ideal)
             if optimization_cost is not None:
                 ideal_dict["optimization_cost"] = optimization_cost
 
-            add_time_constraint_internal(
+            self.time_constraints += [
                 {"from": from_time_point, "to": to_time_point, "ideal": ideal_dict}
-            )
+            ]
 
     def get_instruction_index(self):
         """Get index of the last appended instruction
@@ -856,6 +857,10 @@ class Protocol(object):
             "time_constraints" and "outs", each of which contain the
             "refified" contents of their corresponding Protocol attribute.
 
+        Raises
+        ------
+        RuntimeError
+            If either refs or instructions attribute is empty
         """
         outs = {}
         # pragma pylint: disable=protected-access
@@ -888,8 +893,17 @@ class Protocol(object):
             for a in dir(self)
             if not a.startswith("__") and not callable(getattr(self, a))
         ]
+        # if either refs or instructions is empty raise error
+        if not self.refs or not self.instructions:
+            raise RuntimeError("there must be at least one instruction and a ref")
 
-        explicit_props = ["outs", "refs", "instructions", "time_constraints"]
+        explicit_props = ["outs", "refs", "instructions"]
+        # attributes that are always serialized.
+        optional_props = ["time_constraints"]
+        # optional attributes that are serialized only when there are values
+        for prop in optional_props:
+            if getattr(self, prop):
+                explicit_props.append(prop)
 
         return {
             attr: self._refify(getattr(self, attr))

@@ -311,8 +311,6 @@ class ContainerType(
                 "given exceeds container dimensions."
             )
         row, col = self.decompose(well_ref)
-        print("ROW:", row)
-        print("COL:", col)
         if row > 25:
             return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row // 26 - 1] + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row % 26] + str(col + 1)
         else:

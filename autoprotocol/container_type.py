@@ -312,7 +312,11 @@ class ContainerType(
             )
         row, col = self.decompose(well_ref)
         if row > 25:
-            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row // 26 - 1] + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row % 26] + str(col + 1)
+            return (
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row // 26 - 1]
+                + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row % 26]
+                + str(col + 1)
+            )
         else:
             return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 

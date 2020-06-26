@@ -21,6 +21,12 @@ class TestContainerRobotize(object):
 
         assert [0, 5] == dummy_type.robotize(["A1", "B1"])
 
+    def test_robotimze_1536(self, dummy_1536):
+        assert [1535, 516, 0] == dummy_1536.robotize(["Af48", "k37", "a1"])
+
+    def test_humanize_1536(self, dummy_1536):
+        assert ["AF48", "K37", "A1"] == dummy_1536.humanize([1535, 516, 0])
+
     def test_robotize_decompose_checks(self, dummy_type):
         for ref in [1.0, 4.3]:
             with pytest.raises(TypeError):

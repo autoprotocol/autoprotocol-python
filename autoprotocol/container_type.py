@@ -227,10 +227,12 @@ class ContainerType(
         if isinstance(well_ref, Well):
             well_ref = well_ref.index
         well_ref = str(well_ref)
-        m = re.match(r"([a-z])(\d+)$", well_ref, re.I)
+        m = re.match(r"([a-z])([a-z]?)(\d+)$", well_ref, re.I)
         if m:
             row = ord(m.group(1).upper()) - ord("A")
-            col = int(m.group(2)) - 1
+            if m.group(2):
+                row = 26 * (row + 1) + ord(m.group(2).upper()) - ord("A")
+            col = int(m.group(3)) - 1
             return self.well_from_coordinates(row, col)
         else:
             m = re.match(r"\d+$", well_ref)
@@ -309,7 +311,12 @@ class ContainerType(
                 "given exceeds container dimensions."
             )
         row, col = self.decompose(well_ref)
-        return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
+        print("ROW:", row)
+        print("COL:", col)
+        if row > 25:
+            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row // 26 - 1] + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row % 26] + str(col + 1)
+        else:
+            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
 
     def decompose(self, idx):
         """

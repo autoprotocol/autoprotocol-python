@@ -139,6 +139,19 @@ class ContainerType(
             prioritize_seal_or_cover,
         )
 
+    @staticmethod
+    def well_from_coordinates_static(row, row_count, col, col_count):
+        if row >= row_count:
+            raise ValueError(f"0-indexed row {row} is outside of the bounds of {row_count}")
+
+        if col >= col_count:
+            raise ValueError(
+                f"0-indexed column {col} is outside of the bounds of {col_count}"
+            )
+
+        return row * col_count + col
+
+
     def well_from_coordinates(self, row, column):
         """
         Gets the well at 0-indexed position (row, column) within the container.
@@ -163,15 +176,56 @@ class ContainerType(
         ValueError
             if the specified column is outside the bounds of the container_type
         """
-        if row >= self.row_count():
-            raise ValueError(f"0-indexed row {row} is outside of the bounds of {self}")
+        return ContainerType.well_from_coordinates_static(row, self.row_count(), column, self.col_count)
 
-        if column >= self.col_count:
-            raise ValueError(
-                f"0-indexed column {column} is outside of the bounds of {self}"
+    @staticmethod
+    def robotize_static(well_ref, well_count, col_count):
+        if isinstance(well_ref, list):
+            return [ContainerType.robotize_static(well, well_count, col_count) for well in well_ref]
+
+        if not isinstance(well_ref, (str, int, Well)):
+            raise TypeError(
+                f"ContainerType.robotize(): Well reference "
+                f"({well_ref}) given is not of type 'str', 'int', "
+                f"or 'Well'."
             )
 
-        return row * self.col_count + column
+        if isinstance(well_ref, Well):
+            well_ref = well_ref.index
+        well_ref = str(well_ref)
+        m = re.match(r"([a-z])([a-z]?)(\d+)$", well_ref, re.I)
+        if m:
+            row = ord(m.group(1).upper()) - ord("A")
+            if m.group(2):
+                row = 26 * (row + 1) + ord(m.group(2).upper()) - ord("A")
+            col = int(m.group(3)) - 1
+            # if row >= self.row_count():
+            #     raise ValueError(f"0-indexed row {row} is outside of the bounds of {self}")
+            #
+            # if column >= self.col_count:
+            #     raise ValueError(
+            #         f"0-indexed column {column} is outside of the bounds of {self}"
+            #     )
+            #
+            # return row * self.col_count + column
+            row_count = well_count // col_count
+            return ContainerType.well_from_coordinates_static(row, row_count, col, col_count)
+        else:
+            m = re.match(r"\d+$", well_ref)
+            if m:
+                well_num = int(m.group(0))
+                # Check bounds
+                if well_num >= well_count or well_num < 0:
+                    raise ValueError(
+                        "ContainerType.robotize(): Well number "
+                        "given exceeds container dimensions."
+                    )
+                return well_num
+            else:
+                raise ValueError(
+                    "ContainerType.robotize(): Well must be in "
+                    "'A1' format or be an integer."
+                )
 
     def robotize(self, well_ref):
         """
@@ -214,42 +268,42 @@ class ContainerType(
         ValueError
             If well reference given is in an invalid format.
         """
+        return ContainerType.robotize_static(well_ref, self.well_count, self.col_count)
+
+    @staticmethod
+    def humanize_static(well_ref, well_count, col_count):
+        ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         if isinstance(well_ref, list):
-            return [self.robotize(well) for well in well_ref]
+            return [ContainerType.humanize_static(well, well_count, col_count) for well in well_ref]
 
-        if not isinstance(well_ref, (str, int, Well)):
+        if not isinstance(well_ref, (int, str)):
             raise TypeError(
-                f"ContainerType.robotize(): Well reference "
-                f"({well_ref}) given is not of type 'str', 'int', "
-                f"or 'Well'."
+                "ContainerType.humanize(): Well reference given "
+                "is not of type 'int' or 'str'."
             )
-
-        if isinstance(well_ref, Well):
-            well_ref = well_ref.index
-        well_ref = str(well_ref)
-        m = re.match(r"([a-z])([a-z]?)(\d+)$", well_ref, re.I)
-        if m:
-            row = ord(m.group(1).upper()) - ord("A")
-            if m.group(2):
-                row = 26 * (row + 1) + ord(m.group(2).upper()) - ord("A")
-            col = int(m.group(3)) - 1
-            return self.well_from_coordinates(row, col)
+        try:
+            well_ref = int(well_ref)
+        except:
+            raise TypeError(
+                "ContainerType.humanize(): Well reference given"
+                "is not parseable into 'int' format."
+            )
+        # Check bounds
+        if well_ref >= well_count or well_ref < 0:
+            raise ValueError(
+                "ContainerType.humanize(): Well reference "
+                "given exceeds container dimensions."
+            )
+        idx = ContainerType.robotize_static(well_ref, well_count, col_count)
+        row, col = (idx // col_count, idx % col_count)
+        if row >= len(ALPHABET):
+            return (
+                    ALPHABET[row // 26 - 1]
+                    + ALPHABET[row % 26]
+                    + str(col + 1)
+            )
         else:
-            m = re.match(r"\d+$", well_ref)
-            if m:
-                well_num = int(m.group(0))
-                # Check bounds
-                if well_num >= self.well_count or well_num < 0:
-                    raise ValueError(
-                        "ContainerType.robotize(): Well number "
-                        "given exceeds container dimensions."
-                    )
-                return well_num
-            else:
-                raise ValueError(
-                    "ContainerType.robotize(): Well must be in "
-                    "'A1' format or be an integer."
-                )
+            return ALPHABET[row] + str(col + 1)
 
     def humanize(self, well_ref):
         """
@@ -289,36 +343,7 @@ class ContainerType(
             If well reference given exceeds container dimensions.
 
         """
-        if isinstance(well_ref, list):
-            return [self.humanize(well) for well in well_ref]
-
-        if not isinstance(well_ref, (int, str)):
-            raise TypeError(
-                "ContainerType.humanize(): Well reference given "
-                "is not of type 'int' or 'str'."
-            )
-        try:
-            well_ref = int(well_ref)
-        except:
-            raise TypeError(
-                "ContainerType.humanize(): Well reference given"
-                "is not parseable into 'int' format."
-            )
-        # Check bounds
-        if well_ref >= self.well_count or well_ref < 0:
-            raise ValueError(
-                "ContainerType.humanize(): Well reference "
-                "given exceeds container dimensions."
-            )
-        row, col = self.decompose(well_ref)
-        if row > 25:
-            return (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row // 26 - 1]
-                + "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row % 26]
-                + str(col + 1)
-            )
-        else:
-            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[row] + str(col + 1)
+        return ContainerType.humanize_static(well_ref, self.well_count, self.col_count)
 
     def decompose(self, idx):
         """

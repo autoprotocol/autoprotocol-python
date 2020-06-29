@@ -142,7 +142,9 @@ class ContainerType(
     @staticmethod
     def well_from_coordinates_static(row, row_count, col, col_count):
         if row >= row_count:
-            raise ValueError(f"0-indexed row {row} is outside of the bounds of {row_count}")
+            raise ValueError(
+                f"0-indexed row {row} is outside of the bounds of {row_count}"
+            )
 
         if col >= col_count:
             raise ValueError(
@@ -150,7 +152,6 @@ class ContainerType(
             )
 
         return row * col_count + col
-
 
     def well_from_coordinates(self, row, column):
         """
@@ -176,12 +177,17 @@ class ContainerType(
         ValueError
             if the specified column is outside the bounds of the container_type
         """
-        return ContainerType.well_from_coordinates_static(row, self.row_count(), column, self.col_count)
+        return ContainerType.well_from_coordinates_static(
+            row, self.row_count(), column, self.col_count
+        )
 
     @staticmethod
     def robotize_static(well_ref, well_count, col_count):
         if isinstance(well_ref, list):
-            return [ContainerType.robotize_static(well, well_count, col_count) for well in well_ref]
+            return [
+                ContainerType.robotize_static(well, well_count, col_count)
+                for well in well_ref
+            ]
 
         if not isinstance(well_ref, (str, int, Well)):
             raise TypeError(
@@ -199,17 +205,10 @@ class ContainerType(
             if m.group(2):
                 row = 26 * (row + 1) + ord(m.group(2).upper()) - ord("A")
             col = int(m.group(3)) - 1
-            # if row >= self.row_count():
-            #     raise ValueError(f"0-indexed row {row} is outside of the bounds of {self}")
-            #
-            # if column >= self.col_count:
-            #     raise ValueError(
-            #         f"0-indexed column {column} is outside of the bounds of {self}"
-            #     )
-            #
-            # return row * self.col_count + column
             row_count = well_count // col_count
-            return ContainerType.well_from_coordinates_static(row, row_count, col, col_count)
+            return ContainerType.well_from_coordinates_static(
+                row, row_count, col, col_count
+            )
         else:
             m = re.match(r"\d+$", well_ref)
             if m:
@@ -274,7 +273,10 @@ class ContainerType(
     def humanize_static(well_ref, well_count, col_count):
         ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         if isinstance(well_ref, list):
-            return [ContainerType.humanize_static(well, well_count, col_count) for well in well_ref]
+            return [
+                ContainerType.humanize_static(well, well_count, col_count)
+                for well in well_ref
+            ]
 
         if not isinstance(well_ref, (int, str)):
             raise TypeError(
@@ -297,11 +299,7 @@ class ContainerType(
         idx = ContainerType.robotize_static(well_ref, well_count, col_count)
         row, col = (idx // col_count, idx % col_count)
         if row >= len(ALPHABET):
-            return (
-                    ALPHABET[row // 26 - 1]
-                    + ALPHABET[row % 26]
-                    + str(col + 1)
-            )
+            return ALPHABET[row // 26 - 1] + ALPHABET[row % 26] + str(col + 1)
         else:
             return ALPHABET[row] + str(col + 1)
 

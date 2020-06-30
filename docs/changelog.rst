@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`259` Add humanize and robotize support for 1536w
 * :feature:`258` Add time_constraints value to the Protocol attributes
 * :feature:`254` Add support for provisioning of resources by mass
 

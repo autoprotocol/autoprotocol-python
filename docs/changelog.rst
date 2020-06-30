@@ -2,13 +2,13 @@
 Changelog
 =========
 
+* :release:`7.1.0 <2020-06-29>`
 * :feature:`259` Add humanize and robotize support for 1536w
 * :feature:`258` Add time_constraints value to the Protocol attributes
 * :feature:`254` Add support for provisioning of resources by mass
 
 * :release:`7.0.1 <2020-06-02>`
 * :bug:`255` Update desired_mode method in LiquidHandle to allow for cases where mode_param is empty
-
 
 * :release:`7.0.0 <2020-05-28>`
 * :bug:`253 major` Provision instruction for multiple wells is not including all wells in the request

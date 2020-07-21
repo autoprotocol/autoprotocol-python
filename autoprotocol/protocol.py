@@ -893,9 +893,6 @@ class Protocol(object):
             for a in dir(self)
             if not a.startswith("__") and not callable(getattr(self, a))
         ]
-        # if either refs or instructions is empty raise error
-        if not self.refs or not self.instructions:
-            raise RuntimeError("there must be at least one instruction and a ref")
 
         explicit_props = ["outs", "refs", "instructions"]
         # attributes that are always serialized.

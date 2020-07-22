@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`261` Revert empty Protocol assertion check in `as_dict()`
+
 * :release:`7.1.0 <2020-06-29>`
 * :feature:`259` Add humanize and robotize support for 1536w
 * :feature:`258` Add time_constraints value to the Protocol attributes

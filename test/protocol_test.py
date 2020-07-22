@@ -373,9 +373,6 @@ class TestRefify(object):
                 }
             ],
         }
-        # if refs or instructions is empty, raise error
-        with pytest.raises(RuntimeError):
-            dummy_protocol.as_dict()
         a = dummy_protocol.ref("test", cont_type="96-flat", discard=True)
         dummy_protocol.incubate(a, "ambient", "5:minute")
         # time_constraints is not serialized if empty

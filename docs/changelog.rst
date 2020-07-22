@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.1.1 <2020-07-21>`
 * :bug:`261` Revert empty Protocol assertion check in `as_dict()`
 
 * :release:`7.1.0 <2020-06-29>`

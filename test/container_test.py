@@ -226,6 +226,30 @@ class TestWellName(HasDummyContainers):
         assert self.c.well(0).name == "sample"
 
 
+class TestWellCompounds(HasDummyContainers):
+    def test_set_compound(self):
+        test_comp = {
+                "id": "cmp0123456789abcd",
+                "smiles": "CCC",
+                "molecularWeight": 123.45
+            }
+        self.c.well(0).set_compounds([
+            test_comp
+        ])
+        assert self.c.well(0).compounds == [test_comp]
+        assert self.c.well(0).compounds[0]["molecularWeight"] == 123.45
+
+    def test_validate_compound(self):
+        with pytest.raises(TypeError):
+            self.c.well(0).set_compounds({"id": "cmp0123456789abcd"})
+
+        with pytest.raises(ValueError):
+            self.c.well(0).set_compounds([{"foo": "cmp0123456789abcd"}])
+
+        with pytest.raises(TypeError):
+            self.c.well(0).set_compounds([{"molecularWeight": "123.45:milliliter"}])
+
+
 class TestWellGroupName(HasDummyContainers):
     def test_set_group_name(self):
         ws = self.c.all_wells()

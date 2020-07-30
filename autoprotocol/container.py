@@ -8,6 +8,7 @@ Container, Well, WellGroup objects and associated functions
 """
 
 import json
+import re
 import warnings
 
 from .constants import SBS_FORMAT_SHAPES
@@ -38,6 +39,7 @@ class Well(object):
         self.index = index
         self.volume = None
         self.name = None
+        self.compounds = None
         self.properties = {}
 
     @staticmethod
@@ -60,6 +62,63 @@ class Well(object):
                     f"Aliquot property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
                 )
+
+    @staticmethod
+    def validate_compounds(compounds):
+        """
+        Validate compounds parameters
+
+        Parameters
+        ----------
+        compounds: list(dict)
+            List of compounds parameters
+        Raises
+        ------
+        TypeError
+            compounds must be a list of dict
+        ValueError
+            compound dict key must be valid
+        ValueError
+            compound id must be a alphanumeric string starting with cmp
+        TypeError
+            compound smiles must be a str
+        TypeError
+            compound molecularWeight must be a float
+        """
+        # valid compounds param keys
+        valid_keys = ["id", "smiles", "molecularWeight"]
+
+        if not isinstance(compounds, list):
+            raise TypeError(
+                f"Compounds value has a type {type(compounds)}. It should be a list."
+            )
+        for compound in compounds:
+            if not isinstance(compound, dict):
+                raise TypeError(
+                    f"compounds must be a list of dict, but it contained {compound}."
+                )
+            if not all(key in valid_keys for key in compound):
+                raise ValueError(
+                    f"compound {compound} contain an invalid key."
+                    f"It must be one of {valid_keys}."
+                )
+            # key is a compound id
+            if "id" in compound.keys():
+                if not re.match('^cmp[a-zA-Z0-9]{14}$', compound["id"]):
+                    raise ValueError(
+                        f"compound id {compound['id']} must be an alphanumeric string "
+                        f"starting with 'cmp'."
+                    )
+            if "smiles" in compound.keys():
+                if not isinstance(compound["smiles"], str):
+                    raise TypeError(
+                        f"compound smiles value {compound['smiles']} must be a string."
+                    )
+            if "molecularWeight" in compound.keys():
+                if not isinstance(compound["molecularWeight"], float):
+                    raise TypeError(
+                        f"compound molecularWeight {compound['molecularWeight']} value must be a float."
+                    )
 
     def set_properties(self, properties):
         """
@@ -168,6 +227,25 @@ class Well(object):
         self.name = name
         return self
 
+    def set_compounds(self, compounds):
+        """
+            Set a name for this well for it to be included in a protocol's
+            "outs" section
+
+            Parameters
+            ----------
+            compounds : list(dict)
+                list of compounds dict
+
+            Returns
+            -------
+            Well
+                Well with modified compounds
+            """
+        self.validate_compounds(compounds)
+        self.compounds = compounds
+        return self
+
     def humanize(self):
         """
         Return the human readable representation of the integer well index
@@ -207,7 +285,7 @@ class Well(object):
         Return a string representation of a Well.
 
         """
-        return f"Well({str(self.container)}, {str(self.index)}, " f"{str(self.volume)})"
+        return f"Well({str(self.container)}, {str(self.index)}, " f"{str(self.volume)}, {str(self.compounds)})"
 
 
 class WellGroup(object):

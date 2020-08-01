@@ -477,6 +477,40 @@ class TestManifest(object):
                 },
             )
 
+    def test_container_compounds(self):
+        protocol_info = ProtocolInfo(
+            {
+                "name": "Test Container Compounds",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        parsed = protocol_info.parse(
+            self.protocol,
+            {
+                "refs": {
+                    "my_cont": {
+                        "type": "96-pcr",
+                        "discard": True,
+                        "aliquots": {
+                            "0": {
+                                "volume": "50:microliter",
+                                "compounds": [
+                                    {
+                                        "id": "cmp0123456789abcd",
+                                        "molecularWeight": 123.45,
+                                    }
+                                ],
+                            }
+                        },
+                    }
+                },
+                "parameters": {"cont": "my_cont"},
+            },
+        )
+        assert parsed["cont"].well(0).compounds == [
+            {"id": "cmp0123456789abcd", "molecularWeight": "123.45:g/mol"}
+        ]
+
     def test_container_volumes(self):
         protocol_info1 = ProtocolInfo(
             {

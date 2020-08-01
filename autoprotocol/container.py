@@ -79,6 +79,8 @@ class Well(object):
         ValueError
             compound dict key must be valid
         ValueError
+            compound id must always be provided
+        ValueError
             compound id must be a alphanumeric string starting with cmp
         TypeError
             compound smiles must be a str
@@ -102,9 +104,11 @@ class Well(object):
                     f"compound {compound} contain an invalid key."
                     f"It must be one of {valid_keys}."
                 )
-            # key is a compound id
-            if "id" in compound.keys():
-                if not re.match('^cmp[a-zA-Z0-9]{14}$', compound["id"]):
+            # id should always be present for each entry
+            if not "id" in compound.keys():
+                raise ValueError(f"compound {compound} must have 'id'.")
+            else:
+                if not re.match("^cmp[a-zA-Z0-9]{14}$", compound["id"]):
                     raise ValueError(
                         f"compound id {compound['id']} must be an alphanumeric string "
                         f"starting with 'cmp'."
@@ -114,10 +118,18 @@ class Well(object):
                     raise TypeError(
                         f"compound smiles value {compound['smiles']} must be a string."
                     )
+            # molecularWeight seems to always be in g/mol, but is provided in float from Web
             if "molecularWeight" in compound.keys():
                 if not isinstance(compound["molecularWeight"], float):
                     raise TypeError(
                         f"compound molecularWeight {compound['molecularWeight']} value must be a float."
+                    )
+                # converting float value into g/mol unit type
+                # TODO(Once Web is updated to specify unit type for molecularWeight during compound
+                #  registration, this should be removed.)
+                else:
+                    compound["molecularWeight"] = (
+                        str(compound["molecularWeight"]) + ":g/mol"
                     )
 
     def set_properties(self, properties):
@@ -229,13 +241,13 @@ class Well(object):
 
     def set_compounds(self, compounds):
         """
-            Set a name for this well for it to be included in a protocol's
+            Set compounds for this well for it to be included in a protocol's
             "outs" section
 
             Parameters
             ----------
             compounds : list(dict)
-                list of compounds dict
+                list of compound dict
 
             Returns
             -------
@@ -285,7 +297,10 @@ class Well(object):
         Return a string representation of a Well.
 
         """
-        return f"Well({str(self.container)}, {str(self.index)}, " f"{str(self.volume)}, {str(self.compounds)})"
+        return (
+            f"Well({str(self.container)}, {str(self.index)}, "
+            f"{str(self.volume)}, {str(self.compounds)})"
+        )
 
 
 class WellGroup(object):

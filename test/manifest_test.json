@@ -32,6 +32,15 @@
             "aliquots": {
             "0": {"volume": "50:microliter"},
             "1": {"volume": "50:microliter"},
+            "2": {
+              "volume": "50:microliter",
+              "compounds": [
+                {
+                  "id": "cmp0123456789abcd",
+                  "molecularWeight": 100.00
+                }
+              ]
+            },
             "12": {"volume": "50:microliter"},
             "95": {"volume": "50:microliter"}
             },
@@ -42,7 +51,13 @@
             "my_string": "my_string",
             "my_container": "my_container",
             "my_length": "500:nanometer",
-            "my_volume": "15:microliter"
+            "my_volume": "15:microliter",
+            "my_compounds": [
+              {
+                "id": "cmp0123456789abcd",
+                "molecularWeight": 100.00
+              }
+            ]
         }
       },
       "dependencies": []

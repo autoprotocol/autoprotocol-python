@@ -228,14 +228,13 @@ class TestWellName(HasDummyContainers):
 
 class TestWellCompounds(HasDummyContainers):
     def test_set_compound(self):
-        test_comp = {
-            "id": "cmp0123456789abcd",
-            "smiles": "CCC",
-            "molecularWeight": 123.45,
-        }
-        self.c.well(0).set_compounds([test_comp])
-        assert self.c.well(0).compounds == [test_comp]
-        assert self.c.well(0).compounds[0]["molecularWeight"] == "123.45:g/mol"
+        test_comp = [
+            {"id": "cmp0123456789abcd", "smiles": "[OH2]", "molecularWeight": 123.45}
+        ]
+        self.c.well(0).set_compounds(test_comp)
+        assert self.c.well(0).compounds == test_comp
+        assert self.c.well(0).compounds[0]["molecular_weight"] == "123.45:g/mol"
+        assert self.c.well(0).compounds[0]["smiles"] == "[OH2]"
 
     def test_validate_compound(self):
         with pytest.raises(TypeError):

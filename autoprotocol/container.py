@@ -125,11 +125,12 @@ class Well(object):
                         f"compound molecularWeight {compound['molecularWeight']} value must be a float."
                     )
                 # converting float value into g/mol unit type
-                # TODO(Once Web is updated to specify unit type for molecularWeight during compound
-                #  registration, this should be removed.)
                 else:
-                    compound["molecularWeight"] = (
-                        str(compound["molecularWeight"]) + ":g/mol"
+                    compound["molecular_weight"] = compound.pop("molecularWeight")
+                    # TODO(Once Web is updated to specify unit type for molecularWeight during compound
+                    #  registration, this should be removed.)
+                    compound["molecular_weight"] = (
+                        str(compound["molecular_weight"]) + ":g/mol"
                     )
 
     def set_properties(self, properties):

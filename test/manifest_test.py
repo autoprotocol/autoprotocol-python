@@ -498,7 +498,13 @@ class TestManifest(object):
                                     {
                                         "id": "cmp0123456789abcd",
                                         "molecularWeight": 123.45,
-                                    }
+                                        "smiles": "[OH2]",
+                                    },
+                                    {
+                                        "id": "cmp0123456789abcd",
+                                        "molecularWeight": 111.11,
+                                        "smiles": "[Na+].[Cl-]",
+                                    },
                                 ],
                             }
                         },
@@ -508,7 +514,16 @@ class TestManifest(object):
             },
         )
         assert parsed["cont"].well(0).compounds == [
-            {"id": "cmp0123456789abcd", "molecularWeight": "123.45:g/mol"}
+            {
+                "id": "cmp0123456789abcd",
+                "molecular_weight": "123.45:g/mol",
+                "smiles": "[OH2]",
+            },
+            {
+                "id": "cmp0123456789abcd",
+                "molecular_weight": "111.11:g/mol",
+                "smiles": "[Na+].[Cl-]",
+            },
         ]
 
     def test_container_volumes(self):

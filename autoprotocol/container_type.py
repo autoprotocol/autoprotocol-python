@@ -22,49 +22,8 @@ class ContainerType:
 
     Parameters
     ----------
-    name : str
-      Full name describing a ContainerType.
-    is_tube : bool
-      Indicates whether a ContainerType is a tube (container with one well).
-    well_count : int
-      Number of wells a ContainerType contains.
-    well_depth_mm : float
-      Depth of well(s) contained in a ContainerType in millimeters.
-    well_volume_ul : Unit
-      Maximum volume of well(s) contained in a ContainerType in microliters.
-    well_coating : str
-      Coating of well(s) in container (ex. collagen).
-    sterile : bool
-      Indicates whether a ContainerType is sterile.
-    cover_types: list
-        List of valid covers associated with a ContainerType.
-    seal_types: list
-        List of valid seals associated with a ContainerType.
-    capabilities : list
-      List of capabilities associated with a ContainerType (ex. ["spin",
-        "incubate"]).
     shortname : str
       Short name used to refer to a ContainerType.
-    col_count : int
-      Number of columns a ContainerType contains.
-    dead_volume_ul : Unit
-      Volume of liquid that cannot be aspirated from any given well of a
-      ContainerType via liquid-handling.
-    safe_min_volume_ul : Unit
-      Minimum volume of liquid to ensure adequate volume for liquid-handling
-      aspiration from any given well of a ContainerType.
-    true_max_vol_ul : Unit, optional
-      Maximum volume of well(s) in microliters, often same value as
-      well_volume_ul (maximum working volume), however, some ContainerType(s)
-      can have a different value corresponding to a true maximum volume
-      of a well (ex. echo compatible containers)
-    vendor: str, optional
-      ContainerType commercial vendor, if available.
-    cat_no: str, optional
-      ContainerType vendor catalog number, if available.
-    prioritize_seal_or_cover: str, optional
-        "seal" or "cover", determines whether to prioritize sealing or covering
-        defaults to "seal"
     """
 
     def __init__(self, shortname):

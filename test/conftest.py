@@ -191,6 +191,36 @@ def run_around_tests():
             },
             status=200
         )
+        # TODO: NEED TO BE ADDED TO THE CONTAINER TYPES SERVICE
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/micro-2.0',
+            json={
+                'data': {
+                    'attributes': {
+                        "name": "2mL Microcentrifuge tube",
+                        "well_count": 1,
+                        "well_depth_mm": None,
+                        "well_volume_ul": "2000.0",
+                        "well_coating": None,
+                        "sterile": False,
+                        "cover_types": None,
+                        "seal_types": None,
+                        "capabilities": ["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
+                        "shortname": "micro-2.0",
+                        "is_tube": True,
+                        "col_count": 1,
+                        "dead_volume_ul": "5",
+                        "safe_min_volume_ul": "40",
+                        "vendor": "E&K Scientific",
+                        "cat_no": "280200",
+                        # TODO: TO BE ADDED
+                        "true_max_vol_ul": "2000.0"
+                    }
+                }
+            },
+            status=200
+        )
         rsps.add(
             rsps.GET,
             'https://secure.strateos.com/api/container_types/384-echo',
@@ -325,6 +355,92 @@ def run_around_tests():
                         "well_depth_mm": "10.67",
                         "well_volume_ul": "340.0",
                         "vendor": "Corning"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/1-flat',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "universal"
+                        ],
+                        "capabilities": [
+                            # TODO: TO BE ADDED
+                            "cover",
+                            "incubate",
+                            "image_plate",
+                            "colonize",
+                            "envision"
+                        ],
+                        "catalog_number": "267060",
+                        "col_count": 1,
+                        "cost_each": "4.71",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["universal"],
+                        "dead_volume_ul": "36000.0",
+                        "height_mm": "17.3",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "1-Well Nunc Non-treated Flat Bottom Plate",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "40000.0",
+                        "sale_price": "5.6049",
+                        "shortname": "1-flat",
+                        "well_count": 1,
+                        "well_depth_mm": "11.6",
+                        "well_volume_ul": "90000.0",
+                        "vendor": "Fisher",
+                        # TODO: TO BE ADDED
+                        "true_max_vol_ul": "90000.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/6-flat-tc',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard",
+                            "universal"
+                        ],
+                        "capabilities": [
+                            # NOTE: TO BE ADDED
+                            "cover",
+                            "incubate",
+                            "colonize",
+                            "image_plate",
+                            "dispense-destination",
+                            "envision"
+                        ],
+                        "catalog_number": "30720113",
+                        "col_count": 3,
+                        "cost_each": "4.05",
+                        # NOTE: TO BE ADDED
+                        "cover_types": ["standard", "universal"],
+                        "dead_volume_ul": "400.0",
+                        "height_mm": "19.0",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "6-Well TC Treated Sterile Plate",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "600.0",
+                        "sale_price": "4.8195",
+                        "shortname": "6-flat-tc",
+                        "well_count": 6,
+                        "well_depth_mm": "16.5",
+                        "well_volume_ul": "5000.0",
+                        "vendor": "Eppendorf",
+                        # TODO: TO BE ADDED
+                        "true_max_vol_ul": "5000.0"
                     }
                 }
             },

@@ -169,7 +169,6 @@ class Protocol(object):
         """
         if isinstance(shortname, ContainerType):
             return shortname
-        # else shortname in _CONTAINER_TYPES:
         return ContainerType(shortname)
         # else:
         #     raise ValueError(

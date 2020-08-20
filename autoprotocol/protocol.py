@@ -11,7 +11,7 @@ import warnings
 
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import Container, Well, SEAL_TYPES, COVER_TYPES
-from .container_type import ContainerType, _CONTAINER_TYPES
+from .container_type import ContainerType
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Transfer, Mix, LiquidClass
 from .unit import Unit, UnitError
@@ -152,7 +152,7 @@ class Protocol(object):
         ----------
         shortname : str
             String representing one of the ContainerTypes in the
-            _CONTAINER_TYPES dictionary.
+            container type service.
 
         Returns
         -------
@@ -170,11 +170,6 @@ class Protocol(object):
         if isinstance(shortname, ContainerType):
             return shortname
         return ContainerType(shortname)
-        # else:
-        #     raise ValueError(
-        #         f"Unknown container type {shortname}"
-        #         f"(known types={str(_CONTAINER_TYPES.keys())})"
-        #     )
 
     # pragma pylint: disable=redefined-builtin
     def ref(

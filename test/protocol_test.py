@@ -3,7 +3,6 @@
 import pytest
 import responses
 from autoprotocol.container import Container, Well, WellGroup
-from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
     Thermocycle,
     Incubate,
@@ -137,19 +136,6 @@ class TestRef(object):
             p.as_dict()["refs"]["discard_test"]["store"]
         c1.set_storage("cold_4")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4"
-
-    # pragma pylint: enable=expression-not-assigned
-
-    # def test_cover_state_propagation(self):
-    #     for name, ct in _CONTAINER_TYPES.items():
-    #         for covers in filter(None, [ct.cover_types, ct.seal_types]):
-    #             for cover in covers:
-    #                 p = Protocol()
-    #                 c = p.ref(name + cover, cont_type=name, cover=cover, discard=True)
-    #                 p.image(c, "top", "image")
-    #                 ref = list(p.as_dict()["refs"].values())[0]
-    #                 assert ref["cover"] == cover
-
 
 class TestThermocycle(object):
     def test_thermocycle_append(self):

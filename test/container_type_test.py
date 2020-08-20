@@ -1,5 +1,4 @@
 import pytest
-import responses
 
 from autoprotocol import Unit
 
@@ -111,48 +110,9 @@ class TestContainerType(object):
     def test_instance(self):
         from autoprotocol.container_type import ContainerType
 
-        responses.add(
-            responses.GET,
-            'https://secure.strateos.com/api/container_types/res-sw96-hp',
-            json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": ["universal"],
-                        "capabilities": [
-                            "incubate",
-                            "liquid_handle",
-                            "cover",
-                            "uncover",
-                            "dispense-destination",
-                            "dispense-source"
-                        ],
-                        "catalog_number": "res-sw96-hp",
-                        "col_count": 1,
-                        "cost_each": "7.02",
-                        "dead_volume_ul": None,
-                        "height_mm": "43.92",
-                        "is_tube": False,
-                        "manual_execution": False,
-                        "name": "1-Well Reagent Reservoir with 96-Bottom Troughs, High Profile",
-                        "retired_at": None,
-                        "safe_min_volume_ul": None,
-                        "sale_price": "8.3538",
-                        "shortname": "res-sw96-hp",
-                        "well_count": 1,
-                        "well_depth_mm": "38.6",
-                        "well_volume_ul": "280000.0",
-                        "vendor": "Axygen"
-
-                    }
-                }
-            },
-            status=200
-        )
-
         ct = ContainerType("res-sw96-hp")
 
         assert ct.shortname == "res-sw96-hp"
-        assert len(responses.calls) == 1
         assert ct.well_count == 1
         assert ct.col_count == 1
         assert ct.acceptable_lids == ["universal"]
@@ -161,3 +121,6 @@ class TestContainerType(object):
         assert ct.height_mm == 43.92
         assert ct.well_depth_mm == 38.6
         assert ct.dead_volume_ul == None
+        assert ct.foobar == None
+        assert ct.foobar_mm == 0.0
+        assert ct.foobar_ul == Unit(0.0, "microliter")

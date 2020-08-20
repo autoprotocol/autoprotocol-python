@@ -5779,7 +5779,7 @@ class Protocol(object):
                 return
             elif "cover" in container.container_type.capabilities:
                 self.cover(container, container.container_type.cover_types[0])
-            elif "seal" in container.container_type.capabilities:
+            elif container.container_type.sealable():
                 self.seal(container, container.container_type.seal_types[0])
             else:
                 raise RuntimeError(

@@ -76,13 +76,20 @@ class ContainerType():
         response = requests.get(url)
         attributes = response.json()["data"]["attributes"]
 
-
         for (k, v) in attributes.items():
-            if k.endswith("_mm"):
+            if v != None and k.endswith("_mm"):
                 v = float(v)
             elif v != None and k.endswith("_ul"):
                 v = Unit(v, "microliter")
             self.__dict__[k] = v
+
+    def __getattr__(self, name):
+        print(self.shortname + ": unknow " + name + " attribute, returning None")
+        if name.endswith("_mm"):
+            return 0.0
+        elif name.endswith("_ul"):
+            return Unit(0.0, "microliter")
+        return None
 
     @staticmethod
     def well_from_coordinates_static(row, row_count, col, col_count):
@@ -320,6 +327,22 @@ class ContainerType():
 
         """
         return self.well_count // self.col_count
+
+    def sealable(self):
+        """
+        Return whether or not it has seal capability and seal types
+
+        """
+        has_enough = isinstance(self.seal_types, list) and len(self.seal_types) > 0
+        return "seal" in self.capabilities and has_enough
+
+    def coverable(self):
+        """
+        Return whether or not it has cover capability and cover types
+
+        """
+        has_enough = isinstance(self.cover_types, list) and len(self.cover_types) > 0
+        return "cover" in self.capabilities and has_enough
 
 #:
 # FLAT384 = ContainerType(

@@ -169,13 +169,13 @@ class Protocol(object):
         """
         if isinstance(shortname, ContainerType):
             return shortname
-        elif shortname in _CONTAINER_TYPES:
-            return _CONTAINER_TYPES[shortname]
-        else:
-            raise ValueError(
-                f"Unknown container type {shortname}"
-                f"(known types={str(_CONTAINER_TYPES.keys())})"
-            )
+        # else shortname in _CONTAINER_TYPES:
+        return ContainerType(shortname)
+        # else:
+        #     raise ValueError(
+        #         f"Unknown container type {shortname}"
+        #         f"(known types={str(_CONTAINER_TYPES.keys())})"
+        #     )
 
     # pragma pylint: disable=redefined-builtin
     def ref(

@@ -14,20 +14,20 @@ def dummy_protocol():
 @pytest.fixture(scope="module")
 def dummy_type():
     return ContainerType(
-        name="dummy",
-        well_count=15,
-        well_depth_mm=None,
-        well_volume_ul=Unit(200, "microliter"),
-        well_coating=None,
-        sterile=False,
-        is_tube=False,
-        cover_types=[],
-        seal_types=None,
-        capabilities=[],
-        shortname="dummy",
-        col_count=5,
-        dead_volume_ul=Unit(15, "microliter"),
-        safe_min_volume_ul=Unit(30, "microliter"),
+        # name="dummy",
+        # well_count=15,
+        # well_depth_mm=None,
+        # well_volume_ul=Unit(200, "microliter"),
+        # well_coating=None,
+        # sterile=False,
+        # is_tube=False,
+        # cover_types=[],
+        # seal_types=None,
+        # capabilities=[],
+        shortname="dummy" #,
+        # col_count=5,
+        # dead_volume_ul=Unit(15, "microliter"),
+        # safe_min_volume_ul=Unit(30, "microliter"),
     )
 
 

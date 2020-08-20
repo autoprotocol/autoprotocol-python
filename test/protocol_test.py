@@ -1,6 +1,7 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init
 import pytest
+import responses
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import (
@@ -23,6 +24,36 @@ from autoprotocol.harness import (
     _convert_dispense_instructions,
 )
 import warnings
+
+@pytest.fixture(scope="session")
+def before_all():
+    print("before_all")
+# @responses.activate
+# responses.add(
+#     responses.GET,
+#     'https://secure.strateos.com/api/container_types/96-pcr',
+#     json={
+#         'data': {
+#             'attributes': {
+#                 "foo": "bar"
+#             }
+#         }
+#     },
+#     status=200
+# )
+
+# responses.add(
+#     responses.GET,
+#     'https://secure.strateos.com/api/container_types/96-flat',
+#     json={
+#         'data': {
+#             'attributes': {
+#                 "foo": "bar"
+#             }
+#         }
+#     },
+#     status=200
+# )
 
 
 class TestProtocolMultipleExist(object):

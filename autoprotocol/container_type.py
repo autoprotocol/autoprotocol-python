@@ -7,6 +7,7 @@ Container-type object and associated functions
 
 """
 
+import os
 import requests
 import re
 
@@ -69,7 +70,7 @@ class ContainerType():
     def __init__(self, shortname):
         self.shortname = shortname
 
-        baseUrl = 'https://secure.strateos.com/api/container_types'
+        baseUrl = os.getenv('CONTAINER_TYPES_URL', 'https://secure.strateos.com/api/container_types')
         url = baseUrl + '/' + shortname
         response = requests.get(url)
         attributes = response.json()["data"]["attributes"]

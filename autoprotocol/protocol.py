@@ -4245,7 +4245,7 @@ class Protocol(object):
         ValueError
             If volumes are not correctly formatted or present.
 
-      """
+        """
         sources = []
         controls = []
         if not isinstance(samples, list):

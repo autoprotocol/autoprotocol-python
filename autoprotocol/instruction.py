@@ -13,9 +13,7 @@ from .constants import PROVISION_MEASUREMENT_MODES
 
 
 class Instruction(object):
-    """Base class for an instruction that is to later be encoded as JSON.
-
-    """
+    """Base class for an instruction that is to later be encoded as JSON."""
 
     builders = InstructionBuilders()
 

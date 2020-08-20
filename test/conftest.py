@@ -6,15 +6,18 @@ from autoprotocol.container_type import ContainerType
 from autoprotocol.unit import Unit
 from autoprotocol.protocol import Protocol
 
+
 @pytest.fixture(scope="module", autouse=True)
 def run_around_tests():
+    print("Define mock")
+
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/res-sw96-hp',
+            "https://secure.strateos.com/api/container_types/res-sw96-hp",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "acceptable_lids": ["universal"],
                         "capabilities": [
                             "incubate",
@@ -22,7 +25,7 @@ def run_around_tests():
                             "cover",
                             "uncover",
                             "dispense-destination",
-                            "dispense-source"
+                            "dispense-source",
                         ],
                         "catalog_number": "res-sw96-hp",
                         "col_count": 1,
@@ -41,23 +44,19 @@ def run_around_tests():
                         "well_volume_ul": "280000.0",
                         "vendor": "Axygen",
                         # NOTE: NEED TO BE ADDED TO CONTAINER TYPE SERVICE
-                        "true_max_vol_ul": "280000.0"
+                        "true_max_vol_ul": "280000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-flat',
+            "https://secure.strateos.com/api/container_types/96-flat",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "low_evaporation",
-                            "standard",
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["low_evaporation", "standard", "universal"],
                         "capabilities": [
                             # TODO: TO BE ADDED
                             "cover",
@@ -73,7 +72,7 @@ def run_around_tests():
                             "magnetic_transfer_pcr",
                             "bluewash",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "3632",
                         "col_count": 12,
@@ -98,23 +97,23 @@ def run_around_tests():
                         "well_volume_ul": "340.0",
                         "vendor": "Corning",
                         # NOTE: NEED TO BE ADDED TO CONTAINER TYPE SERVICE
-                        "true_max_vol_ul": "340.0"
+                        "true_max_vol_ul": "340.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-pcr',
+            "https://secure.strateos.com/api/container_types/96-pcr",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "acceptable_lids": [
                             "ultra-clear",
                             "foil",
                             "breathable",
-                            "low_evaporation"
+                            "low_evaporation",
                         ],
                         "capabilities": [
                             "magnetic_separate",
@@ -132,7 +131,7 @@ def run_around_tests():
                             "magnetic_transfer_pcr",
                             "bluewash",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "951020619",
                         "col_count": 12,
@@ -155,25 +154,25 @@ def run_around_tests():
                         "well_count": 96,
                         "well_depth_mm": "14.6",
                         "well_volume_ul": "160.0",
-                        "vendor": "Eppendorf"
+                        "vendor": "Eppendorf",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         # TODO: NEED TO BE ADDED TO THE CONTAINER TYPES SERVICE
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/micro-1.5',
+            "https://secure.strateos.com/api/container_types/micro-1.5",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "capabilities": [
                             "liquid_handle",
                             "gel_separate",
                             "gel_purify",
                             "incubate",
-                            "spin"
+                            "spin",
                         ],
                         "col_count": 1,
                         "cost_each": "4.14",
@@ -188,19 +187,19 @@ def run_around_tests():
                         "well_count": 1,
                         "well_depth_mm": None,
                         "well_volume_ul": "1500.0",
-                        "vendor": "USA Scientific"
+                        "vendor": "USA Scientific",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         # TODO: NEED TO BE ADDED TO THE CONTAINER TYPES SERVICE
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/micro-2.0',
+            "https://secure.strateos.com/api/container_types/micro-2.0",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "name": "2mL Microcentrifuge tube",
                         "well_count": 1,
                         "well_depth_mm": None,
@@ -209,7 +208,13 @@ def run_around_tests():
                         "sterile": False,
                         "cover_types": None,
                         "seal_types": None,
-                        "capabilities": ["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
+                        "capabilities": [
+                            "liquid_handle",
+                            "gel_separate",
+                            "gel_purify",
+                            "incubate",
+                            "spin",
+                        ],
                         "shortname": "micro-2.0",
                         "is_tube": True,
                         "col_count": 1,
@@ -218,23 +223,19 @@ def run_around_tests():
                         "vendor": "E&K Scientific",
                         "cat_no": "280200",
                         # TODO: TO BE ADDED
-                        "true_max_vol_ul": "2000.0"
+                        "true_max_vol_ul": "2000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/384-echo',
+            "https://secure.strateos.com/api/container_types/384-echo",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "universal",
-                            "foil",
-                            "ultra-clear"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["universal", "foil", "ultra-clear"],
                         "capabilities": [
                             "spin",
                             "incubate",
@@ -244,7 +245,7 @@ def run_around_tests():
                             "echo_dest",
                             "echo_source",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "PP-0200",
                         "col_count": 24,
@@ -263,22 +264,19 @@ def run_around_tests():
                         "well_count": 384,
                         "well_depth_mm": "11.5",
                         "well_volume_ul": "135.0",
-                        "vendor": "Labcyte"
+                        "vendor": "Labcyte",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/384-pcr',
+            "https://secure.strateos.com/api/container_types/384-pcr",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "ultra-clear",
-                            "foil"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["ultra-clear", "foil"],
                         "capabilities": [
                             "thermocycle",
                             "spin",
@@ -291,7 +289,7 @@ def run_around_tests():
                             "echo_dest",
                             "bluewash",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "951020539",
                         "col_count": 24,
@@ -310,23 +308,19 @@ def run_around_tests():
                         "well_count": 384,
                         "well_depth_mm": "9.6",
                         "well_volume_ul": "40.0",
-                        "vendor": "Eppendorf"
+                        "vendor": "Eppendorf",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-flat-uv',
+            "https://secure.strateos.com/api/container_types/96-flat-uv",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "low_evaporation",
-                            "standard",
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["low_evaporation", "standard", "universal"],
                         "capabilities": [
                             # NOTE: TO BE ADDED
                             "cover",
@@ -339,7 +333,7 @@ def run_around_tests():
                             "stamp",
                             "magnetic_transfer_pcr",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "3635",
                         "col_count": 12,
@@ -357,28 +351,26 @@ def run_around_tests():
                         "well_count": 96,
                         "well_depth_mm": "10.67",
                         "well_volume_ul": "340.0",
-                        "vendor": "Corning"
+                        "vendor": "Corning",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/1-flat',
+            "https://secure.strateos.com/api/container_types/1-flat",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["universal"],
                         "capabilities": [
                             # TODO: TO BE ADDED
                             "cover",
                             "incubate",
                             "image_plate",
                             "colonize",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "267060",
                         "col_count": 1,
@@ -399,22 +391,19 @@ def run_around_tests():
                         "well_volume_ul": "90000.0",
                         "vendor": "Fisher",
                         # TODO: TO BE ADDED
-                        "true_max_vol_ul": "90000.0"
+                        "true_max_vol_ul": "90000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/6-flat-tc',
+            "https://secure.strateos.com/api/container_types/6-flat-tc",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard",
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard", "universal"],
                         "capabilities": [
                             # NOTE: TO BE ADDED
                             "cover",
@@ -422,7 +411,7 @@ def run_around_tests():
                             "colonize",
                             "image_plate",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "30720113",
                         "col_count": 3,
@@ -443,22 +432,19 @@ def run_around_tests():
                         "well_volume_ul": "5000.0",
                         "vendor": "Eppendorf",
                         # TODO: TO BE ADDED
-                        "true_max_vol_ul": "5000.0"
+                        "true_max_vol_ul": "5000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/384-flat',
+            "https://secure.strateos.com/api/container_types/384-flat",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard",
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard", "universal"],
                         "capabilities": [
                             "cover",
                             "spin",
@@ -471,7 +457,7 @@ def run_around_tests():
                             "echo_dest",
                             "bluewash",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "3706",
                         "col_count": 24,
@@ -494,21 +480,19 @@ def run_around_tests():
                         "well_count": 384,
                         "well_depth_mm": "11.43",
                         "well_volume_ul": "90.0",
-                        "vendor": "Corning"
+                        "vendor": "Corning",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-v-kf',
+            "https://secure.strateos.com/api/container_types/96-v-kf",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard"],
                         "capabilities": [
                             "pipette",
                             "stamp",
@@ -520,7 +504,7 @@ def run_around_tests():
                             "magnetic_transfer_pcr",
                             "image_plate",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "22-387-030",
                         "col_count": 12,
@@ -541,21 +525,19 @@ def run_around_tests():
                         "well_volume_ul": "200.0",
                         "vendor": "Fisher",
                         # TODO: TO BE ADDED BY DEFAULT PLEASE!
-                        "true_max_vol_ul": "200.0"
+                        "true_max_vol_ul": "200.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-deep-kf',
+            "https://secure.strateos.com/api/container_types/96-deep-kf",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard"],
                         "capabilities": [
                             "pipette",
                             "stamp",
@@ -567,7 +549,7 @@ def run_around_tests():
                             "image_plate",
                             "seal",
                             "deseal",
-                            "dispense-destination"
+                            "dispense-destination",
                         ],
                         "catalog_number": "22-387-031",
                         "col_count": 12,
@@ -588,23 +570,19 @@ def run_around_tests():
                         "well_volume_ul": "1000.0",
                         "vendor": "Fisher",
                         # TODO: TO BE ADDED BY DEFAULT PLEASE!
-                        "true_max_vol_ul": "1000.0"
+                        "true_max_vol_ul": "1000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/96-deep',
+            "https://secure.strateos.com/api/container_types/96-deep",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard",
-                            "universal",
-                            "breathable"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard", "universal", "breathable"],
                         "capabilities": [
                             # TODO: TO BE ADDED
                             "cover",
@@ -620,7 +598,7 @@ def run_around_tests():
                             "magnetic_transfer_deep",
                             "deseal",
                             "flash_freeze",
-                            "dispense-destination"
+                            "dispense-destination",
                         ],
                         "catalog_number": "3961",
                         "col_count": 12,
@@ -645,29 +623,26 @@ def run_around_tests():
                         "well_volume_ul": "2000.0",
                         "vendor": "Corning",
                         # TODO: TO BE ADDED BY DEFAULT PLEASE!
-                        "true_max_vol_ul": "2000.0"
+                        "true_max_vol_ul": "2000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/6-flat',
+            "https://secure.strateos.com/api/container_types/6-flat",
             json={
-                'data': {
-                    'attributes': {
-                        "acceptable_lids": [
-                            "standard",
-                            "universal"
-                        ],
+                "data": {
+                    "attributes": {
+                        "acceptable_lids": ["standard", "universal"],
                         "capabilities": [
                             "cover",
                             "incubate",
                             "colonize",
                             "image_plate",
                             "dispense-destination",
-                            "envision"
+                            "envision",
                         ],
                         "catalog_number": "30720016",
                         "col_count": 3,
@@ -688,18 +663,18 @@ def run_around_tests():
                         "well_volume_ul": "5000.0",
                         "vendor": "Eppendorf",
                         # TODO: TO BE ADDED BY DEFAULT PLEASE!
-                        "true_max_vol_ul": "5000.0"
+                        "true_max_vol_ul": "5000.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/dummy',
+            "https://secure.strateos.com/api/container_types/dummy",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "capabilities": [],
                         "catalog_number": "30720016",
                         "col_count": 5,
@@ -716,18 +691,18 @@ def run_around_tests():
                         "well_count": 15,
                         "well_depth_mm": None,
                         "well_volume_ul": "200.0",
-                        "true_max_vol_ul": "200.0"
+                        "true_max_vol_ul": "200.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/dummy-tube',
+            "https://secure.strateos.com/api/container_types/dummy-tube",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "capabilities": [],
                         "catalog_number": "30720016",
                         "col_count": 5,
@@ -745,18 +720,18 @@ def run_around_tests():
                         "well_depth_mm": None,
                         "well_volume_ul": "200.0",
                         "vendor": "Eppendorf",
-                        "true_max_vol_ul": "200.0"
+                        "true_max_vol_ul": "200.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         rsps.add(
             rsps.GET,
-            'https://secure.strateos.com/api/container_types/dummy-big',
+            "https://secure.strateos.com/api/container_types/dummy-big",
             json={
-                'data': {
-                    'attributes': {
+                "data": {
+                    "attributes": {
                         "capabilities": [],
                         "col_count": 5,
                         "cover_types": [],
@@ -773,11 +748,11 @@ def run_around_tests():
                         "well_depth_mm": None,
                         "well_volume_ul": "200.0",
                         "vendor": "Eppendorf",
-                        "true_max_vol_ul": "200.0"
+                        "true_max_vol_ul": "200.0",
                     }
                 }
             },
-            status=200
+            status=200,
         )
         yield
 
@@ -794,86 +769,59 @@ def dummy_type():
 
 @pytest.fixture(scope="module")
 def dummy_tube():
-    return Container(
-        None,
-        ContainerType("dummy-tube"),
-    )
+    return Container(None, ContainerType("dummy-tube"),)
 
 
 @pytest.fixture(scope="module")
 def dummy_big():
-    return Container(
-        None,
-        ContainerType("dummy-big"),
-    )
+    return Container(None, ContainerType("dummy-big"),)
 
 
 @pytest.fixture(scope="module")
 def dummy_96():
-    return Container(
-        None,
-        ContainerType("96-flat"),
-    )
+    return Container(None, ContainerType("96-flat"),)
 
 
 @pytest.fixture(scope="module")
 def dummy_reservoir_row():
-    container_type = ContainerType('dummy')
+    container_type = ContainerType("dummy")
     container_type.well_count = 8
     container_type.col_count = 1
-    return Container(
-        None,
-        container_type,
-    )
+    return Container(None, container_type,)
 
 
 @pytest.fixture(scope="module")
 def dummy_reservoir_column():
-    container_type = ContainerType('dummy')
+    container_type = ContainerType("dummy")
     container_type.well_count = 12
     container_type.col_count = 12
-    return Container(
-        None,
-        container_type,
-    )
+    return Container(None, container_type,)
 
 
 @pytest.fixture(scope="module")
 def dummy_24():
-    container_type = ContainerType('dummy')
+    container_type = ContainerType("dummy")
     container_type.well_count = 24
     container_type.col_count = 6
-    return Container(
-        None,
-        container_type,
-    )
+    return Container(None, container_type,)
 
 
 @pytest.fixture(scope="module")
 def dummy_384():
-    return Container(
-        None,
-        ContainerType("384-echo")
-    )
+    return Container(None, ContainerType("384-echo"))
 
 
 @pytest.fixture(scope="module")
 def dummy_1536():
-    container_type = ContainerType('dummy')
+    container_type = ContainerType("dummy")
     container_type.well_count = 1536
     container_type.col_count = 48
-    return Container(
-        None,
-        container_type,
-    )
+    return Container(None, container_type,)
 
 
 @pytest.fixture(scope="module")
 def dummy_pathological():
-    container_type = ContainerType('dummy')
+    container_type = ContainerType("dummy")
     container_type.well_count = 384
     container_type.col_count = 96
-    return Container(
-        None,
-        container_type,
-    )
+    return Container(None, container_type,)

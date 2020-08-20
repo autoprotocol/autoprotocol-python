@@ -24,6 +24,7 @@ from autoprotocol.harness import (
 )
 import warnings
 
+
 class TestProtocolMultipleExist(object):
     def test_multiple_exist(self, dummy_protocol, dummy_96):
         p1 = dummy_protocol
@@ -136,6 +137,7 @@ class TestRef(object):
             p.as_dict()["refs"]["discard_test"]["store"]
         c1.set_storage("cold_4")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4"
+
 
 class TestThermocycle(object):
     def test_thermocycle_append(self):
@@ -2947,9 +2949,7 @@ class TestSonicate(object):
             temperature="4:celsius",
         )
         assert p.instructions[-1].data["mode"] == "bath"
-        assert p.instructions[-1].data["mode_params"] == {
-            "sample_holder": "suspender"
-        }
+        assert p.instructions[-1].data["mode_params"] == {"sample_holder": "suspender"}
         assert p.instructions[-1].data["temperature"] == Unit("4:celsius")
         assert p.instructions[-1].data["frequency"] == Unit("22:kilohertz")
 
@@ -2975,10 +2975,7 @@ class TestSonicate(object):
         ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
 
         p.sonicate(
-            ws,
-            "1:minute",
-            "horn",
-            {"duty_cycle": 0.1, "amplitude": "3:micrometer"},
+            ws, "1:minute", "horn", {"duty_cycle": 0.1, "amplitude": "3:micrometer"},
         )
         assert p.instructions[-1].op == "sonicate"
         assert "temperature" not in p.instructions[-1].data
@@ -3185,7 +3182,9 @@ class TestSPE(object):
     def setup(self):
         self.p = Protocol()
         self.sample = self.p.ref("Sample", None, "micro-1.5", discard=True).well(0)
-        self.elution_well = self.p.ref("Elution", None, "micro-1.5", discard=True).well(0)
+        self.elution_well = self.p.ref("Elution", None, "micro-1.5", discard=True).well(
+            0
+        )
         self.elute_params = [
             SPE.builders.mobile_phase_params(
                 volume="2:microliter",

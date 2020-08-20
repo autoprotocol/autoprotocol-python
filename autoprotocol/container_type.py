@@ -15,7 +15,7 @@ from .container import Well
 from .unit import Unit
 
 
-class ContainerType():
+class ContainerType:
     """
     The ContainerType class holds the capabilities and properties of a
     particular container type.
@@ -70,8 +70,10 @@ class ContainerType():
     def __init__(self, shortname):
         self.shortname = shortname
 
-        baseUrl = os.getenv('CONTAINER_TYPES_URL', 'https://secure.strateos.com/api/container_types')
-        url = baseUrl + '/' + shortname
+        baseUrl = os.getenv(
+            "CONTAINER_TYPES_URL", "https://secure.strateos.com/api/container_types"
+        )
+        url = baseUrl + "/" + shortname
         response = requests.get(url)
         attributes = response.json()["data"]["attributes"]
 

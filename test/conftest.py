@@ -694,6 +694,92 @@ def run_around_tests():
             },
             status=200
         )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/dummy',
+            json={
+                'data': {
+                    'attributes': {
+                        "capabilities": [],
+                        "catalog_number": "30720016",
+                        "col_count": 5,
+                        "cover_types": [],
+                        "dead_volume_ul": "400.0",
+                        "height_mm": "19.0",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "Dummy",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "600.0",
+                        "sale_price": "4.4982",
+                        "shortname": "dummy",
+                        "well_count": 15,
+                        "well_depth_mm": None,
+                        "well_volume_ul": "200.0",
+                        "vendor": "Eppendorf",
+                        "true_max_vol_ul": "200.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/dummy-tube',
+            json={
+                'data': {
+                    'attributes': {
+                        "capabilities": [],
+                        "catalog_number": "30720016",
+                        "col_count": 5,
+                        "cover_types": [],
+                        "dead_volume_ul": "15.0",
+                        "height_mm": "19.0",
+                        "is_tube": True,
+                        "manual_execution": False,
+                        "name": "Dummy tube",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "30.0",
+                        "sale_price": "4.4982",
+                        "shortname": "dummy-tube",
+                        "well_count": 1,
+                        "well_depth_mm": None,
+                        "well_volume_ul": "200.0",
+                        "vendor": "Eppendorf",
+                        "true_max_vol_ul": "200.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/dummy-big',
+            json={
+                'data': {
+                    'attributes': {
+                        "capabilities": [],
+                        "col_count": 5,
+                        "cover_types": [],
+                        "dead_volume_ul": "15.0",
+                        "height_mm": "19.0",
+                        "is_tube": True,
+                        "manual_execution": False,
+                        "name": "Dummy tube",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "30.0",
+                        "sale_price": "4.4982",
+                        "shortname": "dummy-tube",
+                        "well_count": 20,
+                        "well_depth_mm": None,
+                        "well_volume_ul": "200.0",
+                        "vendor": "Eppendorf",
+                        "true_max_vol_ul": "200.0"
+                    }
+                }
+            },
+            status=200
+        )
         yield
 
 
@@ -704,44 +790,14 @@ def dummy_protocol():
 
 @pytest.fixture(scope="module")
 def dummy_type():
-    return ContainerType(
-        # name="dummy",
-        # well_count=15,
-        # well_depth_mm=None,
-        # well_volume_ul=Unit(200, "microliter"),
-        # well_coating=None,
-        # sterile=False,
-        # is_tube=False,
-        # cover_types=[],
-        # seal_types=None,
-        # capabilities=[],
-        shortname="dummy" #,
-        # col_count=5,
-        # dead_volume_ul=Unit(15, "microliter"),
-        # safe_min_volume_ul=Unit(30, "microliter"),
-    )
+    return ContainerType("dummy")
 
 
 @pytest.fixture(scope="module")
 def dummy_tube():
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=1,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=True,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=1,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        ContainerType("dummy-tube"),
     )
 
 
@@ -749,22 +805,7 @@ def dummy_tube():
 def dummy_big():
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=20,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=5,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        ContainerType("dummy-big"),
     )
 
 
@@ -778,70 +819,34 @@ def dummy_96():
 
 @pytest.fixture(scope="module")
 def dummy_reservoir_row():
+    container_type = ContainerType('dummy')
+    container_type.well_count = 8
+    container_type.col_count = 1
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=8,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=None,
-            seal_types=None,
-            capabilities=None,
-            shortname="dummy",
-            col_count=1,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        container_type,
     )
 
 
 @pytest.fixture(scope="module")
 def dummy_reservoir_column():
+    container_type = ContainerType('dummy')
+    container_type.well_count = 12
+    container_type.col_count = 12
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=12,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=None,
-            seal_types=None,
-            capabilities=None,
-            shortname="dummy",
-            col_count=12,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        container_type,
     )
 
 
 @pytest.fixture(scope="module")
 def dummy_24():
+    container_type = ContainerType('dummy')
+    container_type.well_count = 24
+    container_type.col_count = 6
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=24,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=None,
-            seal_types=None,
-            capabilities=None,
-            shortname="dummy",
-            col_count=6,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        container_type,
     )
 
 
@@ -849,68 +854,29 @@ def dummy_24():
 def dummy_384():
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=384,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=24,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        ContainerType("384-echo")
     )
 
 
 @pytest.fixture(scope="module")
 def dummy_1536():
+    container_type = ContainerType('dummy')
+    container_type.well_count = 1536
+    container_type.col_count = 48
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=1536,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=48,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        container_type,
     )
 
 
 @pytest.fixture(scope="module")
 def dummy_pathological():
+    container_type = ContainerType('dummy')
+    container_type.well_count = 384
+    container_type.col_count = 96
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=384,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=96,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        container_type,
     )
 
 

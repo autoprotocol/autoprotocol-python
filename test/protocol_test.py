@@ -1,7 +1,6 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init
 import pytest
-import responses
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.instruction import (
     Thermocycle,

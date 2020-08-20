@@ -716,7 +716,6 @@ def run_around_tests():
                         "well_count": 15,
                         "well_depth_mm": None,
                         "well_volume_ul": "200.0",
-                        "vendor": "Eppendorf",
                         "true_max_vol_ul": "200.0"
                     }
                 }
@@ -877,29 +876,4 @@ def dummy_pathological():
     return Container(
         None,
         container_type,
-    )
-
-
-@pytest.fixture(scope="module")
-def dummy_echo():
-    return Container(
-        None,
-        ContainerType(
-            name="dummy",
-            well_count=384,
-            well_depth_mm=None,
-            well_volume_ul=Unit(65, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=[],
-            seal_types=None,
-            capabilities=[],
-            shortname="dummy",
-            col_count=96,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(15, "microliter"),
-            true_max_vol_ul=Unit(135, "microliter"),
-            vendor="Labcyte",
-        ),
     )

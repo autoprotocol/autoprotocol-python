@@ -7,8 +7,6 @@ Container-type object and associated functions
 
 """
 
-from collections import namedtuple
-
 import requests
 import re
 

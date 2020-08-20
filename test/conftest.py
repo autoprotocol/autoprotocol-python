@@ -3,7 +3,6 @@ import pytest
 import responses
 from autoprotocol.container import Container
 from autoprotocol.container_type import ContainerType
-from autoprotocol.unit import Unit
 from autoprotocol.protocol import Protocol
 
 

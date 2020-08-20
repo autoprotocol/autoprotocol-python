@@ -25,37 +25,6 @@ from autoprotocol.harness import (
 )
 import warnings
 
-@pytest.fixture(scope="session")
-def before_all():
-    print("before_all")
-# @responses.activate
-# responses.add(
-#     responses.GET,
-#     'https://secure.strateos.com/api/container_types/96-pcr',
-#     json={
-#         'data': {
-#             'attributes': {
-#                 "foo": "bar"
-#             }
-#         }
-#     },
-#     status=200
-# )
-
-# responses.add(
-#     responses.GET,
-#     'https://secure.strateos.com/api/container_types/96-flat',
-#     json={
-#         'data': {
-#             'attributes': {
-#                 "foo": "bar"
-#             }
-#         }
-#     },
-#     status=200
-# )
-
-
 class TestProtocolMultipleExist(object):
     def test_multiple_exist(self, dummy_protocol, dummy_96):
         p1 = dummy_protocol
@@ -171,15 +140,15 @@ class TestRef(object):
 
     # pragma pylint: enable=expression-not-assigned
 
-    def test_cover_state_propagation(self):
-        for name, ct in _CONTAINER_TYPES.items():
-            for covers in filter(None, [ct.cover_types, ct.seal_types]):
-                for cover in covers:
-                    p = Protocol()
-                    c = p.ref(name + cover, cont_type=name, cover=cover, discard=True)
-                    p.image(c, "top", "image")
-                    ref = list(p.as_dict()["refs"].values())[0]
-                    assert ref["cover"] == cover
+    # def test_cover_state_propagation(self):
+    #     for name, ct in _CONTAINER_TYPES.items():
+    #         for covers in filter(None, [ct.cover_types, ct.seal_types]):
+    #             for cover in covers:
+    #                 p = Protocol()
+    #                 c = p.ref(name + cover, cont_type=name, cover=cover, discard=True)
+    #                 p.image(c, "top", "image")
+    #                 ref = list(p.as_dict()["refs"].values())[0]
+    #                 assert ref["cover"] == cover
 
 
 class TestThermocycle(object):
@@ -2872,57 +2841,57 @@ class TestDyeTest(object):
 
 
 class TestAgitate(object):
-    # pylint: disable=invalid-name
-    p = Protocol()
-    pl1 = p.ref("pl1", id=None, cont_type="96-pcr", discard=True)
-    t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
-
     def test_param_checks(self):
+        # pylint: disable=invalid-name
+        p = Protocol()
+        pl1 = p.ref("pl1", id=None, cont_type="96-pcr", discard=True)
+        t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
+
         with pytest.raises(TypeError):
-            self.p.agitate(self.pl1, "roll", duration="5:minute", speed="100:rpm")
+            p.agitate(pl1, "roll", duration="5:minute", speed="100:rpm")
         with pytest.raises(TypeError):
-            self.p.agitate(self.pl1, "invert", duration="5:minute", speed="100:rpm")
+            p.agitate(pl1, "invert", duration="5:minute", speed="100:rpm")
         with pytest.raises(ValueError):
-            self.p.agitate(self.t1, "invert", duration="5:minute", speed="0:rpm")
+            p.agitate(t1, "invert", duration="5:minute", speed="0:rpm")
         with pytest.raises(ValueError):
-            self.p.agitate(self.pl1, "fake", duration="5:minute", speed="100:rpm")
+            p.agitate(pl1, "fake", duration="5:minute", speed="100:rpm")
         with pytest.raises(ValueError):
-            self.p.agitate(self.pl1, "stir_bar", duration="5:minute", speed="100:rpm")
+            p.agitate(pl1, "stir_bar", duration="5:minute", speed="100:rpm")
         with pytest.raises(TypeError):
-            self.p.agitate(self.t1, "invert", duration="30:gram", speed="100;rpm")
+            p.agitate(t1, "invert", duration="30:gram", speed="100;rpm")
         with pytest.raises(ValueError):
-            self.p.agitate(self.t1, mode="vortex", duration="0:second", speed="100:rpm")
+            p.agitate(t1, mode="vortex", duration="0:second", speed="100:rpm")
         with pytest.raises(ValueError):
-            self.p.agitate(
-                self.t1,
+            p.agitate(
+                t1,
                 mode="vortex",
                 duration="3:minute",
                 speed="250:rpm",
                 mode_params={
-                    "wells": Well(self.t1, 0),
+                    "wells": Well(t1, 0),
                     "bar_shape": "cross",
                     "bar_length": "234:micrometer",
                 },
             )
         with pytest.raises(ValueError):
-            self.p.agitate(
-                self.t1,
+            p.agitate(
+                t1,
                 mode="stir_bar",
                 duration="3:minute",
                 speed="250:rpm",
                 mode_params={
-                    "not_wells": Well(self.t1, 0),
+                    "not_wells": Well(t1, 0),
                     "not_bar_shape": "cross",
                     "not_bar_length": "234:micrometer",
                 },
             )
         with pytest.raises(ValueError):
-            self.p.agitate(
-                self.t1,
+            p.agitate(
+                t1,
                 mode="stir_bar",
                 duration="3:minute",
                 speed="250:rpm",
-                mode_params={"wells": Well(self.t1, 0)},
+                mode_params={"wells": Well(t1, 0)},
             )
 
     # pylint: disable=no-self-use
@@ -2979,64 +2948,72 @@ class TestIncubate(object):
 
 
 class TestSonicate(object):
-    # pylint: disable=invalid-name
-    p = Protocol()
-    ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
-
     def test_sonicate(self):
-        self.p.sonicate(
-            self.ws,
+        p = Protocol()
+        ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
+
+        p.sonicate(
+            ws,
             "1:minute",
             "bath",
             {"sample_holder": "suspender"},
             frequency="22:kilohertz",
             temperature="4:celsius",
         )
-        assert self.p.instructions[-1].data["mode"] == "bath"
-        assert self.p.instructions[-1].data["mode_params"] == {
+        assert p.instructions[-1].data["mode"] == "bath"
+        assert p.instructions[-1].data["mode_params"] == {
             "sample_holder": "suspender"
         }
-        assert self.p.instructions[-1].data["temperature"] == Unit("4:celsius")
-        assert self.p.instructions[-1].data["frequency"] == Unit("22:kilohertz")
+        assert p.instructions[-1].data["temperature"] == Unit("4:celsius")
+        assert p.instructions[-1].data["frequency"] == Unit("22:kilohertz")
 
     def test_sonicate_one_well(self):
-        self.p.sonicate(
-            self.ws[0],
+        p = Protocol()
+        ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
+
+        p.sonicate(
+            ws[0],
             "1:minute",
             "horn",
             {"duty_cycle": 0.2, "amplitude": "1:micrometer"},
             frequency="25:kilohertz",
             temperature="4:celsius",
         )
-        assert self.p.instructions[-1].data["mode"] == "horn"
-        assert len(self.p.instructions[-1].data["wells"]) == 1
-        assert self.p.instructions[-1].data["temperature"] == Unit("4:celsius")
-        assert self.p.instructions[-1].data["frequency"] == Unit("25:kilohertz")
+        assert p.instructions[-1].data["mode"] == "horn"
+        assert len(p.instructions[-1].data["wells"]) == 1
+        assert p.instructions[-1].data["temperature"] == Unit("4:celsius")
+        assert p.instructions[-1].data["frequency"] == Unit("25:kilohertz")
 
     def test_sonicate_default(self):
-        self.p.sonicate(
-            self.ws,
+        p = Protocol()
+        ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
+
+        p.sonicate(
+            ws,
             "1:minute",
             "horn",
             {"duty_cycle": 0.1, "amplitude": "3:micrometer"},
         )
-        assert self.p.instructions[-1].op == "sonicate"
-        assert "temperature" not in self.p.instructions[-1].data
-        assert self.p.instructions[-1].data["frequency"] == Unit("20:kilohertz")
+        assert p.instructions[-1].op == "sonicate"
+        assert "temperature" not in p.instructions[-1].data
+        assert p.instructions[-1].data["frequency"] == Unit("20:kilohertz")
 
     def test_bad_params(self):
+        p = Protocol()
+        ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
+
         with pytest.raises(ValueError):
             # invalid 'duty_cycle' parameter
-            self.p.sonicate(
-                self.ws,
+            p.sonicate(
+                ws,
                 duration="1:minute",
                 mode="horn",
                 mode_params={"duty_cycle": 3.1, "amplitude": "3:micrometer"},
             )
         with pytest.raises(RuntimeError):
             # invalid mode parameter
-            self.p.sonicate(
-                self.ws[0],
+            p.sonicate(
+                ws[0],
                 "1:minute",
                 "bad_mode",
                 {"duty_cycle": 0.2, "amplitude": "1:micrometer"},
@@ -3045,7 +3022,7 @@ class TestSonicate(object):
             )
         with pytest.raises(TypeError):
             # invalid wells
-            self.p.sonicate(
+            p.sonicate(
                 "bad_wells",
                 "1:minute",
                 "horn",
@@ -3055,8 +3032,8 @@ class TestSonicate(object):
             )
         with pytest.raises(TypeError):
             # invalid wells
-            self.p.sonicate(
-                self.ws[0],
+            p.sonicate(
+                ws[0],
                 "1:minute",
                 "horn",
                 "not_a_dict",
@@ -3066,8 +3043,10 @@ class TestSonicate(object):
 
 
 class TestImage(object):
-    p = Protocol()
-    c1 = p.ref("c1", cont_type="96-pcr", discard=True)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()
+        self.c1 = self.p.ref("c1", cont_type="96-pcr", discard=True)
 
     def test_image(self):
         self.p.image(
@@ -3105,9 +3084,11 @@ class TestImage(object):
 
 
 class TestSeal(object):
-    p = Protocol()
-    c1 = p.ref("c1", cont_type="96-pcr", discard=True)
-    c2 = p.ref("c2", cont_type="384-flat", discard=True)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()
+        self.c1 = self.p.ref("c1", cont_type="96-pcr", discard=True)
+        self.c2 = self.p.ref("c2", cont_type="384-flat", discard=True)
 
     def test_param_checks(self):
         with pytest.raises(RuntimeError):
@@ -3159,9 +3140,11 @@ class TestSeal(object):
 
 
 class TestCountCells(object):
-    p = Protocol()
-    tube = p.ref("tube", id=None, cont_type="micro-1.5", discard=True)
-    plate = p.ref("plate", id=None, cont_type="96-pcr", discard=True)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()
+        self.tube = self.p.ref("tube", id=None, cont_type="micro-1.5", discard=True)
+        self.plate = self.p.ref("plate", id=None, cont_type="96-pcr", discard=True)
 
     def test_good_inputs(self):
         self.p.count_cells(
@@ -3212,43 +3195,45 @@ class TestCountCells(object):
 
 
 class TestSPE(object):
-    p = Protocol()
-    sample = p.ref("Sample", None, "micro-1.5", discard=True).well(0)
-    elution_well = p.ref("Elution", None, "micro-1.5", discard=True).well(0)
-    elute_params = [
-        SPE.builders.mobile_phase_params(
-            volume="2:microliter",
-            loading_flowrate="100:ul/second",
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()
+        self.sample = self.p.ref("Sample", None, "micro-1.5", discard=True).well(0)
+        self.elution_well = self.p.ref("Elution", None, "micro-1.5", discard=True).well(0)
+        self.elute_params = [
+            SPE.builders.mobile_phase_params(
+                volume="2:microliter",
+                loading_flowrate="100:ul/second",
+                settle_time="2:minute",
+                processing_time="3:minute",
+                flow_pressure="2:bar",
+                resource_id="solvent_a",
+                destination_well=self.elution_well,
+                is_elute=True,
+            )
+        ]
+
+        self.bad_elute_params = [
+            SPE.builders.mobile_phase_params(
+                volume="2:microliter",
+                loading_flowrate="100:ul/second",
+                settle_time="2:minute",
+                processing_time="3:minute",
+                flow_pressure="2:bar",
+                resource_id="solvent_a",
+            )
+        ]
+
+        self.load_sample_params = SPE.builders.mobile_phase_params(
+            volume="10:microliter",
+            loading_flowrate="1:ul/second",
             settle_time="2:minute",
             processing_time="3:minute",
             flow_pressure="2:bar",
-            resource_id="solvent_a",
-            destination_well=elution_well,
-            is_elute=True,
+            is_sample=True,
         )
-    ]
 
-    bad_elute_params = [
-        SPE.builders.mobile_phase_params(
-            volume="2:microliter",
-            loading_flowrate="100:ul/second",
-            settle_time="2:minute",
-            processing_time="3:minute",
-            flow_pressure="2:bar",
-            resource_id="solvent_a",
-        )
-    ]
-
-    load_sample_params = SPE.builders.mobile_phase_params(
-        volume="10:microliter",
-        loading_flowrate="1:ul/second",
-        settle_time="2:minute",
-        processing_time="3:minute",
-        flow_pressure="2:bar",
-        is_sample=True,
-    )
-
-    cartridge = "spe_cartridge"
+        self.cartridge = "spe_cartridge"
 
     def test_good_inputs(self):
         self.p.spe(
@@ -3326,8 +3311,10 @@ class TestTransferVolume(object):
 
 
 class TestEvaporate(object):
-    p = Protocol()
-    t1 = p.ref("c1", cont_type="micro-2.0", discard=True)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.p = Protocol()
+        self.t1 = self.p.ref("c1", cont_type="micro-2.0", discard=True)
 
     def test_bad_args(self):
         with pytest.raises(TypeError):

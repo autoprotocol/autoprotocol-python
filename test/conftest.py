@@ -39,8 +39,9 @@ def run_around_tests():
                         "well_count": 1,
                         "well_depth_mm": "38.6",
                         "well_volume_ul": "280000.0",
-                        "vendor": "Axygen"
-
+                        "vendor": "Axygen",
+                        # NOTE: NEED TO BE ADDED TO CONTAINER TYPE SERVICE
+                        "true_max_vol_ul": "280000.0"
                     }
                 }
             },
@@ -95,7 +96,9 @@ def run_around_tests():
                         "well_count": 96,
                         "well_depth_mm": "10.67",
                         "well_volume_ul": "340.0",
-                        "vendor": "Corning"
+                        "vendor": "Corning",
+                        # NOTE: NEED TO BE ADDED TO CONTAINER TYPE SERVICE
+                        "true_max_vol_ul": "340.0"
                     }
                 }
             },
@@ -446,6 +449,251 @@ def run_around_tests():
             },
             status=200
         )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/384-flat',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard",
+                            "universal"
+                        ],
+                        "capabilities": [
+                            "cover",
+                            "spin",
+                            "incubate",
+                            "absorbance",
+                            "fluorescence",
+                            "luminescence",
+                            "image_plate",
+                            "stamp",
+                            "echo_dest",
+                            "bluewash",
+                            "dispense-destination",
+                            "envision"
+                        ],
+                        "catalog_number": "3706",
+                        "col_count": 24,
+                        "cost_each": "11.54",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["standard", "universal"],
+                        "dead_volume_ul": "5.0",
+                        "height_mm": "14.22",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "384-Well Clear Bottom White Polystyrene Microplate",
+                        # TODO: TO BE ADDED
+                        "prioritize_seal_or_cover": "cover",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "15.0",
+                        "sale_price": "13.7326",
+                        # TODO: TO BE ADDED
+                        "seal_types": ["ultra-clear", "foil"],
+                        "shortname": "384-flat",
+                        "well_count": 384,
+                        "well_depth_mm": "11.43",
+                        "well_volume_ul": "90.0",
+                        "vendor": "Corning"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/96-v-kf',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard"
+                        ],
+                        "capabilities": [
+                            "pipette",
+                            "stamp",
+                            "spin",
+                            "cover",
+                            "uncover",
+                            "incubate",
+                            "magnetic_transfer_deep",
+                            "magnetic_transfer_pcr",
+                            "image_plate",
+                            "dispense-destination",
+                            "envision"
+                        ],
+                        "catalog_number": "22-387-030",
+                        "col_count": 12,
+                        "cost_each": "5.3",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["standard"],
+                        "dead_volume_ul": "20.0",
+                        "height_mm": "14.5",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "96-well KingFisher PCR microplate",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "20.0",
+                        "sale_price": "6.307",
+                        "shortname": "96-v-kf",
+                        "well_count": 96,
+                        "well_depth_mm": "12.9",
+                        "well_volume_ul": "200.0",
+                        "vendor": "Fisher",
+                        # TODO: TO BE ADDED BY DEFAULT PLEASE!
+                        "true_max_vol_ul": "200.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/96-deep-kf',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard"
+                        ],
+                        "capabilities": [
+                            "pipette",
+                            "stamp",
+                            "spin",
+                            "cover",
+                            "uncover",
+                            "incubate",
+                            "magnetic_transfer_deep",
+                            "image_plate",
+                            "seal",
+                            "deseal",
+                            "dispense-destination"
+                        ],
+                        "catalog_number": "22-387-031",
+                        "col_count": 12,
+                        "cost_each": "8.25",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["standard"],
+                        "dead_volume_ul": "50.0",
+                        "height_mm": "44.0",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "96-Well KingFisher Deepwell Plate V-bottom Polypropylene",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "50.0",
+                        "sale_price": "9.8175",
+                        "shortname": "96-deep-kf",
+                        "well_count": 96,
+                        "well_depth_mm": "42.3",
+                        "well_volume_ul": "1000.0",
+                        "vendor": "Fisher",
+                        # TODO: TO BE ADDED BY DEFAULT PLEASE!
+                        "true_max_vol_ul": "1000.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/96-deep',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard",
+                            "universal",
+                            "breathable"
+                        ],
+                        "capabilities": [
+                            # TODO: TO BE ADDED
+                            "cover",
+                            "magnetic_separate",
+                            "incubate",
+                            "seal",
+                            "image_plate",
+                            "miniprep_source",
+                            "maxiprep_source",
+                            "maxiprep_destination",
+                            "stamp",
+                            "spin",
+                            "magnetic_transfer_deep",
+                            "deseal",
+                            "flash_freeze",
+                            "dispense-destination"
+                        ],
+                        "catalog_number": "3961",
+                        "col_count": 12,
+                        "cost_each": "8.35",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["standard", "universal"],
+                        "dead_volume_ul": "15.0",
+                        "height_mm": "43.8",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "96-Well Clear V-Bottom Polypropylene Deep Well Plate",
+                        # TODO: TO BE ADDED
+                        "prioritize_seal_or_cover": "cover",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "30.0",
+                        "sale_price": "9.9365",
+                        # TODO: TO BE ADDED
+                        "seal_types": ["breathable"],
+                        "shortname": "96-deep",
+                        "well_count": 96,
+                        "well_depth_mm": "42.03",
+                        "well_volume_ul": "2000.0",
+                        "vendor": "Corning",
+                        # TODO: TO BE ADDED BY DEFAULT PLEASE!
+                        "true_max_vol_ul": "2000.0"
+                    }
+                }
+            },
+            status=200
+        )
+        rsps.add(
+            rsps.GET,
+            'https://secure.strateos.com/api/container_types/6-flat',
+            json={
+                'data': {
+                    'attributes': {
+                        "acceptable_lids": [
+                            "standard",
+                            "universal"
+                        ],
+                        "capabilities": [
+                            "cover",
+                            "incubate",
+                            "colonize",
+                            "image_plate",
+                            "dispense-destination",
+                            "envision"
+                        ],
+                        "catalog_number": "30720016",
+                        "col_count": 3,
+                        "cost_each": "3.78",
+                        # TODO: TO BE ADDED
+                        "cover_types": ["standard", "universal"],
+                        "dead_volume_ul": "400.0",
+                        "height_mm": "19.0",
+                        "is_tube": False,
+                        "manual_execution": False,
+                        "name": "6-Well Non-Treated Sterile Plate",
+                        "retired_at": None,
+                        "safe_min_volume_ul": "600.0",
+                        "sale_price": "4.4982",
+                        "shortname": "6-flat",
+                        "well_count": 6,
+                        "well_depth_mm": "16.5",
+                        "well_volume_ul": "5000.0",
+                        "vendor": "Eppendorf",
+                        # TODO: TO BE ADDED BY DEFAULT PLEASE!
+                        "true_max_vol_ul": "5000.0"
+                    }
+                }
+            },
+            status=200
+        )
         yield
 
 
@@ -524,22 +772,7 @@ def dummy_big():
 def dummy_96():
     return Container(
         None,
-        ContainerType(
-            name="dummy",
-            well_count=96,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=["universal"],
-            seal_types=None,
-            capabilities=["cover"],
-            shortname="dummy",
-            col_count=12,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
+        ContainerType("96-flat"),
     )
 
 

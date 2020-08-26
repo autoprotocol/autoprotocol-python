@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`265` Add support for mass_concentration, amount_concentration and volume_concentration, as specified in ASC-51
 * :support:`267` Pin black version to reduce CI/local inconsistencies. Pin to 20.8b1
 
 * :release:`7.1.1 <2020-07-21>`

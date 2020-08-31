@@ -26,14 +26,22 @@ class ContainerType:
       Short name used to refer to a ContainerType.
     """
 
+    container_types = {}
+
     def __init__(self, shortname):
         self.shortname = shortname
 
-        baseUrl = os.getenv(
-            "CONTAINER_TYPES_URL", "https://secure.strateos.com/api/container_types"
-        )
-        url = baseUrl + "/" + shortname
-        response = requests.get(url)
+
+        if self.shortname in ContainerType.container_types:
+            response = ContainerType.container_types[self.shortname]
+        else:
+            baseUrl = os.getenv(
+                "CONTAINER_TYPES_URL", "https://secure.strateos.com/api/container_types"
+            )
+            url = baseUrl + "/" + shortname
+            response = requests.get(url)
+            ContainerType.container_types[self.shortname] = response
+
         attributes = response.json()["data"]["attributes"]
 
         for (k, v) in attributes.items():
@@ -50,6 +58,10 @@ class ContainerType:
         elif name.endswith("_ul"):
             return Unit(0.0, "microliter")
         return None
+
+    @staticmethod
+    def reset_cache():
+        ContainerType.container_types = {}
 
     @staticmethod
     def well_from_coordinates_static(row, row_count, col, col_count):

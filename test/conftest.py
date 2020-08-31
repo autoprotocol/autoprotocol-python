@@ -8,7 +8,7 @@ from test.test_util import TestUtils
 
 
 @pytest.fixture(scope="module", autouse=True)
-def run_around_tests():
+def mock_requests():
     print("Define mock")
 
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
@@ -21,7 +21,7 @@ def run_around_tests():
                 json=request["body"],
                 status=200,
             )
-        yield
+        yield rsps
 
 
 @pytest.fixture(scope="function")

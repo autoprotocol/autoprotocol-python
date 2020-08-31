@@ -1,6 +1,7 @@
 import pytest
 
 from autoprotocol import Unit
+from autoprotocol.container_type import ContainerType
 
 
 class TestContainerRobotize(object):
@@ -88,8 +89,6 @@ class TestContainerTypeAttributes(object):
 
 class TestContainerType(object):
     def test_instance(self):
-        from autoprotocol.container_type import ContainerType
-
         ct = ContainerType("res-sw96-hp")
 
         assert ct.shortname == "res-sw96-hp"
@@ -104,3 +103,14 @@ class TestContainerType(object):
         assert ct.foobar == None
         assert ct.foobar_mm == 0.0
         assert ct.foobar_ul == Unit(0.0, "microliter")
+
+    def test_caching(self, mock_requests):
+        base_url = "https://secure.strateos.com/api/container_types"
+        mock_requests.calls.reset()
+        ContainerType.reset_cache()
+
+        ct = ContainerType("res-sw96-hp")
+        mock_requests.assert_call_count(base_url + "/res-sw96-hp", 1)
+
+        ct = ContainerType("res-sw96-hp")
+        mock_requests.assert_call_count(base_url + "/res-sw96-hp", 1)

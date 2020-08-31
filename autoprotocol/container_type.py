@@ -31,7 +31,6 @@ class ContainerType:
     def __init__(self, shortname):
         self.shortname = shortname
 
-
         if self.shortname in ContainerType.container_types:
             response = ContainerType.container_types[self.shortname]
         else:

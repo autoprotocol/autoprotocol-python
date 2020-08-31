@@ -109,8 +109,8 @@ class TestContainerType(object):
         mock_requests.calls.reset()
         ContainerType.reset_cache()
 
-        ct = ContainerType("res-sw96-hp")
+        ContainerType("res-sw96-hp")
         mock_requests.assert_call_count(base_url + "/res-sw96-hp", 1)
 
-        ct = ContainerType("res-sw96-hp")
+        ContainerType("res-sw96-hp")
         mock_requests.assert_call_count(base_url + "/res-sw96-hp", 1)

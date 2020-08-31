@@ -1,0 +1,729 @@
+[
+  {
+    "url": "https://secure.strateos.com/api/container_types/res-sw96-hp",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "universal"
+          ],
+          "capabilities": [
+            "incubate",
+            "liquid_handle",
+            "cover",
+            "uncover",
+            "dispense-destination",
+            "dispense-source"
+          ],
+          "catalog_number": "res-sw96-hp",
+          "col_count": 1,
+          "cost_each": "7.02",
+          "dead_volume_ul": null,
+          "height_mm": "43.92",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "1-Well Reagent Reservoir with 96-Bottom Troughs, High Profile",
+          "retired_at": null,
+          "safe_min_volume_ul": null,
+          "sale_price": "8.3538",
+          "shortname": "res-sw96-hp",
+          "well_count": 1,
+          "well_depth_mm": "38.6",
+          "well_volume_ul": "280000.0",
+          "vendor": "Axygen",
+          "true_max_vol_ul": "280000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-flat",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "low_evaporation",
+            "standard",
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "spin",
+            "incubate",
+            "absorbance",
+            "fluorescence",
+            "luminescence",
+            "image_plate",
+            "maxiprep_source",
+            "stamp",
+            "echo_dest",
+            "magnetic_transfer_pcr",
+            "bluewash",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "3632",
+          "col_count": 12,
+          "cost_each": "8.03",
+          "cover_types": [
+            "low_evaporation",
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "25.0",
+          "height_mm": "14.22",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-Well White with Clear Flat Bottom Polystyrene Not Treated Microplate",
+          "prioritize_seal_or_cover": "seal",
+          "retired_at": null,
+          "safe_min_volume_ul": "65.0",
+          "sale_price": "9.5557",
+          "seal_types": [],
+          "shortname": "96-flat",
+          "well_count": 96,
+          "well_depth_mm": "10.67",
+          "well_volume_ul": "340.0",
+          "vendor": "Corning",
+          "true_max_vol_ul": "340.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-pcr",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "ultra-clear",
+            "foil",
+            "breathable",
+            "low_evaporation"
+          ],
+          "capabilities": [
+            "magnetic_separate",
+            "thermocycle",
+            "qrt_thermocycle",
+            "spin",
+            "incubate",
+            "seal",
+            "image_plate",
+            "sanger_sequence",
+            "miniprep_destination",
+            "stamp",
+            "flash_freeze",
+            "echo_dest",
+            "magnetic_transfer_pcr",
+            "bluewash",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "951020619",
+          "col_count": 12,
+          "cost_each": "4.14",
+          "dead_volume_ul": "3.0",
+          "height_mm": "15.9",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-Well twin.tec PCR Plate",
+          "prioritize_seal_or_cover": "seal",
+          "retired_at": null,
+          "safe_min_volume_ul": "5.0",
+          "sale_price": "4.9266",
+          "seal_types": [
+            "ultra-clear",
+            "foil"
+          ],
+          "shortname": "96-pcr",
+          "true_max_vol_ul": "135.0",
+          "well_count": 96,
+          "well_depth_mm": "14.6",
+          "well_volume_ul": "160.0",
+          "vendor": "Eppendorf"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/micro-1.5",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [
+            "liquid_handle",
+            "gel_separate",
+            "gel_purify",
+            "incubate",
+            "spin"
+          ],
+          "col_count": 1,
+          "cost_each": "4.14",
+          "dead_volume_ul": "20.0",
+          "is_tube": true,
+          "manual_execution": false,
+          "name": "1.5mL Microcentrifuge tube",
+          "retired_at": null,
+          "safe_min_volume_ul": "20.0",
+          "shortname": "micro-1.5",
+          "sterile": false,
+          "well_count": 1,
+          "well_depth_mm": null,
+          "well_volume_ul": "1500.0",
+          "vendor": "USA Scientific"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/micro-2.0",
+    "body": {
+      "data": {
+        "attributes": {
+          "name": "2mL Microcentrifuge tube",
+          "well_count": 1,
+          "well_depth_mm": null,
+          "well_volume_ul": "2000.0",
+          "well_coating": null,
+          "sterile": false,
+          "cover_types": null,
+          "seal_types": null,
+          "capabilities": [
+            "liquid_handle",
+            "gel_separate",
+            "gel_purify",
+            "incubate",
+            "spin"
+          ],
+          "shortname": "micro-2.0",
+          "is_tube": true,
+          "col_count": 1,
+          "dead_volume_ul": "5",
+          "safe_min_volume_ul": "40",
+          "vendor": "E&K Scientific",
+          "cat_no": "280200",
+          "true_max_vol_ul": "2000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/384-echo",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "universal",
+            "foil",
+            "ultra-clear"
+          ],
+          "capabilities": [
+            "spin",
+            "incubate",
+            "seal",
+            "image_plate",
+            "stamp",
+            "echo_dest",
+            "echo_source",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "PP-0200",
+          "col_count": 24,
+          "cost_each": "6.18",
+          "dead_volume_ul": "15.0",
+          "height_mm": "14.4",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "384-Well Echo Qualified Polypropylene Microplate 2.0",
+          "retired_at": null,
+          "safe_min_volume_ul": "15.0",
+          "sale_price": "7.3542",
+          "shortname": "384-echo",
+          "true_max_vol_ul": "135.0",
+          "well_count": 384,
+          "well_depth_mm": "11.5",
+          "well_volume_ul": "135.0",
+          "vendor": "Labcyte"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/384-pcr",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "ultra-clear",
+            "foil"
+          ],
+          "capabilities": [
+            "thermocycle",
+            "spin",
+            "incubate",
+            "qrt_thermocycle",
+            "seal",
+            "image_plate",
+            "stamp",
+            "flash_freeze",
+            "echo_dest",
+            "bluewash",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "951020539",
+          "col_count": 24,
+          "cost_each": "7.86",
+          "dead_volume_ul": "2.0",
+          "height_mm": "10.6",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "384-Well twin.tec PCR Plate",
+          "retired_at": null,
+          "safe_min_volume_ul": "3.0",
+          "sale_price": "9.3534",
+          "seal_types": [
+            "ultra-clear",
+            "foil"
+          ],
+          "shortname": "384-pcr",
+          "well_count": 384,
+          "well_depth_mm": "9.6",
+          "well_volume_ul": "40.0",
+          "vendor": "Eppendorf"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-flat-uv",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "low_evaporation",
+            "standard",
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "spin",
+            "incubate",
+            "absorbance",
+            "fluorescence",
+            "luminescence",
+            "image_plate",
+            "stamp",
+            "magnetic_transfer_pcr",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "3635",
+          "col_count": 12,
+          "cost_each": "14.1",
+          "cover_types": [
+            "low_evaporation",
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "25.0",
+          "height_mm": "14.22",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-Well Clear Flat Bottom UV-Transparent Microplate",
+          "retired_at": null,
+          "safe_min_volume_ul": "65.0",
+          "sale_price": "16.779",
+          "shortname": "96-flat-uv",
+          "well_count": 96,
+          "well_depth_mm": "10.67",
+          "well_volume_ul": "340.0",
+          "vendor": "Corning"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/1-flat",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "incubate",
+            "image_plate",
+            "colonize",
+            "envision"
+          ],
+          "catalog_number": "267060",
+          "col_count": 1,
+          "cost_each": "4.71",
+          "cover_types": [
+            "universal"
+          ],
+          "dead_volume_ul": "36000.0",
+          "height_mm": "17.3",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "1-Well Nunc Non-treated Flat Bottom Plate",
+          "retired_at": null,
+          "safe_min_volume_ul": "40000.0",
+          "sale_price": "5.6049",
+          "shortname": "1-flat",
+          "well_count": 1,
+          "well_depth_mm": "11.6",
+          "well_volume_ul": "90000.0",
+          "vendor": "Fisher",
+          "true_max_vol_ul": "90000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/6-flat-tc",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard",
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "incubate",
+            "colonize",
+            "image_plate",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "30720113",
+          "col_count": 3,
+          "cost_each": "4.05",
+          "cover_types": [
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "400.0",
+          "height_mm": "19.0",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "6-Well TC Treated Sterile Plate",
+          "retired_at": null,
+          "safe_min_volume_ul": "600.0",
+          "sale_price": "4.8195",
+          "shortname": "6-flat-tc",
+          "well_count": 6,
+          "well_depth_mm": "16.5",
+          "well_volume_ul": "5000.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "5000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/384-flat",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard",
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "spin",
+            "incubate",
+            "absorbance",
+            "fluorescence",
+            "luminescence",
+            "image_plate",
+            "stamp",
+            "echo_dest",
+            "bluewash",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "3706",
+          "col_count": 24,
+          "cost_each": "11.54",
+          "cover_types": [
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "5.0",
+          "height_mm": "14.22",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "384-Well Clear Bottom White Polystyrene Microplate",
+          "prioritize_seal_or_cover": "cover",
+          "retired_at": null,
+          "safe_min_volume_ul": "15.0",
+          "sale_price": "13.7326",
+          "seal_types": [
+            "ultra-clear",
+            "foil"
+          ],
+          "shortname": "384-flat",
+          "well_count": 384,
+          "well_depth_mm": "11.43",
+          "well_volume_ul": "90.0",
+          "vendor": "Corning"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-v-kf",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard"
+          ],
+          "capabilities": [
+            "pipette",
+            "stamp",
+            "spin",
+            "cover",
+            "uncover",
+            "incubate",
+            "magnetic_transfer_deep",
+            "magnetic_transfer_pcr",
+            "image_plate",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "22-387-030",
+          "col_count": 12,
+          "cost_each": "5.3",
+          "cover_types": [
+            "standard"
+          ],
+          "dead_volume_ul": "20.0",
+          "height_mm": "14.5",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-well KingFisher PCR microplate",
+          "retired_at": null,
+          "safe_min_volume_ul": "20.0",
+          "sale_price": "6.307",
+          "shortname": "96-v-kf",
+          "well_count": 96,
+          "well_depth_mm": "12.9",
+          "well_volume_ul": "200.0",
+          "vendor": "Fisher",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-deep-kf",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard"
+          ],
+          "capabilities": [
+            "pipette",
+            "stamp",
+            "spin",
+            "cover",
+            "uncover",
+            "incubate",
+            "magnetic_transfer_deep",
+            "image_plate",
+            "seal",
+            "deseal",
+            "dispense-destination"
+          ],
+          "catalog_number": "22-387-031",
+          "col_count": 12,
+          "cost_each": "8.25",
+          "cover_types": [
+            "standard"
+          ],
+          "dead_volume_ul": "50.0",
+          "height_mm": "44.0",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-Well KingFisher Deepwell Plate V-bottom Polypropylene",
+          "retired_at": null,
+          "safe_min_volume_ul": "50.0",
+          "sale_price": "9.8175",
+          "shortname": "96-deep-kf",
+          "well_count": 96,
+          "well_depth_mm": "42.3",
+          "well_volume_ul": "1000.0",
+          "vendor": "Fisher",
+          "true_max_vol_ul": "1000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/96-deep",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard",
+            "universal",
+            "breathable"
+          ],
+          "capabilities": [
+            "cover",
+            "magnetic_separate",
+            "incubate",
+            "seal",
+            "image_plate",
+            "miniprep_source",
+            "maxiprep_source",
+            "maxiprep_destination",
+            "stamp",
+            "spin",
+            "magnetic_transfer_deep",
+            "deseal",
+            "flash_freeze",
+            "dispense-destination"
+          ],
+          "catalog_number": "3961",
+          "col_count": 12,
+          "cost_each": "8.35",
+          "cover_types": [
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "15.0",
+          "height_mm": "43.8",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "96-Well Clear V-Bottom Polypropylene Deep Well Plate",
+          "prioritize_seal_or_cover": "cover",
+          "retired_at": null,
+          "safe_min_volume_ul": "30.0",
+          "sale_price": "9.9365",
+          "seal_types": [
+            "breathable"
+          ],
+          "shortname": "96-deep",
+          "well_count": 96,
+          "well_depth_mm": "42.03",
+          "well_volume_ul": "2000.0",
+          "vendor": "Corning",
+          "true_max_vol_ul": "2000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/6-flat",
+    "body": {
+      "data": {
+        "attributes": {
+          "acceptable_lids": [
+            "standard",
+            "universal"
+          ],
+          "capabilities": [
+            "cover",
+            "incubate",
+            "colonize",
+            "image_plate",
+            "dispense-destination",
+            "envision"
+          ],
+          "catalog_number": "30720016",
+          "col_count": 3,
+          "cost_each": "3.78",
+          "cover_types": [
+            "standard",
+            "universal"
+          ],
+          "dead_volume_ul": "400.0",
+          "height_mm": "19.0",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "6-Well Non-Treated Sterile Plate",
+          "retired_at": null,
+          "safe_min_volume_ul": "600.0",
+          "sale_price": "4.4982",
+          "shortname": "6-flat",
+          "well_count": 6,
+          "well_depth_mm": "16.5",
+          "well_volume_ul": "5000.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "5000.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/dummy",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [],
+          "catalog_number": "30720016",
+          "col_count": 5,
+          "cover_types": [],
+          "dead_volume_ul": "400.0",
+          "height_mm": "19.0",
+          "is_tube": false,
+          "manual_execution": false,
+          "name": "Dummy",
+          "retired_at": null,
+          "safe_min_volume_ul": "600.0",
+          "sale_price": "4.4982",
+          "shortname": "dummy",
+          "well_count": 15,
+          "well_depth_mm": null,
+          "well_volume_ul": "200.0",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/dummy-tube",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [],
+          "catalog_number": "30720016",
+          "col_count": 5,
+          "cover_types": [],
+          "dead_volume_ul": "15.0",
+          "height_mm": "19.0",
+          "is_tube": true,
+          "manual_execution": false,
+          "name": "Dummy tube",
+          "retired_at": null,
+          "safe_min_volume_ul": "30.0",
+          "sale_price": "4.4982",
+          "shortname": "dummy-tube",
+          "well_count": 1,
+          "well_depth_mm": null,
+          "well_volume_ul": "200.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/dummy-big",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [],
+          "col_count": 5,
+          "cover_types": [],
+          "dead_volume_ul": "15.0",
+          "height_mm": "19.0",
+          "is_tube": true,
+          "manual_execution": false,
+          "name": "Dummy tube",
+          "retired_at": null,
+          "safe_min_volume_ul": "30.0",
+          "sale_price": "4.4982",
+          "shortname": "dummy-tube",
+          "well_count": 20,
+          "well_depth_mm": null,
+          "well_volume_ul": "200.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
+  }
+]

@@ -14,7 +14,6 @@ class PyTest(TestCommand):
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.pytest_args = "--cov=autoprotocol --cov-report=term"  # pylint: disable=attribute-defined-outside-init
-        # -x test/container_type_test.py
 
     def run_tests(self):
         import shlex

@@ -16,10 +16,7 @@ def mock_requests():
 
         for request in requests:
             rsps.add(
-                rsps.GET,
-                request["url"],
-                json=request["body"],
-                status=200,
+                rsps.GET, request["url"], json=request["body"], status=200,
             )
         yield rsps
 

@@ -269,7 +269,7 @@ class Transfer(LiquidHandleMethod):
             self._mix(
                 delay_time=self._source_liquid.delay_time,
                 liquid_class=self._source_liquid.name,
-                **mix_before
+                **mix_before,
             )
 
     def default_mix_before(self, volume):
@@ -569,7 +569,7 @@ class Transfer(LiquidHandleMethod):
             self._mix(
                 delay_time=self._source_liquid.delay_time,
                 liquid_class=self._source_liquid.name,
-                **mix_after
+                **mix_after,
             )
 
     def default_mix_after(self, volume):

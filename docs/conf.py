@@ -65,11 +65,11 @@ napoleon_use_rtype = True
 master_doc = "index"
 
 # General information about the project.
-project = u"Autoprotocol"
+project = "Autoprotocol"
 year = datetime.now().year
 # pylint: disable=redefined-builtin
 copyright = (
-    u"%d, The Autoprotocol Development Team, see AUTHORS for more details." % year
+    "%d, The Autoprotocol Development Team, see AUTHORS for more details." % year
 )
 # pylint: enable=redefined-builtin
 # The version info for the project you're documenting, acts as replacement for
@@ -224,8 +224,8 @@ latex_documents = [
     (
         "index",
         "Autoprotocol.tex",
-        u"Autoprotocol Documentation",
-        u"Autoprotocol Development Team",
+        "Autoprotocol Documentation",
+        "Autoprotocol Development Team",
         "manual",
     )
 ]
@@ -259,8 +259,8 @@ man_pages = [
     (
         "index",
         "autoprotocol",
-        u"Autoprotocol Documentation",
-        [u"Autoprotocol Development Team"],
+        "Autoprotocol Documentation",
+        ["Autoprotocol Development Team"],
         1,
     )
 ]
@@ -278,8 +278,8 @@ texinfo_documents = [
     (
         "index",
         "Autoprotocol",
-        u"Autoprotocol Documentation",
-        u"Autoprotocol Development Team",
+        "Autoprotocol Documentation",
+        "Autoprotocol Development Team",
         "Autoprotocol",
         "An open standard for encoding biological protocols.",
         "Miscellaneous",

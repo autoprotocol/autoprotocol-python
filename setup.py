@@ -13,7 +13,12 @@ class PyTest(TestCommand):
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = "--cov=autoprotocol --cov-report=term"  # pylint: disable=attribute-defined-outside-init
+        self.pytest_args = "--cov=autoprotocol --cov-report=term -x test/container_type_test.py"  # pylint: disable=attribute-defined-outside-init
+        # [x] -x test/container_type_test.py
+        # [x] -x test/manifest_test.py
+        # [x] -x test/provision_test.py
+        # [x] -x test/protocol_test.py
+        # [x] -x test/container_test.py
 
     def run_tests(self):
         import shlex

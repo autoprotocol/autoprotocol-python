@@ -5774,6 +5774,7 @@ class Protocol(object):
             elif "cover" in container.container_type.capabilities:
                 self.cover(container, container.container_type.cover_types[0])
             elif container.container_type.sealable():
+                print("SHORTNAME: " + container.container_type.shortname)
                 self.seal(container, container.container_type.seal_types[0])
             else:
                 raise RuntimeError(

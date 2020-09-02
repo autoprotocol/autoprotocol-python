@@ -114,3 +114,10 @@ class TestContainerType(object):
 
         ContainerType("res-sw96-hp")
         mock_requests.assert_call_count(base_url + "/res-sw96-hp", 1)
+
+    def test_required_fields(self):
+        with pytest.raises(ValueError):
+            ct = ContainerType("well-count-required")
+
+        with pytest.raises(ValueError):
+            ct = ContainerType("col-count-required")

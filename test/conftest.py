@@ -23,6 +23,8 @@ def mock_requests():
             )
         yield rsps
 
+    print("**** teardown")
+
 
 @pytest.fixture(scope="function")
 def dummy_protocol():

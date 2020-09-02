@@ -725,5 +725,53 @@
         }
       }
     }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/well-count-required",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [],
+          "col_count": 5,
+          "cover_types": [],
+          "dead_volume_ul": "15.0",
+          "height_mm": "19.0",
+          "is_tube": true,
+          "manual_execution": false,
+          "name": "Dummy tube",
+          "retired_at": null,
+          "safe_min_volume_ul": "30.0",
+          "sale_price": "4.4982",
+          "shortname": "dummy-tube",
+          "well_depth_mm": null,
+          "well_volume_ul": "200.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
+  }, {
+    "url": "https://secure.strateos.com/api/container_types/col-count-required",
+    "body": {
+      "data": {
+        "attributes": {
+          "capabilities": [],
+          "cover_types": [],
+          "dead_volume_ul": "15.0",
+          "height_mm": "19.0",
+          "is_tube": true,
+          "manual_execution": false,
+          "name": "Dummy tube",
+          "retired_at": null,
+          "safe_min_volume_ul": "30.0",
+          "sale_price": "4.4982",
+          "shortname": "dummy-tube",
+          "well_count": 20,
+          "well_depth_mm": null,
+          "well_volume_ul": "200.0",
+          "vendor": "Eppendorf",
+          "true_max_vol_ul": "200.0"
+        }
+      }
+    }
   }
 ]

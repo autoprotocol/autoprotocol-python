@@ -27,6 +27,7 @@ class ContainerType:
     """
 
     container_types = {}
+    validation_fields = ['well_count', 'col_count']
 
     def __init__(self, shortname):
         self.shortname = shortname
@@ -50,6 +51,8 @@ class ContainerType:
                 v = Unit(v, "microliter")
             self.__dict__[k] = v
 
+        self.validate()
+
     def __getattr__(self, name):
         print(self.shortname + ": unknow " + name + " attribute, returning None")
         if name.endswith("_mm"):
@@ -57,6 +60,13 @@ class ContainerType:
         elif name.endswith("_ul"):
             return Unit(0.0, "microliter")
         return None
+
+    def validate(self):
+        for attr in ContainerType.validation_fields:
+            if attr not in self.__dict__:
+                raise ValueError(
+                    f"{attr} is required"
+                )
 
     @staticmethod
     def reset_cache():

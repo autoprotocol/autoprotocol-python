@@ -775,6 +775,10 @@ def seal_on_store(protocol):
                 default_method = ref.container.container_type.prioritize_seal_or_cover
                 sealable = ref.container.container_type.sealable()
                 coverable = ref.container.container_type.coverable()
+                print("shortname:", ref.container.container_type.shortname)
+                print("default_method:", default_method)
+                print("sealable:", sealable)
+                print("coverable:", coverable)
                 if default_method == "seal" and sealable:
                     protocol.seal(
                         ref.container, ref.container.container_type.seal_types[0]

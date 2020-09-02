@@ -117,7 +117,7 @@ class TestContainerType(object):
 
     def test_required_fields(self):
         with pytest.raises(ValueError):
-            ct = ContainerType("well-count-required")
+            ContainerType("well-count-required")
 
         with pytest.raises(ValueError):
-            ct = ContainerType("col-count-required")
+            ContainerType("col-count-required")

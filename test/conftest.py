@@ -16,7 +16,10 @@ def mock_requests():
 
         for request in requests:
             rsps.add(
-                rsps.GET, request["url"], json=request["body"], status=200,
+                rsps.GET,
+                request["url"],
+                json=request["body"],
+                status=200,
             )
         yield rsps
 
@@ -33,17 +36,26 @@ def dummy_type():
 
 @pytest.fixture(scope="module")
 def dummy_tube():
-    return Container(None, ContainerType("dummy-tube"),)
+    return Container(
+        None,
+        ContainerType("dummy-tube"),
+    )
 
 
 @pytest.fixture(scope="module")
 def dummy_big():
-    return Container(None, ContainerType("dummy-big"),)
+    return Container(
+        None,
+        ContainerType("dummy-big"),
+    )
 
 
 @pytest.fixture(scope="module")
 def dummy_96():
-    return Container(None, ContainerType("96-flat"),)
+    return Container(
+        None,
+        ContainerType("96-flat"),
+    )
 
 
 @pytest.fixture(scope="module")
@@ -51,7 +63,10 @@ def dummy_reservoir_row():
     container_type = ContainerType("dummy")
     container_type.well_count = 8
     container_type.col_count = 1
-    return Container(None, container_type,)
+    return Container(
+        None,
+        container_type,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -59,7 +74,10 @@ def dummy_reservoir_column():
     container_type = ContainerType("dummy")
     container_type.well_count = 12
     container_type.col_count = 12
-    return Container(None, container_type,)
+    return Container(
+        None,
+        container_type,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -67,7 +85,10 @@ def dummy_24():
     container_type = ContainerType("dummy")
     container_type.well_count = 24
     container_type.col_count = 6
-    return Container(None, container_type,)
+    return Container(
+        None,
+        container_type,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -80,7 +101,10 @@ def dummy_1536():
     container_type = ContainerType("dummy")
     container_type.well_count = 1536
     container_type.col_count = 48
-    return Container(None, container_type,)
+    return Container(
+        None,
+        container_type,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -88,4 +112,7 @@ def dummy_pathological():
     container_type = ContainerType("dummy")
     container_type.well_count = 384
     container_type.col_count = 96
-    return Container(None, container_type,)
+    return Container(
+        None,
+        container_type,
+    )

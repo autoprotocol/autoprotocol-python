@@ -145,7 +145,9 @@ class TestThermocycle(object):
             [
                 {
                     "cycles": 1,
-                    "steps": [{"temperature": "95:celsius", "duration": "60:second"},],
+                    "steps": [
+                        {"temperature": "95:celsius", "duration": "60:second"},
+                    ],
                 },
                 {
                     "cycles": 30,
@@ -242,7 +244,9 @@ class TestThermocycle(object):
         groups = [
             {
                 "cycles": 1,
-                "steps": [{"temperature": "95:celsius", "duration": "60:second"},],
+                "steps": [
+                    {"temperature": "95:celsius", "duration": "60:second"},
+                ],
             }
         ]
         p = Protocol()
@@ -2974,7 +2978,10 @@ class TestSonicate(object):
         ws = p.ref("c1", id=None, cont_type="96-flat", discard=True).wells_from(0, 3)
 
         p.sonicate(
-            ws, "1:minute", "horn", {"duty_cycle": 0.1, "amplitude": "3:micrometer"},
+            ws,
+            "1:minute",
+            "horn",
+            {"duty_cycle": 0.1, "amplitude": "3:micrometer"},
         )
         assert p.instructions[-1].op == "sonicate"
         assert "temperature" not in p.instructions[-1].data

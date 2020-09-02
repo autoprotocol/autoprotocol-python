@@ -2466,18 +2466,18 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     def __init__(self):
         super(FlowCytometryBuilders, self).__init__()
-        self.excitation = None
+        self.gating_modes = ("FSC", "SSC")
 
-    def laser(self, excitation, channels, power=None, area_scaling_factor=None):
+    def laser(self, channels, excitation=None, power=None, area_scaling_factor=None):
         """
         Generates a dict of laser parameters.
 
         Parameters
         ----------
-        excitation : Unit or str
-            Excitation wavelength.
         channels : list(dict)
             See :meth:`FlowCytometryBuilders.channel`.
+        excitation : Unit or str, optional
+            Excitation wavelength.
         power : Unit or str, optional
             Laser power.
         area_scaling_factor : Number, optional
@@ -2491,6 +2491,8 @@ class FlowCytometryBuilders(InstructionBuilders):
             If `channels` is not a list of dict.
         TypeError
             If `area_scaling_factor` is not a number.
+        ValueError
+            If a gating channel (e.g. SSC) is specified and excitation is also specified.
 
         Returns
         -------
@@ -2514,11 +2516,19 @@ class FlowCytometryBuilders(InstructionBuilders):
         if excitation is not None:
             excitation = parse_unit(excitation, "nanometers")
 
-        self.excitation = excitation
         channels = [self.channel(**_) for _ in channels]
 
+        # Gating modes do not allow specification of excitation parameter
+        channel_names = set(
+            [chn["emission_filter"]["channel_name"] for chn in channels]
+        )
+        if channel_names.intersection(self.gating_modes) and excitation is not None:
+            raise ValueError(
+                f"Cannot specify excitation if channel_name is one of {self.gating_modes}"
+            )
+
         return {
-            "excitation": self.excitation,
+            "excitation": excitation,
             "power": power,
             "area_scaling_factor": area_scaling_factor,
             "channels": channels,
@@ -2608,12 +2618,12 @@ class FlowCytometryBuilders(InstructionBuilders):
         dict
             A dict of emission_filter params.
         """
-        gating_modes = ("FSC", "SSC")
-        if channel_name in gating_modes and (shortpass or longpass or self.excitation):
+
+        if channel_name in self.gating_modes and (shortpass or longpass):
             raise ValueError(
-                f"Cannot specify shortpass/longpass/excitation "
-                f"parameters if channel_name is one "
-                f"{gating_modes}"
+                f"Cannot specify shortpass/longpass "
+                f"parameters if channel_name is one of "
+                f"{self.gating_modes}"
             )
 
         if shortpass is not None:

@@ -27,7 +27,7 @@ class ContainerType:
     """
 
     container_types = {}
-    validation_fields = ['well_count', 'col_count']
+    validation_fields = ["well_count", "col_count"]
 
     def __init__(self, shortname):
         self.shortname = shortname
@@ -64,9 +64,7 @@ class ContainerType:
     def validate(self):
         for attr in ContainerType.validation_fields:
             if attr not in self.__dict__:
-                raise ValueError(
-                    f"{attr} is required"
-                )
+                raise ValueError(f"{attr} is required")
 
     @staticmethod
     def reset_cache():

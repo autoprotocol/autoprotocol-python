@@ -608,8 +608,7 @@ class Transfer(LiquidHandleMethod):
 
 
 class DryWellTransfer(Transfer):
-    """Dispenses while tracking liquid without mix_after
-    """
+    """Dispenses while tracking liquid without mix_after"""
 
     def __init__(
         self,
@@ -638,8 +637,7 @@ class DryWellTransfer(Transfer):
 
 
 class PreMixBlowoutTransfer(Transfer):
-    """Adds an additional blowout before the mix_after step
-    """
+    """Adds an additional blowout before the mix_after step"""
 
     def __init__(
         self,

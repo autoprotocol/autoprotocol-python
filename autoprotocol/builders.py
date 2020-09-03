@@ -37,8 +37,7 @@ from .util import parse_unit, is_valid_well
 
 
 class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
-    """General builders that apply to multiple instructions
-    """
+    """General builders that apply to multiple instructions"""
 
     def __init__(self):
         self.sbs_shapes = ["SBS96", "SBS384"]
@@ -1221,8 +1220,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
 
 class LiquidHandleBuilders(InstructionBuilders):
-    """Builders for LiquidHandle Instructions
-    """
+    """Builders for LiquidHandle Instructions"""
 
     def __init__(self):
         super(LiquidHandleBuilders, self).__init__()
@@ -1861,8 +1859,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
 
 class PlateReaderBuilders(InstructionBuilders):
-    """Helpers for building parameters for plate reading instructions
-    """
+    """Helpers for building parameters for plate reading instructions"""
 
     def incubate_params(
         self, duration, shake_amplitude=None, shake_orbital=None, shaking=None
@@ -2060,8 +2057,7 @@ class EvaporateBuilders(InstructionBuilders):
 
 
 class GelPurifyBuilders(InstructionBuilders):
-    """Helpers for building GelPurify instructions
-    """
+    """Helpers for building GelPurify instructions"""
 
     def extract(self, source, band_list, lane=None, gel=None):
         """Helper for building extract params for gel_purify
@@ -2172,8 +2168,7 @@ class GelPurifyBuilders(InstructionBuilders):
 
 # pylint: disable=redefined-builtin
 class MagneticTransferBuilders(InstructionBuilders):
-    """Helpers for building MagneticTransfer instruction parameters
-    """
+    """Helpers for building MagneticTransfer instruction parameters"""
 
     @staticmethod
     def mag_dry(object, duration):

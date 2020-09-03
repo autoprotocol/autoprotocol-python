@@ -158,7 +158,9 @@ class TestThermocycle(object):
             [
                 {
                     "cycles": 1,
-                    "steps": [{"temperature": "95:celsius", "duration": "60:second"},],
+                    "steps": [
+                        {"temperature": "95:celsius", "duration": "60:second"},
+                    ],
                 },
                 {
                     "cycles": 30,
@@ -255,7 +257,9 @@ class TestThermocycle(object):
         groups = [
             {
                 "cycles": 1,
-                "steps": [{"temperature": "95:celsius", "duration": "60:second"},],
+                "steps": [
+                    {"temperature": "95:celsius", "duration": "60:second"},
+                ],
             }
         ]
         p = Protocol()

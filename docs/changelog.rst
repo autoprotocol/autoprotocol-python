@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`267` Pin black version to reduce CI/local inconsistencies. Pin to 20.8b1
+
 * :release:`7.1.1 <2020-07-21>`
 * :bug:`261` Revert empty Protocol assertion check in `as_dict()`
 

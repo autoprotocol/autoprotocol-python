@@ -168,7 +168,11 @@ class TestLiquidClassTransferMultiChannel(LiquidHandleTester):
     def test_fails_on_sbs384_transfer_in_sbs96_plate(self):
         with pytest.raises(ValueError):
             self.p.transfer(
-                self.flat.well(0), self.flat.well(0), "20:uL", rows=16, columns=24,
+                self.flat.well(0),
+                self.flat.well(0),
+                "20:uL",
+                rows=16,
+                columns=24,
             )
 
 

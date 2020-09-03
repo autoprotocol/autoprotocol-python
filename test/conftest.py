@@ -9,8 +9,6 @@ from test.test_util import TestUtils
 
 @pytest.fixture(scope="module", autouse=True)
 def mock_requests():
-    print("Define mock")
-
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
         requests = TestUtils.load_json_file("container_types.json")
 
@@ -22,8 +20,6 @@ def mock_requests():
                 status=200,
             )
         yield rsps
-
-    print("**** teardown")
 
 
 @pytest.fixture(scope="function")

@@ -54,7 +54,6 @@ class ContainerType:
         self.validate()
 
     def __getattr__(self, name):
-        print(self.shortname + ": unknow " + name + " attribute, returning None")
         if name.endswith("_mm"):
             return 0.0
         elif name.endswith("_ul"):

@@ -220,10 +220,14 @@ def convert_param(protocol, val, type_desc):
                 f"improperly formatted."
             )
     elif type in [
-        "volume",
-        "time",
-        "length",
+        "amount_concentration",
         "frequency",
+        "length",
+        "mass_concentration",
+        "time",
+        "volume",
+        "volume_concentration",
+        # TODO: Deprecate the following two types in next major release
         "concentration(mass)",
         "concentration(molar)",
     ]:

@@ -13,7 +13,7 @@ jobs:
   - python: '3.6'
     env: TOXENV=lint
   - python: '3.6'
-    env: TOXENV=clean,py36,stats_xml
+    env: TOXENV=clean,py36,stats_xml DEPLOY=true
   - python: '3.7'
     env: TOXENV=py37
   - python: '3.8'
@@ -40,8 +40,9 @@ deploy:
     secure: 'AAUOGNKdh2QaTeD0BzcDcNkgA4vomSlodDxkpblXucnXkUVyQJQ8akJlGACogE6xqZ4NgLrK9cOsHO5wQyQvWKsxZSY1/c2IrKxG1Ml4X7o3kB4J/a2tERghVPQe6z/Q2rqJN6WPrWvW4k3zj7AZ8X/54H5A/u4T7scEtaIo+Cg='
   on:
     repo: autoprotocol/autoprotocol-python
+    tags: true
     python: '3.6'
-    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$'
+    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ AND env(DEPLOY) = true'
 - provider: pypi
   skip_cleanup: true
   username: '__token__'
@@ -50,4 +51,4 @@ deploy:
   on:
     tags: true
     python: '3.6'
-    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$'
+    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ AND env(DEPLOY) = true'

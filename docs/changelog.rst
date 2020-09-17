@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`269` Update travis.yml to trigger deployment only once
+
 * :release:`7.2.0 <2020-09-15>`
 * :feature:`265` Add support for mass_concentration, amount_concentration and volume_concentration, as specified in ASC-51
 * :support:`267` Pin black version to reduce CI/local inconsistencies. Pin to 20.8b1

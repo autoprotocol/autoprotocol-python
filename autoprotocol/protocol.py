@@ -1181,9 +1181,14 @@ class Protocol(object):
         for x in transfers:
             x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
 
-        return self._append_and_return(
-            AcousticTransfer([{"transfer": transfers}], droplet_size)
-        )
+        if transfers:
+            return self._append_and_return(
+                AcousticTransfer([{"transfer": transfers}], droplet_size)
+            )
+        else:
+            raise RuntimeError(
+                "At least one transfer must have a nonzero transfer volume."
+            )
 
     def illuminaseq(
         self,

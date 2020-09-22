@@ -1178,17 +1178,17 @@ class Protocol(object):
             if v > Unit(0, "microliter"):
                 transfers.append(xfer)
 
-        for x in transfers:
-            x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
-
-        if transfers:
-            return self._append_and_return(
-                AcousticTransfer([{"transfer": transfers}], droplet_size)
-            )
-        else:
+        if not transfers:
             raise RuntimeError(
                 "At least one transfer must have a nonzero transfer volume."
             )
+
+        for x in transfers:
+            x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
+
+        return self._append_and_return(
+            AcousticTransfer([{"transfer": transfers}], droplet_size)
+        )
 
     def illuminaseq(
         self,

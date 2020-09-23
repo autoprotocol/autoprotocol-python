@@ -1178,6 +1178,11 @@ class Protocol(object):
             if v > Unit(0, "microliter"):
                 transfers.append(xfer)
 
+        if not transfers:
+            raise RuntimeError(
+                "At least one transfer must have a nonzero transfer volume."
+            )
+
         for x in transfers:
             x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
 

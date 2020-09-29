@@ -1166,6 +1166,44 @@ FLAT384WHITECLEAR = ContainerType(
     cat_no="3763",
 )
 
+#:
+FALCON96UBOTTOM = ContainerType(
+    name="Falcon 96-Well, Cell Culture-Treated, U-Shaped-Bottom Microplate",
+    shortname="96-ubottom-clear-tc",
+    is_tube=False,
+    well_coating=None,
+    sterile=False,
+    well_count=96,
+    col_count=12,
+    well_depth_mm=Unit(10.5, "millimeter"),
+    well_volume_ul=Unit(320, "microliter"),
+    dead_volume_ul=Unit(50, "microliter"),
+    safe_min_volume_ul=Unit(50, "microliter"),
+    capabilities=[
+        "pipette",
+        "spin",
+        "incubate",
+        "cover",
+        "stamp",
+        "dispense-destination",
+        "provision",
+        "uncover",
+        "seal",
+        "unseal"
+    ],
+    cover_types=[
+        "low_evaporation",
+        "standard",
+        "universal"
+    ],
+    seal_types=[
+        "ultra-clear",
+        "foil"
+    ],
+    vendor="Corning",
+    cat_no="353077",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -1196,4 +1234,5 @@ _CONTAINER_TYPES = {
     "384-echo-ldv-plus": ECHO384LDVPLUS,
     "384-flat-white-clear": FLAT384WHITECLEAR,
     "96-well-v-bottom": V96CC,
+    "96-ubottom-clear-tc": FALCON96UBOTTOM,
 }

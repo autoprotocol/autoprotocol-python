@@ -1189,17 +1189,10 @@ FALCON96UBOTTOM = ContainerType(
         "provision",
         "uncover",
         "seal",
-        "unseal"
+        "unseal",
     ],
-    cover_types=[
-        "low_evaporation",
-        "standard",
-        "universal"
-    ],
-    seal_types=[
-        "ultra-clear",
-        "foil"
-    ],
+    cover_types=["low_evaporation", "standard", "universal"],
+    seal_types=["ultra-clear", "foil"],
     vendor="Corning",
     cat_no="353077",
 )

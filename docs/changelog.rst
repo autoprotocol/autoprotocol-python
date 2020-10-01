@@ -2,9 +2,9 @@
 Changelog
 =========
 
-* :feature:`271` Add 96-ubottom-clear-tc container type
-
-* :bug:`270` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
+* :release:`7.3.0 <2020-10-01>`
+* :feature:`272` Add 96-ubottom-clear-tc container type
+* :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
 * :support:`269` Update travis.yml to trigger deployment only once
 
 * :release:`7.2.0 <2020-09-15>`

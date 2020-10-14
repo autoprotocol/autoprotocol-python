@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`273` Container.wells_with(prop, val) not returning wells with val due to `is` operator instead of `==`
+
 * :release:`7.3.0 <2020-10-01>`
 * :feature:`272` Add 96-ubottom-clear-tc container type
 * :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field

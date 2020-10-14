@@ -1274,18 +1274,30 @@ class TestAcousticTransfer(object):
         p = dummy_protocol
         echo = p.ref("echo", None, "384-echo", discard=True)
         dest = p.ref("dest", None, "384-flat", discard=True)
+
+        # dead volume for source wells(15 uL) results in 0 available volume, not enough to transfer
+        with pytest.raises(RuntimeError):
+            p.acoustic_transfer(
+                echo.wells(0, 1).set_volume("2:microliter"),
+                dest.wells(0, 1, 2, 3),
+                "1:microliter",
+                one_source=True,
+            )
+
         p.acoustic_transfer(
-            echo.wells(0, 1).set_volume("2:microliter"),
-            dest.wells(0, 1, 2, 3),
-            "1:microliter",
+            echo.wells(0, 1, 2, 3).set_volume("60:microliter"),
+            dest.wells(list(range(0, 60))),
+            "2:microliter",
             one_source=True,
         )
+
         assert p.instructions[-1].data["groups"][0]["transfer"][-1][
             "from"
-        ] == echo.well(1)
+        ] == echo.well(2)
         assert p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(
             0
         )
+        assert echo.well(0).volume == echo.container_type.dead_volume_ul
 
     def test_droplet_size(self, dummy_protocol):
         p = dummy_protocol

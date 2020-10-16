@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug:`275` Fix acoustic transfer `one_source`
+
 * :release:`7.3.0 <2020-10-01>`
 * :feature:`272` Add 96-ubottom-clear-tc container type
 * :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field

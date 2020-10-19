@@ -423,7 +423,7 @@ class WellGroup(object):
                 [
                     w
                     for w in self.wells
-                    if prop in w.properties and w.properties[prop] is val
+                    if prop in w.properties and w.properties[prop] == val
                 ]
             )
         else:

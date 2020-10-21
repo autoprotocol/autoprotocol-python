@@ -1111,7 +1111,7 @@ class Protocol(object):
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
             try:
-                source_vol = [s.volume for s in source.wells]
+                source_vol = [s.available_volume() for s in source.wells]
                 if sum([a for a in volume]) > sum([a for a in source_vol]):
                     raise RuntimeError(
                         "There is not enough volume in the source well(s) "
@@ -1129,7 +1129,7 @@ class Protocol(object):
                     destinations = []
                     volumes = []
                     s = source.wells[source_counter]
-                    vol = s.volume
+                    vol = s.available_volume()
 
                     for idx, d in enumerate(dest.wells):
                         vol_d = volume[idx]
@@ -1152,7 +1152,7 @@ class Protocol(object):
                                 source_counter += 1
                                 if source_counter < len_source:
                                     s = source.wells[source_counter]
-                                    vol = s.volume
+                                    vol = s.available_volume()
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes

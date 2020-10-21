@@ -1270,22 +1270,39 @@ class TestAcousticTransfer(object):
         )
         assert len(p.instructions) == 4
 
-    def test_one_source(self, dummy_protocol):
+    @pytest.mark.parametrize(
+        "source_vol", ["2:microliter", "50:microliter", "17:microliter"]
+    )
+    @pytest.mark.parametrize("source_wells", [[0, 1, 2, 3], list(range(0, 60))])
+    @pytest.mark.parametrize(
+        "transfer_vol", ["1:microliter", "1.5:microliter", "2:microliter"]
+    )
+    def test_one_source(self, dummy_protocol, source_vol, source_wells, transfer_vol):
         p = dummy_protocol
         echo = p.ref("echo", None, "384-echo", discard=True)
         dest = p.ref("dest", None, "384-flat", discard=True)
-        p.acoustic_transfer(
-            echo.wells(0, 1).set_volume("2:microliter"),
-            dest.wells(0, 1, 2, 3),
-            "1:microliter",
-            one_source=True,
-        )
-        assert p.instructions[-1].data["groups"][0]["transfer"][-1][
-            "from"
-        ] == echo.well(1)
-        assert p.instructions[-1].data["groups"][0]["transfer"][0]["from"] == echo.well(
-            0
-        )
+        one_source = echo.wells(source_wells).set_volume(source_vol)
+        dest_wells = dest.wells(list(range(0, 60)))
+
+        if sum([w.available_volume() for w in one_source]) < (
+            len(dest_wells) * Unit(transfer_vol)
+        ):
+            with pytest.raises(RuntimeError):
+                p.acoustic_transfer(
+                    one_source,
+                    dest_wells,
+                    transfer_vol,
+                    one_source=True,
+                )
+        else:
+            p.acoustic_transfer(
+                one_source,
+                dest_wells,
+                transfer_vol,
+                one_source=True,
+            )
+            for w in one_source:
+                assert w.volume >= echo.container_type.dead_volume_ul
 
     def test_droplet_size(self, dummy_protocol):
         p = dummy_protocol

@@ -1197,6 +1197,41 @@ FALCON96UBOTTOM = ContainerType(
     cat_no="353077",
 )
 
+#:
+FLAT96DELTA = ContainerType(
+    name="Nunc MicroWell 96-Well, Nunclon Delta-Treated, Flat-Bottom Microplate",
+    shortname="96-flat-white-dc",
+    is_tube=False,
+    well_coating=None,
+    sterile=True,
+    well_count=96,
+    col_count=12,
+    well_depth_mm=Unit(11.2, "millimeter"),
+    well_volume_ul=Unit(320, "microliter"),
+    dead_volume_ul=Unit(50, "microliter"),
+    safe_min_volume_ul=Unit(50, "microliter"),
+    capabilities=[
+        "pipette",
+        "spin",
+        "incubate",
+        "cover",
+        "stamp",
+        "dispense-destination",
+        "provision",
+        "uncover",
+        "seal",
+        "unseal",
+        "liquid_handle",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+    ],
+    cover_types=["low_evaporation", "standard", "universal"],
+    seal_types=["ultra-clear", "foil"],
+    vendor="ThermoFisher",
+    cat_no="136101",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -1228,4 +1263,5 @@ _CONTAINER_TYPES = {
     "384-flat-white-clear": FLAT384WHITECLEAR,
     "96-well-v-bottom": V96CC,
     "96-ubottom-clear-tc": FALCON96UBOTTOM,
+    "96-flat-white-dc": FLAT96DELTA,
 }

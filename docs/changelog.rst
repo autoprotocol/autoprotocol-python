@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.4.0 <2020-10-28>`
 * :feature:`276` Add 96-flat-white-dc container type
 * :bug:`275` Fix acoustic transfer `one_source` bug to take dead volume into account.
 * :bug:`274` Container.wells_with(prop, val) not returning wells with val due to `is` operator instead of `==`

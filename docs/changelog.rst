@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :bug: `277` Fix travis.yml deployment syntax
+
 * :release:`7.4.0 <2020-10-28>`
 * :feature:`276` Add 96-flat-white-dc container type
 * :bug:`275` Fix acoustic transfer `one_source` bug to take dead volume into account.

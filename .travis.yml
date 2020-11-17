@@ -42,7 +42,7 @@ deploy:
     repo: autoprotocol/autoprotocol-python
     tags: true
     python: '3.6'
-    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ AND env(DEPLOY) = true'
+    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && $DEPLOY = true'
 - provider: pypi
   skip_cleanup: true
   username: '__token__'
@@ -51,4 +51,4 @@ deploy:
   on:
     tags: true
     python: '3.6'
-    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ AND env(DEPLOY) = true'
+    condition: '$TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && $DEPLOY = true'

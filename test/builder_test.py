@@ -7,6 +7,8 @@ from autoprotocol.instruction import (
     Spectrophotometry,
     Evaporate,
     SPE,
+    FlowCytometry,
+    Instruction,
 )
 from autoprotocol.builders import InstructionBuilders
 from autoprotocol import Unit, Well
@@ -381,3 +383,87 @@ class TestSPEBuilders(object):
         assert cast_values_as_units(
             self.sample_reference
         ) == SPE.builders.mobile_phase_params(is_sample=True, **self.sample_reference)
+
+
+class TestFlowCytometryBuilders(object):
+    emission_filter_reference = cast_values_as_units(
+        {
+            "channel_name": "VL1",
+            "shortpass": "415:nanometer",
+            "longpass": "465:nanometer",
+        }
+    )
+    measurement_reference = {"area": True, "height": True, "width": True}
+    channel_reference = cast_values_as_units(
+        {
+            "emission_filter": emission_filter_reference,
+            "detector_gain": "10:millivolt",
+            "trigger_threshold": 10,
+            "trigger_logic": "and",
+            "measurements": measurement_reference,
+        }
+    )
+    laser_reference = cast_values_as_units(
+        {
+            "channels": [channel_reference],
+            "excitation": "400:nanometer",
+            "power": "10:milliwatt",
+            "area_scaling_factor": 10,
+        }
+    )
+
+    valid_gating_mode_laser_reference = cast_values_as_units(
+        {
+            "channels": [
+                cast_values_as_units(
+                    {
+                        "emission_filter": {"channel_name": "SSC"},
+                        "detector_gain": "10:millivolt",
+                        "measurements": measurement_reference,
+                    }
+                )
+            ],
+            "power": "10:milliwatt",
+            "area_scaling_factor": 10,
+        }
+    )
+
+    def test_filter_builder(self):
+        assert self.emission_filter_reference == FlowCytometry.builders.emission_filter(
+            **self.emission_filter_reference
+        )
+
+    @pytest.mark.parametrize("channel_name", list(FlowCytometry.builders.gating_modes))
+    @pytest.mark.parametrize("shortpass", [None, "415:nanometer"])
+    @pytest.mark.parametrize("longpass", [None, "415:nanometer"])
+    def test_filter_builder_gating_mode(self, channel_name, shortpass, longpass):
+        if shortpass is None and longpass is None:
+            assert {
+                "channel_name": channel_name,
+                "shortpass": None,
+                "longpass": None,
+            } == FlowCytometry.builders.emission_filter(channel_name=channel_name)
+        else:
+            with pytest.raises(ValueError):
+                FlowCytometry.builders.emission_filter(
+                    channel_name=channel_name, shortpass=shortpass, longpass=longpass
+                )
+
+    def test_laser_builder(self):
+        assert self.laser_reference == FlowCytometry.builders.laser(
+            **self.laser_reference
+        )
+        assert (
+            self.valid_gating_mode_laser_reference
+            == Instruction._remove_empty_fields(
+                FlowCytometry.builders.laser(**self.valid_gating_mode_laser_reference)
+            )
+        )
+        # Cannot specify excitation if gating mode specified
+        with pytest.raises(ValueError):
+            FlowCytometry.builders.laser(
+                **{
+                    **self.valid_gating_mode_laser_reference,
+                    **{"excitation": "400:nanometer"},
+                }
+            )

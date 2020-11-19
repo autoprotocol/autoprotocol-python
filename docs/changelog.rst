@@ -3,6 +3,7 @@ Changelog
 =========
 
 * :bug: `277` Fix travis.yml deployment syntax
+* :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
 
 * :release:`7.4.0 <2020-10-28>`
 * :feature:`276` Add 96-flat-white-dc container type
@@ -11,7 +12,8 @@ Changelog
 
 * :release:`7.3.0 <2020-10-01>`
 * :feature:`272` Add 96-ubottom-clear-tc container type
-* :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
+* :bug:`266 major` FlowCytometry excitation field should be optional and support specification of multiple lasers
+* :bug:`270` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
 * :support:`269` Update travis.yml to trigger deployment only once
 
 * :release:`7.2.0 <2020-09-15>`

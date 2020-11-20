@@ -2,7 +2,6 @@
 Changelog
 =========
 
-* :release:`7.4.1 <2020-11-19>`
 * :bug: `277` Fix travis.yml deployment syntax
 * :bug:`270 major` 0 uL acoustic transfer raises an error instead of creating empty 'groups' field
 

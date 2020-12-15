@@ -14,6 +14,10 @@
    :target: https://codecov.io/gh/autoprotocol/autoprotocol-python
    :alt: Code Coverage
 
+.. image:: https://img.shields.io/pypi/dm/autoprotocol?logo=pypi
+   :target: https://autoprotocol-python.readthedocs.io
+   :alt: PyPI - Downloads
+
 .. image:: https://badges.gitter.im/autoprotocol/autoprotocol-python.svg
    :target: https://gitter.im/autoprotocol/autoprotocol-python?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
    :alt: Gitter Chat

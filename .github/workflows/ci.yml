@@ -121,8 +121,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
-        asset_name: symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
+        asset_path: ./dist/autoprotocol-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
+        asset_name: autoprotocol-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
         asset_content_type: application/gzip
 
     - name: Upload Release wheel
@@ -132,11 +132,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
-        asset_name: symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
+        asset_path: ./dist/autoprotocol-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
+        asset_name: autoprotocol-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
         asset_content_type: application/x-wheel+zip
 
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
-        password: ${{ secrets.PYPI_API_TOKEN  }}
+        password: ${{ secrets.PYPI_API_TOKEN }}

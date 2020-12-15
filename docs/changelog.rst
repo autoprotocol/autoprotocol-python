@@ -2,8 +2,8 @@
 Changelog
 =========
 
-* :support:`-` migrate CI from travis to GitHub actions
-* :support:`-` Add downloads badge to track package usage
+* :support:`282` migrate CI from travis to GitHub actions
+* :support:`281` Add downloads badge to track package usage
 
 * :release:`7.4.1 <2020-11-19>`
 * :bug: `277` Fix travis.yml deployment syntax

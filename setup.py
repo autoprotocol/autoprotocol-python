@@ -40,6 +40,7 @@ doc_deps = [
     "Sphinx>=2.4, <3",
     "sphinx_rtd_theme>=0.4.3, <1",
     "semantic-version==2.6.0",
+    "six>=1.15.0, <2",
 ]
 
 

@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+    - '*'
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Tox
+      run:  |
+        python -m pip install --upgrade pip
+        pip install tox
+
+    - name: Run Tox
+      run: tox -e py
+      if: ${{matrix.python-version != 3.6 }}
+
+    - name: Run Tox with coverage
+      run: tox -e clean,py
+      if: ${{ matrix.python-version == 3.6 }}
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Install Tox
+      run:  |
+        python -m pip install --upgrade pip
+        pip install tox
+
+    - name: Generate Docs
+      run: tox -e docs
+
+  build-and-publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    needs: [tests, docs]
+    if: startsWith(github.ref, 'refs/tags')
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+
+    - name: Install pypa/build
+      run:  |
+        python -m pip install build --user
+
+    - name: Build binary wheel and source tarball
+      run:  |
+        python -m build --sdist --wheel --outdir dist/
+
+    - name: Get tag version
+      id: get_tag_version
+      run: |
+        echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+        echo ::set-output name=VERSION_NO_PREFIX::${GITHUB_REF#refs/tags/v}
+
+    - name: Create Release Message
+      id: release_message
+      run: |
+        # Substitutions required to get multi-line working.
+        # See https://github.community/t/set-output-truncates-multiline-strings/16852
+        MESSAGE="$(git --no-pager log -1 --pretty=format:'%b')"
+        MESSAGE="${MESSAGE//'%'/'%25'}"
+        MESSAGE="${MESSAGE//$'\n'/'%0A'}"
+        MESSAGE="${MESSAGE//$'\r'/'%0D'}"
+        echo ::set-output name=BODY::$MESSAGE
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_tag_version.outputs.VERSION }}
+        release_name: ${{ steps.get_tag_version.outputs.VERSION }}
+        body: ${{ steps.release_message.outputs.BODY }}
+        draft: true
+        prerelease: false
+
+    - name: Upload Release tar gzip
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
+        asset_name: symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Release wheel
+      id: upload-release-asset-wheel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
+        asset_name: symmetrical_chainsaw-${{ steps.get_tag_version.outputs.VERSION_NO_PREFIX }}-py3-none-any.whl
+        asset_content_type: application/x-wheel+zip
+
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN  }}

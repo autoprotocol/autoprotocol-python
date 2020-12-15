@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`-` migrate CI from travis to GitHub actions
 * :support:`-` Add downloads badge to track package usage
 
 * :release:`7.4.1 <2020-11-19>`

@@ -6,8 +6,8 @@
    :target: https://pypi.python.org/pypi/autoprotocol
    :alt: PyPI Version
 
-.. image:: https://travis-ci.org/autoprotocol/autoprotocol-python.svg?branch=master
-   :target: https://travis-ci.org/autoprotocol/autoprotocol-python
+.. image:: https://github.com/autoprotocol/autoprotocol-python/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/autoprotocol/autoprotocol-python/actions?query=workflow%3ACI+branch%3Amaster
    :alt: Build Status
 
 .. image:: https://codecov.io/gh/autoprotocol/autoprotocol-python/branch/master/graph/badge.svg

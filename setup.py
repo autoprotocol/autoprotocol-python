@@ -49,6 +49,8 @@ setup(
     url="https://github.com/autoprotocol/autoprotocol-python",
     maintainer="The Autoprotocol Development Team",
     description="Python library for generating Autoprotocol",
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     license="BSD",
     maintainer_email="support@strateos.com",
     version=__version__,  # pylint: disable=undefined-variable

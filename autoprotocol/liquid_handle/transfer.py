@@ -7,10 +7,10 @@
 Base LiquidHandleMethod used by Protocol.transfer to generate a series of
 movements between pairs of wells.
 """
-from .liquid_handle_method import LiquidHandleMethod
 from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
+from .liquid_handle_method import LiquidHandleMethod
 
 
 # pylint: disable=unused-argument,too-many-instance-attributes,protected-access

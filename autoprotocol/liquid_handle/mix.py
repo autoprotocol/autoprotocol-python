@@ -7,10 +7,10 @@ movements within individual wells.
         for more details.
     :license: BSD, see LICENSE for more details
 """
-from .transfer import LiquidHandleMethod
 from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
+from .transfer import LiquidHandleMethod
 
 
 # pylint: disable=protected-access

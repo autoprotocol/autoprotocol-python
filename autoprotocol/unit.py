@@ -9,9 +9,9 @@ Module containing a Units library
 
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
+from math import ceil, floor
 from numbers import Number
 
-from math import ceil, floor
 from pint import UnitRegistry
 from pint.errors import UndefinedUnitError
 from pint.quantity import _Quantity

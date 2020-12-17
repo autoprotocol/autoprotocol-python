@@ -1,9 +1,10 @@
 # pragma pylint: disable=missing-docstring
 import pytest
+
 from autoprotocol.container import Container
 from autoprotocol.container_type import ContainerType
-from autoprotocol.unit import Unit
 from autoprotocol.protocol import Protocol
+from autoprotocol.unit import Unit
 
 
 @pytest.fixture(scope="function")

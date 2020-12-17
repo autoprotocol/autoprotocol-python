@@ -25,15 +25,14 @@ Instruction
 """
 
 from collections import defaultdict
-from numbers import Number
-
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
 from functools import reduce
+from numbers import Number
 
 from .constants import SBS_FORMAT_SHAPES
-from .container import WellGroup, Well, Container
+from .container import Container, Well, WellGroup
 from .unit import Unit
-from .util import parse_unit, is_valid_well
+from .util import is_valid_well, parse_unit
 
 
 class InstructionBuilders(object):  # pylint: disable=too-few-public-methods

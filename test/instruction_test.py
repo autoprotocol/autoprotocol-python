@@ -1,6 +1,7 @@
-from autoprotocol import Unit
-from autoprotocol.instruction import Instruction, Dispense
 import pytest
+
+from autoprotocol import Unit
+from autoprotocol.instruction import Dispense, Instruction
 
 
 # pylint: disable=protected-access

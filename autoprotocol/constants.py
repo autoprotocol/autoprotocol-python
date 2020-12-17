@@ -8,6 +8,7 @@ Constants used in protocol design, specification, and checking
 """
 from .unit import Unit
 
+
 SBS_FORMAT_SHAPES = {
     "SBS24": {"rows": 4, "columns": 6},
     "SBS96": {"rows": 8, "columns": 12},

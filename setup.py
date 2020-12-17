@@ -4,6 +4,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
+
 # Load version
 exec(open("autoprotocol/version.py").read())  # pylint: disable=exec-used
 

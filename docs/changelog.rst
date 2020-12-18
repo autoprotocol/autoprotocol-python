@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`285` use readme.rst for long description
 * :feature:`283` Support Python 3.9
 * :support:`282` migrate CI from travis to GitHub actions
 * :support:`281` Add downloads badge to track package usage

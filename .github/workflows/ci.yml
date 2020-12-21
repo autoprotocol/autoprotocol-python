@@ -38,7 +38,13 @@ jobs:
       if: ${{matrix.python-version != 3.6 }}
 
     - name: Run Tox with coverage
-      run: tox -e clean,py
+      run: tox -e clean,py,stats_xml
+      if: ${{ matrix.python-version == 3.6 }}
+
+    - name: Upload to CodeCov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
       if: ${{ matrix.python-version == 3.6 }}
 
   docs:

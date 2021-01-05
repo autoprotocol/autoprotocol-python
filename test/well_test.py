@@ -1,6 +1,8 @@
 # pragma pylint: disable=missing-docstring,attribute-defined-outside-init
 import warnings
+
 import pytest
+
 from autoprotocol.container import Container
 
 

@@ -2,15 +2,16 @@
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 # pragma pylint: disable=protected-access
 import pytest
+
 from autoprotocol import Unit
-from autoprotocol.liquid_handle.tip_type import TipType
-from autoprotocol.liquid_handle import LiquidHandleMethod, Transfer, Mix
+from autoprotocol.instruction import LiquidHandle
+from autoprotocol.liquid_handle import LiquidHandleMethod, Mix, Transfer
 from autoprotocol.liquid_handle.liquid_class import (
     LiquidClass,
     VolumeCalibration,
     VolumeCalibrationBin,
 )
-from autoprotocol.instruction import LiquidHandle
+from autoprotocol.liquid_handle.tip_type import TipType
 
 
 class LiquidClassTester(object):

@@ -20,10 +20,10 @@ When creating a vendor-specific library it's likely desirable to monkey patch
 `LiquidHandleMethod._get_tip_types` to reference TipTypes that the vendor
 supports.
 """
-from .tip_type import TipType
 from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
+from .tip_type import TipType
 
 
 # pylint: disable=too-many-public-methods,protected-access

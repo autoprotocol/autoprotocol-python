@@ -1,5 +1,7 @@
 import json
+
 from test.test_util import TestUtils
+
 import pytest
 
 from autoprotocol.protocol import Protocol

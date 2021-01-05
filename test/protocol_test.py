@@ -1,28 +1,30 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init
+import warnings
+
 import pytest
+
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
+from autoprotocol.harness import (
+    _add_dye_to_preview_refs,
+    _convert_dispense_instructions,
+    _convert_provision_instructions,
+)
 from autoprotocol.instruction import (
-    Thermocycle,
-    Incubate,
-    Spin,
-    Dispense,
-    GelPurify,
-    Fluorescence,
-    Absorbance,
-    Luminescence,
-    Instruction,
     SPE,
+    Absorbance,
+    Dispense,
+    Fluorescence,
+    GelPurify,
+    Incubate,
+    Instruction,
+    Luminescence,
+    Spin,
+    Thermocycle,
 )
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
-from autoprotocol.harness import (
-    _add_dye_to_preview_refs,
-    _convert_provision_instructions,
-    _convert_dispense_instructions,
-)
-import warnings
 
 
 class TestProtocolMultipleExist(object):

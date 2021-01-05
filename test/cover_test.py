@@ -1,4 +1,5 @@
 import pytest
+
 from autoprotocol.protocol import Protocol
 
 

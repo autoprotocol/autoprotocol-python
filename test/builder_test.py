@@ -1,17 +1,18 @@
 # pragma pylint: disable=missing-docstring
 
 import pytest
+
+from autoprotocol import Unit, Well
+from autoprotocol.builders import InstructionBuilders
 from autoprotocol.instruction import (
-    Thermocycle,
-    Dispense,
-    Spectrophotometry,
-    Evaporate,
     SPE,
+    Dispense,
+    Evaporate,
     FlowCytometry,
     Instruction,
+    Spectrophotometry,
+    Thermocycle,
 )
-from autoprotocol.builders import InstructionBuilders
-from autoprotocol import Unit, Well
 from autoprotocol.unit import UnitError
 
 

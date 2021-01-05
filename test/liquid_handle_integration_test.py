@@ -1,9 +1,10 @@
 # pragma pylint: disable=missing-docstring, no-self-use, invalid-name
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 import pytest
-from autoprotocol.unit import Unit
+
+from autoprotocol.liquid_handle import DryWellTransfer, Mix
 from autoprotocol.protocol import Protocol
-from autoprotocol.liquid_handle import Mix, DryWellTransfer
+from autoprotocol.unit import Unit
 
 
 class LiquidHandleTester(object):

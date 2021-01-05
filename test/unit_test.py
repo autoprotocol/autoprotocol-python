@@ -1,6 +1,8 @@
-import pytest
-from autoprotocol.unit import Unit, UnitValueError
 from decimal import Decimal
+
+import pytest
+
+from autoprotocol.unit import Unit, UnitValueError
 
 
 class TestUnitType(object):

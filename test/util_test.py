@@ -1,7 +1,7 @@
 import pytest
 
-from autoprotocol.util import parse_unit
 from autoprotocol.unit import Unit
+from autoprotocol.util import parse_unit
 
 
 class TestParseUnit(object):

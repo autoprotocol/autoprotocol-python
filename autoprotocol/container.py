@@ -13,6 +13,7 @@ import warnings
 from .constants import SBS_FORMAT_SHAPES
 from .unit import Unit
 
+
 SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 

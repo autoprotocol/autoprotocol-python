@@ -7,15 +7,15 @@ Module containing the harness module which helps with Manifest interpretation
 
 """
 
-import json
-
 import argparse
 import io
+import json
 
 from . import UserError
 from .container import WellGroup
 from .protocol import Protocol
 from .unit import Unit, UnitError
+
 
 _DYE_TEST_RS = {"dye4000": "rs18qmhr7t9jwq", "water": "rs17gmh5wafm5p"}
 

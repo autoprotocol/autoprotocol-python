@@ -10,12 +10,12 @@ Module containing the main `Protocol` object and associated functions
 import warnings
 
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
-from .container import Container, Well, SEAL_TYPES, COVER_TYPES
-from .container_type import ContainerType, _CONTAINER_TYPES
+from .container import COVER_TYPES, SEAL_TYPES, Container, Well
+from .container_type import _CONTAINER_TYPES, ContainerType
 from .instruction import *  # pylint: disable=unused-wildcard-import
-from .liquid_handle import Transfer, Mix, LiquidClass
+from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError
-from .util import _validate_as_instance, _check_container_type_with_shape
+from .util import _check_container_type_with_shape, _validate_as_instance
 
 
 class Ref(object):

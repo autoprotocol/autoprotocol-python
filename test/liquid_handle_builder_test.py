@@ -1,8 +1,9 @@
 # pragma pylint: disable=missing-docstring,no-self-use
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 import pytest
-from autoprotocol.instruction import LiquidHandle
+
 from autoprotocol import Unit
+from autoprotocol.instruction import LiquidHandle
 
 
 class TestInstructionBuilders(object):

@@ -140,9 +140,8 @@ def _check_container_type_with_shape(container_type, shape):
     Parameters
     ----------
     container_type : ContainerType
-        the origin of the liquid handling operation. for multi channel
-        operations this is the top left well of the stamp. for single channel
-        operations this is the source well.
+        the origin of the liquid handling operation. used to determine what format the tube
+        or plate is in.
     shape : dict
         the shape of the transfer. used to determine the shape format of
         multichannel liquid handling operations

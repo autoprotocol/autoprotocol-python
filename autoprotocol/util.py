@@ -144,7 +144,7 @@ def _check_container_type_with_shape(container_type, shape):
         or plate is in.
     shape : dict
         the shape of the transfer. used to determine the shape format of
-        multichannel liquid handling operations
+        single or multi channel liquid handling operations
         see LiquidHandle.builders.shape
 
     Raises

@@ -968,7 +968,7 @@ RESMW12HP = ContainerType(
 
 #:
 FLAT96CLEARTC = ContainerType(
-    name="96-well flat-bottom TC treated plate",
+    name="`96-well flat-bottom TC treated plate`",
     well_count=96,
     well_depth_mm=None,
     well_volume_ul=Unit(340.0, "microliter"),
@@ -976,7 +976,7 @@ FLAT96CLEARTC = ContainerType(
     sterile=False,
     is_tube=False,
     cover_types=["low_evaporation", "standard", "universal"],
-    seal_types=None,
+    seal_types=["breathable"],
     capabilities=[
         "liquid_handle",
         "spin",
@@ -988,6 +988,7 @@ FLAT96CLEARTC = ContainerType(
         "gel_purify",
         "cover",
         "dispense",
+        "seal"
     ],
     shortname="96-flat-clear-clear-tc",
     col_count=12,

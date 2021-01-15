@@ -968,7 +968,7 @@ RESMW12HP = ContainerType(
 
 #:
 FLAT96CLEARTC = ContainerType(
-    name="`96-well flat-bottom TC treated plate`",
+    name="96-well flat-bottom TC treated plate",
     well_count=96,
     well_depth_mm=None,
     well_volume_ul=Unit(340.0, "microliter"),

@@ -200,6 +200,17 @@ def convert_param(protocol, val, type_desc):
                 f"The value supplied to input '{label}' (type aliquot++) is "
                 f"improperly formatted."
             )
+    elif type == "compound":
+        return str(val)
+    elif type == "compound+":
+         try:
+            return [convert_param(protocol, cont, "compound") for cont in val]
+        except:
+            label = type_desc.get("label") or "[unknown]"
+            raise RuntimeError(
+                f"The value supplied to input '{label}' (type compound+) is "
+                f"improperly formatted."
+            )
     elif type == "container":
 
         try:

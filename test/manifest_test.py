@@ -584,3 +584,79 @@ class TestManifest(object):
         ]
         for key in manifest_keys:
             assert key in preview
+
+    def test_valid_compound_type(self):
+        protocol_info1 = ProtocolInfo(
+            {
+                "name": "Test Compound type",
+                "inputs": {"compound": {"type": "compound"}},
+            }
+        )
+        parsed = protocol_info1.parse(
+            self.protocol,
+            {
+                "refs": {},
+                "parameters": {
+                    "compound": "SMILES:CCC"
+                },
+            },
+        )
+        assert parsed["compound"].value == "CCC"
+        assert parsed["compound"].notation == "SMILES"
+
+    def test_invalid_compound_type(self):
+        with pytest.raises(RuntimeError):
+            protocol_info1 = ProtocolInfo(
+                {
+                    "name": "Test Compound type",
+                    "inputs": {"compound": {"type": "compound"}},
+                }
+            )
+            protocol_info1.parse(
+                self.protocol,
+                {
+                    "refs": {},
+                    "parameters": {
+                        "compound": "INVALID_NOTATION:CCC"
+                    },
+                },
+            )
+
+    def test_invalid_compound_format(self):
+        with pytest.raises(RuntimeError):
+            protocol_info1 = ProtocolInfo(
+                {
+                    "name": "Test Compound type",
+                    "inputs": {"compound": {"type": "compound"}},
+                }
+            )
+            protocol_info1.parse(
+                self.protocol,
+                {
+                    "refs": {},
+                    "parameters": {
+                        "compound": "INVALID_FORMAT"
+                    },
+                },
+            )
+
+    def test_multiple_compound_type(self):
+        protocol_info1 = ProtocolInfo(
+            {
+                "name": "Test Compound type",
+                "inputs": {"compound": {"type": "compound+"}},
+            }
+        )
+        parsed = protocol_info1.parse(
+            self.protocol,
+            {
+                "refs": {},
+                "parameters": {
+                    "compound": ["SMILES:CCC", "SMILES:C"]
+                },
+            },
+        )
+        assert parsed["compound"][0].value == "CCC"
+        assert parsed["compound"][1].value == "C"
+        assert parsed["compound"][0].notation == "SMILES"
+        assert parsed["compound"][1].notation == "SMILES"

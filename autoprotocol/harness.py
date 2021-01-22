@@ -12,6 +12,7 @@ import io
 import json
 
 from . import UserError
+from .compound import Compound, CompoundError
 from .container import WellGroup
 from .protocol import Protocol
 from .unit import Unit, UnitError
@@ -200,10 +201,18 @@ def convert_param(protocol, val, type_desc):
                 f"The value supplied to input '{label}' (type aliquot++) is "
                 f"improperly formatted."
             )
-    elif type == "compound":
-        return str(val)
+    elif type in "compound":
+        try:
+            tokenized = val.split(':')
+            if len(tokenized) != 2:
+                raise RuntimeError(f"Invalid compound format: {val}")
+            return Compound(notation=tokenized[0], value=tokenized[1])
+        except CompoundError as e:
+            raise RuntimeError(
+                f"Invalid compound notation or value; Details: {e.value}")
+
     elif type == "compound+":
-         try:
+        try:
             return [convert_param(protocol, cont, "compound") for cont in val]
         except:
             label = type_desc.get("label") or "[unknown]"

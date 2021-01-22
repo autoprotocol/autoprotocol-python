@@ -596,9 +596,7 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {
-                    "compound": "SMILES:CCC"
-                },
+                "parameters": {"compound": "SMILES:CCC"},
             },
         )
         assert parsed["compound"].value == "CCC"
@@ -616,9 +614,7 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {
-                        "compound": "INVALID_NOTATION:CCC"
-                    },
+                    "parameters": {"compound": "INVALID_NOTATION:CCC"},
                 },
             )
 
@@ -634,9 +630,7 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {
-                        "compound": "INVALID_FORMAT"
-                    },
+                    "parameters": {"compound": "INVALID_FORMAT"},
                 },
             )
 
@@ -651,9 +645,7 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {
-                    "compound": ["SMILES:CCC", "SMILES:C"]
-                },
+                "parameters": {"compound": ["SMILES:CCC", "SMILES:C"]},
             },
         )
         assert parsed["compound"][0].value == "CCC"

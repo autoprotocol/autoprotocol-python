@@ -203,13 +203,14 @@ def convert_param(protocol, val, type_desc):
             )
     elif type in "compound":
         try:
-            tokenized = val.split(':')
+            tokenized = val.split(":")
             if len(tokenized) != 2:
                 raise RuntimeError(f"Invalid compound format: {val}")
             return Compound(notation=tokenized[0], value=tokenized[1])
         except CompoundError as e:
             raise RuntimeError(
-                f"Invalid compound notation or value; Details: {e.value}")
+                f"Invalid compound notation or value; Details: {e.value}"
+            )
 
     elif type == "compound+":
         try:

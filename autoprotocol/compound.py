@@ -19,4 +19,5 @@ class Notation(enum.Enum):
 
 class CompoundError(Exception):
     def __init__(self, value):
+        super(CompoundError, self).__init__(value)
         self.value = value

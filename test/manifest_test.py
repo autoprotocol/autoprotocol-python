@@ -585,7 +585,7 @@ class TestManifest(object):
         for key in manifest_keys:
             assert key in preview
 
-    def test_valid_compound_type(self):
+    def test_compound_type(self):
         protocol_info1 = ProtocolInfo(
             {
                 "name": "Test Compound type",
@@ -596,43 +596,10 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": "SMILES:CCC"},
+                "parameters": {"compound": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"},
             },
         )
-        assert parsed["compound"].value == "CCC"
-        assert parsed["compound"].notation == "SMILES"
-
-    def test_invalid_compound_type(self):
-        with pytest.raises(RuntimeError):
-            protocol_info1 = ProtocolInfo(
-                {
-                    "name": "Test Compound type",
-                    "inputs": {"compound": {"type": "compound"}},
-                }
-            )
-            protocol_info1.parse(
-                self.protocol,
-                {
-                    "refs": {},
-                    "parameters": {"compound": "INVALID_NOTATION:CCC"},
-                },
-            )
-
-    def test_invalid_compound_format(self):
-        with pytest.raises(RuntimeError):
-            protocol_info1 = ProtocolInfo(
-                {
-                    "name": "Test Compound type",
-                    "inputs": {"compound": {"type": "compound"}},
-                }
-            )
-            protocol_info1.parse(
-                self.protocol,
-                {
-                    "refs": {},
-                    "parameters": {"compound": "INVALID_FORMAT"},
-                },
-            )
+        assert parsed["compound"].inchi == "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"
 
     def test_multiple_compound_type(self):
         protocol_info1 = ProtocolInfo(
@@ -645,10 +612,8 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": ["SMILES:CCC", "SMILES:C"]},
+                "parameters": {"compound": ["InChI=1S/C2H6", "InChI=1S/C2H8"]},
             },
         )
-        assert parsed["compound"][0].value == "CCC"
-        assert parsed["compound"][1].value == "C"
-        assert parsed["compound"][0].notation == "SMILES"
-        assert parsed["compound"][1].notation == "SMILES"
+        assert parsed["compound"][0].inchi == "InChI=1S/C2H6"
+        assert parsed["compound"][1].inchi == "InChI=1S/C2H8"

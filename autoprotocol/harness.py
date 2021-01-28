@@ -12,7 +12,7 @@ import io
 import json
 
 from . import UserError
-from .compound import Compound
+from .compound import Compound, CompoundError
 from .container import WellGroup
 from .protocol import Protocol
 from .unit import Unit, UnitError
@@ -202,8 +202,10 @@ def convert_param(protocol, val, type_desc):
                 f"improperly formatted."
             )
     elif type in "compound":
-        return Compound(val)
-
+        try:
+            return Compound(val)
+        except CompoundError as e:
+            raise RuntimeError(f"Invalid Compound; Details: {e.value}")
     elif type == "compound+":
         try:
             return [convert_param(protocol, cont, "compound") for cont in val]

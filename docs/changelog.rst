@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`288` Add "Compound" to derived types
 * :support:`284` add isort for automatic import sorting
 * :support:`286` CodeCov action for GitHub actions
 * :support:`285` use readme.rst for long description
@@ -472,4 +473,3 @@ Changelog
 
 * :release:`1.0.0 <2014-01-22>`
 * :feature:`-` initializing ap-py
-* :feature:`-` Add "Compound" to derived types

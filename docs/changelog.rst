@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`288` Add "Compound" to derived types
 * :support:`284` add isort for automatic import sorting
 * :support:`286` CodeCov action for GitHub actions
 * :support:`285` use readme.rst for long description

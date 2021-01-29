@@ -584,3 +584,54 @@ class TestManifest(object):
         ]
         for key in manifest_keys:
             assert key in preview
+
+    def test_compound_type(self):
+        protocol_info1 = ProtocolInfo(
+            {
+                "name": "Test Compound type",
+                "inputs": {"compound": {"type": "compound"}},
+            }
+        )
+        parsed = protocol_info1.parse(
+            self.protocol,
+            {
+                "refs": {},
+                "parameters": {"compound": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"},
+            },
+        )
+        assert parsed["compound"].InChI == "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"
+
+    def test_multiple_compound_type(self):
+        protocol_info1 = ProtocolInfo(
+            {
+                "name": "Test Compound type",
+                "inputs": {"compound": {"type": "compound+"}},
+            }
+        )
+        parsed = protocol_info1.parse(
+            self.protocol,
+            {
+                "refs": {},
+                "parameters": {"compound": ["InChI=1S/C2H6", "InChI=1S/C2H8"]},
+            },
+        )
+        assert parsed["compound"][0].InChI == "InChI=1S/C2H6"
+        assert parsed["compound"][1].InChI == "InChI=1S/C2H8"
+
+    def test_invalid_compound(self):
+        with pytest.raises(RuntimeError) as e:
+            protocol_info1 = ProtocolInfo(
+                {
+                    "name": "Test Compound type",
+                    "inputs": {"compound": {"type": "compound"}},
+                }
+            )
+            protocol_info1.parse(
+                self.protocol,
+                {
+                    "refs": {},
+                    "parameters": {"compound": "abc"},
+                },
+            )
+
+        assert "abc is not a valid InChI key" in str(e.value)

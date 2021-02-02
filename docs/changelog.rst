@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.5.0 <2021-01-31>`
 * :feature:`288` Add "Compound" to derived types
 * :support:`284` add isort for automatic import sorting
 * :support:`286` CodeCov action for GitHub actions

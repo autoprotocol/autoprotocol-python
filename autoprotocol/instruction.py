@@ -137,11 +137,7 @@ class Instruction(object):
         # keys for its `data`.
         valid_informatics_types = {"attach_compounds": ["wells", "compounds"]}
 
-        # if informatics is provided in a dict, format it to a list of dict.
-        # if isinstance(informatics, dict):
-        #     info_list = []
-        #     info_list.append(informatics)
-        # if informatics is provided in a list, it must be a list of dict.
+        # informatics must be a list of dict.
         if isinstance(informatics, list):
             for info in informatics:
                 if not isinstance(info, dict):

@@ -142,13 +142,12 @@ class Instruction(object):
             for info in informatics:
                 if not isinstance(info, dict):
                     raise TypeError(f"informatics: {info} must be provided in a dict.")
-            info_list = informatics
         else:
             raise TypeError(
                 f"informatics: {informatics} must be provided in a list of dict. "
             )
 
-        for info in info_list:
+        for info in informatics:
             info_keys = info.keys()
             if set(info_keys) != set(valid_informatics_keys):
                 raise ValueError(
@@ -171,7 +170,7 @@ class Instruction(object):
                     f"keys: {valid_data_keys}."
                 )
 
-        return info_list
+        return informatics
 
 
 class MagneticTransfer(Instruction):

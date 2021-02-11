@@ -21,6 +21,25 @@ class TestBaseInstruction(object):
         }
         return Instruction(op="test_instruction", data=example_data)
 
+    @pytest.fixture
+    def test_inst_with_informatics(self):
+        example_data = {
+            "some_param": "foo/1",
+            "some_int": 1,
+        }
+        example_informatics = [
+            {
+                "type": "attach_compounds",
+                "data": {
+                    "wells": "foo/0",
+                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                },
+            }
+        ]
+        return Instruction(
+            op="test_instruction", data=example_data, informatics=example_informatics
+        )
+
     def test_remove_empty_fields(self):
         assert dict(some_str="something") == Instruction._remove_empty_fields(
             {"some_str": "something", "empty": None}
@@ -74,6 +93,82 @@ class TestBaseInstruction(object):
             },
             "dict_2": {"some_bool": False},
         }
+
+    @staticmethod
+    def test_informatics(test_inst_with_informatics):
+        assert test_inst_with_informatics.informatics == [
+            {
+                "type": "attach_compounds",
+                "data": {
+                    "wells": "foo/0",
+                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                },
+            }
+        ]
+
+    def test_verify_informatics_field(self):
+        assert Instruction(
+            op="some_instruction",
+            data={"some_field": "some_value"},
+            informatics=[
+                {
+                    "type": "attach_compounds",
+                    "data": {
+                        "wells": "foo/0",
+                        "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                    },
+                }
+            ],
+        ).informatics == [
+            {
+                "type": "attach_compounds",
+                "data": {
+                    "wells": "foo/0",
+                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                },
+            }
+        ]
+
+        with pytest.raises(ValueError):
+            Instruction(
+                op="some instruction",
+                data={"some_param": "some_value"},
+                informatics=[
+                    {
+                        "type": "attach_compounds",
+                        "data": {"wells": [], "compounds": None},
+                    }
+                ],
+            )
+
+        with pytest.raises(TypeError):
+            Instruction._verify_informatics_field(["foo", "bar"])
+        with pytest.raises(ValueError):
+            Instruction._verify_informatics_field(
+                [
+                    {
+                        "type": "foo",
+                        "data": {
+                            "wells": "foo/1",
+                            "compounds": ["1S/ClH.Na/h1H;/q;+1/p-1/i;1+1"],
+                        },
+                    }
+                ]
+            )
+        with pytest.raises(ValueError):
+            Instruction._verify_informatics_field(
+                [
+                    {
+                        "type": "attach_compounds",
+                    }
+                ]
+            )
+        with pytest.raises(ValueError):
+            Instruction._verify_informatics_field(
+                [{"type": "attach_compounds", "data": {"foo": "some_data"}}]
+            )
+        with pytest.raises(ValueError):
+            Instruction._verify_informatics_field([{"foo": "bar"}])
 
 
 class TestInstruction(object):

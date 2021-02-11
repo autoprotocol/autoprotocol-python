@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`290` Add informatics attribute to Instruction
+
 * :release:`7.5.0 <2021-01-31>`
 * :feature:`288` Add "Compound" to derived types
 * :support:`284` add isort for automatic import sorting

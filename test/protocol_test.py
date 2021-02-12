@@ -596,9 +596,16 @@ class TestTimeConstraints(object):
 class TestInformatics(object):
     def test_informatics_checker(self, dummy_protocol):
         p = dummy_protocol
-        well1 = p.ref("well1", id=None, cont_type="96-pcr", discard=True).well(0)
-        well2 = p.ref("well2", id=None, cont_type="96-pcr", discard=True).well(1)
+        cont1 = p.ref("cont1", id=None, cont_type="96-flat", discard=True)
+        well1 = cont1.well(0)
+        well2 = cont1.well(1)
         compd1 = Compound("InChI=1S/CH4/h1H4")
+
+        output = p.check_informatics_field(
+            [{"type": "attach_compounds", "data": {"wells": [well1], "compounds": [compd1]}}],
+            cont1
+        )
+        assert output[0]["type"] == "attach_compounds"
 
         with pytest.raises(TypeError):
             p.check_informatics_field(

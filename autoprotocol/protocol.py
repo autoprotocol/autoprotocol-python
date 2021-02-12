@@ -744,7 +744,12 @@ class Protocol(object):
                         f"wells: {info_data['wells']} must be Well, list of Well or WellGroup."
                     )
                 wells = WellGroup(wells)
-                all_wells = WellGroup(all_wells)
+                # if instruction is executed on ref (Container) unit instead of Well, check against all
+                # wells in the container.
+                if isinstance(all_wells, Container):
+                    all_wells = all_wells.all_wells()
+                else:
+                    all_wells = WellGroup(all_wells)
                 for well in wells.wells:
                     if well not in all_wells.wells:
                         raise ValueError(

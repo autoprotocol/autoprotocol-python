@@ -4,6 +4,7 @@ import warnings
 
 import pytest
 
+from autoprotocol.compound import Compound
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.harness import (
@@ -590,6 +591,75 @@ class TestTimeConstraints(object):
         )
 
         assert len(p.time_constraints) == 4
+
+
+class TestInformatics(object):
+    def test_informatics_checker(self, dummy_protocol):
+        p = dummy_protocol
+        well1 = p.ref("well1", id=None, cont_type="96-pcr", discard=True).well(0)
+        well2 = p.ref("well2", id=None, cont_type="96-pcr", discard=True).well(1)
+        compd1 = Compound("InChI=1S/CH4/h1H4")
+
+        with pytest.raises(TypeError):
+            p.check_informatics_field(
+                {
+                    "type": "attach_compounds",
+                    "data": {"wells": [well1], "compounds": [compd1]},
+                },
+                well1,
+            )
+
+        with pytest.raises(ValueError):
+            p.check_informatics_field(
+                [{"type": "foo", "data": {"wells": [well1], "compounds": [compd1]}}],
+                well1,
+            )
+
+        with pytest.raises(KeyError):
+            p.check_informatics_field([{"foo": "some value"}], well1)
+
+        with pytest.raises(TypeError):
+            p.check_informatics_field(
+                [{"type": "attach_compounds", "data": "some value"}], well1
+            )
+
+        with pytest.raises(TypeError):
+            p.check_informatics_field(
+                [
+                    {
+                        "type": "attach_compounds",
+                        "data": {"wells": "foo", "compounds": [compd1]},
+                    }
+                ],
+                well1,
+            )
+
+        with pytest.raises(TypeError):
+            p.check_informatics_field(
+                [
+                    {
+                        "type": "attach_compounds",
+                        "data": {"wells": well1, "compounds": ["foo"]},
+                    }
+                ],
+                well1,
+            )
+
+        with pytest.raises(KeyError):
+            p.check_informatics_field(
+                [{"type": "attach_compounds", "data": {"foo": "bar"}}], well1
+            )
+
+        with pytest.raises(ValueError):
+            p.check_informatics_field(
+                [
+                    {
+                        "type": "attach_compounds",
+                        "data": {"wells": well1, "compounds": [compd1]},
+                    }
+                ],
+                well2,
+            )
 
 
 class TestAbsorbance(object):
@@ -2761,14 +2831,29 @@ class TestDyeTest(object):
     def test_convert_provision(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        compd1 = Compound("InChI=1S/CH4/h1H4")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.provision(
+            "rs181818181818",
+            c1.well(1),
+            volumes="10:microliter",
+            informatics=[
+                {
+                    "type": "attach_compounds",
+                    "data": {"wells": [c1.well(1)], "compounds": [compd1]},
+                }
+            ],
+        )
         _convert_provision_instructions(p1, 3, 3)
 
         assert p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz"
         assert p1.instructions[3].data["resource_id"] == "rs17gmh5wafm5p"
+        assert p1.instructions[3].informatics == {}
+        assert p1.instructions[4].informatics[0]["type"] == "attach_compounds"
+        assert p1.instructions[4].informatics[0]["data"]["compounds"] == [compd1]
 
         with pytest.raises(ValueError):
             _convert_provision_instructions(p1, "2", 3)

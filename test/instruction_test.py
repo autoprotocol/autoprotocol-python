@@ -32,7 +32,7 @@ class TestBaseInstruction(object):
                 "type": "attach_compounds",
                 "data": {
                     "wells": "foo/0",
-                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                    "compounds": ["comp"],
                 },
             }
         ]
@@ -81,6 +81,20 @@ class TestBaseInstruction(object):
             == {"not_empty": ["foo", "bar"]}
         )
 
+        assert (
+            Instruction(
+                op="some instruction",
+                data={"some_param": "some_value"},
+                informatics=[
+                    {
+                        "type": "attach_compounds",
+                        "data": {"wells": "foo/1", "compounds": None},
+                    }
+                ],
+            ).informatics
+            == [{"type": "attach_compounds", "data": {"wells": "foo/1"}}]
+        )
+
     @staticmethod
     def test_op(test_instruction):
         assert test_instruction.op == "test_instruction"
@@ -101,74 +115,10 @@ class TestBaseInstruction(object):
                 "type": "attach_compounds",
                 "data": {
                     "wells": "foo/0",
-                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
+                    "compounds": ["comp"],
                 },
             }
         ]
-
-    def test_verify_informatics_field(self):
-        assert Instruction(
-            op="some_instruction",
-            data={"some_field": "some_value"},
-            informatics=[
-                {
-                    "type": "attach_compounds",
-                    "data": {
-                        "wells": "foo/0",
-                        "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
-                    },
-                }
-            ],
-        ).informatics == [
-            {
-                "type": "attach_compounds",
-                "data": {
-                    "wells": "foo/0",
-                    "compounds": ["1S/C6H6/c1-2-4-6-5-3-1/h1-6H"],
-                },
-            }
-        ]
-
-        with pytest.raises(ValueError):
-            Instruction(
-                op="some instruction",
-                data={"some_param": "some_value"},
-                informatics=[
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": [], "compounds": None},
-                    }
-                ],
-            )
-
-        with pytest.raises(TypeError):
-            Instruction._verify_informatics_field(["foo", "bar"])
-        with pytest.raises(ValueError):
-            Instruction._verify_informatics_field(
-                [
-                    {
-                        "type": "foo",
-                        "data": {
-                            "wells": "foo/1",
-                            "compounds": ["1S/ClH.Na/h1H;/q;+1/p-1/i;1+1"],
-                        },
-                    }
-                ]
-            )
-        with pytest.raises(ValueError):
-            Instruction._verify_informatics_field(
-                [
-                    {
-                        "type": "attach_compounds",
-                    }
-                ]
-            )
-        with pytest.raises(ValueError):
-            Instruction._verify_informatics_field(
-                [{"type": "attach_compounds", "data": {"foo": "some_data"}}]
-            )
-        with pytest.raises(ValueError):
-            Instruction._verify_informatics_field([{"foo": "bar"}])
 
 
 class TestInstruction(object):

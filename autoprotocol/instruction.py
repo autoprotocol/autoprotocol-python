@@ -28,7 +28,6 @@ class Instruction(object):
             self._remove_empty_fields(informatics)
         )
         if len(informatics) > 0:
-            # self._verify_informatics_field(self.informatics)
             self.__dict__.update(self.informatics)
 
     def __repr__(self):
@@ -97,80 +96,6 @@ class Instruction(object):
                 if not filter_criteria(_)
             ]
         return data
-
-    # @staticmethod
-    # def _verify_informatics_field(informatics):
-    #     """
-    #     Helper function to verify that informatics dict has a valid type
-    #     and data schema
-    #
-    #     Parameters
-    #     ----------
-    #     informatics: list
-    #         list of dict with informatics type and data
-    #
-    #     Returns
-    #     -------
-    #     List
-    #         Validated list of dict with informatics details
-    #
-    #     Raises
-    #     ------
-    #     TypeError
-    #         informatics must be provided in a list
-    #     TypeError
-    #         informatics element must be in dict
-    #     ValueError
-    #         informaticss dict must have correct keys
-    #     ValueError
-    #         informatics type must be a valid type
-    #     TypeError
-    #         informatics data must be provided in dict
-    #     ValueError
-    #         each informatics type must have correct keys to describe its data
-    #
-    #     """
-    #     # any informatics dict must only have these keys.
-    #     valid_informatics_keys = ["type", "data"]
-    #     # informatics have a list of valid types, and data schema specific for each type.
-    #     # Here, each key represents a valid `type`, and value is a list of valid
-    #     # keys for its `data`.
-    #     valid_informatics_types = {"attach_compounds": ["wells", "compounds"]}
-    #
-    #     # informatics must be a list of dict.
-    #     if isinstance(informatics, list):
-    #         for info in informatics:
-    #             if not isinstance(info, dict):
-    #                 raise TypeError(f"informatics: {info} must be provided in a dict.")
-    #     else:
-    #         raise TypeError(
-    #             f"informatics: {informatics} must be provided in a list of dict. "
-    #         )
-    #
-    #     for info in informatics:
-    #         info_keys = info.keys()
-    #         if set(info_keys) != set(valid_informatics_keys):
-    #             raise ValueError(
-    #                 f"informatics dict: {info} must have keys: {valid_informatics_keys}"
-    #             )
-    #         info_type = info["type"]
-    #         info_data = info["data"]
-    #         if info_type not in valid_informatics_types.keys():
-    #             raise ValueError(
-    #                 f"informatics type: {info_type} must be one of {valid_informatics_types.keys()}"
-    #             )
-    #         if not isinstance(info_data, dict):
-    #             raise TypeError(
-    #                 f"informatics data: {info_data} must be provided in a dict."
-    #             )
-    #         valid_data_keys = valid_informatics_types[info_type]
-    #         if set(info_data.keys()) != set(valid_data_keys):
-    #             raise ValueError(
-    #                 f"informatics type: {info_type} must have a data dict with valid "
-    #                 f"keys: {valid_data_keys}."
-    #             )
-    #
-    #     return informatics
 
 
 class MagneticTransfer(Instruction):

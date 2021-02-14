@@ -5999,6 +5999,8 @@ class Protocol(object):
             return self._refify(op_data._as_AST())
         elif isinstance(op_data, Ref):
             return op_data.opts
+        elif isinstance(op_data, Compound):
+            return op_data.InChI
         else:
             return op_data
 

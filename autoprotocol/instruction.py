@@ -52,7 +52,7 @@ class Instruction(object):
 
         """
         # informatics is not serialized if empty.
-        if getattr(self, "informatics"):
+        if self.informatics:
             return dict(op=self.op, **self.data, informatics=self.informatics)
         else:
             return dict(op=self.op, **self.data)

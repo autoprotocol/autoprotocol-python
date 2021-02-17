@@ -598,17 +598,16 @@ class TestInformatics(object):
         p = dummy_protocol
         cont1 = p.ref("cont1", id=None, cont_type="96-flat", discard=True)
         well1 = cont1.well(0)
-        well2 = cont1.well(1)
         compd1 = Compound("InChI=1S/CH4/h1H4")
 
-        output = p.check_informatics_field(
+        output = p.check_informatics(
             [{"type": "attach_compounds", "data": {"wells": [well1], "compounds": [compd1]}}],
             cont1
         )
         assert output[0]["type"] == "attach_compounds"
 
         with pytest.raises(TypeError):
-            p.check_informatics_field(
+            p.check_informatics(
                 {
                     "type": "attach_compounds",
                     "data": {"wells": [well1], "compounds": [compd1]},
@@ -617,55 +616,9 @@ class TestInformatics(object):
             )
 
         with pytest.raises(ValueError):
-            p.check_informatics_field(
+            p.check_informatics(
                 [{"type": "foo", "data": {"wells": [well1], "compounds": [compd1]}}],
                 well1,
-            )
-
-        with pytest.raises(KeyError):
-            p.check_informatics_field([{"foo": "some value"}], well1)
-
-        with pytest.raises(TypeError):
-            p.check_informatics_field(
-                [{"type": "attach_compounds", "data": "some value"}], well1
-            )
-
-        with pytest.raises(TypeError):
-            p.check_informatics_field(
-                [
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": "foo", "compounds": [compd1]},
-                    }
-                ],
-                well1,
-            )
-
-        with pytest.raises(TypeError):
-            p.check_informatics_field(
-                [
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": well1, "compounds": ["foo"]},
-                    }
-                ],
-                well1,
-            )
-
-        with pytest.raises(KeyError):
-            p.check_informatics_field(
-                [{"type": "attach_compounds", "data": {"foo": "bar"}}], well1
-            )
-
-        with pytest.raises(ValueError):
-            p.check_informatics_field(
-                [
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": well1, "compounds": [compd1]},
-                    }
-                ],
-                well2,
             )
 
 

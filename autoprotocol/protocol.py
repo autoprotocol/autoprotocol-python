@@ -13,6 +13,7 @@ from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
 from .container_type import _CONTAINER_TYPES, ContainerType
+from .informatics import AttachCompounds
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError
@@ -656,53 +657,38 @@ class Protocol(object):
         return instruction_index
 
     @staticmethod
-    def check_informatics_field(informatics, all_wells):
+    def check_informatics(informatics, wells):
         """
-        Helper function to verify that informatics dict has a valid type
-        and data schema
+                Helper function to verify that informatics dict has a valid type
+                and data schema
 
-        Parameters
-        ----------
-        informatics: list
-            list of dict with informatics type and data
-        all_wells: WellGroup
-            All wells used in the instruction that are applicable for informatics
-            to take effect on.
+                Parameters
+                ----------
+                informatics: list
+                    list of dict with informatics type and data
+                all_wells: WellGroup
+                    All wells used in the instruction that are applicable for informatics
+                    to take effect on.
 
-        Returns
-        -------
-        List
-            Validated list of dict with informatics details
+                Returns
+                -------
+                List
+                    Validated list of dict with informatics details
 
-        Raises
-        ------
-        TypeError
-            informatics must be provided in a list
-        TypeError
-            informatics element must be in dict
-        KeyError
-            informaticss dict must have correct keys
-        ValueError
-            informatics type must be a valid type
-        TypeError
-            informatics data must be provided in dict
-        KeyError
-            each informatics type must have correct keys to describe its data
-        TypeError
-            wells must be Well, list of Well or GroupWell
-        TypeError
-            compounds must be a list
-        TypeError
-            compound must be Compound
+                Raises
+                ------
+                TypeError
+                    informatics must be provided in a list
+                TypeError
+                    informatics element must be in dict
+                KeyError
+                    informaticss dict must have correct keys
+                ValueError
+                    informatics type must be a valid type
 
-        """
+                """
         # any informatics dict must only have these keys.
         valid_informatics_keys = ["type", "data"]
-        # informatics have a list of valid types, and data schema specific for each type.
-        # Here, each key represents a valid `type`, and value is a list of valid
-        # keys for its `data`.
-        valid_informatics_types = {"attach_compounds": ["wells", "compounds"]}
-
         # informatics must be a list of dict.
         if isinstance(informatics, list):
             for info in informatics:
@@ -713,6 +699,7 @@ class Protocol(object):
                 f"informatics: {informatics} must be provided in a list of dict. "
             )
 
+        valid_informatics = []
         for info in informatics:
             info_keys = info.keys()
             if set(info_keys) != set(valid_informatics_keys):
@@ -720,51 +707,15 @@ class Protocol(object):
                     f"informatics dict: {info} must have keys: {valid_informatics_keys}"
                 )
             info_type = info["type"]
-            info_data = info["data"]
-            if info_type not in valid_informatics_types.keys():
-                raise ValueError(
-                    f"informatics type: {info_type} must be one of {valid_informatics_types.keys()}"
-                )
-            if not isinstance(info_data, dict):
-                raise TypeError(
-                    f"informatics data: {info_data} must be provided in a dict."
-                )
-            valid_data_keys = valid_informatics_types[info_type]
-            if set(info_data.keys()) != set(valid_data_keys):
-                raise KeyError(
-                    f"informatics type: {info_type} must have a data dict with valid "
-                    f"keys: {valid_data_keys}."
-                )
-            # verify data values for each informatics type
             if info_type == "attach_compounds":
-                wells = info_data["wells"]
-                compounds = info_data["compounds"]
-                if not is_valid_well(wells):
-                    raise TypeError(
-                        f"wells: {info_data['wells']} must be Well, list of Well or WellGroup."
-                    )
-                wells = WellGroup(wells)
-                # if instruction is executed on ref (Container) unit instead of Well, check against all
-                # wells in the container.
-                if isinstance(all_wells, Container):
-                    all_wells = all_wells.all_wells()
-                else:
-                    all_wells = WellGroup(all_wells)
-                for well in wells.wells:
-                    if well not in all_wells.wells:
-                        raise ValueError(
-                            f"informatics well: {wells} must be one of the wells used in this instruction."
-                        )
-                info_data["wells"] = wells
-                if not isinstance(compounds, list):
-                    raise TypeError(
-                        f"compounds: {compounds} must be provided in a list."
-                    )
-                for compd in compounds:
-                    if not isinstance(compd, Compound):
-                        raise TypeError(f"compound: {compd} must be Compound type.")
+                info_obj = AttachCompounds(info["data"], wells)
+            else:
+                raise ValueError(
+                    f"informatics type: {info_type} is not a valid type."
+                )
+            valid_informatics.append(info_obj.as_dict())
 
-        return informatics
+        return valid_informatics
 
     def _append_and_return(self, instructions):
         """
@@ -5190,7 +5141,7 @@ class Protocol(object):
           one should be specified explicitly in a list matching the order of the
           specified destinations.
           Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
-        informatics: list
+        informatics: list(dict)
           List of dict detailing aliquot effects intended from this instruction. Valid type
           and data schema for this field is found in Instrucion.
 
@@ -5255,7 +5206,7 @@ class Protocol(object):
         measurement_mode = self._identify_provision_mode(provision_amounts)
 
         if informatics is not None:
-            self.check_informatics_field(informatics, dests)
+            informatics = self.check_informatics(informatics, dests)
 
         provision_instructions_to_return: Provision = []
         for d, amount in zip(dests, provision_amounts):

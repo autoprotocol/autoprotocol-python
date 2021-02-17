@@ -91,6 +91,8 @@ class AttachCompounds(Informatics):
             if not isinstance(compd, Compound):
                 raise TypeError(f"compound: {compd} must be Compound type.")
 
+        super().__init__()
+
     def as_dict(self):
         """generates a Python object representation of Informatics attribute in
         class Instruction

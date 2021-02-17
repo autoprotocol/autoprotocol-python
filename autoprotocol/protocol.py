@@ -666,7 +666,7 @@ class Protocol(object):
         ----------
         informatics: list
             list of dict with informatics type and data
-        all_wells: WellGroup
+        wells: WellGroup
             All wells used in the instruction that are applicable for informatics
             to take effect on.
 

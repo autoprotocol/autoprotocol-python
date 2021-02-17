@@ -682,7 +682,7 @@ class Protocol(object):
         TypeError
             informatics element must be in dict
         KeyError
-            informaticss dict must have correct keys
+            informatics dict must have correct keys
         ValueError
             informatics type must be a valid type
 

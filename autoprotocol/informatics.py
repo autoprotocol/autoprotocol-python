@@ -8,6 +8,7 @@ Contains all the Autoprotocol Informatics objects
 """
 
 from abc import abstractmethod
+
 from .compound import Compound
 from .container import Container, WellGroup
 from .util import is_valid_well
@@ -18,6 +19,7 @@ class Informatics:
     Base class for informatics attribute in an instruction that is to later be
     encoded as JSON.
     """
+
     def __init__(self):
         pass
 
@@ -56,12 +58,11 @@ class AttachCompounds(Informatics):
     TypeError
         each element in compounds must be Compound type
     """
+
     def __init__(self, data: dict, all_wells):
         # turn data into specific attributes for this type of informatics
         if not isinstance(data, dict):
-            raise TypeError(
-                f"informatics data: {data} must be provided in a dict."
-            )
+            raise TypeError(f"informatics data: {data} must be provided in a dict.")
 
         self.wells = data["wells"]
         self.compounds = data["compounds"]
@@ -85,34 +86,32 @@ class AttachCompounds(Informatics):
 
         # validate compounds
         if not isinstance(self.compounds, list):
-            raise TypeError(
-                f"compounds: {self.compounds} must be provided in a list."
-            )
+            raise TypeError(f"compounds: {self.compounds} must be provided in a list.")
         for compd in self.compounds:
             if not isinstance(compd, Compound):
                 raise TypeError(f"compound: {compd} must be Compound type.")
 
     def as_dict(self):
         """generates a Python object representation of Informatics attribute in
-           class Instruction
+        class Instruction
 
-            Returns
-            -------
-            dict
-                a dict of python objects that have the same structure as the
-                Autoprotocol JSON for the Informatics
+         Returns
+         -------
+         dict
+             a dict of python objects that have the same structure as the
+             Autoprotocol JSON for the Informatics
 
-            Notes
-            -----
-            Used as a part of JSON serialization of the Instruction
+         Notes
+         -----
+         Used as a part of JSON serialization of the Instruction
 
-            See Also
-            --------
-            :class:`Instruction` : Instruction class
+         See Also
+         --------
+         :class:`Instruction` : Instruction class
 
-         """
+        """
 
         return {
             "type": "attach_compounds",
-            "data": {"wells": self.wells, "compounds": self.compounds}
+            "data": {"wells": self.wells, "compounds": self.compounds},
         }

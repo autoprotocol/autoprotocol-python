@@ -17,8 +17,12 @@ class TestAttachCompoundsInformatics(object):
         wg2 = WellGroup([cont1.well(2), cont1.well(3)])
         comp = Compound("InChI=1S/CH4/h1H4")
 
-        assert AttachCompounds({"wells": well1, "compounds": [comp]}, wg1).compounds == [comp]
-        assert AttachCompounds({"wells": well1, "compounds": [comp]}, wg1).wells == well1
+        assert AttachCompounds(
+            {"wells": well1, "compounds": [comp]}, wg1
+        ).compounds == [comp]
+        assert (
+            AttachCompounds({"wells": well1, "compounds": [comp]}, wg1).wells == well1
+        )
         with pytest.raises(TypeError):
             AttachCompounds("foo", wg1)
         with pytest.raises(KeyError):
@@ -39,11 +43,8 @@ class TestAttachCompoundsInformatics(object):
         cont1 = p.ref("cont_1", None, "96-flat", discard=True)
         well1 = WellGroup([cont1.well(0)])
         comp = Compound("InChI=1S/CH4/h1H4")
-        example_informatics = {
-            "wells": well1,
-            "compounds": [comp]
-        }
+        example_informatics = {"wells": well1, "compounds": [comp]}
         assert AttachCompounds(example_informatics, well1).as_dict() == {
             "type": "attach_compounds",
-            "data": {"wells": well1, "compounds": [comp]}
+            "data": {"wells": well1, "compounds": [comp]},
         }

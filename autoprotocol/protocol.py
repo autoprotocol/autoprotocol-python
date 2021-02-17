@@ -659,34 +659,34 @@ class Protocol(object):
     @staticmethod
     def check_informatics(informatics, wells):
         """
-                Helper function to verify that informatics dict has a valid type
-                and data schema
+        Helper function to verify that informatics dict has a valid type
+        and data schema
 
-                Parameters
-                ----------
-                informatics: list
-                    list of dict with informatics type and data
-                all_wells: WellGroup
-                    All wells used in the instruction that are applicable for informatics
-                    to take effect on.
+        Parameters
+        ----------
+        informatics: list
+            list of dict with informatics type and data
+        all_wells: WellGroup
+            All wells used in the instruction that are applicable for informatics
+            to take effect on.
 
-                Returns
-                -------
-                List
-                    Validated list of dict with informatics details
+        Returns
+        -------
+        List
+            Validated list of dict with informatics details
 
-                Raises
-                ------
-                TypeError
-                    informatics must be provided in a list
-                TypeError
-                    informatics element must be in dict
-                KeyError
-                    informaticss dict must have correct keys
-                ValueError
-                    informatics type must be a valid type
+        Raises
+        ------
+        TypeError
+            informatics must be provided in a list
+        TypeError
+            informatics element must be in dict
+        KeyError
+            informaticss dict must have correct keys
+        ValueError
+            informatics type must be a valid type
 
-                """
+        """
         # any informatics dict must only have these keys.
         valid_informatics_keys = ["type", "data"]
         # informatics must be a list of dict.
@@ -710,9 +710,7 @@ class Protocol(object):
             if info_type == "attach_compounds":
                 info_obj = AttachCompounds(info["data"], wells)
             else:
-                raise ValueError(
-                    f"informatics type: {info_type} is not a valid type."
-                )
+                raise ValueError(f"informatics type: {info_type} is not a valid type.")
             valid_informatics.append(info_obj.as_dict())
 
         return valid_informatics

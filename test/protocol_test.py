@@ -601,8 +601,13 @@ class TestInformatics(object):
         compd1 = Compound("InChI=1S/CH4/h1H4")
 
         output = p.check_informatics(
-            [{"type": "attach_compounds", "data": {"wells": [well1], "compounds": [compd1]}}],
-            cont1
+            [
+                {
+                    "type": "attach_compounds",
+                    "data": {"wells": [well1], "compounds": [compd1]},
+                }
+            ],
+            cont1,
         )
         assert output[0]["type"] == "attach_compounds"
 

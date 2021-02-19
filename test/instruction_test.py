@@ -85,14 +85,9 @@ class TestBaseInstruction(object):
             Instruction(
                 op="some instruction",
                 data={"some_param": "some_value"},
-                informatics=[
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": "foo/1", "compounds": None},
-                    }
-                ],
+                informatics=[],
             ).informatics
-            == [{"type": "attach_compounds", "data": {"wells": "foo/1"}}]
+            == []
         )
 
     @staticmethod

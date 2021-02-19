@@ -656,8 +656,7 @@ class Protocol(object):
             raise ValueError("Instruction index less than 0")
         return instruction_index
 
-    @staticmethod
-    def check_informatics(informatics, wells):
+    def check_informatics(self, informatics, all_wells):
         """
         Helper function to verify that informatics dict has a valid type
         and data schema
@@ -666,9 +665,8 @@ class Protocol(object):
         ----------
         informatics: list
             list of dict with informatics type and data
-        wells: WellGroup
-            All wells used in the instruction that are applicable for informatics
-            to take effect on.
+        all_wells: Well, list of Well, WellGroup or Container
+            wells or container this instruction operates on
 
         Returns
         -------
@@ -708,12 +706,57 @@ class Protocol(object):
                 )
             info_type = info["type"]
             if info_type == "attach_compounds":
-                info_obj = AttachCompounds(info["data"], wells)
+                info_obj = AttachCompounds(info["data"])
             else:
                 raise ValueError(f"informatics type: {info_type} is not a valid type.")
-            valid_informatics.append(info_obj.as_dict())
+            # validate wells only if it's present in Informatics
+            try:
+                if info_obj.wells:
+                    self.check_informatics_wells(info_obj, all_wells)
+            except KeyError:
+                continue
+            info_obj.validate()
+            valid_informatics.append(info_obj)
 
         return valid_informatics
+
+    @staticmethod
+    def check_informatics_wells(info, all_wells):
+        """
+        Verifies info_wells is included in all_wells to make sure Informatics wells are
+        part of wells or container instruction is operating on.
+
+        Parameters
+        ----------
+        info: Informatics
+            Informatics with wells specified
+        all_wells: Well, list of Well, WellGroup, or Container
+            All wells or a container used in the instruction that are applicable for informatics
+            to take effect on.
+
+        Raises
+        ------
+        TypeError
+
+        ValueError
+
+        """
+        info_wells = info.wells
+        if not is_valid_well(info_wells):
+            raise TypeError(
+                f"wells: {info_wells} must be Well, list of Well or WellGroup."
+            )
+        wells = WellGroup(info_wells)
+        if isinstance(all_wells, Container):
+            all_wells = all_wells.all_wells()
+        else:
+            all_wells = WellGroup(all_wells)
+        for well in wells.wells:
+            if well not in all_wells.wells:
+                raise ValueError(
+                    f"informatics well: {wells} must be one of the wells used in this instruction."
+                )
+        info.wells = wells
 
     def _append_and_return(self, instructions):
         """
@@ -5950,6 +5993,8 @@ class Protocol(object):
             return op_data.opts
         elif isinstance(op_data, Compound):
             return op_data.InChI
+        elif isinstance(op_data, Informatics):
+            return op_data.as_dict()
         else:
             return op_data
 

@@ -10,6 +10,7 @@ Contains all the Autoprotocol Instruction objects
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 from .builders import *  # pylint: disable=unused-wildcard-import
 from .constants import PROVISION_MEASUREMENT_MODES
+from .informatics import Informatics
 
 
 class Instruction(object):
@@ -19,16 +20,14 @@ class Instruction(object):
 
     def __init__(self, op, data, informatics=None):
         super(Instruction, self).__init__()
-        if informatics is None:
-            informatics = []
+        # if informatics is None:
+        #     informatics = []
         self.op = op
         self.data = self._remove_empty_fields(self._remove_empty_fields(data))
         self.__dict__.update(self.data)
         self.informatics = self._remove_empty_fields(
             self._remove_empty_fields(informatics)
         )
-        if len(informatics) > 0:
-            self.__dict__.update(self.informatics)
 
     def __repr__(self):
         return f"Instruction({self.op}, {self.data}, {self.informatics})"
@@ -1384,7 +1383,7 @@ class Provision(Instruction):
       Destination(s) for specified resource, together with volume information
     measurement_mode : str
       Measurement mode. Possible values are :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
-    informatics : list(dict)
+    informatics : list(Informatics)
       List of expected aliquot effects at the completion of this instruction
 
     Raises
@@ -1401,7 +1400,7 @@ class Provision(Instruction):
 
     """
 
-    def __init__(self, resource_id, dests, measurement_mode="volume", informatics=None):
+    def __init__(self, resource_id, dests, measurement_mode="volume", informatics: Informatics = None):
         if measurement_mode not in PROVISION_MEASUREMENT_MODES:
             raise RuntimeError(
                 f"{measurement_mode} is not a valid measurement mode for provisioning"
@@ -1414,7 +1413,7 @@ class Provision(Instruction):
                 "measurement_mode": measurement_mode,
                 "to": dests,
             },
-            informatics={"informatics": informatics},
+            informatics=informatics,
         )
 
 

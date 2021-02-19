@@ -20,8 +20,6 @@ class Instruction(object):
 
     def __init__(self, op, data, informatics=None):
         super(Instruction, self).__init__()
-        # if informatics is None:
-        #     informatics = []
         self.op = op
         self.data = self._remove_empty_fields(self._remove_empty_fields(data))
         self.__dict__.update(self.data)

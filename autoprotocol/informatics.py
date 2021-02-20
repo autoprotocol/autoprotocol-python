@@ -108,9 +108,7 @@ class AttachCompounds(Informatics):
             )
 
         if not isinstance(self.compounds, list):
-            raise TypeError(
-                f"compounds: {self.compounds} must be provided in a list."
-            )
+            raise TypeError(f"compounds: {self.compounds} must be provided in a list.")
         for compd in self.compounds:
             if not isinstance(compd, Compound):
                 raise TypeError(f"compound: {compd} must be Compound type.")

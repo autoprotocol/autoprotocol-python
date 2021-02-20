@@ -11,7 +11,7 @@ Contains all the Autoprotocol Instruction objects
 from .builders import *  # pylint: disable=unused-wildcard-import
 from .constants import PROVISION_MEASUREMENT_MODES
 from .container import Container
-from .informatics import AttachCompounds, Informatics
+from .informatics import AttachCompounds
 
 
 class Instruction(object):
@@ -178,6 +178,8 @@ class Instruction(object):
                         f"informatics well: {wells} must be one of the wells used in this instruction."
                     )
 
+    # pragma pylint: disable=expression-not-assigned
+    # pragma pylint: disable=unused-variable
     def get_wells(self, op_data):
         """
         Parameters

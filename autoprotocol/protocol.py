@@ -13,6 +13,7 @@ from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
 from .container_type import _CONTAINER_TYPES, ContainerType
+from .informatics import Informatics
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError

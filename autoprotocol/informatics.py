@@ -27,7 +27,7 @@ class Informatics:
         pass
 
     @abstractmethod
-    def validate(self, data):
+    def validate(self):
         pass
 
 

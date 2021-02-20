@@ -13,16 +13,12 @@ class TestAttachCompoundsInformatics(object):
         p = Protocol()
         cont1 = p.ref("cont_1", None, "96-flat", discard=True)
         well1 = cont1.well(0)
-        wg1 = WellGroup([cont1.well(0), cont1.well(1)])
-        wg2 = WellGroup([cont1.well(2), cont1.well(3)])
         comp = Compound("InChI=1S/CH4/h1H4")
 
-        assert AttachCompounds(
-            {"wells": well1, "compounds": [comp]}
-        ).compounds == [comp]
-        assert (
-            AttachCompounds({"wells": well1, "compounds": [comp]}).wells == well1
-        )
+        assert AttachCompounds({"wells": well1, "compounds": [comp]}).compounds == [
+            comp
+        ]
+        assert AttachCompounds({"wells": well1, "compounds": [comp]}).wells == well1
         with pytest.raises(TypeError):
             AttachCompounds("foo")
         with pytest.raises(KeyError):

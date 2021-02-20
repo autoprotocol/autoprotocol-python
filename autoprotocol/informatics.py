@@ -27,7 +27,7 @@ class Informatics:
         pass
 
     @abstractmethod
-    def validate(self, all_wells):
+    def validate(self, data):
         pass
 
 
@@ -61,7 +61,7 @@ class AttachCompounds(Informatics):
 
         self.wells = data["wells"]
         self.compounds = data["compounds"]
-
+        self.validate()
         super().__init__()
 
     def as_dict(self):
@@ -93,16 +93,6 @@ class AttachCompounds(Informatics):
         """
         validate input dict has valid parameters to instantiate AttachCompounds
 
-        Parameters
-        ----------
-        data: dict
-            Informatics data
-
-        Returns
-        -------
-        data: dict
-            Validated dict of data
-
         Raises
         ------
         TypeError
@@ -118,7 +108,9 @@ class AttachCompounds(Informatics):
             )
 
         if not isinstance(self.compounds, list):
-            raise TypeError(f"compounds: {self.compounds} must be provided in a list.")
+            raise TypeError(
+                f"compounds: {self.compounds} must be provided in a list."
+            )
         for compd in self.compounds:
             if not isinstance(compd, Compound):
                 raise TypeError(f"compound: {compd} must be Compound type.")

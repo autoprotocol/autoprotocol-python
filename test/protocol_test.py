@@ -594,61 +594,6 @@ class TestTimeConstraints(object):
         assert len(p.time_constraints) == 4
 
 
-class TestInformatics(object):
-    def test_informatics_checker(self, dummy_protocol):
-        p = dummy_protocol
-        cont1 = p.ref("cont1", id=None, cont_type="96-flat", discard=True)
-        well1 = cont1.well(0)
-        compd1 = Compound("InChI=1S/CH4/h1H4")
-
-        output = p.check_informatics(
-            [
-                {
-                    "type": "attach_compounds",
-                    "data": {"wells": [well1], "compounds": [compd1]},
-                }
-            ],
-            cont1,
-        )
-        assert isinstance(output[0], AttachCompounds)
-        assert output[0].wells == WellGroup([well1])
-        assert output[0].compounds == [compd1]
-
-        with pytest.raises(TypeError):
-            p.check_informatics(
-                {
-                    "type": "attach_compounds",
-                    "data": {"wells": [well1], "compounds": [compd1]},
-                },
-                well1,
-            )
-
-        with pytest.raises(ValueError):
-            p.check_informatics(
-                [{"type": "foo", "data": {"wells": [well1], "compounds": [compd1]}}],
-                well1,
-            )
-
-    def test_informatics_wells_checker(self, dummy_protocol):
-        p = dummy_protocol
-        cont1 = p.ref("cont1", id=None, cont_type="96-flat", discard=True)
-        cont2 = p.ref("cont2", id=None, cont_type="96-flat", discard=True)
-        well1 = cont1.well(0)
-        compd1 = Compound("InChI=1S/CH4/h1H4")
-
-        with pytest.raises(TypeError):
-            p.check_informatics(
-                [{"type": "attach_compounds", "data": {"wells": "foo", "compounds": [compd1]}}],
-                cont2,
-            )
-
-        with pytest.raises(ValueError):
-            p.check_informatics(
-                [{"type": "attach_compounds", "data": {"wells": [well1], "compounds": [compd1]}}],
-                cont2,
-            )
-
-
 class TestAbsorbance(object):
     def test_single_well(self):
         p = Protocol()
@@ -2838,7 +2783,7 @@ class TestDyeTest(object):
 
         assert p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz"
         assert p1.instructions[3].data["resource_id"] == "rs17gmh5wafm5p"
-        assert p1.instructions[3].informatics is None
+        assert p1.instructions[3].informatics == []
         assert isinstance(p1.instructions[4].informatics[0], AttachCompounds)
         assert p1.instructions[4].informatics[0].compounds == [compd1]
 

@@ -5182,6 +5182,8 @@ class Protocol(object):
                 and self.instructions[-1].resource_id == resource_id
                 and self.instructions[-1].to[-1]["well"].container == d.container
             ):
+                if informatics is not None:
+                    self.instructions[-1].informatics.extend(informatics)
                 self.instructions[-1].to.append(xfer)
             else:
                 provision_instructions_to_return.append(

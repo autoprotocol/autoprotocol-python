@@ -11,7 +11,7 @@ Contains all the Autoprotocol Instruction objects
 from .builders import *  # pylint: disable=unused-wildcard-import
 from .constants import PROVISION_MEASUREMENT_MODES
 from .container import Container
-from .informatics import AttachCompounds
+from .informatics import AttachCompounds, Informatics
 
 
 class Instruction(object):
@@ -21,6 +21,7 @@ class Instruction(object):
 
     def __init__(self, op, data, informatics=None):
         super(Instruction, self).__init__()
+        # prevent mutable default value by assigning default value inside the method
         if informatics is None:
             informatics = []
         self.op = op
@@ -31,7 +32,7 @@ class Instruction(object):
         )
 
         if len(self.informatics) > 0:
-            self._set_informatics()
+            self._check_informatics()
 
     def __repr__(self):
         return f"Instruction({self.op}, {self.data}, {self.informatics})"
@@ -100,83 +101,112 @@ class Instruction(object):
             ]
         return data
 
-    def _set_informatics(self):
+    # def _set_informatics(self):
+    #     """
+    #     set Instruction informatics to valid list of Informatics
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         informatics must be a list
+    #     TypeError
+    #         informatics element must be a dict
+    #     KeyError
+    #         informatics must have keys 'type' and 'data'
+    #     ValueError
+    #         informatics type must be a valid type
+    #     """
+    # any informatics dict must only have these keys.
+    # valid_informatics_keys = ["type", "data"]
+    # # informatics must be a list of dict.
+    # informatics = self.informatics
+    # if isinstance(informatics, list):
+    #     for info in informatics:
+    #         if not isinstance(info, dict):
+    #             raise TypeError(f"informatics: {info} must be provided in a dict.")
+    # else:
+    #     raise TypeError(
+    #         f"informatics: {informatics} must be provided in a list of dict. "
+    #     )
+
+    # instantiate Informatics based on the type
+    # valid_informatics = []
+    # for info in self.informatics:
+    #     info_keys = info.keys()
+    #     if set(info_keys) != set(valid_informatics_keys):
+    #         raise KeyError(
+    #             f"informatics dict: {info} must only have keys: {valid_informatics_keys}"
+    #         )
+    # validate wells only if `wells` param is present in informatics
+    # try:
+    #     if info["data"]["wells"]:
+    #         self._check_info_wells()
+    # except KeyError:
+    #     continue
+    # info_type = info["type"]
+    #     if info_type == "attach_compounds":
+    #         info_obj = AttachCompounds(info["data"]["wells"], info["data"]["compounds"])
+    #         self._check_info_wells()
+    #     else:
+    #         raise ValueError(f"informatics type: {info_type} is not a valid type.")
+    #     valid_informatics.append(info_obj)
+    #
+    # self.informatics = valid_informatics
+
+    def _check_informatics(self):
         """
-        set Instruction informatics to valid list of Informatics
+        Validates each Informatics element in informatics.
 
         Raises
         ------
         TypeError
-            informatics must be a list
+            informatics is in a list
         TypeError
-            informatics element must be a dict
-        KeyError
-            informatics must have keys 'type' and 'data'
-        ValueError
-            informatics type must be a valid type
+            informatics element is Informatics
+
         """
-        # any informatics dict must only have these keys.
-        valid_informatics_keys = ["type", "data"]
-        # informatics must be a list of dict.
-        informatics = self.informatics
-        if isinstance(informatics, list):
-            for info in informatics:
-                if not isinstance(info, dict):
-                    raise TypeError(f"informatics: {info} must be provided in a dict.")
-        else:
+        if not isinstance(self.informatics, list):
             raise TypeError(
-                f"informatics: {informatics} must be provided in a list of dict. "
+                f"informatics: {self.informatics} must be provided in a list."
             )
-
-        # instantiate Informatics based on the type
-        valid_informatics = []
         for info in self.informatics:
-            info_keys = info.keys()
-            if set(info_keys) != set(valid_informatics_keys):
-                raise KeyError(
-                    f"informatics dict: {info} must have keys: {valid_informatics_keys}"
-                )
-            # validate wells only if `wells` param is present in informatics
-            try:
-                if info["data"]["wells"]:
-                    self._check_info_wells()
-            except KeyError:
-                continue
-            info_type = info["type"]
-            if info_type == "attach_compounds":
-                info_obj = AttachCompounds(info["data"])
-            else:
-                raise ValueError(f"informatics type: {info_type} is not a valid type.")
-            valid_informatics.append(info_obj)
+            if not isinstance(info, Informatics):
+                raise TypeError("informatics must be Informatics type.")
+            if isinstance(info, AttachCompounds):
+                available_wells = self.get_wells(self.data)
+                self._check_info_wells(info, available_wells)
 
-        self.informatics = valid_informatics
-
-    def _check_info_wells(self):
+    @staticmethod
+    def _check_info_wells(info, available_wells):
         """
         validates Informatics wells are included in the wells associated with
         the instruction.
 
         Raises
         -------
+        ValueError
+            'wells' has a value in the informatics data
         TypeError
             wells are Well, list of Well or WellGroup
         ValueError
             Informatics wells are part of wells Instruction is operating on
         """
-        for info in self.informatics:
-            info_wells = info["data"]["wells"]
-            if not is_valid_well(info_wells):
-                raise TypeError(
-                    f"wells: {info_wells} must be Well, list of Well or WellGroup."
-                )
-            wells = WellGroup(info_wells)
+        if not info.wells:
+            raise ValueError(
+                f"Informatics: {info} must have wells to run this validation."
+            )
+        info_wells = info.wells
+        if not is_valid_well(info_wells):
+            raise TypeError(
+                f"wells: {info_wells} must be Well, list of Well or WellGroup."
+            )
+        wells = WellGroup(info_wells)
 
-            available_wells = self.get_wells(self.data)
-            for well in wells.wells:
-                if well not in available_wells:
-                    raise ValueError(
-                        f"informatics well: {wells} must be one of the wells used in this instruction."
-                    )
+        for well in wells.wells:
+            if well not in available_wells:
+                raise ValueError(
+                    f"informatics well: {wells} must be one of the wells used in this instruction."
+                )
 
     # pragma pylint: disable=expression-not-assigned
     # pragma pylint: disable=unused-variable

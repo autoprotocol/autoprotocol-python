@@ -97,12 +97,7 @@ class TestBaseInstruction(object):
             "wells": [cont1.well(0), cont1.well(1)],
             "some_int": 1,
         }
-        example_informatics = [
-            {
-                "type": "attach_compounds",
-                "data": {"wells": cont1.well(0), "compounds": [compd]},
-            }
-        ]
+        example_informatics = [AttachCompounds(cont1.well(0), [compd])]
         instr = Instruction(
             op="test_instruction", data=example_data, informatics=example_informatics
         )
@@ -113,14 +108,8 @@ class TestBaseInstruction(object):
             op="test_instruction",
             data=example_data,
             informatics=[
-                {
-                    "type": "attach_compounds",
-                    "data": {"wells": cont1.well(0), "compounds": [compd]},
-                },
-                {
-                    "type": "attach_compounds",
-                    "data": {"wells": cont1.well(1), "compounds": [compd]},
-                },
+                AttachCompounds(cont1.well(0), [compd]),
+                AttachCompounds(cont1.well(1), [compd]),
             ],
         )
         assert len(instr_multi.informatics) == 2
@@ -150,74 +139,21 @@ class TestBaseInstruction(object):
         cont1 = p.ref("cont1", None, "6-flat", discard=True)
         compd = Compound("InChI=1S/CH4/h1H4")
         example_data = {"objects": [cont1.well(0), cont1.well(1)], "some_int": 1}
-
-        with pytest.raises(TypeError):
-            Instruction(
-                op="test_instruction",
-                data=example_data,
-                informatics=[
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": "w1/0", "compounds": [compd]},
-                    }
-                ],
-            )._check_info_wells()
+        instr = Instruction(
+            op="test_instruction",
+            data=example_data,
+            informatics=[AttachCompounds(cont1.well(0), [compd])],
+        )
+        avail_wells = instr.get_wells(instr.data)
         with pytest.raises(ValueError):
-            Instruction(
-                op="test_instruction",
-                data=example_data,
-                informatics=[
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": cont1.well(10), "compounds": [compd]},
-                    }
-                ],
-            )._check_info_wells()
-
-    def test_informatics_setter(self):
-        p = Protocol()
-        cont1 = p.ref("cont1", None, "6-flat", discard=True)
-        compd = Compound("InChI=1S/CH4/h1H4")
-        example_data = {
-            "objects": [cont1.well(0), cont1.well(1)],
-            "some_int": 1,
-        }
-
+            instr.informatics[0].wells = None
+            instr._check_info_wells(instr.informatics[0], avail_wells)
         with pytest.raises(TypeError):
-            Instruction(
-                op="test_instruction",
-                data=example_data,
-                informatics={
-                    "type": "attach_compounds",
-                    "data": {"wells": cont1.well(0), "compounds": [compd]},
-                },
-            )._set_informatics()
-        with pytest.raises(TypeError):
-            Instruction(
-                op="test_instruction", data=example_data, informatics=["foo", "bar"]
-            )._set_informatics()
+            instr.informatics[0].wells = "cont1/0"
+            instr._check_info_wells(instr.informatics[0], avail_wells)
         with pytest.raises(ValueError):
-            Instruction(
-                op="test_instruction",
-                data=example_data,
-                informatics=[
-                    {
-                        "type": "foo",
-                        "data": {"wells": cont1.well(0), "compounds": [compd]},
-                    }
-                ],
-            )._set_informatics()
-        with pytest.raises(TypeError):
-            Instruction(
-                op="test_instruction",
-                data=example_data,
-                informatics=[
-                    {
-                        "type": "attach_compounds",
-                        "data": {"wells": cont1.well(0), "compounds": ["bar"]},
-                    }
-                ],
-            )._set_informatics()
+            instr.informatics[0].wells = cont1.well(10)
+            instr._check_info_wells(instr.informatics[0], avail_wells)
 
 
 class TestInstruction(object):

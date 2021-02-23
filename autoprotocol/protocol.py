@@ -5080,9 +5080,8 @@ class Protocol(object):
           one should be specified explicitly in a list matching the order of the
           specified destinations.
           Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
-        informatics: list(dict)
-          List of dict detailing aliquot effects intended from this instruction. Valid type
-          and data schema for this field is found in Instrucion.
+        informatics: list(Informatics)
+          List of Informatics detailing aliquot effects intended from this instruction.
 
         Raises
         ------
@@ -5889,7 +5888,7 @@ class Protocol(object):
         elif isinstance(op_data, Compound):
             return op_data.InChI
         elif isinstance(op_data, Informatics):
-            return op_data.as_dict()
+            return self._refify(op_data.as_dict())
         else:
             return op_data
 

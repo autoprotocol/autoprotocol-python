@@ -38,29 +38,20 @@ class AttachCompounds(Informatics):
 
     Parameters
     ----------
-    data: dict
-        dict of Informatics data
-
+    wells: Well, list(Well) or WellGroup
+        wells where compounds are associated with
+    compounds: list(Compound)
+        List of new compounds attached to wells
     Returns
     -------
     AttachCompounds
 
-    Raises
-    ------
-    TypeError
-        data must be a dict
-    TypeError
-        wells must be Well, list of Well, or WellGroup
-    TypeError
-        compounds must be a list
-    TypeError
-        each element in compounds must be Compound type
     """
 
-    def __init__(self, data: dict):
+    def __init__(self, wells, compounds):
 
-        self.wells = data["wells"]
-        self.compounds = data["compounds"]
+        self.wells = wells
+        self.compounds = compounds
         self.validate()
         super().__init__()
 

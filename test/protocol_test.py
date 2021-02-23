@@ -352,6 +352,17 @@ class TestRefify(object):
         # refify Ref
         assert p._refify(p.refs["test"]) == p.refs["test"].opts
 
+        # refify Compound
+        compd = Compound("InChI=1S/CH4/h1H4")
+        assert p._refify(compd) == "InChI=1S/CH4/h1H4"
+
+        # refify AttachCompouonds
+        ac = AttachCompounds(well, [compd])
+        assert p._refify(ac) == {
+            "type": "attach_compounds",
+            "data": {"wells": "test/0", "compounds": ["InChI=1S/CH4/h1H4"]},
+        }
+
         # refify other
         s = "randomstring"
         i = 24
@@ -2772,12 +2783,7 @@ class TestDyeTest(object):
             "rs181818181818",
             c1.well(1),
             volumes="10:microliter",
-            informatics=[
-                {
-                    "type": "attach_compounds",
-                    "data": {"wells": [c1.well(1)], "compounds": [compd1]},
-                }
-            ],
+            informatics=[AttachCompounds([c1.well(1)], [compd1])],
         )
         _convert_provision_instructions(p1, 3, 3)
 

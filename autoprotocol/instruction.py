@@ -101,58 +101,6 @@ class Instruction(object):
             ]
         return data
 
-    # def _set_informatics(self):
-    #     """
-    #     set Instruction informatics to valid list of Informatics
-    #
-    #     Raises
-    #     ------
-    #     TypeError
-    #         informatics must be a list
-    #     TypeError
-    #         informatics element must be a dict
-    #     KeyError
-    #         informatics must have keys 'type' and 'data'
-    #     ValueError
-    #         informatics type must be a valid type
-    #     """
-    # any informatics dict must only have these keys.
-    # valid_informatics_keys = ["type", "data"]
-    # # informatics must be a list of dict.
-    # informatics = self.informatics
-    # if isinstance(informatics, list):
-    #     for info in informatics:
-    #         if not isinstance(info, dict):
-    #             raise TypeError(f"informatics: {info} must be provided in a dict.")
-    # else:
-    #     raise TypeError(
-    #         f"informatics: {informatics} must be provided in a list of dict. "
-    #     )
-
-    # instantiate Informatics based on the type
-    # valid_informatics = []
-    # for info in self.informatics:
-    #     info_keys = info.keys()
-    #     if set(info_keys) != set(valid_informatics_keys):
-    #         raise KeyError(
-    #             f"informatics dict: {info} must only have keys: {valid_informatics_keys}"
-    #         )
-    # validate wells only if `wells` param is present in informatics
-    # try:
-    #     if info["data"]["wells"]:
-    #         self._check_info_wells()
-    # except KeyError:
-    #     continue
-    # info_type = info["type"]
-    #     if info_type == "attach_compounds":
-    #         info_obj = AttachCompounds(info["data"]["wells"], info["data"]["compounds"])
-    #         self._check_info_wells()
-    #     else:
-    #         raise ValueError(f"informatics type: {info_type} is not a valid type.")
-    #     valid_informatics.append(info_obj)
-    #
-    # self.informatics = valid_informatics
-
     def _check_informatics(self):
         """
         Validates each Informatics element in informatics.

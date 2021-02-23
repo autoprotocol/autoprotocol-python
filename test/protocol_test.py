@@ -2795,7 +2795,7 @@ class TestDyeTest(object):
         assert p1.instructions[4].informatics[0].compounds == [compd1]
 
         # when the same resource is transferred into the same container multiple times,
-        # transfer(s) are appended to 'to', and 'informatics' is extended.
+        # transfer(s) are appended to 'to', and 'informatics' is extended if there are any.
         p2 = Protocol()
         p2.provision("rs123123123", c1.well(1), volumes="10:microliter")
 
@@ -2806,7 +2806,7 @@ class TestDyeTest(object):
             "rs123123123",
             c1.well(2),
             volumes="50:microliter",
-            informatics=[AttachCompounds([c1.well(1)], [compd1])],
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
         )
 
         assert len(p2.instructions) == 1
@@ -2814,10 +2814,19 @@ class TestDyeTest(object):
         assert len(p2.instructions[0].informatics) == 1
         assert isinstance(p2.instructions[0].informatics[0], AttachCompounds)
 
+        p2.provision(
+            "rs123123123",
+            c1.well(2),
+            volumes="20:microliter",
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
+        )
+
+        assert len(p2.instructions[0].informatics) == 2
+
         p2.provision("rs123123123", c1.well(3), volumes="30:microliter")
 
-        assert len(p2.instructions[0].data["to"]) == 3
-        assert len(p2.instructions[0].informatics) == 1
+        assert len(p2.instructions[0].data["to"]) == 4
+        assert len(p2.instructions[0].informatics) == 2
 
         with pytest.raises(ValueError):
             _convert_provision_instructions(p1, "2", 3)

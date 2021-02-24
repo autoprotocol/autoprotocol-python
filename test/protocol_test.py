@@ -77,6 +77,7 @@ class TestProtocolBasic(object):
 
         assert len(protocol.instructions) == 2
         assert protocol.instructions[0].op == "liquid_handle"
+        assert protocol.instructions[0].informatics == []
 
         protocol.incubate(bacteria, "warm_37", "30:minute")
 
@@ -84,6 +85,18 @@ class TestProtocolBasic(object):
         assert protocol.instructions[2].op == "cover"
         assert protocol.instructions[3].op == "incubate"
         assert protocol.instructions[3].duration == "30:minute"
+
+        protocol.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            bacteria.well(1),
+            "5:microliter",
+            informatics=[AttachCompounds(bacteria.well(1), [Compound("InChI=1S/CH4/h1H4")])]
+        )
+        assert protocol.instructions[-1].op == "liquid_handle"
+        assert len(protocol.instructions[-1].informatics) == 1
+        assert isinstance(protocol.instructions[-1].informatics[0], AttachCompounds)
+        assert protocol.instructions[-1].informatics[0].wells == bacteria.well(1)
+        assert protocol.instructions[-1].informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
 
 
 class TestProtocolAppendReturn(object):

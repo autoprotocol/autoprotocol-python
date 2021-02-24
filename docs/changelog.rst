@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`292` Add informatics param to LiquidHandle
 * :support:`291` Update copyright and authors
 * :feature:`290` Add informatics attribute to Instruction
 

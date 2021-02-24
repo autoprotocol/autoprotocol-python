@@ -1,7 +1,7 @@
 """
 Contains all the Autoprotocol Informatics objects
 
-    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2021 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 

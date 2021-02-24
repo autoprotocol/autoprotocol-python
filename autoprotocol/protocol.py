@@ -9,9 +9,11 @@ Module containing the main `Protocol` object and associated functions
 
 import warnings
 
+from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
 from .container_type import _CONTAINER_TYPES, ContainerType
+from .informatics import Informatics
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError
@@ -5050,7 +5052,9 @@ class Protocol(object):
         """
         return self._append_and_return(ImagePlate(ref, mode, dataref))
 
-    def provision(self, resource_id, dests, amounts=None, volumes=None):
+    def provision(
+        self, resource_id, dests, amounts=None, volumes=None, informatics=None
+    ):
         """
         Provision a commercial resource from a catalog into the specified
         destination well(s).  A new tip is used for each destination well
@@ -5076,6 +5080,8 @@ class Protocol(object):
           one should be specified explicitly in a list matching the order of the
           specified destinations.
           Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
+        informatics: list(Informatics)
+          List of Informatics detailing aliquot effects intended from this instruction.
 
         Raises
         ------
@@ -5176,11 +5182,15 @@ class Protocol(object):
                 and self.instructions[-1].resource_id == resource_id
                 and self.instructions[-1].to[-1]["well"].container == d.container
             ):
+                if informatics is not None:
+                    self.instructions[-1].informatics.extend(informatics)
                 self.instructions[-1].to.append(xfer)
             else:
                 provision_instructions_to_return.append(
                     self._append_and_return(
-                        Provision(resource_id, dest_group, measurement_mode)
+                        Provision(
+                            resource_id, dest_group, measurement_mode, informatics
+                        )
                     )
                 )
         return provision_instructions_to_return
@@ -5877,6 +5887,10 @@ class Protocol(object):
             return self._refify(op_data._as_AST())
         elif isinstance(op_data, Ref):
             return op_data.opts
+        elif isinstance(op_data, Compound):
+            return op_data.InChI
+        elif isinstance(op_data, Informatics):
+            return self._refify(op_data.as_dict())
         else:
             return op_data
 

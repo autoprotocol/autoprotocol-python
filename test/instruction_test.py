@@ -1,7 +1,11 @@
 import pytest
 
 from autoprotocol import Unit
+from autoprotocol.compound import Compound
+from autoprotocol.container import WellGroup
+from autoprotocol.informatics import AttachCompounds
 from autoprotocol.instruction import Dispense, Instruction
+from autoprotocol.protocol import Protocol
 
 
 # pylint: disable=protected-access
@@ -62,6 +66,15 @@ class TestBaseInstruction(object):
             == {"not_empty": ["foo", "bar"]}
         )
 
+        assert (
+            Instruction(
+                op="some instruction",
+                data={"some_param": "some_value"},
+                informatics=None,
+            ).informatics
+            == []
+        )
+
     @staticmethod
     def test_op(test_instruction):
         assert test_instruction.op == "test_instruction"
@@ -74,6 +87,73 @@ class TestBaseInstruction(object):
             },
             "dict_2": {"some_bool": False},
         }
+
+    @staticmethod
+    def test_informatics():
+        p = Protocol()
+        cont1 = p.ref("cont1", None, "6-flat", discard=True)
+        compd = Compound("InChI=1S/CH4/h1H4")
+        example_data = {
+            "wells": [cont1.well(0), cont1.well(1)],
+            "some_int": 1,
+        }
+        example_informatics = [AttachCompounds(cont1.well(0), [compd])]
+        instr = Instruction(
+            op="test_instruction", data=example_data, informatics=example_informatics
+        )
+        assert isinstance(instr.informatics[0], AttachCompounds)
+        assert instr.informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
+
+        instr_multi = Instruction(
+            op="test_instruction",
+            data=example_data,
+            informatics=[
+                AttachCompounds(cont1.well(0), [compd]),
+                AttachCompounds(cont1.well(1), [compd]),
+            ],
+        )
+        assert len(instr_multi.informatics) == 2
+
+    def test_get_wells(self):
+        p = Protocol()
+        cont1 = p.ref("cont1", None, "6-flat", discard=True)
+        cont2 = p.ref("cont2", None, "6-flat", discard=True)
+        example_data = {
+            "list": [cont1.well(0), cont1.well(1)],
+            "well": cont2,
+            "dict": {"key1": 1, "key2": "bar", "dict_well": cont1.well(2)},
+            "bar": [
+                {"key4": "value", "key5": {"well": cont1.well(3)}},
+                {"key4": "value", "key5": {"well_group": WellGroup([cont1.well(4)])}},
+            ],
+            "duplicate": cont1.well(0),
+            "nest": [{"list": [{"more_nested": [{"wells": [cont1.well(5)]}]}]}],
+        }
+        inst = Instruction(op="test", data=example_data)
+
+        wells = set(cont1.all_wells().wells + cont2.all_wells().wells)
+        assert set(inst.get_wells(example_data)) == wells
+
+    def test_info_wells_checker(self):
+        p = Protocol()
+        cont1 = p.ref("cont1", None, "6-flat", discard=True)
+        compd = Compound("InChI=1S/CH4/h1H4")
+        example_data = {"objects": [cont1.well(0), cont1.well(1)], "some_int": 1}
+        instr = Instruction(
+            op="test_instruction",
+            data=example_data,
+            informatics=[AttachCompounds(cont1.well(0), [compd])],
+        )
+        avail_wells = instr.get_wells(instr.data)
+        with pytest.raises(ValueError):
+            instr.informatics[0].wells = None
+            instr._check_info_wells(instr.informatics[0], avail_wells)
+        with pytest.raises(TypeError):
+            instr.informatics[0].wells = "cont1/0"
+            instr._check_info_wells(instr.informatics[0], avail_wells)
+        with pytest.raises(ValueError):
+            instr.informatics[0].wells = cont1.well(10)
+            instr._check_info_wells(instr.informatics[0], avail_wells)
 
 
 class TestInstruction(object):

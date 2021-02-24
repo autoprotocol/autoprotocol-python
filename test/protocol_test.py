@@ -4,6 +4,7 @@ import warnings
 
 import pytest
 
+from autoprotocol.compound import Compound
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.harness import (
@@ -11,6 +12,7 @@ from autoprotocol.harness import (
     _convert_dispense_instructions,
     _convert_provision_instructions,
 )
+from autoprotocol.informatics import AttachCompounds
 from autoprotocol.instruction import (
     SPE,
     Absorbance,
@@ -349,6 +351,17 @@ class TestRefify(object):
 
         # refify Ref
         assert p._refify(p.refs["test"]) == p.refs["test"].opts
+
+        # refify Compound
+        compd = Compound("InChI=1S/CH4/h1H4")
+        assert p._refify(compd) == "InChI=1S/CH4/h1H4"
+
+        # refify AttachCompouonds
+        ac = AttachCompounds(well, [compd])
+        assert p._refify(ac) == {
+            "type": "attach_compounds",
+            "data": {"wells": "test/0", "compounds": ["InChI=1S/CH4/h1H4"]},
+        }
 
         # refify other
         s = "randomstring"
@@ -2761,14 +2774,59 @@ class TestDyeTest(object):
     def test_convert_provision(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        compd1 = Compound("InChI=1S/CH4/h1H4")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.provision("rs181818181818", c1.well(2), volumes="10:microliter")
+        p1.provision(
+            "rs181818181818",
+            c1.well(1),
+            volumes="10:microliter",
+            informatics=[AttachCompounds([c1.well(1)], [compd1])],
+        )
         _convert_provision_instructions(p1, 3, 3)
 
         assert p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz"
         assert p1.instructions[3].data["resource_id"] == "rs17gmh5wafm5p"
+        assert p1.instructions[3].informatics == []
+        assert isinstance(p1.instructions[4].informatics[0], AttachCompounds)
+        assert p1.instructions[4].informatics[0].compounds == [compd1]
+
+        # when the same resource is transferred into the same container multiple times,
+        # transfer(s) are appended to 'to', and 'informatics' is extended if there are any.
+        p2 = Protocol()
+        p2.provision("rs123123123", c1.well(1), volumes="10:microliter")
+
+        assert len(p2.instructions[0].data["to"]) == 1
+        assert p2.instructions[0].informatics == []
+
+        p2.provision(
+            "rs123123123",
+            c1.well(2),
+            volumes="50:microliter",
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
+        )
+
+        assert len(p2.instructions) == 1
+        assert len(p2.instructions[0].data["to"]) == 2
+        assert len(p2.instructions[0].informatics) == 1
+        assert isinstance(p2.instructions[0].informatics[0], AttachCompounds)
+
+        p2.provision(
+            "rs123123123",
+            c1.well(2),
+            volumes="20:microliter",
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
+        )
+
+        assert len(p2.instructions[0].informatics) == 2
+
+        p2.provision("rs123123123", c1.well(3), volumes="30:microliter")
+
+        assert len(p2.instructions[0].data["to"]) == 4
+        assert len(p2.instructions[0].informatics) == 2
 
         with pytest.raises(ValueError):
             _convert_provision_instructions(p1, "2", 3)

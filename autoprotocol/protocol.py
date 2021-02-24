@@ -6576,6 +6576,7 @@ class Protocol(object):
         one_tip=False,
         density=None,
         mode=None,
+        informatics=None,
     ):
         """Generates LiquidHandle instructions between wells
 
@@ -6611,7 +6612,9 @@ class Protocol(object):
             Density of the liquid to be aspirated/dispensed
         mode : str, optional
             The liquid handling mode
-
+        informatics : list(Informatics), optional
+            List of Informatics describing the intended aliquot effects upon
+            completion of this instruction.
         Returns
         -------
         list(LiquidHandle)
@@ -6866,6 +6869,7 @@ class Protocol(object):
                                     tip_type=met.tip_type
                                 )
                             ),
+                            informatics=informatics
                         )
                     )
                 remaining_vol -= transfer_vol

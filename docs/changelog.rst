@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :support:`291` Update copyright and authors
 * :feature:`290` Add informatics attribute to Instruction
 
 * :release:`7.5.0 <2021-01-31>`

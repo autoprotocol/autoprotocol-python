@@ -1856,12 +1856,16 @@ class LiquidHandle(Instruction):
 
     builders = LiquidHandleBuilders()
 
-    def __init__(self, locations, shape=None, mode=None, mode_params=None, informatics=None):
+    def __init__(
+        self, locations, shape=None, mode=None, mode_params=None, informatics=None
+    ):
         data = {
             "locations": locations,
             "shape": shape,
             "mode": mode,
             "mode_params": mode_params,
         }
-        informatics = informatics
-        super(LiquidHandle, self).__init__(op="liquid_handle", data=data, informatics=informatics)
+
+        super(LiquidHandle, self).__init__(
+            op="liquid_handle", data=data, informatics=informatics
+        )

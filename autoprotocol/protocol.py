@@ -6791,9 +6791,13 @@ class Protocol(object):
                                     compd = [compd]
                                 informatics_list.append(AttachCompounds(well, compd))
                     else:
-                        raise ValueError(f"Informatics wells: {wells} do not match wells used in Instruction.")
+                        raise ValueError(
+                            f"Informatics wells: {wells} do not match wells used in Instruction."
+                        )
                 else:
-                    raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
+                    raise TypeError(
+                        f"Informatics:{informatics} is not available in this protocol."
+                    )
             else:
                 wells_compounds_dict = {}
                 for info in informatics:
@@ -6809,12 +6813,15 @@ class Protocol(object):
                                     f"intent is ambiguous."
                                 )
                     else:
-                        raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
+                        raise TypeError(
+                            f"Informatics:{informatics} is not available in this protocol."
+                        )
                 if len(wells_compounds_dict.keys()) == dest_count:
                     informatics_list = []
                     # sort informatics_list by the destination order
                     wells_compounds_dict = sorted(
-                        wells_compounds_dict.items(), key=lambda pair: destination.wells.index(pair[0])
+                        wells_compounds_dict.items(),
+                        key=lambda pair: destination.wells.index(pair[0]),
                     )
                     for k, v in wells_compounds_dict:
                         if not isinstance(v, list):
@@ -6888,7 +6895,7 @@ class Protocol(object):
             source_liquid,
             destination_liquid,
             method,
-            informatics_list
+            informatics_list,
         )
         correct_parameter_counts = all(len(_) == count for _ in countable_parameters)
         if not correct_parameter_counts:
@@ -6959,7 +6966,7 @@ class Protocol(object):
                                     tip_type=met.tip_type
                                 )
                             ),
-                            informatics=informatics
+                            informatics=informatics,
                         )
                     )
                 remaining_vol -= transfer_vol

@@ -6783,17 +6783,22 @@ class Protocol(object):
             else:
                 dest_count = len(dest)
 
+            # When one informatics is provided for a sequence of liquid_handle Instruction,
+            # Informatics is instantiated for each Instruction. Currently, this does not accept
+            # users to attach Informatics to part of the wells or sequence.
             if len(informatics) == 1:
+                # In the future, if we are to add more Informatics subclasses, we may create
+                # subclass for InformaticsWithWells and InformaicsWithoutWells instead of
+                # specifying each type here.
                 if isinstance(informatics[0], AttachCompounds):
                     compounds = informatics[0].compounds
                     wells = WellGroup(informatics[0].wells)
+                    # Informatics must include all destination wells
                     if len(wells) == dest_count and set(wells) == set(destination):
                         info_compd = compounds * dest_count
                         informatics_list = []
                         for well, compd in zip(destination, info_compd):
                             if isinstance(informatics[0], AttachCompounds):
-                                if not isinstance(compd, list):
-                                    compd = [compd]
                                 if not isinstance(compd, list):
                                     compd = [compd]
                                 informatics_list.append(AttachCompounds(well, compd))
@@ -6805,24 +6810,32 @@ class Protocol(object):
                     raise TypeError(
                         f"Informatics:{informatics} is not available in this protocol."
                     )
-                # If transfer has multiple sources and one destination, Informatics should be added
+                # If liquid_handle has multiple sources and one destination, Informatics should be added
                 # to the last transfer.
                 if multi_src:
                     informatics_list = [None] * (len(dest) - 1) + informatics
             else:
                 wells_compounds_dict = {}
+                # when multiple Informatics are provided, `wells` in all Informatics must
+                # sum up to include all destination wells.
                 for info in informatics:
                     if isinstance(info, AttachCompounds):
                         wells_count = len(WellGroup(info.wells))
                         compounds = info.compounds * wells_count
                         for w, c in zip(WellGroup(info.wells).wells, compounds):
+                            if not isinstance(c, list):
+                                c = [c]
+                            # if there are multiple Informatics for a well, all the compounds
+                            # will be added to a single instance of Informatics for that well.
                             if w not in wells_compounds_dict.keys():
                                 wells_compounds_dict[w] = c
                             else:
-                                raise ValueError(
-                                    f"There are multiple instances of Informatics for well: {w}. The "
-                                    f"intent is ambiguous."
-                                )
+                                all_compounds = wells_compounds_dict[w]
+                                if not isinstance(all_compounds, list):
+                                    all_compounds = [all_compounds]
+                                all_compounds.extend(c)
+                                compounds_set = set(all_compounds)
+                                wells_compounds_dict[w] = list(compounds_set)
                     else:
                         raise TypeError(
                             f"Informatics:{informatics} is not available in this protocol."
@@ -6835,8 +6848,6 @@ class Protocol(object):
                         key=lambda pair: destination.wells.index(pair[0]),
                     )
                     for k, v in wells_compounds_dict:
-                        if not isinstance(v, list):
-                            v = [v]
                         informatics_list.append(AttachCompounds(k, v))
                 else:
                     raise ValueError(

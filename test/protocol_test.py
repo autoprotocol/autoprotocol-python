@@ -3369,31 +3369,28 @@ class TestTransferVolume(object):
                 self.container.well("A1"),
             ]
         )
+        compd1 = Compound("InChI=1S/CH4/h1H4")
+        compd2 = Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")
 
         # Test case for single destination with Informatics
         self.p.transfer(
             resource.well(0).set_volume("40:microliter"),
             test_wells[0],
             "5:microliter",
-            informatics=[
-                AttachCompounds(test_wells[0], [Compound("InChI=1S/CH4/h1H4")])
-            ],
+            informatics=[AttachCompounds(test_wells[0], [compd1])],
         )
         assert self.p.instructions[-1].op == "liquid_handle"
         assert len(self.p.instructions[-1].informatics) == 1
         assert isinstance(self.p.instructions[-1].informatics[0], AttachCompounds)
         assert self.p.instructions[-1].informatics[0].wells == test_wells[0]
-        assert (
-            self.p.instructions[-1].informatics[0].compounds[0].InChI
-            == "InChI=1S/CH4/h1H4"
-        )
+        assert self.p.instructions[-1].informatics[0].compounds[0] == compd1
 
         # Test case for multiple destination wells with single Informatics
         self.p.transfer(
             resource.well(0).set_volume("40:microliter"),
             test_wells,
             "5:microliter",
-            informatics=[AttachCompounds(test_wells, [Compound("InChI=1S/CH4/h1H4")])],
+            informatics=[AttachCompounds(test_wells, [compd1])],
         )
         assert self.p.instructions[-1].op == "liquid_handle"
         new_instructions = self.p.instructions[-4:]
@@ -3402,7 +3399,7 @@ class TestTransferVolume(object):
             assert instr.op == "liquid_handle"
             assert len(instr.informatics) == 1
             assert isinstance(instr.informatics[0], AttachCompounds)
-            assert instr.informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
+            assert instr.informatics[0].compounds[0] == compd1
             wells.append(instr.informatics[0].wells)
         assert WellGroup(wells) == test_wells
 
@@ -3412,31 +3409,19 @@ class TestTransferVolume(object):
             test_wells,
             "5:microliter",
             informatics=[
-                AttachCompounds(
-                    [test_wells[0], test_wells[1]], [Compound("InChI=1S/CH4/h1H4")]
-                ),
+                AttachCompounds([test_wells[0], test_wells[1]], [compd1]),
                 AttachCompounds(
                     [test_wells[2], test_wells[3]],
-                    [Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")],
+                    [compd2],
                 ),
             ],
         )
         new_instructions = self.p.instructions[-4:]
         assert len(new_instructions[0].informatics) == 1
-        assert (
-            new_instructions[0].informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
-        )
-        assert (
-            new_instructions[1].informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
-        )
-        assert (
-            new_instructions[2].informatics[0].compounds[0].InChI
-            == "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"
-        )
-        assert (
-            new_instructions[3].informatics[0].compounds[0].InChI
-            == "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"
-        )
+        assert new_instructions[0].informatics[0].compounds[0] == compd1
+        assert new_instructions[1].informatics[0].compounds[0] == compd1
+        assert new_instructions[2].informatics[0].compounds[0] == compd2
+        assert new_instructions[3].informatics[0].compounds[0] == compd2
 
         # Test case for Informatics wells order not aligned with destination
         self.p.transfer(
@@ -3444,31 +3429,19 @@ class TestTransferVolume(object):
             test_wells,
             "5:microliter",
             informatics=[
-                AttachCompounds(
-                    [test_wells[0], test_wells[2]], [Compound("InChI=1S/CH4/h1H4")]
-                ),
+                AttachCompounds([test_wells[0], test_wells[2]], [compd1]),
                 AttachCompounds(
                     [test_wells[1], test_wells[3]],
-                    [Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")],
+                    [compd2],
                 ),
             ],
         )
         new_instructions = self.p.instructions[-4:]
         assert len(new_instructions[0].informatics) == 1
-        assert (
-            new_instructions[0].informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
-        )
-        assert (
-            new_instructions[1].informatics[0].compounds[0].InChI
-            == "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"
-        )
-        assert (
-            new_instructions[2].informatics[0].compounds[0].InChI == "InChI=1S/CH4/h1H4"
-        )
-        assert (
-            new_instructions[3].informatics[0].compounds[0].InChI
-            == "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"
-        )
+        assert new_instructions[0].informatics[0].compounds[0] == compd1
+        assert new_instructions[1].informatics[0].compounds[0] == compd2
+        assert new_instructions[2].informatics[0].compounds[0] == compd1
+        assert new_instructions[3].informatics[0].compounds[0] == compd2
         wells = []
         for instr in new_instructions:
             wells.append(instr.informatics[0].wells)
@@ -3486,7 +3459,7 @@ class TestTransferVolume(object):
             informatics=[
                 AttachCompounds(
                     test_wells[0],
-                    [Compound("InChI=1S/CH4/h1H4")],
+                    [compd1],
                 )
             ],
         )
@@ -3496,6 +3469,23 @@ class TestTransferVolume(object):
         assert len(new_instructions[1].informatics) == 1
         assert new_instructions[1].data["locations"][0]["location"] == resource.well(1)
 
+        # Test with multiple Informatics provided for a well
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells[0],
+            "10:microliter",
+            informatics=[
+                AttachCompounds(test_wells[0], [compd1]),
+                AttachCompounds(test_wells[0], [compd2]),
+                AttachCompounds(test_wells[0], [compd2]),
+            ],
+        )
+        assert len(self.p.instructions[-1].informatics) == 1
+        assert len(self.p.instructions[-1].informatics[0].compounds) == 2
+        assert self.p.instructions[-1].informatics[0].wells == test_wells[0]
+        assert len(self.p.instructions[-1].informatics[0].compounds) == 2
+        assert set(self.p.instructions[-1].informatics[0].compounds) == {compd1, compd2}
+
         with pytest.raises(ValueError):
             self.p.transfer(
                 [
@@ -3504,25 +3494,14 @@ class TestTransferVolume(object):
                 ],
                 [test_wells[0], test_wells[1], test_wells[2]],
                 "10:microliter",
-                informatics=[
-                    AttachCompounds(test_wells[2], [Compound("InChI=1S/CH4/h1H4")])
-                ],
+                informatics=[AttachCompounds(test_wells[2], [compd1])],
             )
         with pytest.raises(ValueError):
             self.p.transfer(
                 resource.well(0).set_volume("40:microliter"),
                 test_wells[0],
                 "10:microliter",
-                informatics=[
-                    AttachCompounds(test_wells[2], [Compound("InChI=1S/CH4/h1H4")])
-                ],
-            )
-        with pytest.raises(TypeError):
-            self.p.transfer(
-                resource.well(0).set_volume("40:microliter"),
-                test_wells[0],
-                "10:microliter",
-                informatics=["foo"],
+                informatics=[AttachCompounds(test_wells[2], [compd1])],
             )
         with pytest.raises(TypeError):
             self.p.transfer(
@@ -3536,23 +3515,7 @@ class TestTransferVolume(object):
                 resource.well(0).set_volume("40:microliter"),
                 test_wells[0],
                 "10:microliter",
-                informatics=[
-                    AttachCompounds(test_wells[0], [Compound("InChI=1S/CH4/h1H4")]),
-                    AttachCompounds(
-                        test_wells[0], [Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")]
-                    ),
-                ],
-            )
-        with pytest.raises(ValueError):
-            self.p.transfer(
-                resource.well(0).set_volume("40:microliter"),
-                test_wells[0],
-                "10:microliter",
-                informatics=[
-                    AttachCompounds(
-                        [test_wells[0], test_wells[1]], [Compound("InChI=1S/CH4/h1H4")]
-                    )
-                ],
+                informatics=[AttachCompounds([test_wells[0], test_wells[1]], [compd1])],
             )
 
     def test_can_append_properties(self):

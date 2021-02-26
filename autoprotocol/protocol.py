@@ -6748,7 +6748,7 @@ class Protocol(object):
                 ),
             ]
 
-        def informatics_helper(informatics, dest_count):
+        def informatics_helper(informatics, dest, multi_src):
             """
             Checks Informatics against the Instruction param values, and split
             Informatics per destination well as needed.
@@ -6757,8 +6757,10 @@ class Protocol(object):
             ----------
             informatics: list(Informatics)
                 list of Informatics provided by the user input
-            dest_count: int
-                number of destination wells that could be affected by the instruction
+            dest: WellGroup
+                destination wells that could be affected by the instruction
+            multi_src: boolean
+                True if there are multiple sources in the transfer
 
             Returns
             -------
@@ -6776,6 +6778,11 @@ class Protocol(object):
             ValueError
                 Parsed list of Informatics length should match the length of destination
             """
+            if multi_src:
+                dest_count = 1
+            else:
+                dest_count = len(dest)
+
             if len(informatics) == 1:
                 if isinstance(informatics[0], AttachCompounds):
                     compounds = informatics[0].compounds
@@ -6798,6 +6805,10 @@ class Protocol(object):
                     raise TypeError(
                         f"Informatics:{informatics} is not available in this protocol."
                     )
+                # If transfer has multiple sources and one destination, Informatics should be added
+                # to the last transfer.
+                if multi_src:
+                    informatics_list = [None] * (len(dest) - 1) + informatics
             else:
                 wells_compounds_dict = {}
                 for info in informatics:
@@ -6839,6 +6850,7 @@ class Protocol(object):
         source = WellGroup(source)
         destination = WellGroup(destination)
         count = max((len(source), len(destination)))
+        multiple_source = len(source) > len(destination)
 
         if len(source) == 1:
             source = WellGroup([source[0]] * count)
@@ -6882,7 +6894,9 @@ class Protocol(object):
         # if informatics is provided for multiple wells, split Informatics for each destination well
         # with the specified compounds.
         if informatics is not None and len(informatics) > 0:
-            informatics_list = informatics_helper(informatics, len(destination))
+            informatics_list = informatics_helper(
+                informatics, destination, multiple_source
+            )
         else:
             informatics_list = [informatics] * count
 

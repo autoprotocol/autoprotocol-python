@@ -3474,6 +3474,40 @@ class TestTransferVolume(object):
             wells.append(instr.informatics[0].wells)
         assert WellGroup(wells) == test_wells
 
+        # Transfer from multiple sources to destination match Informatics to
+        # the last transfer event on a destination well
+        self.p.transfer(
+            [
+                resource.well(0).set_volume("40:microliter"),
+                resource.well(1).set_volume("40:microliter"),
+            ],
+            test_wells[0],
+            "5:microliter",
+            informatics=[
+                AttachCompounds(
+                    test_wells[0],
+                    [Compound("InChI=1S/CH4/h1H4")],
+                )
+            ],
+        )
+        new_instructions = self.p.instructions[-2:]
+        assert len(new_instructions[0].informatics) == 0
+        assert new_instructions[0].data["locations"][0]["location"] == resource.well(0)
+        assert len(new_instructions[1].informatics) == 1
+        assert new_instructions[1].data["locations"][0]["location"] == resource.well(1)
+
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                [
+                    resource.well(0).set_volume("40:microliter"),
+                    resource.well(1).set_volume("40:microliter"),
+                ],
+                [test_wells[0], test_wells[1], test_wells[2]],
+                "10:microliter",
+                informatics=[
+                    AttachCompounds(test_wells[2], [Compound("InChI=1S/CH4/h1H4")])
+                ],
+            )
         with pytest.raises(ValueError):
             self.p.transfer(
                 resource.well(0).set_volume("40:microliter"),

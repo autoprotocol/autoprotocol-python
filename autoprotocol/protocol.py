@@ -6748,6 +6748,86 @@ class Protocol(object):
                 ),
             ]
 
+        def informatics_helper(informatics, dest_count):
+            """
+            Checks Informatics against the Instruction param values, and split
+            Informatics per destination well as needed.
+
+            Parameters
+            ----------
+            informatics: list(Informatics)
+                list of Informatics provided by the user input
+            dest_count: int
+                number of destination wells that could be affected by the instruction
+
+            Returns
+            -------
+            list(Informatics)
+                list of Informatics per destination well
+
+            Raises
+            ------
+            TypeError
+                Informatics provided is not valid or not supported
+            ValueError
+                Informatics wells must match wells in Instruction
+            ValueError
+                Multiple instances of Informatics on a Well
+            ValueError
+                Parsed list of Informatics length should match the length of destination
+            """
+            if len(informatics) == 1:
+                if isinstance(informatics[0], AttachCompounds):
+                    compounds = informatics[0].compounds
+                    wells = WellGroup(informatics[0].wells)
+                    if len(wells) == dest_count and set(wells) == set(destination):
+                        info_compd = compounds * dest_count
+                        informatics_list = []
+                        for well, compd in zip(destination, info_compd):
+                            if isinstance(informatics[0], AttachCompounds):
+                                if not isinstance(compd, list):
+                                    compd = [compd]
+                                if not isinstance(compd, list):
+                                    compd = [compd]
+                                informatics_list.append(AttachCompounds(well, compd))
+                    else:
+                        raise ValueError(f"Informatics wells: {wells} do not match wells used in Instruction.")
+                else:
+                    raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
+            else:
+                wells_compounds_dict = {}
+                for info in informatics:
+                    if isinstance(info, AttachCompounds):
+                        wells_count = len(WellGroup(info.wells))
+                        compounds = info.compounds * wells_count
+                        for w, c in zip(WellGroup(info.wells).wells, compounds):
+                            if w not in wells_compounds_dict.keys():
+                                wells_compounds_dict[w] = c
+                            else:
+                                raise ValueError(
+                                    f"There are multiple instances of Informatics for well: {w}. The "
+                                    f"intent is ambiguous."
+                                )
+                    else:
+                        raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
+                if len(wells_compounds_dict.keys()) == dest_count:
+                    informatics_list = []
+                    # sort informatics_list by the destination order
+                    wells_compounds_dict = sorted(
+                        wells_compounds_dict.items(), key=lambda pair: destination.wells.index(pair[0])
+                    )
+                    for k, v in wells_compounds_dict:
+                        if not isinstance(v, list):
+                            v = [v]
+                        informatics_list.append(AttachCompounds(k, v))
+                else:
+                    raise ValueError(
+                        f"the length of provided informatics: {len(wells_compounds_dict.keys())} does "
+                        f"not match the number of available wells."
+                    )
+
+            return informatics_list
+
         # validate parameter types
         source = WellGroup(source)
         destination = WellGroup(destination)
@@ -6795,53 +6875,7 @@ class Protocol(object):
         # if informatics is provided for multiple wells, split Informatics for each destination well
         # with the specified compounds.
         if informatics is not None and len(informatics) > 0:
-            if len(informatics) == 1:
-                if isinstance(informatics[0], AttachCompounds):
-                    compounds = informatics[0].compounds
-                    wells = WellGroup(informatics[0].wells)
-                    if len(wells) == count and set(wells) == set(destination):
-                        info_compd = compounds * count
-                        informatics_list = []
-                        for well, compd in zip(destination, info_compd):
-                            if isinstance(informatics[0], AttachCompounds):
-                                if not isinstance(compd, list):
-                                    compd = [compd]
-                                if not isinstance(compd, list):
-                                    compd = [compd]
-                                informatics_list.append(AttachCompounds(well, compd))
-                    else:
-                        raise ValueError(f"Informatics wells: {wells} do not match wells used in Instruction.")
-                else:
-                    raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
-            else:
-                wells_compounds_dict = {}
-                for info in informatics:
-                    if isinstance(info, AttachCompounds):
-                        wells_count = len(WellGroup(info.wells))
-                        compounds = info.compounds * wells_count
-                        for w, c in zip(WellGroup(info.wells).wells, compounds):
-                            if w not in wells_compounds_dict.keys():
-                                wells_compounds_dict[w] = c
-                            else:
-                                raise ValueError(
-                                    f"There are multiple instances of Informatics for well: {w}. The "
-                                    f"intent is ambiguous."
-                                )
-                    else:
-                        raise TypeError(f"Informatics:{informatics} is not available in this protocol.")
-                if len(wells_compounds_dict.keys()) == count:
-                    informatics_list = []
-                    # sort informatics_list by the destination order
-                    wells_compounds_dict = sorted(wells_compounds_dict.items(), key=lambda pair: destination.wells.index(pair[0]))
-                    for k, v in wells_compounds_dict:
-                        if not isinstance(v, list):
-                            v = [v]
-                        informatics_list.append(AttachCompounds(k, v))
-                else:
-                    raise ValueError(
-                        f"the length of provided informatics: {len(wells_compounds_dict.keys())} does "
-                        f"not match the number of available wells."
-                    )
+            informatics_list = informatics_helper(informatics, len(destination))
         else:
             informatics_list = [informatics] * count
 

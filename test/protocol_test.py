@@ -3403,7 +3403,7 @@ class TestTransferVolume(object):
             wells.append(instr.informatics[0].wells)
         assert WellGroup(wells) == test_wells
 
-        # Test case for multiple destinations with multiple Informatics in order
+        # Test with multiple AttachCompounds with different compounds provided for destination wells
         self.p.transfer(
             resource.well(0).set_volume("40:microliter"),
             test_wells,
@@ -3425,7 +3425,7 @@ class TestTransferVolume(object):
         assert new_instructions[2].informatics[0].compounds == [compd2]
         assert new_instructions[3].informatics[0].compounds == [compd2]
 
-        # Test case for Informatics wells order not aligned with destination
+        # Test case for Informatics when AttachComounds 'wells' order is not aligned with destination wells order
         self.p.transfer(
             resource.well(0).set_volume("40:microliter"),
             test_wells,
@@ -3488,6 +3488,7 @@ class TestTransferVolume(object):
         assert len(self.p.instructions[-1].informatics[0].compounds) == 2
         assert set(self.p.instructions[-1].informatics[0].compounds) == {compd1, compd2}
 
+        # Informatics must be provided for all destination wells
         with pytest.raises(ValueError):
             self.p.transfer(
                 [
@@ -3498,6 +3499,7 @@ class TestTransferVolume(object):
                 "10:microliter",
                 informatics=[AttachCompounds(test_wells[2], [compd1])],
             )
+        # Informatics well must be operated on in the Instruction
         with pytest.raises(ValueError):
             self.p.transfer(
                 resource.well(0).set_volume("40:microliter"),
@@ -3505,6 +3507,7 @@ class TestTransferVolume(object):
                 "10:microliter",
                 informatics=[AttachCompounds(test_wells[2], [compd1])],
             )
+        # Informatics must be a valid type
         with pytest.raises(TypeError):
             self.p.transfer(
                 resource.well(0).set_volume("40:microliter"),
@@ -3512,12 +3515,21 @@ class TestTransferVolume(object):
                 "10:microliter",
                 informatics=["foo"],
             )
+        # All Informatics wells must be part of the Instruction wells
         with pytest.raises(ValueError):
             self.p.transfer(
                 resource.well(0).set_volume("40:microliter"),
                 test_wells[0],
                 "10:microliter",
                 informatics=[AttachCompounds([test_wells[0], test_wells[1]], [compd1])],
+            )
+        # cannot provide informatics for the source well
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                resource.well(0).set_volume("40:microliter"),
+                test_wells[0],
+                "10:microliter",
+                informatics=[AttachCompounds(resource.well(0), [compd1])],
             )
 
     def test_can_append_properties(self):

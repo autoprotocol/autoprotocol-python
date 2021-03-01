@@ -6767,6 +6767,247 @@ class Protocol(object):
             list(Informatics)
                 list of Informatics per destination well
 
+            Examples
+            --------
+            .. code-block:: python
+                from autoprotocol.container import Container, Well, WellGroup
+                from autoprotocol.informatics import AttachCompounds
+                from autoprotocol.protocol import Protocol
+                from autoprotocol.unit import Unit
+
+                p = Protocol()
+                resource = p.ref("resource", None, "96-flat", discard=True)
+                container = p.ref("container", cont_type="96-flat", discard=True)
+                dest_wells = WellGroup(
+                    [
+                        container.well[0],
+                        container.well[1],
+                        container.well[2]
+                    ]
+                )
+                compd1 = Compound("InChI=1S/CH4/h1H4")
+                compd2 = Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")
+
+                # Single Informatics a destination well in a transfer from a source well to a destination well
+                p.transfer(
+                    resource.well(0).set_volume("40:microliter"),
+                    dest_wells[0],
+                    "5:microliter",
+                    informatics=[AttachCompounds(dest_wells[0], [compd1])],
+                )
+
+                # Single Informatics for a destination well in a transfer from multiple sources to single destination
+                p.transfer(
+                    [resource.well(0).set_volume("40:microliter"),resource.well(1).set_volume("40:microliter")],
+                    test_wells[0],
+                    "5:microliter",
+                    informatics=[AttachCompounds(dest_wells[0], [compd1])]
+                )
+
+                # Single Informatics for multiple wells in a transfer from single source to multiple destinations
+                p.transfer(
+                    resource.well(0).set_volume("40:microliter"),
+                    dest_wells,
+                    "5:microliter",
+                    informatics=[AttachCompounds(dest_wells, [compd1])],
+                )
+
+                # Multiple Informatics for a well in a transfer from a source well to a destination well
+                self.p.transfer(
+                    resource.well(0).set_volume("40:microliter"),
+                    dest_wells[0],
+                    "10:microliter",
+                    informatics=[
+                        AttachCompounds(dest_wells[0], [compd1]),
+                        AttachCompounds(dest_wells[0], [compd2])
+                    ]
+                )
+
+                # Multiple Informatics for multiple wells in transfer from a source to many destination wells
+                p.transfer(
+                    resource.well(0).set_volume("40:microliter"),
+                    dest_wells,
+                    "5:microliter",
+                    informatics=[
+                        AttachCompounds([dest_wells[0], dest_wells[1]], [compd1]),
+                        AttachCompounds(dest_wells, [compd2])
+                    ]
+                )
+
+            .. code-block:: json
+                # Only showing details on the informatics attribute for the purpose of demonstrating how informatics
+                # param is being serialized per instruction.
+                [
+                    # a transfer from a source well to a destination well with one Informatics
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/0"], "transports": ...}
+                        ]
+                        ...,
+                        "informatics": [
+                            {
+                                "type: "attach_compounds",
+                                "data": [
+                                    {
+                                        "wells": "container/0",
+                                        "compounds": ["InChI=1S/CH4/h1H4"]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+
+                    # a transfer from multiple sources to a destination with one Informatics
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/0"], "transports": ...},
+                            {"location": ["contianer/0"], "transports": ...}
+                        ],
+                        ...,
+                    },
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/1"], "transports": ...},
+                            {"location": ["container/0"], "transports": ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds",
+                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
+                            }
+                        ]
+                    },
+
+                    # Single Informatics for multiple wells in a transfer from single source to multiple destinations
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/0"], "transports": ...},
+                            {"location": ["container/0"], "transports": ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds",
+                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
+                            }
+                        ]
+                    },
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/0"], "transports": ...},
+                            {"location": ["container/1"], "transports": ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds",
+                                "data": {"wells": "container/2", "compounds": ["InChI=1S/CH4/h1H4"]}
+                            }
+                        ]
+                    },
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": ["resource/0"], "transports": ...},
+                            {"location": ["container/2"], "transports": ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds",
+                                "data": {"wells": "container/2", "compounds": ["InChI=1S/CH4/h1H4"]}
+                            }
+                        ]
+                    },
+
+                    # Multiple Informatics for a well in a transfer from a source well to a destination well
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": "resource/0", ...},
+                            {"location": "container/0", ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds"
+                                "data":{
+                                    "wells": "container/0",
+                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                }
+                            }
+                        ]
+                    },
+
+                    # Multiple Informatics for multiple wells in transfer from a source to many destination wells
+                p.transfer(
+                    resource.well(0).set_volume("40:microliter"),
+                    dest_wells,
+                    "5:microliter",
+                    informatics=[
+                        AttachCompounds([dest_wells[0], dest_wells[1]], [compd1]),
+                        AttachCompounds(dest_wells, [compd2])
+                    ]
+                )
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": "resource/0", ...},
+                            {"location": "container/0", ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds"
+                                "data":{
+                                    "wells": "container/0",
+                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": "resource/0", ...},
+                            {"location": "container/1", ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds"
+                                "data":{
+                                    "wells": "container/1",
+                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "op": "liquid_handle"
+                        "locations": [
+                            {"location": "resource/0", ...},
+                            {"location": "container/2", ...}
+                        ],
+                        ...,
+                        "informatics": [
+                            {
+                                "type": "attach_compounds"
+                                "data":{
+                                    "wells": "container/2",
+                                    "compounds": ["InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                }
+                            }
+                        ]
+                    }
+                ]
+
             Raises
             ------
             TypeError

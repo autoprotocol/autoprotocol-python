@@ -3411,17 +3411,19 @@ class TestTransferVolume(object):
             informatics=[
                 AttachCompounds([test_wells[0], test_wells[1]], [compd1]),
                 AttachCompounds(
-                    [test_wells[2], test_wells[3]],
+                    test_wells,
                     [compd2],
                 ),
             ],
         )
         new_instructions = self.p.instructions[-4:]
         assert len(new_instructions[0].informatics) == 1
-        assert new_instructions[0].informatics[0].compounds[0] == compd1
-        assert new_instructions[1].informatics[0].compounds[0] == compd1
-        assert new_instructions[2].informatics[0].compounds[0] == compd2
-        assert new_instructions[3].informatics[0].compounds[0] == compd2
+        assert len(new_instructions[0].informatics[0].compounds) == 2
+        assert set(new_instructions[0].informatics[0].compounds) == {compd1, compd2}
+        assert len(new_instructions[1].informatics[0].compounds) == 2
+        assert len(new_instructions[2].informatics[0].compounds) == 1
+        assert new_instructions[2].informatics[0].compounds == [compd2]
+        assert new_instructions[3].informatics[0].compounds == [compd2]
 
         # Test case for Informatics wells order not aligned with destination
         self.p.transfer(

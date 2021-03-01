@@ -6848,12 +6848,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type: "attach_compounds",
-                                "data": [
-                                    {
-                                        "wells": "container/0",
-                                        "compounds": ["InChI=1S/CH4/h1H4"]
-                                    }
-                                ]
+                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
                             }
                         ]
                     },
@@ -6946,15 +6941,6 @@ class Protocol(object):
                     },
 
                     # Multiple Informatics for multiple wells in transfer from a source to many destination wells
-                p.transfer(
-                    resource.well(0).set_volume("40:microliter"),
-                    dest_wells,
-                    "5:microliter",
-                    informatics=[
-                        AttachCompounds([dest_wells[0], dest_wells[1]], [compd1]),
-                        AttachCompounds(dest_wells, [compd2])
-                    ]
-                )
                     {
                         "op": "liquid_handle"
                         "locations": [

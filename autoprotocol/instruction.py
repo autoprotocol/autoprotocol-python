@@ -1849,11 +1849,16 @@ class LiquidHandle(Instruction):
         the liquid handling mode
     mode_params : dict, optional
         See Also :meth:`LiquidHandle.builders.instruction_mode_params`
+    informatics : list(Informatics), optional
+        List of Informatics describing the intended aliquot effects upon
+        completion of this instruction.
     """
 
     builders = LiquidHandleBuilders()
 
-    def __init__(self, locations, shape=None, mode=None, mode_params=None):
+    def __init__(
+        self, locations, shape=None, mode=None, mode_params=None, informatics=None
+    ):
         data = {
             "locations": locations,
             "shape": shape,
@@ -1861,4 +1866,6 @@ class LiquidHandle(Instruction):
             "mode_params": mode_params,
         }
 
-        super(LiquidHandle, self).__init__(op="liquid_handle", data=data)
+        super(LiquidHandle, self).__init__(
+            op="liquid_handle", data=data, informatics=informatics
+        )

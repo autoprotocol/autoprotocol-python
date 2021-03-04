@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+* :bug:`294` Fix output of AttachCompounds wells
 
 * :release:`7.6.0 <2021-03-02>`
 * :feature:`292` Add informatics param to p.transfer

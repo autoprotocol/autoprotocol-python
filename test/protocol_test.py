@@ -3443,9 +3443,13 @@ class TestTransferVolume(object):
         new_instructions = self.p.instructions[-4:]
         assert len(new_instructions[0].informatics) == 1
         assert new_instructions[0].informatics[0].compounds[0] == compd1
+        assert new_instructions[0].informatics[0].wells == [test_wells[0]]
         assert new_instructions[1].informatics[0].compounds[0] == compd2
+        assert new_instructions[1].informatics[0].wells == [test_wells[1]]
         assert new_instructions[2].informatics[0].compounds[0] == compd1
+        assert new_instructions[2].informatics[0].wells == [test_wells[2]]
         assert new_instructions[3].informatics[0].compounds[0] == compd2
+        assert new_instructions[3].informatics[0].wells == [test_wells[3]]
         wells = []
         for instr in new_instructions:
             wells.extend(instr.informatics[0].wells)

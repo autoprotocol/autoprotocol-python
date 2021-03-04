@@ -2794,6 +2794,7 @@ class TestDyeTest(object):
         assert p1.instructions[3].informatics == []
         assert isinstance(p1.instructions[4].informatics[0], AttachCompounds)
         assert p1.instructions[4].informatics[0].compounds == [compd1]
+        assert p1.instructions[4].informatics[0].wells == [c1.well(1)]
 
         # when the same resource is transferred into the same container multiple times,
         # transfer(s) are appended to 'to', and 'informatics' is extended if there are any.
@@ -3382,7 +3383,7 @@ class TestTransferVolume(object):
         assert self.p.instructions[-1].op == "liquid_handle"
         assert len(self.p.instructions[-1].informatics) == 1
         assert isinstance(self.p.instructions[-1].informatics[0], AttachCompounds)
-        assert self.p.instructions[-1].informatics[0].wells == test_wells[0]
+        assert self.p.instructions[-1].informatics[0].wells == [test_wells[0]]
         assert self.p.instructions[-1].informatics[0].compounds[0] == compd1
 
         # Test case for multiple destination wells with single Informatics
@@ -3400,8 +3401,8 @@ class TestTransferVolume(object):
             assert len(instr.informatics) == 1
             assert isinstance(instr.informatics[0], AttachCompounds)
             assert instr.informatics[0].compounds[0] == compd1
-            wells.append(instr.informatics[0].wells)
-        assert WellGroup(wells) == test_wells
+            wells.extend(instr.informatics[0].wells)
+        assert wells == test_wells.wells
 
         # Test with multiple AttachCompounds with different compounds provided for destination wells
         self.p.transfer(
@@ -3420,6 +3421,7 @@ class TestTransferVolume(object):
         assert len(new_instructions[0].informatics) == 1
         assert len(new_instructions[0].informatics[0].compounds) == 2
         assert set(new_instructions[0].informatics[0].compounds) == {compd1, compd2}
+        assert new_instructions[0].informatics[0].wells == [test_wells[0]]
         assert len(new_instructions[1].informatics[0].compounds) == 2
         assert len(new_instructions[2].informatics[0].compounds) == 1
         assert new_instructions[2].informatics[0].compounds == [compd2]
@@ -3446,8 +3448,8 @@ class TestTransferVolume(object):
         assert new_instructions[3].informatics[0].compounds[0] == compd2
         wells = []
         for instr in new_instructions:
-            wells.append(instr.informatics[0].wells)
-        assert WellGroup(wells) == test_wells
+            wells.extend(instr.informatics[0].wells)
+        assert wells == test_wells.wells
 
         # Transfer from multiple sources to destination match Informatics to
         # the last transfer event on a destination well
@@ -3484,7 +3486,7 @@ class TestTransferVolume(object):
         )
         assert len(self.p.instructions[-1].informatics) == 1
         assert len(self.p.instructions[-1].informatics[0].compounds) == 2
-        assert self.p.instructions[-1].informatics[0].wells == test_wells[0]
+        assert self.p.instructions[-1].informatics[0].wells == [test_wells[0]]
         assert len(self.p.instructions[-1].informatics[0].compounds) == 2
         assert set(self.p.instructions[-1].informatics[0].compounds) == {compd1, compd2}
 

@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+* :release:`7.6.1 <2021-03-04>`
 * :bug:`294` Fix output of AttachCompounds wells
 
 * :release:`7.6.0 <2021-03-02>`

@@ -156,6 +156,8 @@ class Instruction(object):
                     f"informatics well: {wells} must be one of the wells used in this instruction."
                 )
 
+        info.wells = wells.wells
+
     # pragma pylint: disable=expression-not-assigned
     # pragma pylint: disable=unused-variable
     def get_wells(self, op_data):

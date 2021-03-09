@@ -1,6 +1,9 @@
 =========
 Changelog
 =========
+
+* :bug:`295` Remove low-evaporation cover type from FALCON96UBOTTOM
+
 * :release:`7.6.1 <2021-03-04>`
 * :bug:`294` Fix output of AttachCompounds wells
 

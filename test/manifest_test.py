@@ -596,10 +596,10 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"},
+                "parameters": {"compound": "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"},
             },
         )
-        assert parsed["compound"].InChI == "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"
+        assert parsed["compound"].SMILES == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
 
     def test_multiple_compound_type(self):
         protocol_info1 = ProtocolInfo(
@@ -612,11 +612,11 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": ["InChI=1S/C2H6", "InChI=1S/C2H8"]},
+                "parameters": {"compound": ["C1=CC=CC=C1", "CCCC"]},
             },
         )
-        assert parsed["compound"][0].InChI == "InChI=1S/C2H6"
-        assert parsed["compound"][1].InChI == "InChI=1S/C2H8"
+        assert parsed["compound"][0].SMILES == "C1=CC=CC=C1"
+        assert parsed["compound"][1].SMILES == "CCCC"
 
     def test_invalid_compound(self):
         with pytest.raises(RuntimeError) as e:
@@ -630,8 +630,8 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {"compound": "abc"},
+                    "parameters": {"compound": "InChI=xxx"},
                 },
             )
 
-        assert "abc is not a valid InChI key" in str(e.value)
+        assert "InChI=xxx is not a valid SMILES key" in str(e.value)

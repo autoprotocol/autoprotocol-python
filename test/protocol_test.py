@@ -354,14 +354,14 @@ class TestRefify(object):
         assert p._refify(p.refs["test"]) == p.refs["test"].opts
 
         # refify Compound
-        compd = Compound("InChI=1S/CH4/h1H4")
-        assert p._refify(compd) == "InChI=1S/CH4/h1H4"
+        compd = Compound("C1=CC=CC=C1")
+        assert p._refify(compd) == "C1=CC=CC=C1"
 
         # refify AttachCompouonds
         ac = AttachCompounds(well, [compd])
         assert p._refify(ac) == {
             "type": "attach_compounds",
-            "data": {"wells": "test/0", "compounds": ["InChI=1S/CH4/h1H4"]},
+            "data": {"wells": "test/0", "compounds": ["C1=CC=CC=C1"]},
         }
 
         # refify other
@@ -2775,7 +2775,7 @@ class TestDyeTest(object):
     def test_convert_provision(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
-        compd1 = Compound("InChI=1S/CH4/h1H4")
+        compd1 = Compound("C1=CC=CC=C1")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
@@ -3370,8 +3370,8 @@ class TestTransferVolume(object):
                 self.container.well("A1"),
             ]
         )
-        compd1 = Compound("InChI=1S/CH4/h1H4")
-        compd2 = Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")
+        compd1 = Compound("C1=CC=CC=C1")
+        compd2 = Compound("CCCC")
 
         # Test case for single destination with Informatics
         self.p.transfer(

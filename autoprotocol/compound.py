@@ -7,20 +7,21 @@ class Compound:
 
     Parameters
     ----------
-    InChI : Standard International Chemical Identifier
+    SMILES : Simplified Molecular-Input Line-Entry System
 
     """
 
-    def __init__(self, InChI):
-        if self.is_valid(InChI):
-            self.InChI = InChI
+    def __init__(self, SMILES):
+        if self.is_valid(SMILES):
+            self.SMILES = SMILES
         else:
-            raise CompoundError(f"{InChI} is not a valid InChI key")
+            raise CompoundError(f"{SMILES} is not a valid SMILES key")
 
     @staticmethod
-    def is_valid(InChI):
-        pattern = r"^InChI\=1S?\/[^\s]+(\s|$)"
-        return re.match(pattern, InChI)
+    def is_valid(SMILES):
+        # Any alphanumeric string with no space that does not start with 'InChI='
+        pattern = r"^(?!InChI=)\w\S+$"
+        return re.match(pattern, SMILES)
 
 
 class CompoundError(Exception):

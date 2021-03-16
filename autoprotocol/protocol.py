@@ -5888,7 +5888,7 @@ class Protocol(object):
         elif isinstance(op_data, Ref):
             return op_data.opts
         elif isinstance(op_data, Compound):
-            return op_data.InChI
+            return op_data.SMILES
         elif isinstance(op_data, Informatics):
             return self._refify(op_data.as_dict())
         else:
@@ -6785,8 +6785,8 @@ class Protocol(object):
                         container.well[2]
                     ]
                 )
-                compd1 = Compound("InChI=1S/CH4/h1H4")
-                compd2 = Compound("InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H")
+                compd1 = Compound("CCCC")
+                compd2 = Compound("C1=CC=CC=C1")
 
                 # Single Informatics a destination well in a transfer from a source well to a destination well
                 p.transfer(
@@ -6848,7 +6848,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type: "attach_compounds",
-                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
+                                "data": {"wells": "container/0", "compounds": ["CCCC"]}
                             }
                         ]
                     },
@@ -6872,7 +6872,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type": "attach_compounds",
-                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
+                                "data": {"wells": "container/0", "compounds": ["CCCC"]}
                             }
                         ]
                     },
@@ -6888,7 +6888,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type": "attach_compounds",
-                                "data": {"wells": "container/0", "compounds": ["InChI=1S/CH4/h1H4"]}
+                                "data": {"wells": "container/0", "compounds": ["CCCC"]}
                             }
                         ]
                     },
@@ -6902,7 +6902,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type": "attach_compounds",
-                                "data": {"wells": "container/2", "compounds": ["InChI=1S/CH4/h1H4"]}
+                                "data": {"wells": "container/2", "compounds": ["CCCC"]}
                             }
                         ]
                     },
@@ -6916,7 +6916,7 @@ class Protocol(object):
                         "informatics": [
                             {
                                 "type": "attach_compounds",
-                                "data": {"wells": "container/2", "compounds": ["InChI=1S/CH4/h1H4"]}
+                                "data": {"wells": "container/2", "compounds": ["CCCC"]}
                             }
                         ]
                     },
@@ -6934,7 +6934,7 @@ class Protocol(object):
                                 "type": "attach_compounds"
                                 "data":{
                                     "wells": "container/0",
-                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                    "compounds": ["CCCC", "C1=CC=CC=C1"]
                                 }
                             }
                         ]
@@ -6953,7 +6953,7 @@ class Protocol(object):
                                 "type": "attach_compounds"
                                 "data":{
                                     "wells": "container/0",
-                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                    "compounds": ["CCCC", "C1=CC=CC=C1"]
                                 }
                             }
                         ]
@@ -6970,7 +6970,7 @@ class Protocol(object):
                                 "type": "attach_compounds"
                                 "data":{
                                     "wells": "container/1",
-                                    "compounds": ["InChI=1S/CH4/h1H4", "InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                    "compounds": ["CCCC", "C1=CC=CC=C1"]
                                 }
                             }
                         ]
@@ -6987,7 +6987,7 @@ class Protocol(object):
                                 "type": "attach_compounds"
                                 "data":{
                                     "wells": "container/2",
-                                    "compounds": ["InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H"]
+                                    "compounds": ["C1=CC=CC=C1"]
                                 }
                             }
                         ]

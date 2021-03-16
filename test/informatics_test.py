@@ -46,4 +46,3 @@ class TestAttachCompoundsInformatics(object):
             AttachCompounds(well1, "C1=NC2=NC=NC(=C2N1)N")
         with pytest.raises(CompoundError):
             AttachCompounds(well1, [Compound("InChI=xxx")])
-

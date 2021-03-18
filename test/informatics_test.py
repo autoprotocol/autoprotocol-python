@@ -15,8 +15,8 @@ class TestAttachCompoundsInformatics(object):
         well1 = cont1.well(0)
         well2 = cont1.well(1)
         wg1 = WellGroup([well1, well2])
-        comp1 = Compound("CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
-        comp2 = Compound("C1=NC2=NC=NC(=C2N1)N")
+        comp1 = Compound("Daylight Canonical SMILES", "CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
+        comp2 = Compound("Daylight Canonical SMILES", "C1=NC2=NC=NC(=C2N1)N")
 
         assert AttachCompounds(well1, [comp1]).compounds == [comp1]
         assert AttachCompounds(well1, [comp1]).wells == well1
@@ -27,7 +27,7 @@ class TestAttachCompoundsInformatics(object):
         p = Protocol()
         cont1 = p.ref("cont_1", None, "96-flat", discard=True)
         well1 = WellGroup([cont1.well(0)])
-        comp = Compound("C1=NC2=NC=NC(=C2N1)N")
+        comp = Compound("Daylight Canonical SMILES", "C1=NC2=NC=NC(=C2N1)N")
         assert AttachCompounds(well1, [comp]).as_dict() == {
             "type": "attach_compounds",
             "data": {"wells": well1, "compounds": [comp]},
@@ -37,7 +37,7 @@ class TestAttachCompoundsInformatics(object):
         p = Protocol()
         cont1 = p.ref("cont_1", None, "96-flat", discard=True)
         well1 = WellGroup([cont1.well(0)])
-        comp = Compound("C1=NC2=NC=NC(=C2N1)N")
+        comp = Compound("Daylight Canonical SMILES", "C1=NC2=NC=NC(=C2N1)N")
         with pytest.raises(TypeError):
             AttachCompounds(well1, comp)
         with pytest.raises(TypeError):
@@ -45,4 +45,4 @@ class TestAttachCompoundsInformatics(object):
         with pytest.raises(TypeError):
             AttachCompounds(well1, "C1=NC2=NC=NC(=C2N1)N")
         with pytest.raises(CompoundError):
-            AttachCompounds(well1, [Compound("InChI=xxx")])
+            AttachCompounds(well1, [Compound("Daylight Canonical SMILES", "InChI=xxx")])

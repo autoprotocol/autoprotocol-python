@@ -5888,7 +5888,7 @@ class Protocol(object):
         elif isinstance(op_data, Ref):
             return op_data.opts
         elif isinstance(op_data, Compound):
-            return op_data.SMILES
+            return op_data.as_dict()
         elif isinstance(op_data, Informatics):
             return self._refify(op_data.as_dict())
         else:

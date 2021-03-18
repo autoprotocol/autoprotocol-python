@@ -92,7 +92,7 @@ class TestBaseInstruction(object):
     def test_informatics():
         p = Protocol()
         cont1 = p.ref("cont1", None, "6-flat", discard=True)
-        compd = Compound("CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
+        compd = Compound("Daylight Canonical SMILES", "CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
         example_data = {
             "wells": [cont1.well(0), cont1.well(1)],
             "some_int": 1,
@@ -103,7 +103,7 @@ class TestBaseInstruction(object):
         )
         assert isinstance(instr.informatics[0], AttachCompounds)
         assert (
-            instr.informatics[0].compounds[0].SMILES == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
+            instr.informatics[0].compounds[0].value == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
         )
 
         instr_multi = Instruction(
@@ -139,7 +139,7 @@ class TestBaseInstruction(object):
     def test_info_wells_checker(self):
         p = Protocol()
         cont1 = p.ref("cont1", None, "6-flat", discard=True)
-        compd = Compound("CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
+        compd = Compound("Daylight Canonical SMILES", "CN1C=NC2=C1C(=O)N(C(=O)N2C)C")
         example_data = {"objects": [cont1.well(0), cont1.well(1)], "some_int": 1}
         instr = Instruction(
             op="test_instruction",

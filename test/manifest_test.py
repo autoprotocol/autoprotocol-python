@@ -596,10 +596,10 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"},
+                "parameters": {"compound": {"format": "InChI", "value": "InChI=1S/CH4/h1H4"}},
             },
         )
-        assert parsed["compound"].SMILES == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
+        assert parsed["compound"].value == "InChI=1S/CH4/h1H4"
 
     def test_multiple_compound_type(self):
         protocol_info1 = ProtocolInfo(
@@ -612,11 +612,18 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": ["C1=CC=CC=C1", "CCCC"]},
+                "parameters": {
+                    "compound": [
+                        {"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"},
+                        {"format": "Daylight Canonical SMILES", "value": "CCCC"},
+                    ]
+                },
             },
         )
-        assert parsed["compound"][0].SMILES == "C1=CC=CC=C1"
-        assert parsed["compound"][1].SMILES == "CCCC"
+        assert parsed["compound"][0].value == "C1=CC=CC=C1"
+        assert parsed["compound"][0].format == "Daylight Canonical SMILES"
+        assert parsed["compound"][1].value == "CCCC"
+        assert parsed["compound"][1].format == "Daylight Canonical SMILES"
 
     def test_invalid_compound(self):
         with pytest.raises(RuntimeError) as e:
@@ -630,8 +637,25 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {"compound": "InChI=xxx"},
+                    "parameters": {"compound": {"format": "Daylight Canonical SMILES", "value": "C1:CO&"}},
                 },
             )
 
-        assert "InChI=xxx is not a valid SMILES key" in str(e.value)
+        assert "C1:CO& is not a valid Daylight Canonical SMILES value." in str(e.value)
+
+        with pytest.raises(RuntimeError) as e:
+            protocol_info1 = ProtocolInfo(
+                {
+                    "name": "Test Compound type",
+                    "inputs": {"compound": {"type": "compound"}},
+                }
+            )
+            protocol_info1.parse(
+                self.protocol,
+                {
+                    "refs": {},
+                    "parameters": {"compound": {"format": "foo", "value": "CCCC"}},
+                },
+            )
+
+        assert "foo is not an acceptable Compound format." in str(e.value)

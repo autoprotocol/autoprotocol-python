@@ -355,13 +355,21 @@ class TestRefify(object):
 
         # refify Compound
         compd = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
-        assert p._refify(compd) == {"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"}
+        assert p._refify(compd) == {
+            "format": "Daylight Canonical SMILES",
+            "value": "C1=CC=CC=C1",
+        }
 
         # refify AttachCompouonds
         ac = AttachCompounds(well, [compd])
         assert p._refify(ac) == {
             "type": "attach_compounds",
-            "data": {"wells": "test/0", "compounds": [{"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"}]},
+            "data": {
+                "wells": "test/0",
+                "compounds": [
+                    {"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"}
+                ],
+            },
         }
 
         # refify other

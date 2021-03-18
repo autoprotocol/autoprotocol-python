@@ -7,17 +7,17 @@ class Compound:
 
     Parameters
     ----------
-    format : Compound string input format
+    comp_format : Compound string input format
     value : Compound string
 
     """
 
-    def __init__(self, format, value):
+    def __init__(self, comp_format, value):
         compound_formats = ["Daylight Canonical SMILES", "InChI"]
-        if format in compound_formats:
-            self.format = format
+        if comp_format in compound_formats:
+            self.format = comp_format
         else:
-            raise CompoundError(f"{format} is not an acceptable Compound format.")
+            raise CompoundError(f"{comp_format} is not an acceptable Compound format.")
 
         if self.is_valid(value):
             self.value = value
@@ -31,28 +31,33 @@ class Compound:
         if self.format == "InChI":
             return bool(re.match(inchi_pattern, compound))
         elif self.format == "Daylight Canonical SMILES":
-            return bool(re.match(non_inchi_pattern, compound) and not re.search("[~?!$%^&;'Jj]", compound))
+            return bool(
+                re.match(non_inchi_pattern, compound)
+                and not re.search("[~?!$%^&;'Jj]", compound)
+            )
         else:
-            raise CompoundError(f"String pattern is not defined for this compound format: {self.format}.")
+            raise CompoundError(
+                f"String pattern is not defined for this compound format: {self.format}."
+            )
 
     def as_dict(self):
         """generates a Python object representation of Compound
 
-         Returns
-         -------
-         dict
-             a dict of python objects that have the same structure as the
-             Autoprotocol JSON for the Compound
+        Returns
+        -------
+        dict
+            a dict of python objects that have the same structure as the
+            Autoprotocol JSON for the Compound
 
-         Notes
-         -----
-         Used as a part of JSON serialization of the Compound
+        Notes
+        -----
+        Used as a part of JSON serialization of the Compound
 
         """
 
         return {
             "format": self.format,
-            "value":  self.value,
+            "value": self.value,
         }
 
 

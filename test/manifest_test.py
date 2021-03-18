@@ -596,7 +596,9 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": {"format": "InChI", "value": "InChI=1S/CH4/h1H4"}},
+                "parameters": {
+                    "compound": {"format": "InChI", "value": "InChI=1S/CH4/h1H4"}
+                },
             },
         )
         assert parsed["compound"].value == "InChI=1S/CH4/h1H4"
@@ -637,7 +639,12 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {"compound": {"format": "Daylight Canonical SMILES", "value": "C1:CO&"}},
+                    "parameters": {
+                        "compound": {
+                            "format": "Daylight Canonical SMILES",
+                            "value": "C1:CO&",
+                        }
+                    },
                 },
             )
 

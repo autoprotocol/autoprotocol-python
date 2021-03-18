@@ -102,9 +102,7 @@ class TestBaseInstruction(object):
             op="test_instruction", data=example_data, informatics=example_informatics
         )
         assert isinstance(instr.informatics[0], AttachCompounds)
-        assert (
-            instr.informatics[0].compounds[0].value == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
-        )
+        assert instr.informatics[0].compounds[0].value == "CN1C=NC2=C1C(=O)N(C(=O)N2C)C"
 
         instr_multi = Instruction(
             op="test_instruction",

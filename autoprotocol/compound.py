@@ -35,7 +35,6 @@ class Compound:
         elif self.format == "Daylight Canonical SMILES":
             return bool(
                 re.match(non_inchi_pattern, compound)
-                # there are some symbols and letter that are not used in SMILES
                 and not re.search(non_smiles_pattern, compound)
             )
         else:

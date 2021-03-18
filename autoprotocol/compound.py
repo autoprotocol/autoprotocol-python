@@ -28,6 +28,7 @@ class Compound:
     def is_valid(self, compound):
         inchi_pattern = r"^InChI\=1S?\/[^\s]+(\s|$)"
         non_inchi_pattern = r"^(?!InChI=)\w\S+$"
+        non_smiles_pattern = "[~?!$%^&;'J]"
 
         if self.format == "InChI":
             return bool(re.match(inchi_pattern, compound))
@@ -35,7 +36,7 @@ class Compound:
             return bool(
                 re.match(non_inchi_pattern, compound)
                 # there are some symbols and letter that are not used in SMILES
-                and not re.search("[~?!$%^&;'J]", compound)
+                and not re.search(non_smiles_pattern, compound)
             )
         else:
             raise CompoundError(

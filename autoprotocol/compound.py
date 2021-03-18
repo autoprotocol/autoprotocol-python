@@ -7,17 +7,18 @@ class Compound:
 
     Parameters
     ----------
-    comp_format : Compound string input format
+    format : Compound string input format
     value : Compound string
 
     """
 
-    def __init__(self, comp_format, value):
+    # pragma pylint: disable=redefined-builtin
+    def __init__(self, format, value):
         compound_formats = ["Daylight Canonical SMILES", "InChI"]
-        if comp_format in compound_formats:
-            self.format = comp_format
+        if format in compound_formats:
+            self.format = format
         else:
-            raise CompoundError(f"{comp_format} is not an acceptable Compound format.")
+            raise CompoundError(f"{format} is not an acceptable Compound format.")
 
         if self.is_valid(value):
             self.value = value

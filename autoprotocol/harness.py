@@ -203,7 +203,7 @@ def convert_param(protocol, val, type_desc):
             )
     elif type in "compound":
         try:
-            return Compound(val)
+            return Compound(val["format"], val["value"])
         except CompoundError as e:
             raise RuntimeError(f"Invalid Compound; Details: {e.value}")
     elif type == "compound+":

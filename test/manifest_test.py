@@ -596,10 +596,12 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"},
+                "parameters": {
+                    "compound": {"format": "InChI", "value": "InChI=1S/CH4/h1H4"}
+                },
             },
         )
-        assert parsed["compound"].InChI == "InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H"
+        assert parsed["compound"].value == "InChI=1S/CH4/h1H4"
 
     def test_multiple_compound_type(self):
         protocol_info1 = ProtocolInfo(
@@ -612,11 +614,18 @@ class TestManifest(object):
             self.protocol,
             {
                 "refs": {},
-                "parameters": {"compound": ["InChI=1S/C2H6", "InChI=1S/C2H8"]},
+                "parameters": {
+                    "compound": [
+                        {"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"},
+                        {"format": "Daylight Canonical SMILES", "value": "CCCC"},
+                    ]
+                },
             },
         )
-        assert parsed["compound"][0].InChI == "InChI=1S/C2H6"
-        assert parsed["compound"][1].InChI == "InChI=1S/C2H8"
+        assert parsed["compound"][0].value == "C1=CC=CC=C1"
+        assert parsed["compound"][0].format == "Daylight Canonical SMILES"
+        assert parsed["compound"][1].value == "CCCC"
+        assert parsed["compound"][1].format == "Daylight Canonical SMILES"
 
     def test_invalid_compound(self):
         with pytest.raises(RuntimeError) as e:
@@ -630,8 +639,30 @@ class TestManifest(object):
                 self.protocol,
                 {
                     "refs": {},
-                    "parameters": {"compound": "abc"},
+                    "parameters": {
+                        "compound": {
+                            "format": "Daylight Canonical SMILES",
+                            "value": "C1:CO&",
+                        }
+                    },
                 },
             )
 
-        assert "abc is not a valid InChI key" in str(e.value)
+        assert "C1:CO& is not a valid Daylight Canonical SMILES value." in str(e.value)
+
+        with pytest.raises(RuntimeError) as e:
+            protocol_info1 = ProtocolInfo(
+                {
+                    "name": "Test Compound type",
+                    "inputs": {"compound": {"type": "compound"}},
+                }
+            )
+            protocol_info1.parse(
+                self.protocol,
+                {
+                    "refs": {},
+                    "parameters": {"compound": {"format": "foo", "value": "CCCC"}},
+                },
+            )
+
+        assert "foo is not an acceptable Compound format." in str(e.value)

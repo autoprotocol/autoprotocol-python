@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :release:`7.6.2 <2021-03-18>`
+* :release:`7.7.0 <2021-03-18>`
 * :feature:`297` Add support for SMILES to Compound class
 * :bug:`296` Remove low-evaporation cover type from FALCON96UBOTTOM
 

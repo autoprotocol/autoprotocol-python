@@ -1,7 +1,7 @@
 """
 Contains all the Autoprotocol Instruction objects
 
-    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2021 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -10,6 +10,8 @@ Contains all the Autoprotocol Instruction objects
 # pragma pylint: disable=too-few-public-methods, redefined-builtin
 from .builders import *  # pylint: disable=unused-wildcard-import
 from .constants import PROVISION_MEASUREMENT_MODES
+from .container import Container
+from .informatics import AttachCompounds, Informatics
 
 
 class Instruction(object):
@@ -17,14 +19,23 @@ class Instruction(object):
 
     builders = InstructionBuilders()
 
-    def __init__(self, op, data):
+    def __init__(self, op, data, informatics=None):
         super(Instruction, self).__init__()
+        # prevent mutable default value by assigning default value inside the method
+        if informatics is None:
+            informatics = []
         self.op = op
         self.data = self._remove_empty_fields(self._remove_empty_fields(data))
         self.__dict__.update(self.data)
+        self.informatics = self._remove_empty_fields(
+            self._remove_empty_fields(informatics)
+        )
+
+        if len(self.informatics) > 0:
+            self._check_informatics()
 
     def __repr__(self):
-        return f"Instruction({self.op}, {self.data})"
+        return f"Instruction({self.op}, {self.data}, {self.informatics})"
 
     def _as_AST(self):
         """generates a Python object representation of Autoprotocol JSON
@@ -44,7 +55,11 @@ class Instruction(object):
         :meth:`Protocol._refify` : Protocol serialization method
 
         """
-        return dict(op=self.op, **self.data)
+        # informatics is not serialized if empty.
+        if self.informatics:
+            return dict(op=self.op, **self.data, informatics=self.informatics)
+        else:
+            return dict(op=self.op, **self.data)
 
     @staticmethod
     def _remove_empty_fields(data):
@@ -85,6 +100,98 @@ class Instruction(object):
                 if not filter_criteria(_)
             ]
         return data
+
+    def _check_informatics(self):
+        """
+        Validates each Informatics element in informatics.
+
+        Raises
+        ------
+        TypeError
+            informatics is in a list
+        TypeError
+            informatics element is Informatics
+
+        """
+        if not isinstance(self.informatics, list):
+            raise TypeError(
+                f"informatics: {self.informatics} must be provided in a list."
+            )
+        for info in self.informatics:
+            if not isinstance(info, Informatics):
+                raise TypeError("informatics must be Informatics type.")
+            if isinstance(info, AttachCompounds):
+                available_wells = self.get_wells(self.data)
+                self._check_info_wells(info, available_wells)
+
+    @staticmethod
+    def _check_info_wells(info, available_wells):
+        """
+        validates Informatics wells are included in the wells associated with
+        the instruction.
+
+        Raises
+        -------
+        ValueError
+            'wells' has a value in the informatics data
+        TypeError
+            wells are Well, list of Well or WellGroup
+        ValueError
+            Informatics wells are part of wells Instruction is operating on
+        """
+        if not info.wells:
+            raise ValueError(
+                f"Informatics: {info} must have wells to run this validation."
+            )
+        info_wells = info.wells
+        if not is_valid_well(info_wells):
+            raise TypeError(
+                f"wells: {info_wells} must be Well, list of Well or WellGroup."
+            )
+        wells = WellGroup(info_wells)
+
+        for well in wells.wells:
+            if well not in available_wells:
+                raise ValueError(
+                    f"informatics well: {wells} must be one of the wells used in this instruction."
+                )
+
+        info.wells = wells.wells
+
+    # pragma pylint: disable=expression-not-assigned
+    # pragma pylint: disable=unused-variable
+    def get_wells(self, op_data):
+        """
+        Parameters
+        ----------
+        op_data: dict
+            Instruction data containing all the operational parameters
+
+        Returns
+        -------
+        list(Well)
+            List of all wells associated with the instruction. Note this contains
+            all source and destination wells for instructions such as `liquid_handle`.
+        """
+        all_wells = []
+        if type(op_data) is dict:
+            for k, v in op_data.items():
+                all_wells.append(self.get_wells(v))
+        elif type(op_data) is list:
+            for i in op_data:
+                all_wells.extend([self.get_wells(i)])
+        # if container is provided, all wells in the container are included
+        elif type(op_data) is Container:
+            all_wells.append(op_data.all_wells())
+        elif is_valid_well(op_data):
+            all_wells.append(WellGroup(op_data))
+
+        flattened_wells = [item for sublist in all_wells for item in sublist]
+        # remove any duplicate values in the list
+        unique_wells = []
+        [unique_wells.append(x) for x in flattened_wells if x not in unique_wells]
+
+        return unique_wells
 
 
 class MagneticTransfer(Instruction):
@@ -1373,6 +1480,8 @@ class Provision(Instruction):
       Destination(s) for specified resource, together with volume information
     measurement_mode : str
       Measurement mode. Possible values are :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
+    informatics : list(Informatics)
+      List of expected aliquot effects at the completion of this instruction
 
     Raises
     ------
@@ -1388,7 +1497,7 @@ class Provision(Instruction):
 
     """
 
-    def __init__(self, resource_id, dests, measurement_mode="volume"):
+    def __init__(self, resource_id, dests, measurement_mode="volume", informatics=None):
         if measurement_mode not in PROVISION_MEASUREMENT_MODES:
             raise RuntimeError(
                 f"{measurement_mode} is not a valid measurement mode for provisioning"
@@ -1401,6 +1510,7 @@ class Provision(Instruction):
                 "measurement_mode": measurement_mode,
                 "to": dests,
             },
+            informatics=informatics,
         )
 
 
@@ -1741,11 +1851,16 @@ class LiquidHandle(Instruction):
         the liquid handling mode
     mode_params : dict, optional
         See Also :meth:`LiquidHandle.builders.instruction_mode_params`
+    informatics : list(Informatics), optional
+        List of Informatics describing the intended aliquot effects upon
+        completion of this instruction.
     """
 
     builders = LiquidHandleBuilders()
 
-    def __init__(self, locations, shape=None, mode=None, mode_params=None):
+    def __init__(
+        self, locations, shape=None, mode=None, mode_params=None, informatics=None
+    ):
         data = {
             "locations": locations,
             "shape": shape,
@@ -1753,4 +1868,6 @@ class LiquidHandle(Instruction):
             "mode_params": mode_params,
         }
 
-        super(LiquidHandle, self).__init__(op="liquid_handle", data=data)
+        super(LiquidHandle, self).__init__(
+            op="liquid_handle", data=data, informatics=informatics
+        )

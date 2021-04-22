@@ -1,7 +1,7 @@
 """
 Container-type object and associated functions
 
-    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2021 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -1191,7 +1191,7 @@ FALCON96UBOTTOM = ContainerType(
         "seal",
         "unseal",
     ],
-    cover_types=["low_evaporation", "standard", "universal"],
+    cover_types=["standard", "universal"],
     seal_types=["ultra-clear", "foil"],
     vendor="Corning",
     cat_no="353077",

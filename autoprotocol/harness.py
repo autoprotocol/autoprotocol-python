@@ -1,7 +1,7 @@
 """
 Module containing the harness module which helps with Manifest interpretation
 
-    :copyright: 2020 by The Autoprotocol Development Team, see AUTHORS
+    :copyright: 2021 by The Autoprotocol Development Team, see AUTHORS
         for more details.
     :license: BSD, see LICENSE for more details
 
@@ -12,6 +12,7 @@ import io
 import json
 
 from . import UserError
+from .compound import Compound, CompoundError
 from .container import WellGroup
 from .protocol import Protocol
 from .unit import Unit, UnitError
@@ -198,6 +199,20 @@ def convert_param(protocol, val, type_desc):
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type aliquot++) is "
+                f"improperly formatted."
+            )
+    elif type in "compound":
+        try:
+            return Compound(val["format"], val["value"])
+        except CompoundError as e:
+            raise RuntimeError(f"Invalid Compound; Details: {e.value}")
+    elif type == "compound+":
+        try:
+            return [convert_param(protocol, cont, "compound") for cont in val]
+        except:
+            label = type_desc.get("label") or "[unknown]"
+            raise RuntimeError(
+                f"The value supplied to input '{label}' (type compound+) is "
                 f"improperly formatted."
             )
     elif type == "container":

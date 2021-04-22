@@ -4,6 +4,7 @@ import warnings
 
 import pytest
 
+from autoprotocol.compound import Compound
 from autoprotocol.container import Container, Well, WellGroup
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.harness import (
@@ -11,6 +12,7 @@ from autoprotocol.harness import (
     _convert_dispense_instructions,
     _convert_provision_instructions,
 )
+from autoprotocol.informatics import AttachCompounds
 from autoprotocol.instruction import (
     SPE,
     Absorbance,
@@ -75,6 +77,7 @@ class TestProtocolBasic(object):
 
         assert len(protocol.instructions) == 2
         assert protocol.instructions[0].op == "liquid_handle"
+        assert protocol.instructions[0].informatics == []
 
         protocol.incubate(bacteria, "warm_37", "30:minute")
 
@@ -349,6 +352,25 @@ class TestRefify(object):
 
         # refify Ref
         assert p._refify(p.refs["test"]) == p.refs["test"].opts
+
+        # refify Compound
+        compd = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
+        assert p._refify(compd) == {
+            "format": "Daylight Canonical SMILES",
+            "value": "C1=CC=CC=C1",
+        }
+
+        # refify AttachCompouonds
+        ac = AttachCompounds(well, [compd])
+        assert p._refify(ac) == {
+            "type": "attach_compounds",
+            "data": {
+                "wells": "test/0",
+                "compounds": [
+                    {"format": "Daylight Canonical SMILES", "value": "C1=CC=CC=C1"}
+                ],
+            },
+        }
 
         # refify other
         s = "randomstring"
@@ -2761,14 +2783,60 @@ class TestDyeTest(object):
     def test_convert_provision(self):
         p1 = Protocol()
         c1 = p1.ref("c1", id=None, cont_type="96-pcr", discard=True)
+        compd1 = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
         p1.incubate(c1, where="ambient", duration="1:hour", uncovered=True)
         p1.provision("rs18s8x4qbsvjz", c1.well(0), volumes="10:microliter")
+        p1.provision("rs181818181818", c1.well(2), volumes="10:microliter")
+        p1.provision(
+            "rs181818181818",
+            c1.well(1),
+            volumes="10:microliter",
+            informatics=[AttachCompounds([c1.well(1)], [compd1])],
+        )
         _convert_provision_instructions(p1, 3, 3)
 
         assert p1.instructions[1].data["resource_id"] == "rs18s8x4qbsvjz"
         assert p1.instructions[3].data["resource_id"] == "rs17gmh5wafm5p"
+        assert p1.instructions[3].informatics == []
+        assert isinstance(p1.instructions[4].informatics[0], AttachCompounds)
+        assert p1.instructions[4].informatics[0].compounds == [compd1]
+        assert p1.instructions[4].informatics[0].wells == [c1.well(1)]
+
+        # when the same resource is transferred into the same container multiple times,
+        # transfer(s) are appended to 'to', and 'informatics' is extended if there are any.
+        p2 = Protocol()
+        p2.provision("rs123123123", c1.well(1), volumes="10:microliter")
+
+        assert len(p2.instructions[0].data["to"]) == 1
+        assert p2.instructions[0].informatics == []
+
+        p2.provision(
+            "rs123123123",
+            c1.well(2),
+            volumes="50:microliter",
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
+        )
+
+        assert len(p2.instructions) == 1
+        assert len(p2.instructions[0].data["to"]) == 2
+        assert len(p2.instructions[0].informatics) == 1
+        assert isinstance(p2.instructions[0].informatics[0], AttachCompounds)
+
+        p2.provision(
+            "rs123123123",
+            c1.well(2),
+            volumes="20:microliter",
+            informatics=[AttachCompounds([c1.well(2)], [compd1])],
+        )
+
+        assert len(p2.instructions[0].informatics) == 2
+
+        p2.provision("rs123123123", c1.well(3), volumes="30:microliter")
+
+        assert len(p2.instructions[0].data["to"]) == 4
+        assert len(p2.instructions[0].informatics) == 2
 
         with pytest.raises(ValueError):
             _convert_provision_instructions(p1, "2", 3)
@@ -3299,6 +3367,184 @@ class TestTransferVolume(object):
             shape=Instruction.builders.shape(),
         )
         assert self.container.well(1).properties == self.container.well(0).properties
+
+    def test_transfer_informatics(self):
+        resource = self.p.ref("resource", None, "96-flat", discard=True)
+        test_wells = WellGroup(
+            [
+                self.container.well("B1"),
+                self.container.well("C5"),
+                self.container.well("A5"),
+                self.container.well("A1"),
+            ]
+        )
+        compd1 = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
+        compd2 = Compound("Daylight Canonical SMILES", "CCCC")
+
+        # Test case for single destination with Informatics
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells[0],
+            "5:microliter",
+            informatics=[AttachCompounds(test_wells[0], [compd1])],
+        )
+        assert self.p.instructions[-1].op == "liquid_handle"
+        assert len(self.p.instructions[-1].informatics) == 1
+        assert isinstance(self.p.instructions[-1].informatics[0], AttachCompounds)
+        assert self.p.instructions[-1].informatics[0].wells == [test_wells[0]]
+        assert self.p.instructions[-1].informatics[0].compounds[0] == compd1
+
+        # Test case for multiple destination wells with single Informatics
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells,
+            "5:microliter",
+            informatics=[AttachCompounds(test_wells, [compd1])],
+        )
+        assert self.p.instructions[-1].op == "liquid_handle"
+        new_instructions = self.p.instructions[-4:]
+        wells = []
+        for instr in new_instructions:
+            assert instr.op == "liquid_handle"
+            assert len(instr.informatics) == 1
+            assert isinstance(instr.informatics[0], AttachCompounds)
+            assert instr.informatics[0].compounds[0] == compd1
+            wells.extend(instr.informatics[0].wells)
+        assert wells == test_wells.wells
+
+        # Test with multiple AttachCompounds with different compounds provided for destination wells
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells,
+            "5:microliter",
+            informatics=[
+                AttachCompounds([test_wells[0], test_wells[1]], [compd1]),
+                AttachCompounds(
+                    test_wells,
+                    [compd2],
+                ),
+            ],
+        )
+        new_instructions = self.p.instructions[-4:]
+        assert len(new_instructions[0].informatics) == 1
+        assert len(new_instructions[0].informatics[0].compounds) == 2
+        assert set(new_instructions[0].informatics[0].compounds) == {compd1, compd2}
+        assert new_instructions[0].informatics[0].wells == [test_wells[0]]
+        assert len(new_instructions[1].informatics[0].compounds) == 2
+        assert len(new_instructions[2].informatics[0].compounds) == 1
+        assert new_instructions[2].informatics[0].compounds == [compd2]
+        assert new_instructions[3].informatics[0].compounds == [compd2]
+
+        # Test case for Informatics when AttachComounds 'wells' order is not aligned with destination wells order
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells,
+            "5:microliter",
+            informatics=[
+                AttachCompounds([test_wells[0], test_wells[2]], [compd1]),
+                AttachCompounds(
+                    [test_wells[1], test_wells[3]],
+                    [compd2],
+                ),
+            ],
+        )
+        new_instructions = self.p.instructions[-4:]
+        assert len(new_instructions[0].informatics) == 1
+        assert new_instructions[0].informatics[0].compounds[0] == compd1
+        assert new_instructions[0].informatics[0].wells == [test_wells[0]]
+        assert new_instructions[1].informatics[0].compounds[0] == compd2
+        assert new_instructions[1].informatics[0].wells == [test_wells[1]]
+        assert new_instructions[2].informatics[0].compounds[0] == compd1
+        assert new_instructions[2].informatics[0].wells == [test_wells[2]]
+        assert new_instructions[3].informatics[0].compounds[0] == compd2
+        assert new_instructions[3].informatics[0].wells == [test_wells[3]]
+        wells = []
+        for instr in new_instructions:
+            wells.extend(instr.informatics[0].wells)
+        assert wells == test_wells.wells
+
+        # Transfer from multiple sources to destination match Informatics to
+        # the last transfer event on a destination well
+        self.p.transfer(
+            [
+                resource.well(0).set_volume("40:microliter"),
+                resource.well(1).set_volume("40:microliter"),
+            ],
+            test_wells[0],
+            "5:microliter",
+            informatics=[
+                AttachCompounds(
+                    test_wells[0],
+                    [compd1],
+                )
+            ],
+        )
+        new_instructions = self.p.instructions[-2:]
+        assert len(new_instructions[0].informatics) == 0
+        assert new_instructions[0].data["locations"][0]["location"] == resource.well(0)
+        assert len(new_instructions[1].informatics) == 1
+        assert new_instructions[1].data["locations"][0]["location"] == resource.well(1)
+
+        # Test with multiple Informatics provided for a well
+        self.p.transfer(
+            resource.well(0).set_volume("40:microliter"),
+            test_wells[0],
+            "10:microliter",
+            informatics=[
+                AttachCompounds(test_wells[0], [compd1]),
+                AttachCompounds(test_wells[0], [compd2]),
+                AttachCompounds(test_wells[0], [compd2]),
+            ],
+        )
+        assert len(self.p.instructions[-1].informatics) == 1
+        assert len(self.p.instructions[-1].informatics[0].compounds) == 2
+        assert self.p.instructions[-1].informatics[0].wells == [test_wells[0]]
+        assert len(self.p.instructions[-1].informatics[0].compounds) == 2
+        assert set(self.p.instructions[-1].informatics[0].compounds) == {compd1, compd2}
+
+        # Informatics must be provided for all destination wells
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                [
+                    resource.well(0).set_volume("40:microliter"),
+                    resource.well(1).set_volume("40:microliter"),
+                ],
+                [test_wells[0], test_wells[1], test_wells[2]],
+                "10:microliter",
+                informatics=[AttachCompounds(test_wells[2], [compd1])],
+            )
+        # Informatics well must be operated on in the Instruction
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                resource.well(0).set_volume("40:microliter"),
+                test_wells[0],
+                "10:microliter",
+                informatics=[AttachCompounds(test_wells[2], [compd1])],
+            )
+        # Informatics must be a valid type
+        with pytest.raises(TypeError):
+            self.p.transfer(
+                resource.well(0).set_volume("40:microliter"),
+                test_wells[0],
+                "10:microliter",
+                informatics=["foo"],
+            )
+        # All Informatics wells must be part of the Instruction wells
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                resource.well(0).set_volume("40:microliter"),
+                test_wells[0],
+                "10:microliter",
+                informatics=[AttachCompounds([test_wells[0], test_wells[1]], [compd1])],
+            )
+        # cannot provide informatics for the source well
+        with pytest.raises(ValueError):
+            self.p.transfer(
+                resource.well(0).set_volume("40:microliter"),
+                test_wells[0],
+                "10:microliter",
+                informatics=[AttachCompounds(resource.well(0), [compd1])],
+            )
 
     def test_can_append_properties(self):
         """Expected behavior when propagating properties to wells with prior properties."""

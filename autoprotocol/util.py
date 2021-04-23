@@ -180,7 +180,8 @@ def _check_container_type_with_shape(container_type, shape):
                 f"1 or divisible by 2, but {shape} was specified."
             )
 
-    if shape["format"] == "SBS384" and container_wells < 384:
+# access reservoir attribute from predefined container type to determine if stampable
+    if shape["format"] == "SBS384" and container_wells < 384 and container_type.is_reservoir == False:
         raise ValueError(
             f"SBS384 transfers can only be executed in 384 well plates, but "
             f"container_type: {container_type} has {container_wells} wells."

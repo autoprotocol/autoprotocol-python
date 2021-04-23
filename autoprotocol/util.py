@@ -133,6 +133,13 @@ def _validate_as_instance(item, target_type):
     return item
 
 
+# please provide feedback on how I should define a reservoir based on params of container_type and shape or shape_format
+# Perhaps reservoirs can have multiple wells and shape formats.
+def _is_reservoir(container_type, shape_format):
+    if container_type.well_count==1 and shape_format == "SBS384" and container_type.is_tube == False:
+        return True
+    return False
+
 def _check_container_type_with_shape(container_type, shape):
     """
     Checks whether the selected origin and shape pair are valid
@@ -179,7 +186,7 @@ def _check_container_type_with_shape(container_type, shape):
                 f"1 or divisible by 2, but {shape} was specified."
             )
 
-    if shape["format"] == "SBS384" and container_wells < 384:
+    if shape["format"] == "SBS384" and container_wells < 384 and _is_reservoir(container_type, shape["format"]) == False:
         raise ValueError(
             f"SBS384 transfers can only be executed in 384 well plates, but "
             f"container_type: {container_type} has {container_wells} wells."

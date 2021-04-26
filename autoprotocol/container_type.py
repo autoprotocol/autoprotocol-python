@@ -1074,10 +1074,6 @@ ROUND384CLEAR = ContainerType(
 )
 
 #:
-# I set is-reservoir in container object to true for this container below where the error occurred in Xi's run. 
-# For all other containers the is_reservoir param is defaulted to false via the class definition. 
-# If there are cases where this container does not act as a reservoir it may be better to, change the default to true from
-# the specific client protocol code instead. This will ensure that the change will not affect gingko etc.
 RESSW384LP = ContainerType(
     name="384-well singlewell lowprofile reservoir",
     well_count=1,
@@ -1085,7 +1081,6 @@ RESSW384LP = ContainerType(
     well_volume_ul=Unit(35, "milliliter"),
     well_coating=None,
     sterile=False,
-    is_reservoir=True,
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,

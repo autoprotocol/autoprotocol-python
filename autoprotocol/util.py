@@ -179,7 +179,7 @@ def _check_container_type_with_shape(container_type, shape):
                 f"containers must have row and column counts either equal to "
                 f"1 or divisible by 2, but {shape} was specified."
             )
-
+ 
 # access reservoir attribute from predefined container type to determine if stampable
     if shape["format"] == "SBS384" and container_wells < 384 and container_type.is_reservoir == False:
         raise ValueError(

@@ -2,7 +2,6 @@ import pytest
 
 from autoprotocol.unit import Unit
 from autoprotocol.util import parse_unit
-# from autoprotocol.container_type import _CONTAINER_TYPES
 
 class TestParseUnit(object):
     def test_casting_to_unit(self):
@@ -25,8 +24,3 @@ class TestParseUnit(object):
 
         with pytest.raises(TypeError):
             parse_unit("1:ul", ["second", "kg"])
-
-    # def test_reservoir(self):
-    #     container_type_reservoir = _CONTAINER_TYPES["res-sw384-lp"]
-    #     assert container_type_reservoir.is_reservoir == False
-    #     # print(container_type_reservoir.is_reservoir)

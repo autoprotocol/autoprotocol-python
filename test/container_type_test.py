@@ -95,6 +95,8 @@ class TestContainerTypeAttributes(object):
         assert dummy_type.vendor is None
         assert dummy_type.cat_no is None
         assert dummy_type.true_max_vol_ul == dummy_type.well_volume_ul
+        assert dummy_type.is_reservoir == False
+        
 
     def test_echo_attributes(self, dummy_echo):
         assert dummy_echo.container_type.vendor == "Labcyte"
@@ -103,3 +105,8 @@ class TestContainerTypeAttributes(object):
             dummy_echo.container_type.true_max_vol_ul
             > dummy_echo.container_type.well_volume_ul
         )
+
+# from autoprotocol.container_type import _CONTAINER_TYPES
+# a = TestContainerTypeAttributes()
+# a.test_default_attributes(_CONTAINER_TYPES["res-sw384-lp"])
+

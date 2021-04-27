@@ -31,7 +31,15 @@ class TestParseUnit(object):
 
 class TestUtil(object):
     def test_compatible_reservoir_container(self):
-        container_type = _CONTAINER_TYPES["res-sw384-lp"]
-        container_type.capabilities.append("sbs384_compatible")
-        shape = LiquidHandle.builders.shape(1, 1, "SBS384")
-        _check_container_type_with_shape(container_type, shape)
+        # asserts that no exception is raised. If it raises an exception, we catch it, display it, and assert False.
+        try:
+            container_type = _CONTAINER_TYPES["res-sw384-lp"]
+            shape = LiquidHandle.builders.shape(1, 1, "SBS384")
+            _check_container_type_with_shape(container_type, shape)
+        except Exception as exc:
+            assert False, f"{exc}"
+        # asserts that an exception is raised of class ValueError
+        with pytest.raises(ValueError):
+            container_type = _CONTAINER_TYPES["res-sw96-hp"]
+            shape = LiquidHandle.builders.shape(1, 1, "SBS384")
+            _check_container_type_with_shape(container_type, shape)

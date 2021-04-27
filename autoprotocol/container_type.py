@@ -49,6 +49,8 @@ class ContainerType(
     ----------
     name : str
       Full name describing a ContainerType.
+    is_reservoir: bool
+      Indicates whether a ContainerType will act as a reservoir default false.
     is_tube : bool
       Indicates whether a ContainerType is a tube (container with one well).
     well_count : int

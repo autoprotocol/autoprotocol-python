@@ -2,12 +2,11 @@
 # pylint: disable=W0703
 import pytest
 
-from autoprotocol.unit import Unit
-from autoprotocol.util import parse_unit
-
 from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import LiquidHandle
-from autoprotocol.util import _check_container_type_with_shape
+from autoprotocol.unit import Unit
+from autoprotocol.util import _check_container_type_with_shape, parse_unit
+
 
 class TestParseUnit(object):
     def test_casting_to_unit(self):

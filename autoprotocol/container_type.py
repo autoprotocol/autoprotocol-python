@@ -6,7 +6,7 @@ Container-type object and associated functions
     :license: BSD, see LICENSE for more details
 
 """
-
+# fmt: off
 import re
 
 from collections import namedtuple

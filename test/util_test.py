@@ -1,4 +1,5 @@
 # fmt: off
+# pylint: disable=W0703
 import pytest
 
 from autoprotocol.unit import Unit

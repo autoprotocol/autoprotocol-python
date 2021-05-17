@@ -4,5 +4,6 @@ generate LiquidHandle instructions.
 """
 from .liquid_class import LiquidClass
 from .liquid_handle_method import LiquidHandleMethod
+from .dispense import Dispense
 from .mix import *
 from .transfer import *

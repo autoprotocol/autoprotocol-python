@@ -2,6 +2,13 @@
 Changelog
 =========
 
+* :release:`7.8.0 <2021-05-17>`
+* :feature:`300` Port liquid_handle_dispense method (tempest) from txappy to appy
+* :feature:`290` Expand LiquidHandleBuilders class to account for protein buffer liquid class and volume resolution
+* :feature:`298` Helper function for building device level mode_params in LiquidHandleBuilders for tempest 
+* :support:`293` Add tests for liquid_handle_dispense method
+* :support:`292` Update authors
+
 * :release:`7.7.0 <2021-03-18>`
 * :feature:`297` Add support for SMILES to Compound class
 * :bug:`296 major` Remove low-evaporation cover type from FALCON96UBOTTOM

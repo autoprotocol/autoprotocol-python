@@ -13,6 +13,10 @@ Here is a list of active contributors from Strateos:
 - Eriberto Lopez - `EribertoLopez <https://github.com/EribertoLopez>`_ - eriberto.lopez@strateos.com
 - Asuka Ota - `aota001 <https://github.com/aota001>`_ - asuka.ota@strateos.com
 - Joshua Nowak - `joshhacksthings <https://github.com/joshhacksthings>`_ - josh.nowak@strateos.com
+- Xi Liu - `xiliustrateos <https://github.com/xiliustrateos>`_ - xi.liu@strateos.com
+- Eric Shade - `ericschade <https://github.com/ericschade>`_ - eric.shade@strateos.com
+- Aaron Karlsberg - `aaronstrateos <https://github.com/aaronstrateos>`_ - aaron.karlsberg@strateos.com
+
 
 Especially active past contributors we're grateful to:
 

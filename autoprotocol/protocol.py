@@ -910,6 +910,7 @@ class Protocol(object):
             for attr in prop_list
             if attr in explicit_props
         }
+
     # pylint: disable=protected-access
     # pylint: disable=no-member
     def liquid_handle_dispense(

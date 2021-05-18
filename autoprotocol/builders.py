@@ -1440,7 +1440,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         if position_z is not None:
             position_z = self.position_z(**position_z)
-        
+
         if volume_resolution is not None:
             volume_resolution = parse_unit(volume_resolution, "uL")
 
@@ -1512,7 +1512,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             device_mode_params["x_tempest_chip"] = x_tempest_chip
 
         return device_mode_params
-
 
     @staticmethod
     def move_rate(target=None, acceleration=None):

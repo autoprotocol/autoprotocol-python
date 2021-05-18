@@ -7,9 +7,11 @@ from autoprotocol import Protocol, Unit, WellGroup
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle import LiquidHandleMethod, Mix, Transfer
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
-from autoprotocol.liquid_handle.liquid_class import (LiquidClass,
-                                                     VolumeCalibration,
-                                                     VolumeCalibrationBin,)
+from autoprotocol.liquid_handle.liquid_class import (
+    LiquidClass,
+    VolumeCalibration,
+    VolumeCalibrationBin,
+)
 from autoprotocol.liquid_handle.tip_type import TipType
 
 
@@ -426,6 +428,7 @@ class ProteinBuffer(LiquidClass):
         super(ProteinBuffer, self).__init__()
         self.name = "protein_buffer"
 
+
 class LiquidHandleTester(object):
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -433,6 +436,7 @@ class LiquidHandleTester(object):
         self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
         self.tube.well(0).set_volume("50:microliter")
         self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+
 
 class TestLiquidHandleDispenseMode(LiquidHandleTester):
     def test_location_count(self):
@@ -552,8 +556,7 @@ class TestLiquidHandleDispenseMode(LiquidHandleTester):
             liquid=ProteinBuffer,
         )
 
-        transports = [loc.get("transports")
-                      for loc in instruction.data["locations"]]
+        transports = [loc.get("transports") for loc in instruction.data["locations"]]
         for transport in [item for sublist in transports for item in sublist]:
             assert transport["mode_params"]["liquid_class"] == liquid_class
 

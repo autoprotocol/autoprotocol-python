@@ -4,7 +4,7 @@ Changelog
 
 * :release:`7.8.0 <2021-05-17>`
 * :feature:`300` Port liquid_handle_dispense method (tempest) from txappy to appy
-* :feature:`290` Expand LiquidHandleBuilders class to account for protein buffer liquid class and volume resolution
+* :feature:`299` Expand LiquidHandleBuilders class to account for protein buffer liquid class and volume resolution
 * :feature:`298` Helper function for building device level mode_params in LiquidHandleBuilders for tempest
 * :support:`293` Add tests for liquid_handle_dispense method
 * :support:`292` Update authors

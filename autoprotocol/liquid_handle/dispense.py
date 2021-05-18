@@ -4,10 +4,10 @@ Base LiquidHandleMethod used by Protocol.liquid_handle_dispense to generate a
 series of movements that define a dispense from a source into a destination
 """
 
-from .liquid_handle_method import LiquidHandleMethod
+from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
-from ..instruction import LiquidHandle
+from .liquid_handle_method import LiquidHandleMethod
 
 
 # pylint: disable=protected-access

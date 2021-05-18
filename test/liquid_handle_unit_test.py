@@ -3,17 +3,15 @@
 # pragma pylint: disable=protected-access
 import pytest
 
-from autoprotocol import Unit, Protocol, WellGroup
+from autoprotocol import Protocol, Unit, WellGroup
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle import LiquidHandleMethod, Mix, Transfer
-from autoprotocol.liquid_handle.liquid_class import (
-    LiquidClass,
-    VolumeCalibration,
-    VolumeCalibrationBin,
-)
+from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
+from autoprotocol.liquid_handle.liquid_class import (LiquidClass,
+                                                     VolumeCalibration,
+                                                     VolumeCalibrationBin,)
 from autoprotocol.liquid_handle.tip_type import TipType
 
-from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 
 class LiquidClassTester(object):
     tip_type = "generic_1_50"

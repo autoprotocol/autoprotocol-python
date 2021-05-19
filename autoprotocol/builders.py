@@ -1497,7 +1497,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         if (nozzle != "standard") and (nozzle is not None):
             raise ValueError(f"Tempest nozzle is {nozzle}. It must be: standard.")
         if (chip_material not in ["silicone", "pfe"]) and (chip_material is not None):
-            raise ValueError(f"Tempest chip material is {chip_material}. It must be either: silicone or pfe.")
+            raise ValueError(
+                f"Tempest chip material is {chip_material}. It must be either: silicone or pfe."
+            )
 
         device_mode_params = {}
         if any([model, chip_material, nozzle]):

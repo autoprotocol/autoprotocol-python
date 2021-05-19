@@ -1404,7 +1404,10 @@ class LiquidHandleBuilders(InstructionBuilders):
             A dict of positions x, y, and z. Should only be specified if none of
             the other tip position parameters have been specified.
         volume_resolution : Unit, optional
-            LiquidHandle dispense mode volume resolution
+            LiquidHandle dispense mode volume resolution specifies the droplet size to dispense.
+            A specified resolution will exclude machines that are not configured for the given droplet size.
+            By default, None means any droplet size will suffice. Check default droplet size on your machine configuration.
+
 
         Returns
         -------
@@ -1482,7 +1485,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         Raises
         ------
         ValueError
-            If model is not None or "high volume"
+            If model is not None or "high_volume"
         ValueError
             If nozzle is not None or "standard"
         ValueError
@@ -1490,11 +1493,11 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         # tempest chip specification
         if (model != "high_volume") and (model is not None):
-            raise ValueError("tempest chip model must be: high_volume.")
+            raise ValueError(f"Tempest chip model is {model}. It must be: high_volume.")
         if (nozzle != "standard") and (nozzle is not None):
-            raise ValueError("tempest nozzle must be: standard.")
+            raise ValueError(f"Tempest nozzle is {nozzle}. It must be: standard.")
         if (chip_material not in ["silicone", "pfe"]) and (chip_material is not None):
-            raise ValueError("tempest chip material must be: silicone or pfe.")
+            raise ValueError(f"Tempest chip material is {chip_material}. It must be either: silicone or pfe.")
 
         device_mode_params = {}
         if any([model, chip_material, nozzle]):

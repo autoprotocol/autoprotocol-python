@@ -993,7 +993,7 @@ class Protocol(object):
 
         .. code-block:: python
 
-            from appy import Protocol
+            from autoprotocol import Protocol
 
             p = Protocol()
             source = p.ref("source", cont_type="conical-50", discard=True)
@@ -1008,7 +1008,7 @@ class Protocol(object):
 
         .. code-block:: python
 
-            from appy import Protocol
+            from autoprotocol import Protocol
 
             p = Protocol()
             source = p.ref("source", cont_type="conical-50", discard=True)
@@ -1024,7 +1024,7 @@ class Protocol(object):
         .. code-block:: python
 
             from autoprotocol import Unit
-            from appy import Protocol
+            from autoprotocol import Protocol
 
             p = Protocol()
             source = p.ref("source", cont_type="conical-50", discard=True)

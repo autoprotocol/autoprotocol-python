@@ -15,6 +15,7 @@ from .container import COVER_TYPES, SEAL_TYPES, Container, Well
 from .container_type import _CONTAINER_TYPES, ContainerType
 from .informatics import Informatics
 from .instruction import *  # pylint: disable=unused-wildcard-import
+from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
@@ -909,6 +910,232 @@ class Protocol(object):
             for attr in prop_list
             if attr in explicit_props
         }
+
+    # pylint: disable=protected-access
+    # pylint: disable=no-member
+    def liquid_handle_dispense(
+        self,
+        source,
+        destination,
+        volume,
+        rows=8,
+        columns=1,
+        method=DispenseMethod,
+        liquid=LiquidClass,
+        model=None,
+        chip_material=None,
+        nozzle=None,
+    ):
+        """Generates a liquid_handle dispense
+
+        Dispenses liquid from a source well to a group of destination wells.
+
+        Notes
+        -----
+        Some liquidClass parameters including volume calibration and flowrate
+        are not yet supported. There are currently no plans to support liquid
+        level detection and its corresponding thresholds for this mode.
+
+        Parameters
+        ----------
+        source : Well
+            Well(s) to transfer liquid from.
+        destination : Well or WellGroup or list(Well)
+            Well(s) to transfer liquid to.
+        volume : str or Unit or list(str) or list(Unit)
+            Volume(s) of liquid to be transferred from source well to
+            destination wells. The number of volumes specified must
+            correspond to the number of destination wells.
+        rows : int, optional
+            Number of rows to be concurrently transferred
+        columns : int, optional
+            Number of columns to be concurrently transferred
+        liquid : LiquidClass or list(LiquidClass), optional
+            Type(s) of liquid to be dispensed. This affects aspirate and
+            dispense behavior including flowrates and physical movements.
+        method : Dispense or list(Dispense), optional
+            Integrates with the specified liquid to define a set of physical
+            movements.
+        model : str, optional
+            Tempest chip model, currently only support "high_volume".
+        chip_material : str, optional
+            Tempest chip material, support "silicone" and "pfe",
+            default is "silicon".
+        nozzle : str, optional
+            Tempest nozzle type, currently only support "standard".
+            The three chip parameters: model, chip_material, and nozzle will be
+            used in liquid handle mode_params to allow tempest chip specification.
+
+
+        Returns
+        -------
+        LiquidHandle
+            Returns a :py:class:`autoprotocol.instruction.LiquidHandle`
+            instruction created from the specified parameters.
+
+        Raises
+        ------
+        ValueError
+            if source is not a well
+        ValueError
+            if destination and volumes are not of the same length
+        ValueError
+            if model is not high_volume
+        ValueError
+            if nozzle is not standard
+        ValueError
+            if chip_material is not in silicone or pfe
+
+
+        Examples
+        --------
+        A single volume dispense to a single column
+
+        .. code-block:: python
+
+            from autoprotocol import Protocol
+
+            p = Protocol()
+            source = p.ref("source", cont_type="conical-50", discard=True)
+            destination = p.ref("destination", cont_type="96-flat", discard=True)
+            p.liquid_handle_dispense(
+                source=source.well(0),
+                destination=destination.well(0),
+                volume="5:ul"
+            )
+
+        A single volume dispense to a whole 384 well plate
+
+        .. code-block:: python
+
+            from autoprotocol import Protocol
+
+            p = Protocol()
+            source = p.ref("source", cont_type="conical-50", discard=True)
+            destination = p.ref("destination", cont_type="384-flat", discard=True)
+            p.liquid_handle_dispense(
+                source=source.well(0),
+                destination=destination.wells_from(0, 48),
+                volume="5:ul"
+            )
+
+        Dispensing a volume gradient across a plate
+
+        .. code-block:: python
+
+            from autoprotocol import Unit
+            from autoprotocol import Protocol
+
+            p = Protocol()
+            source = p.ref("source", cont_type="conical-50", discard=True)
+            destination = p.ref("destination", cont_type="96-flat", discard=True)
+            p.liquid_handle_dispense(
+                source=source.well(0),
+                destination=destination.wells_from(0, 12),
+                volume=[Unit(_, "uL") for _ in range(1, 13)]
+            )
+
+        See Also
+        --------
+        :py:class:`autoprotocol.liquid_handle.Dispense`
+            Base liquid handling method for dispense operations
+        """
+        if not isinstance(source, Well):
+            raise ValueError(
+                f"source: {source} must be a Well but it was a {type(source)}"
+            )
+        destination = WellGroup(destination)
+
+        if not isinstance(volume, list):
+            volume = [volume] * len(destination)
+        volume = [parse_unit(_, "uL") for _ in volume]
+
+        if not len(destination) == len(volume):
+            raise ValueError(
+                f"A different number of destinations: {destination} and volumes: {volume} were specified."
+            )
+
+        shape = LiquidHandle.builders.shape(rows, columns, None)
+        method = _validate_as_instance(method, DispenseMethod)
+        liquid = _validate_as_instance(liquid, LiquidClass)
+        method._liquid = liquid
+
+        # prime volume
+        if method.prime is True:
+            prime = method.default_prime(None)
+        elif method.prime is False:
+            prime = Unit(0, "uL")
+        else:
+            prime = method.prime
+        prime_volume = parse_unit(prime, "uL")
+
+        # predispense volume
+        if method.predispense is True:
+            predispense = method.default_predispense(None)
+        elif method.predispense is False:
+            predispense = Unit(0, "uL")
+        else:
+            predispense = method.predispense
+        predispense_volume = parse_unit(predispense, "uL")
+
+        auxiliary_locations = [
+            LiquidHandle.builders.location(
+                location=source,
+                transports=method._aspirate_transports(
+                    sum(volume) + prime_volume + predispense_volume
+                ),
+            ),
+            LiquidHandle.builders.location(
+                location=source, transports=method._prime_transports(prime_volume)
+            )
+            if method.prime
+            else [],
+            LiquidHandle.builders.location(
+                location=None,
+                transports=method._predispense_transports(predispense_volume),
+            )
+            if method.predispense
+            else [],
+        ]
+
+        destination_locations = [
+            LiquidHandle.builders.location(
+                location=dest, transports=method._dispense_transports(vol)
+            )
+            for dest, vol in zip(destination, volume)
+        ]
+
+        total_volume_dispensed = (
+            sum([rows * columns * vol for vol in volume])
+            + predispense_volume * rows * columns
+        )
+        if source.volume:
+            source.volume -= total_volume_dispensed
+        else:
+            source.volume = -total_volume_dispensed
+
+        all_destination_wells = [
+            d.container.wells_from_shape(d.index, shape) for d in destination
+        ]
+        for well_group, volume in zip(all_destination_wells, volume):
+            for well in well_group.wells:
+                if well.volume:
+                    well.volume += volume
+                else:
+                    well.volume = volume
+
+        device_mode_params = LiquidHandleBuilders.device_mode_params(
+            model=model, chip_material=chip_material, nozzle=nozzle
+        )
+
+        return self._append_and_return(
+            LiquidHandle(
+                locations=auxiliary_locations + destination_locations,
+                shape=shape,
+                mode="dispense",
+                mode_params=device_mode_params,
+            )
+        )
 
     def store(self, container, condition):
         """

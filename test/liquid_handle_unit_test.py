@@ -3,7 +3,7 @@
 # pragma pylint: disable=protected-access
 import pytest
 
-from autoprotocol import Protocol, Unit, WellGroup
+from autoprotocol import Unit
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle import LiquidHandleMethod, Mix, Transfer
 from autoprotocol.liquid_handle.liquid_class import (

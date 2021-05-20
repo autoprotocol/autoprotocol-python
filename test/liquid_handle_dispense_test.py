@@ -4,8 +4,9 @@
 import pytest
 
 from autoprotocol import Protocol, Unit, WellGroup
-from autoprotocol.liquid_handle.liquid_class import LiquidClass
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
+from autoprotocol.liquid_handle.liquid_class import LiquidClass
+
 
 class ProteinBuffer(LiquidClass):
     def __init__(self):

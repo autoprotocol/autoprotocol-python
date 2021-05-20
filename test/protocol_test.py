@@ -25,9 +25,9 @@ from autoprotocol.instruction import (
     Spin,
     Thermocycle,
 )
+from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
-from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 
 
 class TestProtocolMultipleExist(object):
@@ -3635,6 +3635,7 @@ class LiquidHandleTester(object):
         self.tube.well(0).set_volume("50:microliter")
         self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
 
+
 class TestLiquidHandleDispenseMode(LiquidHandleTester):
     def test_location_count(self):
         volume = "5:uL"
@@ -3642,7 +3643,7 @@ class TestLiquidHandleDispenseMode(LiquidHandleTester):
             source=self.tube.well(0),
             destination=self.flat.wells_from(0, 12),
             volume=volume,
+            method=DispenseMethod,
         )
         assert len(instruction.data["locations"]) == 15
         assert self.protocol.instructions[-1].op == "liquid_handle"
-

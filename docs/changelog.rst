@@ -6,6 +6,11 @@ Changelog
 * :feature:`300` Allow reservoir stamping for plates with shape SBS384 provided that container has capability: `sbs384_compatible`. Capability added to container RESSW384LP.
 * :support:`300` Add tests in util to check if container type is a compatible reservoir
 
+* :release:`7.8.0 <2021-05-18>`
+* :feature:`301` Add liquid_handle_dispense method, include protein buffer liquid class and volume resolution in `LiquidHandleBuilders`. Add helper function for building device level mode_params in LiquidHandleBuilders for tempest.
+* :support:`301` Add tests for liquid_handle_dispense method
+* :support:`301` Update authors
+
 * :release:`7.7.0 <2021-03-18>`
 * :feature:`297` Add support for SMILES to Compound class
 * :bug:`296 major` Remove low-evaporation cover type from FALCON96UBOTTOM

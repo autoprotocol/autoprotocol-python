@@ -28,6 +28,7 @@ class TestParseUnit(object):
         with pytest.raises(TypeError):
             parse_unit("1:ul", ["second", "kg"])
 
+
 class TestUtil(object):
     def test_compatible_reservoir_container(self):
         # asserts that no exception is raised. If it raises an exception, we catch it, display it, and assert False.

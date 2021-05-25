@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :release:`7.9.0 <2021-05-19>`
+* :release:`7.9.0 <2021-05-25>`
 * :feature:`300` Allow reservoir stamping for plates with shape SBS384 provided that container has capability: `sbs384_compatible`. Capability added to container RESSW384LP.
 * :support:`300` Add tests in util to check if container type is a compatible reservoir
 

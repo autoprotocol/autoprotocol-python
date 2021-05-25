@@ -45,12 +45,36 @@ class TestUtil(object):
             shape = LiquidHandle.builders.shape(1, 1, "SBS384")
             _check_container_type_with_shape(container_type, shape)
 
-    def test_stamp_single_well_to_384_well_reservoir(self):
-        # asserts that no exception is raised. If it raises an exception, we catch it, display it, and assert False.
-        try:
-            p = Protocol()
-            source = p.ref("source", cont_type="res-sw384-lp", discard=True)
-            destination = p.ref("destination", cont_type="384-flat", discard=True)
+    def test_stamp_384_well_to_single_well_reservoir_and_reverse(self):
+        p = Protocol()
+        source = p.ref("destination", cont_type="384-flat", discard=True)
+        destination = p.ref("source", cont_type="res-sw384-lp", discard=True)
+        p.transfer(
+            source=source.well(0),
+            destination=destination.well(0),
+            volume="10:microliter",
+            rows=16,
+            columns=24,
+        )
+        assert p.instructions[-1].op == "liquid_handle"
+
+        p = Protocol()
+        source = p.ref("destination", cont_type="res-sw384-lp", discard=True)
+        destination = p.ref("source", cont_type="384-flat", discard=True)
+        p.transfer(
+            source=source.well(0),
+            destination=destination.well(0),
+            volume="10:microliter",
+            rows=16,
+            columns=24,
+        )
+        assert p.instructions[-1].op == "liquid_handle"
+
+    def test_stamp_384_reservoir_and_384_well_plate_to_96_well_plate(self):
+        p = Protocol()
+        source = p.ref("destination", cont_type="384-flat", discard=True)
+        destination = p.ref("source", cont_type="96-flat", discard=True)
+        with pytest.raises(ValueError):
             p.transfer(
                 source=source.well(0),
                 destination=destination.well(0),
@@ -58,5 +82,15 @@ class TestUtil(object):
                 rows=16,
                 columns=24,
             )
-        except Exception as exc:  # pylint: disable=W0703
-            assert False, f"{exc}"
+
+        p = Protocol()
+        source = p.ref("destination", cont_type="res-sw384-lp", discard=True)
+        destination = p.ref("source", cont_type="96-flat", discard=True)
+        with pytest.raises(ValueError):
+            p.transfer(
+                source=source.well(0),
+                destination=destination.well(0),
+                volume="10:microliter",
+                rows=16,
+                columns=24,
+            )

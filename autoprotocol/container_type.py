@@ -6,7 +6,6 @@ Container-type object and associated functions
     :license: BSD, see LICENSE for more details
 
 """
-
 import re
 
 from collections import namedtuple
@@ -1082,7 +1081,14 @@ RESSW384LP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "cover",
+        "dispense",
+        "liquid_handle",
+        "sbs384_compatible",
+    ],
     shortname="res-sw384-lp",
     col_count=1,
     dead_volume_ul=Unit(10, "milliliter"),

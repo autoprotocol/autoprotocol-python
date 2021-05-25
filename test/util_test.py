@@ -1,5 +1,3 @@
-# fmt: off
-# pylint: disable=W0703
 import pytest
 
 from autoprotocol.container_type import _CONTAINER_TYPES

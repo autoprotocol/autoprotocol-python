@@ -36,7 +36,7 @@ class TestUtil(object):
             container_type = _CONTAINER_TYPES["res-sw384-lp"]
             shape = LiquidHandle.builders.shape(1, 1, "SBS384")
             _check_container_type_with_shape(container_type, shape)
-        except Exception as exc:
+        except Exception as exc: #W0703
             assert False, f"{exc}"
         # asserts that an exception is raised of class ValueError
         with pytest.raises(ValueError):

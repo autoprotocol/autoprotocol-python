@@ -3612,6 +3612,7 @@ class TestEvaporate(object):
             },
         )
         assert len(self.p.instructions) == 1
+        assert self.t1.well(0).volume == Unit(0, "uL")
 
         self.p.evaporate(
             self.t1,

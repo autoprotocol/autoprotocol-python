@@ -8001,7 +8001,7 @@ class Protocol(object):
                         f" {evaporator_temperature}"
                     )
 
-        # remove volume from all wells in evaporated container
+        # Autoprotocol Evaporate assumes full evaporation - set volume to 0uL
         for well in ref.all_wells():
             well.set_volume(Unit(0, "uL"))
 

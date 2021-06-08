@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.9.1 <2021-06-08>`
 * :support:`302` Remove volume from wells that are on a container that is evaporated
 
 * :release:`7.9.0 <2021-05-25>`

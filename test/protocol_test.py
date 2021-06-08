@@ -3567,6 +3567,7 @@ class TestTransferVolume(object):
 class TestEvaporate(object):
     p = Protocol()
     t1 = p.ref("c1", cont_type="micro-2.0", discard=True)
+    t1.well(0).set_volume("1000:uL")
 
     def test_bad_args(self):
         with pytest.raises(TypeError):
@@ -3600,6 +3601,9 @@ class TestEvaporate(object):
             )
 
     def test_good_args(self):
+        # assert vial has volume before evaporation
+        assert self.t1.well(0).volume == Unit(1000, "uL")
+
         self.p.evaporate(
             self.t1,
             mode="vortex",
@@ -3612,6 +3616,7 @@ class TestEvaporate(object):
             },
         )
         assert len(self.p.instructions) == 1
+        assert self.t1.well(0).volume == Unit(0, "uL")
 
         self.p.evaporate(
             self.t1,

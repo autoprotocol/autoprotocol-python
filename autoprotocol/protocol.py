@@ -7919,16 +7919,19 @@ class Protocol(object):
             c = p.ref("container", id=None,
                       cont_type="micro-1.5", storage="cold_20")
             blowdown_params = Evaporate.builders.get_mode_params(
-                                mode="blowdown", mode_params={
-                                    "gas":"nitrogen",
-                                    "vortex_speed":Unit("200:rpm"),
-                                    "blow_rate": "200:uL/sec"
-                                })
-            p.evaporate(c,
-                        mode="blowdown",
-                        duration="10:minute",
-                        evaporator_temperature="22:degC",
-                        mode_params = blowdown_params
+                                  mode="blowdown", mode_params={
+                                      "gas":"nitrogen",
+                                      "vortex_speed":Unit("200:rpm"),
+                                      "blow_rate": "200:uL/sec"
+                                  }
+                              )
+            p.evaporate(
+                c,
+                mode="blowdown",
+                duration="10:minute",
+                evaporator_temperature="22:degC",
+                mode_params = blowdown_params
+            )
 
         .. code-block:: json
 
@@ -7997,6 +8000,10 @@ class Protocol(object):
                         "cannot be higher than the evaporator_temperature:"
                         f" {evaporator_temperature}"
                     )
+
+        # Autoprotocol Evaporate assumes full evaporation - set volume to 0uL
+        for well in ref.all_wells():
+            well.set_volume(Unit(0, "uL"))
 
         return self._append_and_return(
             Evaporate(

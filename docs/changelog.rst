@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`7.9.2 <2021-06-22>`
+* :support: remove standard cover type attribute from container type: 96-ubottom-clear-tc
+
 * :release:`7.9.1 <2021-06-08>`
 * :support:`302` Remove volume from wells that are on a container that is evaporated
 

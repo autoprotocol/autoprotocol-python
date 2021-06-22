@@ -459,6 +459,8 @@ class ProtocolInfo(object):
                     c.well(idx).set_volume(aq["volume"])
                     if "name" in aq:
                         c.well(idx).set_name(aq["name"])
+                    if "mass_mg" in aq:
+                        c.well(idx).set_mass(aq["mass_mg"])
                     if "properties" in aq:
                         c.well(idx).set_properties(aq.get("properties"))
 

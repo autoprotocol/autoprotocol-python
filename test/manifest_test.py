@@ -532,10 +532,7 @@ class TestManifest(object):
                         "type": "384-echo",
                         "discard": True,
                         "aliquots": {
-                            "0": {
-                                "volume": "10:microliter",
-                                "mass_mg": "100:milligram"
-                            }
+                            "0": {"volume": "10:microliter", "mass_mg": "100:milligram"}
                         },
                     }
                 },

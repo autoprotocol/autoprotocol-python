@@ -125,7 +125,7 @@ class Well(object):
         Parameters
         ----------
         mass : str, Unit
-            Theoretical volume to indicate for a Well.
+            Theoretical mass to indicate for a Well.
 
         Returns
         -------
@@ -136,8 +136,6 @@ class Well(object):
         ------
         TypeError
             Incorrect input-type given
-        ValueError
-            Volume set exceeds maximum well volume
         """
         if not isinstance(mass, str) and not isinstance(mass, Unit):
             raise TypeError(

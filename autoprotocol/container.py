@@ -10,6 +10,8 @@ Container, Well, WellGroup objects and associated functions
 import json
 import warnings
 
+from autoprotocol.util import parse_unit
+
 from .constants import SBS_FORMAT_SHAPES
 from .unit import Unit
 
@@ -38,6 +40,7 @@ class Well(object):
         self.container = container
         self.index = index
         self.volume = None
+        self.mass = None
         self.name = None
         self.properties = {}
 
@@ -113,6 +116,35 @@ class Well(object):
                     self.properties[key] = value
             else:
                 self.properties[key] = value
+        return self
+
+    def set_mass(self, mass):
+        """
+        Set the theoretical mass of contents in a Well.
+
+        Parameters
+        ----------
+        mass : str, Unit
+            Theoretical mass to indicate for a Well.
+
+        Returns
+        -------
+        Well
+            Well with modified mass
+
+        Raises
+        ------
+        TypeError
+            Incorrect input-type given
+        """
+        if not isinstance(mass, str) and not isinstance(mass, Unit):
+            raise TypeError(
+                f"Mass {mass} is of type {type(mass)}, it should be either "
+                f"'str' or 'Unit'."
+            )
+        m = parse_unit(mass)
+        self.mass = m
+
         return self
 
     def set_volume(self, vol):

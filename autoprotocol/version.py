@@ -1,2 +1,2 @@
 """Maintains current version of package"""
-__version__ = "7.9.1"
+__version__ = "7.9.2"

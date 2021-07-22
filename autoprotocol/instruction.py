@@ -553,7 +553,7 @@ class Incubate(Instruction):
 
     """
 
-    WHERE = ["ambient", "warm_30", "warm_35", "warm_37", "cold_4", "cold_20", "cold_80"]
+    WHERE = ["ambient", "warm_30", "warm_35", "warm_37", "cold_4", "cold_20", "cold_80", "cold_196"]
 
     def __init__(
         self,

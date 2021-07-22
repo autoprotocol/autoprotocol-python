@@ -91,6 +91,7 @@ class TestLiquidHandleBuilder(object):
                 "position_y": flat_mode_params["position_y"],
                 "position_z": flat_mode_params["position_z"],
             },
+            "volume_resolution": None,
         }
 
         assert (

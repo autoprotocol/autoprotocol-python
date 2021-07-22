@@ -2,7 +2,23 @@
 Changelog
 =========
 
-* :feature:`298` Add `warm_35` incubation location
+
+* :feature:`305` Add `warm_35` incubation location
+
+* :release:`7.9.2 <2021-06-22>`
+* :support:`304` remove standard cover type attribute from container type: 96-ubottom-clear-tc
+
+* :release:`7.9.1 <2021-06-08>`
+* :support:`302` Remove volume from wells that are on a container that is evaporated
+
+* :release:`7.9.0 <2021-05-25>`
+* :feature:`300` Allow reservoir stamping for plates with shape SBS384 provided that container has capability: `sbs384_compatible`. Capability added to container RESSW384LP.
+* :support:`300` Add tests in util to check if container type is a compatible reservoir
+
+* :release:`7.8.0 <2021-05-18>`
+* :feature:`301` Add liquid_handle_dispense method, include protein buffer liquid class and volume resolution in `LiquidHandleBuilders`. Add helper function for building device level mode_params in LiquidHandleBuilders for tempest.
+* :support:`301` Add tests for liquid_handle_dispense method
+* :support:`301` Update authors
 
 * :release:`7.7.0 <2021-03-18>`
 * :feature:`297` Add support for SMILES to Compound class

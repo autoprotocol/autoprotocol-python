@@ -180,10 +180,15 @@ def _check_container_type_with_shape(container_type, shape):
                 f"1 or divisible by 2, but {shape} was specified."
             )
 
-    if shape["format"] == "SBS384" and container_wells < 384:
+    if (
+        shape["format"] == "SBS384"
+        and container_wells < 384
+        and "sbs384_compatible" not in container_type.capabilities
+    ):
         raise ValueError(
             f"SBS384 transfers can only be executed in 384 well plates, but "
             f"container_type: {container_type} has {container_wells} wells."
+            f"If the container_type is compatible with less than 384 wells, make sure to include: sbs384_compatible in the container_type's capabilities list"
         )
 
     # check for valid multi channel shapes

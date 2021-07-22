@@ -1223,7 +1223,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     def __init__(self):
         super(LiquidHandleBuilders, self).__init__()
-        self.liquid_classes = ["air", "default", "viscous"]
+        self.liquid_classes = ["air", "default", "viscous", "protein_buffer"]
         self.xy_max = 1
         self.z_references = [
             "well_top",
@@ -1379,6 +1379,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         position_y=None,
         position_z=None,
         tip_position=None,
+        volume_resolution=None,
     ):
         """Helper for building transport mode_params
 
@@ -1402,6 +1403,11 @@ class LiquidHandleBuilders(InstructionBuilders):
         tip_position : dict, optional
             A dict of positions x, y, and z. Should only be specified if none of
             the other tip position parameters have been specified.
+        volume_resolution : Unit, optional
+            LiquidHandle dispense mode volume resolution specifies the droplet size to dispense.
+            A specified resolution will exclude machines that are not configured for the given droplet size.
+            By default, None means any droplet size will suffice. Check default droplet size on your machine configuration.
+
 
         Returns
         -------
@@ -1438,6 +1444,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         if position_z is not None:
             position_z = self.position_z(**position_z)
 
+        if volume_resolution is not None:
+            volume_resolution = parse_unit(volume_resolution, "uL")
+
         return {
             "liquid_class": liquid_class,
             "tip_position": {
@@ -1445,7 +1454,69 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "position_y": position_y,
                 "position_z": position_z,
             },
+            "volume_resolution": volume_resolution,
         }
+
+    @staticmethod
+    def device_mode_params(
+        model=None,
+        chip_material=None,
+        nozzle=None,
+    ):
+        """Helper for building device level mode_params
+
+        Mode params contain information about desired device hardware to
+        be used
+
+        Parameters
+        ----------
+        model : string, optional
+            Tempest chip model.
+        chip_material : string, optional
+            Material that the tempest chip is made of.
+        nozzle : string, optional
+            Type of chip nozzle.
+
+        Returns
+        -------
+        dict
+            device_mode_params for a LiquidHandle instruction
+
+        Raises
+        ------
+        ValueError
+            If model is not None or "high_volume"
+        ValueError
+            If nozzle is not None or "standard"
+        ValueError
+            If chip_material is not None or in the allowable list of tempest chip materials
+        """
+        # tempest chip specification
+        if (model != "high_volume") and (model is not None):
+            raise ValueError(f"Tempest chip model is {model}. It must be: high_volume.")
+        if (nozzle != "standard") and (nozzle is not None):
+            raise ValueError(f"Tempest nozzle is {nozzle}. It must be: standard.")
+        if (chip_material not in ["silicone", "pfe"]) and (chip_material is not None):
+            raise ValueError(
+                f"Tempest chip material is {chip_material}. It must be either: silicone or pfe."
+            )
+
+        device_mode_params = {}
+        if any([model, chip_material, nozzle]):
+            if model is None:
+                model = "high_volume"
+            if chip_material is None:
+                chip_material = "pfe"
+            if nozzle is None:
+                nozzle = "standard"
+            x_tempest_chip = {
+                "model": model,
+                "material": chip_material,
+                "nozzle": nozzle,
+            }
+            device_mode_params["x_tempest_chip"] = x_tempest_chip
+
+        return device_mode_params
 
     @staticmethod
     def move_rate(target=None, acceleration=None):

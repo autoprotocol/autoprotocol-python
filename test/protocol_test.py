@@ -25,6 +25,7 @@ from autoprotocol.instruction import (
     Spin,
     Thermocycle,
 )
+from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import Protocol, Ref
 from autoprotocol.unit import Unit, UnitError
 
@@ -3573,6 +3574,7 @@ class TestTransferVolume(object):
 class TestEvaporate(object):
     p = Protocol()
     t1 = p.ref("c1", cont_type="micro-2.0", discard=True)
+    t1.well(0).set_volume("1000:uL")
 
     def test_bad_args(self):
         with pytest.raises(TypeError):
@@ -3606,6 +3608,9 @@ class TestEvaporate(object):
             )
 
     def test_good_args(self):
+        # assert vial has volume before evaporation
+        assert self.t1.well(0).volume == Unit(1000, "uL")
+
         self.p.evaporate(
             self.t1,
             mode="vortex",
@@ -3618,6 +3623,7 @@ class TestEvaporate(object):
             },
         )
         assert len(self.p.instructions) == 1
+        assert self.t1.well(0).volume == Unit(0, "uL")
 
         self.p.evaporate(
             self.t1,
@@ -3631,3 +3637,25 @@ class TestEvaporate(object):
             },
         )
         assert self.p.instructions[0].op == "evaporate"
+
+
+class LiquidHandleTester(object):
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
+        self.tube.well(0).set_volume("50:microliter")
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+
+
+class TestLiquidHandleDispenseMode(LiquidHandleTester):
+    def test_location_count(self):
+        volume = "5:uL"
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.wells_from(0, 12),
+            volume=volume,
+            method=DispenseMethod,
+        )
+        assert len(instruction.data["locations"]) == 15
+        assert self.protocol.instructions[-1].op == "liquid_handle"

@@ -517,6 +517,30 @@ class TestManifest(object):
             )
         assert "Theoretical volume" in str(e.value)
 
+    def test_container_masses(self):
+        protocol_info2 = ProtocolInfo(
+            {
+                "name": "Test Container Masses",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        parsed = protocol_info2.parse(
+            self.protocol,
+            {
+                "refs": {
+                    "echo_plate": {
+                        "type": "384-echo",
+                        "discard": True,
+                        "aliquots": {
+                            "0": {"volume": "10:microliter", "mass_mg": "100:milligram"}
+                        },
+                    }
+                },
+                "parameters": {"cont": "echo_plate"},
+            },
+        )
+        assert parsed["cont"].well(0).mass == Unit(100, "milligram")
+
     # Test parsing of local manifest file
     def test_json_parse(self):
         with open("test/manifest_test.json", "r") as f:

@@ -156,6 +156,13 @@ class TestRef(object):
                     ref = list(p.as_dict()["refs"].values())[0]
                     assert ref["cover"] == cover
 
+    def test_cold_196_storage(self, dummy_protocol):
+        p = dummy_protocol
+        c1 = p.ref("discard_test", None, "96-flat", storage="cold_196")
+        assert p.refs["discard_test"].opts["store"]["where"] == "cold_196"
+        c1.set_storage("warm_35")
+        assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "warm_35"
+
 
 class TestThermocycle(object):
     def test_thermocycle_append(self):

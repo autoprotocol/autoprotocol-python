@@ -2,6 +2,9 @@
 Changelog
 =========
 
+
+* :feature:`305` Add `cold_196` incubation location
+
 * :release:`7.9.2 <2021-06-22>`
 * :support:`304` remove standard cover type attribute from container type: 96-ubottom-clear-tc
 

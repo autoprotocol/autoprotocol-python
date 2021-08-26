@@ -119,7 +119,7 @@ def param_default(type_desc):
 
         return {"value": default, "inputs": default_inputs}
     elif type_desc["type"] == "csv-table":
-        return [{}, {}]
+        return [{}, [{}]]
     else:
         return None
 
@@ -201,7 +201,7 @@ def convert_param(protocol, val, type_desc):
                 f"The value supplied to input '{label}' (type aliquot++) is "
                 f"improperly formatted."
             )
-    elif type in "compound":
+    elif type == "compound":
         try:
             return Compound(val["format"], val["value"])
         except CompoundError as e:

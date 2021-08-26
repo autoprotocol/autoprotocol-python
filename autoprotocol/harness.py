@@ -119,7 +119,7 @@ def param_default(type_desc):
 
         return {"value": default, "inputs": default_inputs}
     elif type_desc["type"] == "csv-table":
-        return [{}, {}]
+        return [{}, [{}]]
     else:
         return None
 

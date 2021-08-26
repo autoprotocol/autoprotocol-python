@@ -201,7 +201,7 @@ def convert_param(protocol, val, type_desc):
                 f"The value supplied to input '{label}' (type aliquot++) is "
                 f"improperly formatted."
             )
-    elif type in "compound":
+    elif type == "compound":
         try:
             return Compound(val["format"], val["value"])
         except CompoundError as e:

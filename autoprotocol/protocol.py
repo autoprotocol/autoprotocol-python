@@ -1152,7 +1152,7 @@ class Protocol(object):
                 f"A different number of destinations: {destination} and volumes: {volume} were specified."
             )
 
-        def locations_generator(volume=volume, destination=destination):
+        def locations_generator(volume=volume, destination=destination, method=method):
             if mode == "multi-dispense":
                 for i, src_list in enumerate(source):
                     len_srcs = len(src_list)
@@ -1230,10 +1230,15 @@ class Protocol(object):
                 sum([rows * columns * vol for vol in dispense_volume])
                 + predispense_volume * rows * columns
             )
-            if source.volume:
-                source.volume -= total_volume_dispensed
+            if isinstance(source, Well):
+                if source.volume:
+                    source.volume -= total_volume_dispensed
+                else:
+                    source.volume = -total_volume_dispensed
+            elif isinstance(source, str):
+                pass  # is the name of the solution
             else:
-                source.volume = -total_volume_dispensed
+                raise ValueError(f"Unexpected source type {type(source)} {source}")
 
             def update_destination_well_volumes(
                 destination_dispense_transports,

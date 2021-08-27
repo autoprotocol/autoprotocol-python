@@ -1155,15 +1155,19 @@ class Protocol(object):
         def locations_generator(volume=volume, destination=destination):
             if mode == "multi-dispense":
                 for i, src_list in enumerate(source):
-                    source_aspirate: List[dict] = method._aspirate_transports(
-                        sum(volume) + prime_volume + predispense_volume
-                    ) * len(src_list)
-                    source_prime: List[dict] = method._prime_transports(
-                        sum(volume) + prime_volume + predispense_volume
-                    ) * len(src_list)
-                    source_predispense: List[dict] = method._predispense_transports(
-                        predispense_volume
-                    ) * len(src_list)
+                    len_srcs = len(src_list)
+                    source_aspirate: List[dict] = (
+                        method._aspirate_transports(
+                            sum(volume) + prime_volume + predispense_volume
+                        )
+                        * len_srcs
+                    )
+                    source_prime: List[dict] = (
+                        method._prime_transports(prime_volume) * len_srcs
+                    )
+                    source_predispense: List[dict] = (
+                        method._predispense_transports(predispense_volume) * len_srcs
+                    )
                     destination_well: List[Well] = (
                         destination if len(destination) == 1 else [destination[i]]
                     )
@@ -1173,13 +1177,12 @@ class Protocol(object):
                     destination_dispense_transports: List[dict] = [
                         LiquidHandle.builders.location(
                             location=dest,
-                            transports=method._dispense_transports(vol) * len(src_list),
+                            transports=(method._dispense_transports(vol) * len_srcs),
                         )
                         for dest, vol in zip(destination_well, liha_dispense_volume)
                     ]
-                    yield src_list[
-                        0
-                    ], source_aspirate, source_prime, source_predispense, destination_well, liha_dispense_volume, destination_dispense_transports
+                    dispense_src = src_list[0]
+                    yield dispense_src, source_aspirate, source_prime, source_predispense, destination_well, liha_dispense_volume, destination_dispense_transports
             else:
                 source_aspirate: List[dict] = method._aspirate_transports(
                     sum(volume) + prime_volume + predispense_volume
@@ -1239,11 +1242,12 @@ class Protocol(object):
                 When multi-dispensing take into account the wells dispensed to
                 by the additional chips and update their volumes
                 """
+                num_dest_transports = len(
+                    destination_dispense_transports[0].get("transports")
+                )
                 if mode == "multi-dispense":
                     for w in destination:
-                        return w.container.wells_from(
-                            w.index, len(destination_dispense_transports)
-                        )
+                        return w.container.wells_from(w.index, num_dest_transports)
                 else:
                     return destination
 

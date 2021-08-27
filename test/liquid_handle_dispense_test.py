@@ -51,6 +51,28 @@ class TestLiquidHandleMultiDispenseMode:
             volume=self.test_volume,
             mode=self.mode,
         )
+        assert self.protocol.instructions[-1].locations[0][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[0]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[3][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[3]["transports"])
+            == intake_hoses
+        )
+
+        num_dests = 1
+        filled_wells = self.flat.container_type.row_count() * len(source) * num_dests
+        assert [
+            w.volume == Unit(self.test_volume)
+            for w in self.flat.wells_from(0, filled_wells, columnwise=True)
+        ]
 
     def test_intake_hoses_in_single_src_to_multi_dest(self):
         intake_hoses = 3
@@ -65,6 +87,29 @@ class TestLiquidHandleMultiDispenseMode:
             volume=self.test_volume,
             mode=self.mode,
         )
+        assert self.protocol.instructions[-1].locations[0][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[0]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[3][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[3]["transports"])
+            == intake_hoses
+        )
+
+        filled_wells = (
+            self.flat.container_type.row_count() * len(source) * len(destination)
+        )
+        assert [
+            w.volume == Unit(self.test_volume)
+            for w in self.flat.wells_from(0, filled_wells, columnwise=True)
+        ]
 
     def test_intake_hoses_for_multiple_srcs_to_single_dest(self):
         intake_hoses = 3
@@ -81,6 +126,96 @@ class TestLiquidHandleMultiDispenseMode:
             volume=self.test_volume,
             mode=self.mode,
         )
+        assert self.protocol.instructions[-1].locations[0][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[0]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[1][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[1]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[2].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[2].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[3][
+            "location"
+        ] == self.src_tube_2.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[3]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[4][
+            "location"
+        ] == self.src_tube_2.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[4]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[5].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[5].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[6][
+            "location"
+        ] == self.src_tube_3.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[6]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[7][
+            "location"
+        ] == self.src_tube_3.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[7]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[8].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[8].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[9][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[9]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[10][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[10]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[11][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[11]["transports"])
+            == intake_hoses
+        )
+
+        num_dests = 1
+        filled_wells = self.flat.container_type.row_count() * len(source) * num_dests
+        assert [
+            w.volume == Unit(self.test_volume)
+            for w in self.flat.wells_from(0, filled_wells, columnwise=True)
+        ]
 
     def test_intake_hoses_for_multiple_srcs_to_mulit_dest(self):
         intake_hoses = 3
@@ -100,6 +235,97 @@ class TestLiquidHandleMultiDispenseMode:
             volume=self.test_volume,
             mode=self.mode,
         )
+        assert self.protocol.instructions[-1].locations[0][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[0]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[1][
+            "location"
+        ] == self.src_tube_1.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[1]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[2].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[2].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[3][
+            "location"
+        ] == self.src_tube_2.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[3]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[4][
+            "location"
+        ] == self.src_tube_2.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[4]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[5].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[5].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[6][
+            "location"
+        ] == self.src_tube_3.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[6]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[7][
+            "location"
+        ] == self.src_tube_3.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[7]["transports"])
+            == intake_hoses
+        )
+        assert self.protocol.instructions[-1].locations[8].get("location") is None
+        assert (
+            len(self.protocol.instructions[-1].locations[8].get("transports"))
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[9][
+            "location"
+        ] == self.flat.well(0)
+        assert (
+            len(self.protocol.instructions[-1].locations[9]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[10][
+            "location"
+        ] == self.flat.well(3)
+        assert (
+            len(self.protocol.instructions[-1].locations[10]["transports"])
+            == intake_hoses
+        )
+
+        assert self.protocol.instructions[-1].locations[11][
+            "location"
+        ] == self.flat.well(6)
+        assert (
+            len(self.protocol.instructions[-1].locations[11]["transports"])
+            == intake_hoses
+        )
+
+        filled_wells = (
+            self.flat.container_type.row_count() * len(source) * len(destination)
+        )
+        assert [
+            w.volume == Unit(self.test_volume)
+            for w in self.flat.wells_from(0, filled_wells, columnwise=True)
+        ]
 
 
 class TestLiquidHandleDispenseMode:

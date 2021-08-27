@@ -16,24 +16,6 @@ class ProteinBuffer(LiquidClass):
         self.name = "protein_buffer"
 
 
-class Solution1(LiquidClass):
-    def __init__(self):
-        super(Solution1, self).__init__()
-        self.name = "solution_1"
-
-
-class Solution2(LiquidClass):
-    def __init__(self):
-        super(Solution2, self).__init__()
-        self.name = "solution_2"
-
-
-class Solution3(LiquidClass):
-    def __init__(self):
-        super(Solution3, self).__init__()
-        self.name = "solution_3"
-
-
 class TestLiquidHandleMultiDispenseMode:
     """Test using multipte hoses in one tube that will dispense to multiple columns at once"""
 
@@ -58,9 +40,6 @@ class TestLiquidHandleMultiDispenseMode:
         self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
         self.test_volume = "100:uL"
         self.mode = "multi-dispense"
-        self.solution_1 = Solution1
-        self.solution_2 = Solution2
-        self.solution_3 = Solution3
 
     def test_intake_hoses_in_single_src_to_single_dest(self):
         intake_hoses = 3
@@ -351,9 +330,9 @@ class TestLiquidHandleMultiDispenseMode:
     def test_intake_hoses_for_multiple_src_solutions_to_mulit_dest(self):
         intake_hoses = 3
         sources = [
-            "solution_1",
-            "solution_2",
-            "solution_3",
+            self.reagent_name_1,
+            self.reagent_name_2,
+            self.reagent_name_3,
         ]
         source: List[List[Well]] = [[src] * intake_hoses for src in sources]
         destination = [
@@ -366,12 +345,18 @@ class TestLiquidHandleMultiDispenseMode:
             volume=self.test_volume,
             mode=self.mode,
         )
-        assert self.protocol.instructions[-1].locations[0]["location"] == "solution_1"
+        assert (
+            self.protocol.instructions[-1].locations[0]["location"]
+            == self.reagent_name_1
+        )
         assert (
             len(self.protocol.instructions[-1].locations[0]["transports"])
             == intake_hoses
         )
-        assert self.protocol.instructions[-1].locations[1]["location"] == "solution_1"
+        assert (
+            self.protocol.instructions[-1].locations[1]["location"]
+            == self.reagent_name_1
+        )
         assert (
             len(self.protocol.instructions[-1].locations[1]["transports"])
             == intake_hoses
@@ -382,12 +367,18 @@ class TestLiquidHandleMultiDispenseMode:
             == intake_hoses
         )
 
-        assert self.protocol.instructions[-1].locations[3]["location"] == "solution_2"
+        assert (
+            self.protocol.instructions[-1].locations[3]["location"]
+            == self.reagent_name_2
+        )
         assert (
             len(self.protocol.instructions[-1].locations[3]["transports"])
             == intake_hoses
         )
-        assert self.protocol.instructions[-1].locations[4]["location"] == "solution_2"
+        assert (
+            self.protocol.instructions[-1].locations[4]["location"]
+            == self.reagent_name_2
+        )
         assert (
             len(self.protocol.instructions[-1].locations[4]["transports"])
             == intake_hoses
@@ -398,12 +389,18 @@ class TestLiquidHandleMultiDispenseMode:
             == intake_hoses
         )
 
-        assert self.protocol.instructions[-1].locations[6]["location"] == "solution_3"
+        assert (
+            self.protocol.instructions[-1].locations[6]["location"]
+            == self.reagent_name_3
+        )
         assert (
             len(self.protocol.instructions[-1].locations[6]["transports"])
             == intake_hoses
         )
-        assert self.protocol.instructions[-1].locations[7]["location"] == "solution_3"
+        assert (
+            self.protocol.instructions[-1].locations[7]["location"]
+            == self.reagent_name_3
+        )
         assert (
             len(self.protocol.instructions[-1].locations[7]["transports"])
             == intake_hoses

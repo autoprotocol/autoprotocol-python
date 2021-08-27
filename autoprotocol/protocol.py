@@ -945,7 +945,7 @@ class Protocol(object):
         place in the source by specifying a List of Lists of sources where the
         number of items in the internal List represents the number of intake
         hoses to use in the Set of sources.
-            - ie: source=[[source.well(0), source.well(0), source.well(0)]]
+        - ie: source=[[source.well(0), source.well(0), source.well(0)]]
 
         Parameters
         ----------
@@ -2435,7 +2435,7 @@ class Protocol(object):
         if spin_direction is not None:
             if not isinstance(spin_direction, list):
                 raise TypeError("Spin directions must be in the form of a list.")
-            if len(spin_direction) is 0:
+            if len(spin_direction) == 0:
                 raise ValueError(
                     "Spin direction must be a list containing at least one "
                     "spin direction ('cw', 'ccw')"

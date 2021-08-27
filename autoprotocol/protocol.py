@@ -1247,10 +1247,10 @@ class Protocol(object):
                 When multi-dispensing take into account the wells dispensed to
                 by the additional chips and update their volumes
                 """
-                num_dest_transports = len(
-                    destination_dispense_transports[0].get("transports")
-                )
                 if mode == "multi-dispense":
+                    num_dest_transports = len(
+                        destination_dispense_transports[0].get("transports")
+                    )
                     for w in destination:
                         return w.container.wells_from(w.index, num_dest_transports)
                 else:

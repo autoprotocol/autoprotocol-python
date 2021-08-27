@@ -1,9 +1,11 @@
 # pragma pylint: disable=missing-docstring, no-self-use, invalid-name
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 # pragma pylint: disable=protected-access
+from typing import List
+
 import pytest
 
-from autoprotocol import Protocol, Unit, WellGroup
+from autoprotocol import Protocol, Unit, Well, WellGroup
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.liquid_handle.liquid_class import LiquidClass
 
@@ -14,7 +16,93 @@ class ProteinBuffer(LiquidClass):
         self.name = "protein_buffer"
 
 
-class LiquidHandleTester(object):
+class TestLiquidHandleMultiDispenseMode:
+    """Test using multipte hoses in one tube that will dispense to multiple columns at once"""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.src_tube_1 = self.protocol.ref(
+            "src_tube_1", cont_type="micro-2.0", discard=True
+        )
+        self.src_tube_2 = self.protocol.ref(
+            "src_tube_2", cont_type="micro-2.0", discard=True
+        )
+        self.src_tube_3 = self.protocol.ref(
+            "src_tube_3", cont_type="micro-2.0", discard=True
+        )
+        self.src_tube_1.well(0).set_volume("50:microliter")
+        self.src_tube_2.well(0).set_volume("50:microliter")
+        self.src_tube_3.well(0).set_volume("50:microliter")
+        self.reagent_name_1 = "reagent_name_1"
+        self.reagent_name_2 = "reagent_name_2"
+        self.reagent_name_3 = "reagent_name_3"
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+        self.test_volume = "100:uL"
+        self.mode = "multi-dispense"
+
+    def test_intake_hoses_in_single_src_to_single_dest(self):
+        intake_hoses = 3
+        source: List[List[Well]] = [[self.src_tube_1.well(0)] * intake_hoses]
+        destination = self.flat.well(0)
+        self.protocol.liquid_handle_dispense(
+            source=source,
+            destination=destination,
+            volume=self.test_volume,
+            mode=self.mode,
+        )
+
+    def test_intake_hoses_in_single_src_to_multi_dest(self):
+        intake_hoses = 3
+        source: List[List[Well]] = [[self.src_tube_1.well(0)] * intake_hoses]
+        destination = [
+            self.flat.well(i)
+            for i in range(0, (intake_hoses * len(source)), intake_hoses)
+        ]
+        self.protocol.liquid_handle_dispense(
+            source=source,
+            destination=destination,
+            volume=self.test_volume,
+            mode=self.mode,
+        )
+
+    def test_intake_hoses_for_multiple_srcs_to_single_dest(self):
+        intake_hoses = 3
+        sources = [
+            self.src_tube_1.well(0),
+            self.src_tube_2.well(0),
+            self.src_tube_3.well(0),
+        ]
+        source: List[List[Well]] = [[src] * intake_hoses for src in sources]
+        destination = self.flat.well(0)
+        self.protocol.liquid_handle_dispense(
+            source=source,
+            destination=destination,
+            volume=self.test_volume,
+            mode=self.mode,
+        )
+
+    def test_intake_hoses_for_multiple_srcs_to_mulit_dest(self):
+        intake_hoses = 3
+        sources = [
+            self.src_tube_1.well(0),
+            self.src_tube_2.well(0),
+            self.src_tube_3.well(0),
+        ]
+        source: List[List[Well]] = [[src] * intake_hoses for src in sources]
+        destination = [
+            self.flat.well(i)
+            for i in range(0, (intake_hoses * len(source)), intake_hoses)
+        ]
+        self.protocol.liquid_handle_dispense(
+            source=source,
+            destination=destination,
+            volume=self.test_volume,
+            mode=self.mode,
+        )
+
+
+class TestLiquidHandleDispenseMode:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.protocol = Protocol()
@@ -22,8 +110,6 @@ class LiquidHandleTester(object):
         self.tube.well(0).set_volume("50:microliter")
         self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
 
-
-class TestLiquidHandleDispenseMode(LiquidHandleTester):
     def test_location_count(self):
         volume = "5:uL"
         instruction = self.protocol.liquid_handle_dispense(

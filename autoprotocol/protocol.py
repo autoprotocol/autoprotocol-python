@@ -9,6 +9,8 @@ Module containing the main `Protocol` object and associated functions
 
 import warnings
 
+from typing import List
+
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
@@ -925,6 +927,7 @@ class Protocol(object):
         model=None,
         chip_material=None,
         nozzle=None,
+        mode=None,
     ):
         """Generates a liquid_handle dispense
 
@@ -936,10 +939,20 @@ class Protocol(object):
         are not yet supported. There are currently no plans to support liquid
         level detection and its corresponding thresholds for this mode.
 
+        "multi-dispense" mode will allow a user to specify using multiple intake
+        hoses to dispense to multiple destinations at once. To use multiple
+        intake hoses from a single source, specify how many hoses to
+        place in the source by specifying a List of Lists of sources where the
+        number of items in the internal List represents the number of intake
+        hoses to use in the Set of sources.
+            - ie: source=[[source.well(0), source.well(0), source.well(0)]]
+
         Parameters
         ----------
-        source : Well
-            Well(s) to transfer liquid from.
+        source : Well or str or  list(list(Well)) or list(list(str))
+            Well(s) or reagent to transfer liquid from if multi-dispense is specified
+            the number of replicates per list represents the number of intake
+            hoses to place in the source.
         destination : Well or WellGroup or list(Well)
             Well(s) to transfer liquid to.
         volume : str or Unit or list(str) or list(Unit)
@@ -965,6 +978,10 @@ class Protocol(object):
             Tempest nozzle type, currently only support "standard".
             The three chip parameters: model, chip_material, and nozzle will be
             used in liquid handle mode_params to allow tempest chip specification.
+        mode : str, optional
+            Specifying "multi-dispense" will allow a user to specify the use
+            of multiple Tempest intake hoses. Currently, only "multi-dipense"
+            is supported.
 
 
         Returns
@@ -1035,25 +1052,71 @@ class Protocol(object):
                 volume=[Unit(_, "uL") for _ in range(1, 13)]
             )
 
+        Dispensing using multi-dispense and 3 intake hoses in a single source
+        and multi-dispensing to multiple destination columns
+
+        .. code-block:: python
+
+            from autoprotocol import Unit
+            from autoprotocol import Protocol
+
+            p = Protocol()
+            source = p.ref("source", cont_type="conical-50", discard=True)
+            destination = p.ref("destination", cont_type="96-flat", discard=True)
+
+            intake_hoses = 3
+            source: List[List[Well]] = [[source.well(0)] * intake_hoses]
+            destination = [
+                destination.well(i)
+                for i in range(0, (intake_hoses*len(source)), intake_hoses)
+            ]
+            self.protocol.liquid_handle_dispense(
+                source=source,
+                destination=destination,
+                volume='100:microliter',
+                mode='multi-dispense'
+            )
+
+
         See Also
         --------
         :py:class:`autoprotocol.liquid_handle.Dispense`
             Base liquid handling method for dispense operations
         """
-        if not isinstance(source, Well):
+        if not mode and not isinstance(source, Well):
             raise ValueError(
                 f"source: {source} must be a Well but it was a {type(source)}"
             )
-        destination = WellGroup(destination)
+        elif mode == "multi-dispense":
+            # The source must be a list of strings or a list of wells - Is there a case when we use a combo?
+            # Assert that the sources and dssts are given as [list()]
+            for i, src_list in enumerate(source):
+                if not isinstance(src_list, list):
+                    raise ValueError(
+                        f"Mode {mode} expects source to be a List[List[Union[Well or String]] instead "
+                        f"received {src_list} in source[{i}]"
+                    )
+                if len(list(set(src_list))) > 1:
+                    raise ValueError(
+                        f"source lists must be of the same type but {set(src_list)} were found in source[{i}]"
+                    )
+            if isinstance(destination, list):
+                len_dests, len_srcs = len(destination), len(source)
+                if len_dests > 1 and len_dests != len_srcs:
+                    raise ValueError(
+                        f"When specifying more than one destination locations "
+                        f"the number of destinations must match the number of source groupings "
+                        f"num of destinations {len_dests} != num of source groupings {len_srcs}"
+                    )
 
-        if not isinstance(volume, list):
-            volume = [volume] * len(destination)
-        volume = [parse_unit(_, "uL") for _ in volume]
-
-        if not len(destination) == len(volume):
-            raise ValueError(
-                f"A different number of destinations: {destination} and volumes: {volume} were specified."
-            )
+                if isinstance(volume, list):
+                    len_vols = len(volume)
+                    if len_vols > 1 and len_vols != len_dests:
+                        raise ValueError(
+                            f"When specifying more than one volume "
+                            f"the number of volumes must match the number of destination locations "
+                            f"num of volumes {len_vols} != num of destinations {len_dests}"
+                        )
 
         shape = LiquidHandle.builders.shape(rows, columns, None)
         method = _validate_as_instance(method, DispenseMethod)
@@ -1062,67 +1125,140 @@ class Protocol(object):
 
         # prime volume
         if method.prime is True:
-            prime = method.default_prime(None)
+            prime_volume: Unit = parse_unit(method.default_prime(None), "uL")
         elif method.prime is False:
-            prime = Unit(0, "uL")
+            prime_volume: Unit = Unit(0, "uL")
         else:
-            prime = method.prime
-        prime_volume = parse_unit(prime, "uL")
+            prime_volume: Unit = parse_unit(method.prime, "uL")
 
         # predispense volume
         if method.predispense is True:
-            predispense = method.default_predispense(None)
+            predispense_volume: Unit = parse_unit(
+                method.default_predispense(None), "uL"
+            )
         elif method.predispense is False:
-            predispense = Unit(0, "uL")
+            predispense_volume: Unit = Unit(0, "uL")
         else:
-            predispense = method.predispense
-        predispense_volume = parse_unit(predispense, "uL")
+            predispense_volume: Unit = parse_unit(method.predispense, "uL")
 
-        auxiliary_locations = [
-            LiquidHandle.builders.location(
-                location=source,
-                transports=method._aspirate_transports(
+        destination = WellGroup(destination)
+
+        if not isinstance(volume, list):
+            volume: List[Unit] = [volume] * len(destination)
+        volume: List[Unit] = [parse_unit(_, "uL") for _ in volume]
+
+        if not len(destination) == len(volume):
+            raise ValueError(
+                f"A different number of destinations: {destination} and volumes: {volume} were specified."
+            )
+
+        def locations_generator(volume=volume, destination=destination):
+            if mode == "multi-dispense":
+                for i, src_list in enumerate(source):
+                    source_aspirate: List[dict] = method._aspirate_transports(
+                        sum(volume) + prime_volume + predispense_volume
+                    ) * len(src_list)
+                    source_prime: List[dict] = method._prime_transports(
+                        sum(volume) + prime_volume + predispense_volume
+                    ) * len(src_list)
+                    source_predispense: List[dict] = method._predispense_transports(
+                        predispense_volume
+                    ) * len(src_list)
+                    destination_well: List[Well] = (
+                        destination if len(destination) == 1 else [destination[i]]
+                    )
+                    liha_dispense_volume: List[Unit] = (
+                        volume if len(volume) == 1 else [volume[i]]
+                    )
+                    destination_dispense_transports: List[dict] = [
+                        LiquidHandle.builders.location(
+                            location=dest,
+                            transports=method._dispense_transports(vol) * len(src_list),
+                        )
+                        for dest, vol in zip(destination_well, liha_dispense_volume)
+                    ]
+                    yield src_list[
+                        0
+                    ], source_aspirate, source_prime, source_predispense, destination_well, liha_dispense_volume, destination_dispense_transports
+            else:
+                source_aspirate: List[dict] = method._aspirate_transports(
                     sum(volume) + prime_volume + predispense_volume
+                )
+                source_prime: List[dict] = method._prime_transports(prime_volume)
+                source_predispense: List[dict] = method._predispense_transports(
+                    predispense_volume
+                )
+                destination_dispense_transports: List[dict] = [
+                    LiquidHandle.builders.location(
+                        location=dest, transports=method._dispense_transports(vol)
+                    )
+                    for dest, vol in zip(destination, volume)
+                ]
+                yield source, source_aspirate, source_prime, source_predispense, destination, volume, destination_dispense_transports
+
+        auxiliary_locations, destination_locations = [], []
+        for (
+            source,
+            source_aspirate,
+            source_prime,
+            source_predispense,
+            destination,
+            dispense_volume,
+            destination_dispense_transports,
+        ) in locations_generator():
+            auxiliary_locations += [
+                LiquidHandle.builders.location(
+                    location=source, transports=source_aspirate
                 ),
-            ),
-            LiquidHandle.builders.location(
-                location=source, transports=method._prime_transports(prime_volume)
-            )
-            if method.prime
-            else [],
-            LiquidHandle.builders.location(
-                location=None,
-                transports=method._predispense_transports(predispense_volume),
-            )
-            if method.predispense
-            else [],
-        ]
+                LiquidHandle.builders.location(location=source, transports=source_prime)
+                if method.prime
+                else [],
+                LiquidHandle.builders.location(
+                    location=None, transports=source_predispense
+                )
+                if method.predispense
+                else [],
+            ]
 
-        destination_locations = [
-            LiquidHandle.builders.location(
-                location=dest, transports=method._dispense_transports(vol)
+            # Include additional destinations
+            destination_locations += destination_dispense_transports
+
+            total_volume_dispensed: Unit = (
+                sum([rows * columns * vol for vol in dispense_volume])
+                + predispense_volume * rows * columns
             )
-            for dest, vol in zip(destination, volume)
-        ]
+            if source.volume:
+                source.volume -= total_volume_dispensed
+            else:
+                source.volume = -total_volume_dispensed
 
-        total_volume_dispensed = (
-            sum([rows * columns * vol for vol in volume])
-            + predispense_volume * rows * columns
-        )
-        if source.volume:
-            source.volume -= total_volume_dispensed
-        else:
-            source.volume = -total_volume_dispensed
-
-        all_destination_wells = [
-            d.container.wells_from_shape(d.index, shape) for d in destination
-        ]
-        for well_group, volume in zip(all_destination_wells, volume):
-            for well in well_group.wells:
-                if well.volume:
-                    well.volume += volume
+            def update_destination_well_volumes(
+                destination_dispense_transports,
+            ) -> WellGroup:
+                """
+                When multi-dispensing take into account the wells dispensed to
+                by the additional chips and update their volumes
+                """
+                if mode == "multi-dispense":
+                    for w in destination:
+                        return w.container.wells_from(
+                            w.index, len(destination_dispense_transports)
+                        )
                 else:
-                    well.volume = volume
+                    return destination
+
+            all_destination_wells: List[WellGroup] = [
+                d.container.wells_from_shape(d.index, shape)
+                for d in update_destination_well_volumes(
+                    destination_dispense_transports
+                )
+            ]
+            for well_group, vol in zip(all_destination_wells, dispense_volume):
+                for well in well_group.wells:
+                    if well.volume:
+                        well.volume += vol
+                    else:
+                        well.volume = vol
 
         device_mode_params = LiquidHandleBuilders.device_mode_params(
             model=model, chip_material=chip_material, nozzle=nozzle

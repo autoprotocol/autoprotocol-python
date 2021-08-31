@@ -1238,6 +1238,70 @@ FLAT96DELTA = ContainerType(
     cat_no="136101",
 )
 
+#:
+FLAT384BLACKUBOTTOM = ContainerType(
+    name="Spheroid Microplate, U bottom, Black plates ",
+    well_count=384,
+    well_depth_mm=None,
+    well_volume_ul=Unit(90.0, "microliter"),
+    well_coating=None,
+    sterile=False,
+    is_tube=False,
+    cover_types=["standard", "universal"],
+    seal_types=["ultra-clear", "foil"],
+    prioritize_seal_or_cover="cover",
+    capabilities=[
+        "liquid_handle",
+        "spin",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "cover",
+        "dispense",
+        "seal",
+    ],
+    shortname="384-flat",
+    col_count=24,
+    dead_volume_ul=Unit(7, "microliter"),
+    safe_min_volume_ul=Unit(15, "microliter"),
+    vendor="Corning",
+    cat_no="3830",
+)
+
+#:
+FLAT384BLACKTC = ContainerType(
+    name="Cell Culture-Treated, Flat-Bottom, Black plates",
+    well_count=384,
+    well_depth_mm=11.43,
+    well_volume_ul=Unit(80.0, "microliter"),
+    well_coating=None,
+    sterile=True,
+    is_tube=False,
+    cover_types=["standard", "universal"],
+    seal_types=None,
+    capabilities=[
+        "absorbance",
+        "cover",
+        "dispense",
+        "fluorescence",
+        "image_plate",
+        "incubate",
+        "luminescence",
+        "liquid_handle",
+        "spin",
+        "uncover",
+    ],
+    shortname="384-flat-black-white-tc",
+    col_count=24,
+    dead_volume_ul=Unit(20, "microliter"),
+    safe_min_volume_ul=Unit(30, "microliter"),
+    vendor="Corning",
+    cat_no="3764",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,

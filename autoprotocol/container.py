@@ -183,6 +183,36 @@ class Well(object):
         self.volume = v
         return self
 
+    def add_volume(self, vol: Unit):
+        """
+        Updates the volume of the well
+
+        Parameters
+        ----------
+        vol : str, Unit
+            Theoretical volume to indicate for a Well.
+
+        Returns
+        -------
+        Unit
+            the updated volume of the Well
+
+        Raises
+        ------
+        TypeError
+            Error when input does not match expected type or dimensionality
+        ValueError
+            Volume set exceeds maximum well volume
+        """
+
+        v = parse_unit(vol)
+
+        if self.volume:
+            self.volume += v
+        else:
+            self.volume = v
+        return self.volume
+
     def set_name(self, name):
         """
         Set a name for this well for it to be included in a protocol's

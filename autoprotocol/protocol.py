@@ -9,7 +9,7 @@ Module containing the main `Protocol` object and associated functions
 
 import warnings
 
-from typing import List
+from typing import List, Tuple
 
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
@@ -927,7 +927,6 @@ class Protocol(object):
         model=None,
         chip_material=None,
         nozzle=None,
-        mode=None,
     ):
         """Generates a liquid_handle dispense
 
@@ -942,18 +941,22 @@ class Protocol(object):
         "multi-dispense" mode will allow a user to specify using multiple intake
         hoses to dispense to multiple destinations at once. To use multiple
         intake hoses from a single source, specify how many hoses to
-        place in the source by specifying a List of Lists of sources where the
-        number of items in the internal List represents the number of intake
-        hoses to use in the Set of sources.
-        - ie: source=[[source.well(0), source.well(0), source.well(0)]]
+        place in the source by specifying a List of tuples where the first index
+        is the Well or str from which to aspirate and the second index is the Int that
+        represents the desired number of intake hoses.
+        - ie: source=[(Well, 2), ("NameOfResource", 2)]
 
         Parameters
         ----------
-        source : Well or str or  list(list(Well)) or list(list(str))
-            Well(s) or reagent to transfer liquid from if multi-dispense is specified
-            the number of replicates per list represents the number of intake
-            hoses to place in the source.
+        source : Well or str or list((Well, int)) or list((str, int))
+            Well(s) or reagent to transfer liquid from.
+            If multi-dispense is specified as the mode then the source is expected
+            as a list of tuples ie: source=[(source.well(0), 2), ('reagent_a', 2)]
+            where the first index of the tuple is the source Well or str
+            from which to aspirate from and the second index is the Int that
+            represents the desired number of intake hoses.
         destination : Well or WellGroup or list(Well)
+            # TODO: List of list of dests that allows you to specify a source to multiple dests
             Well(s) to transfer liquid to.
         volume : str or Unit or list(str) or list(Unit)
             Volume(s) of liquid to be transferred from source well to
@@ -978,11 +981,6 @@ class Protocol(object):
             Tempest nozzle type, currently only support "standard".
             The three chip parameters: model, chip_material, and nozzle will be
             used in liquid handle mode_params to allow tempest chip specification.
-        mode : str, optional
-            Specifying "multi-dispense" will allow a user to specify the use
-            of multiple Tempest intake hoses. Currently, only "multi-dipense"
-            is supported.
-
 
         Returns
         -------
@@ -993,7 +991,7 @@ class Protocol(object):
         Raises
         ------
         ValueError
-            if source is not a well
+            if source is not a Well or list((Well, int))
         ValueError
             if destination and volumes are not of the same length
         ValueError
@@ -1052,6 +1050,7 @@ class Protocol(object):
                 volume=[Unit(_, "uL") for _ in range(1, 13)]
             )
 
+        # TODO: Create example
         Dispensing using multi-dispense and 3 intake hoses in a single source
         and multi-dispensing to multiple destination columns
 
@@ -1083,191 +1082,176 @@ class Protocol(object):
         :py:class:`autoprotocol.liquid_handle.Dispense`
             Base liquid handling method for dispense operations
         """
-        if not mode and not isinstance(source, Well):
+
+        default_num_dispense_chips_in_source: int = 1
+        if isinstance(source, list):
+            for i, s in enumerate(source):
+                if isinstance(s, Well):
+                    source[i]: Tuple[Well, int] = (
+                        s,
+                        default_num_dispense_chips_in_source,
+                    )
+                elif isinstance(s, tuple):
+                    sw, chip_num = s
+                    if not isinstance(sw, Well) or not isinstance(chip_num, int):
+                        raise ValueError(
+                            f"The specified {s} source[{i}] is not a (Well, int)"
+                        )
+        elif isinstance(source, Well):
+            source: List[Tuple[Well, int]] = [
+                (source, default_num_dispense_chips_in_source)
+            ]
+        else:
             raise ValueError(
-                f"source: {source} must be a Well but it was a {type(source)}"
+                f"Source must be either "
+                f"Well or list(Well) or list((Well, int)) "
+                f"but received {source}"
             )
-        elif mode == "multi-dispense":
-            # The source must be a list of strings or a list of wells - Is there a case when we use a combo?
-            # Assert that the sources and dssts are given as [list()]
-            for i, src_list in enumerate(source):
-                if not isinstance(src_list, list):
-                    raise ValueError(
-                        f"Mode {mode} expects source to be a List[List[Union[Well or String]] instead "
-                        f"received {src_list} in source[{i}]"
-                    )
-                if len(list(set(src_list))) > 1:
-                    raise ValueError(
-                        f"source lists must be of the same type but {set(src_list)} were found in source[{i}]"
-                    )
-            if isinstance(destination, list):
-                len_dests, len_srcs = len(destination), len(source)
-                if len_dests > 1 and len_dests != len_srcs:
+
+        # Check destinations match the number of sources
+        len_src = len(source)
+        if not isinstance(destination, list):
+            if isinstance(destination, (WellGroup, Well)):
+                destination: List[WellGroup] = [WellGroup(destination) for _ in source]
+            else:
+                raise ValueError(
+                    f"The destination given {type(destination)} {destination} is not a WellGroup or Well"
+                )
+        else:
+            if len_src > 1:
+                len_dests = len(destination)
+                if len_dests != len_src:
                     raise ValueError(
                         f"When specifying more than one destination locations "
-                        f"the number of destinations must match the number of source groupings "
-                        f"num of destinations {len_dests} != num of source groupings {len_srcs}"
+                        f"the number of destinations must match the number of sources "
+                        f"num of destinations {len_dests} != num of sources {len_src}"
                     )
-
-                if isinstance(volume, list):
-                    len_vols = len(volume)
-                    if len_vols > 1 and len_vols != len_dests:
-                        raise ValueError(
-                            f"When specifying more than one volume "
-                            f"the number of volumes must match the number of destination locations "
-                            f"num of volumes {len_vols} != num of destinations {len_dests}"
-                        )
-
-        shape = LiquidHandle.builders.shape(rows, columns, None)
-        method = _validate_as_instance(method, DispenseMethod)
-        liquid = _validate_as_instance(liquid, LiquidClass)
-        method._liquid = liquid
-
-        # prime volume
-        if method.prime is True:
-            prime_volume: Unit = parse_unit(method.default_prime(None), "uL")
-        elif method.prime is False:
-            prime_volume: Unit = Unit(0, "uL")
-        else:
-            prime_volume: Unit = parse_unit(method.prime, "uL")
-
-        # predispense volume
-        if method.predispense is True:
-            predispense_volume: Unit = parse_unit(
-                method.default_predispense(None), "uL"
-            )
-        elif method.predispense is False:
-            predispense_volume: Unit = Unit(0, "uL")
-        else:
-            predispense_volume: Unit = parse_unit(method.predispense, "uL")
-
-        destination = WellGroup(destination)
-
-        if not isinstance(volume, list):
-            volume: List[Unit] = [volume] * len(destination)
-        volume: List[Unit] = [parse_unit(_, "uL") for _ in volume]
-
-        if not len(destination) == len(volume):
-            raise ValueError(
-                f"A different number of destinations: {destination} and volumes: {volume} were specified."
-            )
-
-        def locations_generator(volume=volume, destination=destination, method=method):
-            if mode == "multi-dispense":
-                for i, src_list in enumerate(source):
-                    len_srcs = len(src_list)
-                    source_aspirate: List[dict] = (
-                        method._aspirate_transports(
-                            sum(volume) + prime_volume + predispense_volume
-                        )
-                        * len_srcs
-                    )
-                    source_prime: List[dict] = (
-                        method._prime_transports(prime_volume) * len_srcs
-                    )
-                    source_predispense: List[dict] = (
-                        method._predispense_transports(predispense_volume) * len_srcs
-                    )
-                    destination_well: List[Well] = (
-                        destination if len(destination) == 1 else [destination[i]]
-                    )
-                    liha_dispense_volume: List[Unit] = (
-                        volume if len(volume) == 1 else [volume[i]]
-                    )
-                    destination_dispense_transports: List[dict] = [
-                        LiquidHandle.builders.location(
-                            location=dest,
-                            transports=(method._dispense_transports(vol) * len_srcs),
-                        )
-                        for dest, vol in zip(destination_well, liha_dispense_volume)
-                    ]
-                    dispense_src = src_list[0]
-                    yield dispense_src, source_aspirate, source_prime, source_predispense, destination_well, liha_dispense_volume, destination_dispense_transports
+                destination: List[WellGroup] = [WellGroup(d) for d in destination]
             else:
-                source_aspirate: List[dict] = method._aspirate_transports(
-                    sum(volume) + prime_volume + predispense_volume
-                )
-                source_prime: List[dict] = method._prime_transports(prime_volume)
-                source_predispense: List[dict] = method._predispense_transports(
-                    predispense_volume
-                )
-                destination_dispense_transports: List[dict] = [
-                    LiquidHandle.builders.location(
-                        location=dest, transports=method._dispense_transports(vol)
-                    )
-                    for dest, vol in zip(destination, volume)
-                ]
-                yield source, source_aspirate, source_prime, source_predispense, destination, volume, destination_dispense_transports
+                destination: List[WellGroup] = [WellGroup(destination)]
 
-        auxiliary_locations, destination_locations = [], []
-        for (
-            source,
-            source_aspirate,
-            source_prime,
-            source_predispense,
-            destination,
-            dispense_volume,
-            destination_dispense_transports,
-        ) in locations_generator():
-            auxiliary_locations += [
-                LiquidHandle.builders.location(
-                    location=source, transports=source_aspirate
-                ),
-                LiquidHandle.builders.location(location=source, transports=source_prime)
-                if method.prime
-                else [],
-                LiquidHandle.builders.location(
-                    location=None, transports=source_predispense
+        len_dests = len(destination)
+        if not isinstance(volume, list):
+            volume: List[Unit] = [
+                [parse_unit(v, "uL") for v in [volume] * len(wg)] for wg in destination
+            ]
+        else:
+            len_vols = len(volume)
+            if len_vols != len_dests:
+                raise ValueError(
+                    f"When specifying more than one volume "
+                    f"the number of volumes must match the number of destination locations "
+                    f"num of volumes {len_vols} != num of destinations {len_dests}"
                 )
-                if method.predispense
-                else [],
+            volume: List[Unit] = [
+                [parse_unit(v, "uL") for v in [vol] * len(destination[i])]
+                for i, vol in volume
             ]
 
-            # Include additional destinations
-            destination_locations += destination_dispense_transports
+        if not isinstance(liquid, list):
+            lc = _validate_as_instance(liquid, LiquidClass)
+            liquid: List[LiquidClass] = [lc] * len_src
+        else:
+            len_liquid = len(liquid)
+            if len_liquid != len_src:
+                raise ValueError(
+                    f"The number of LiquidClass(s) {len_liquid} and sources {len_src} do not match "
+                )
+            elif not all(_validate_as_instance(lc, LiquidClass) for lc in liquid):
+                raise ValueError(
+                    f"liquid list {liquid} did not contain all of type LiquidClass"
+                )
+
+        if not isinstance(method, list):
+            dm = _validate_as_instance(method, DispenseMethod)
+            method: List[DispenseMethod] = [dm] * len_src
+        else:
+            len_method = len(method)
+            if len_method != len_src:
+                raise ValueError(
+                    f"The number of DispenseMethod(s) {len_method} and sources {len_src} do not match "
+                )
+            elif not all(_validate_as_instance(dm, DispenseMethod) for dm in method):
+                raise ValueError(
+                    f"method list {method} did not contain all of type DispenseMethod"
+                )
+
+        # Set the DispenseMethod's liquid class
+        for dm, lc in zip(method, liquid):
+            # The index of the method and liquid classes should line up with
+            # source, destination, and volumes you wish to effect. The name of
+            # the liquid class will be applied to the transports of the mappings.
+            dm._liquid = lc
+
+        transport_locations = []
+        shape = LiquidHandle.builders.shape(rows, columns, None)
+        for i, multi_dispense_tup in enumerate(source):
+            source_location: Well = multi_dispense_tup[0]
+            num_dispense_chips: int = multi_dispense_tup[1]
+            destination_locations: WellGroup = destination[i]
+            dispense_volumes: List[Unit] = volume[i]
+            sum_dispense_volumes: Unit = (
+                sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
+            )
+
+            # Aspirate from source
+            transport_locations.append(
+                LiquidHandle.builders.location(
+                    location=source_location,
+                    transports=(
+                        method[i]._aspirate_transports(sum_dispense_volumes)
+                        * num_dispense_chips
+                    ),
+                )
+            )
+
+            # Prime from source
+            if method[i].prime:
+                transport_locations.append(
+                    LiquidHandle.builders.location(
+                        location=source_location,
+                        transports=(method[i]._prime_transports() * num_dispense_chips),
+                    )
+                )
+
+            # Predispense from source
+            if method[i].predispense:
+                transport_locations.append(
+                    LiquidHandle.builders.location(
+                        location=None,
+                        transports=(
+                            method[i]._predispense_transports() * num_dispense_chips
+                        ),
+                    )
+                )
+
+            # Dispense from source to destination
+            for destination_location, vol in zip(
+                destination_locations, dispense_volumes
+            ):
+                transport_locations.append(
+                    LiquidHandle.builders.location(
+                        location=destination_location,
+                        transports=(
+                            method[i]._dispense_transports(vol) * num_dispense_chips
+                        ),
+                    )
+                )
 
             total_volume_dispensed: Unit = (
-                sum([rows * columns * vol for vol in dispense_volume])
-                + predispense_volume * rows * columns
+                method[i].get_predispense_volume() * rows * columns * num_dispense_chips
+            ) + sum(
+                [rows * columns * num_dispense_chips * vol for vol in dispense_volumes]
             )
-            if isinstance(source, Well):
-                if source.volume:
-                    source.volume -= total_volume_dispensed
-                else:
-                    source.volume = -total_volume_dispensed
-            elif isinstance(source, str):
-                pass  # is the name of the solution
+            if source_location.volume:
+                source_location.volume -= total_volume_dispensed
             else:
-                raise ValueError(f"Unexpected source type {type(source)} {source}")
+                source_location.volume = -total_volume_dispensed
 
-            def update_destination_well_volumes(
-                destination_dispense_transports,
-            ) -> WellGroup:
-                """
-                When multi-dispensing take into account the wells dispensed to
-                by the additional chips and update their volumes
-                """
-                if mode == "multi-dispense":
-                    num_dest_transports = len(
-                        destination_dispense_transports[0].get("transports")
-                    )
-                    for w in destination:
-                        return w.container.wells_from(w.index, num_dest_transports)
-                else:
-                    return destination
-
-            all_destination_wells: List[WellGroup] = [
-                d.container.wells_from_shape(d.index, shape)
-                for d in update_destination_well_volumes(
-                    destination_dispense_transports
-                )
-            ]
-            for well_group, vol in zip(all_destination_wells, dispense_volume):
-                for well in well_group.wells:
-                    if well.volume:
-                        well.volume += vol
-                    else:
-                        well.volume = vol
+            # Update destination column volumes
+            for w, vol in zip(destination_locations, dispense_volumes):
+                for column_well in w.container.wells_from_shape(w.index, shape):
+                    column_well.add_volume(vol)
 
         device_mode_params = LiquidHandleBuilders.device_mode_params(
             model=model, chip_material=chip_material, nozzle=nozzle
@@ -1275,7 +1259,7 @@ class Protocol(object):
 
         return self._append_and_return(
             LiquidHandle(
-                locations=auxiliary_locations + destination_locations,
+                locations=transport_locations,
                 shape=shape,
                 mode="dispense",
                 mode_params=device_mode_params,

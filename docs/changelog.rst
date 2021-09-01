@@ -3,6 +3,7 @@ Changelog
 =========
 
 
+* :feature:`306` Add new containers: `384-ubottom-black-clear-tc` and `384-flat-black-clear-tc`
 * :feature:`305` Add `cold_196` incubation location
 
 * :release:`7.9.2 <2021-06-22>`

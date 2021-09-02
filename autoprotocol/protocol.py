@@ -938,30 +938,22 @@ class Protocol(object):
         are not yet supported. There are currently no plans to support liquid
         level detection and its corresponding thresholds for this mode.
 
-        "multi-dispense" mode will allow a user to specify using multiple intake
-        hoses to dispense to multiple destinations at once. To use multiple
-        intake hoses from a single source, specify how many hoses to
-        place in the source by specifying a List of tuples where the first index
-        is the Well or str from which to aspirate and the second index is the Int that
-        represents the desired number of intake hoses.
-        - ie: source=[(Well, 2), ("NameOfResource", 2)]
-
         Parameters
         ----------
-        source : Well or str or list((Well, int)) or list((str, int))
-            Well(s) or reagent to transfer liquid from.
-            If multi-dispense is specified as the mode then the source is expected
-            as a list of tuples ie: source=[(source.well(0), 2), ('reagent_a', 2)]
-            where the first index of the tuple is the source Well or str
-            from which to aspirate from and the second index is the Int that
-            represents the desired number of intake hoses.
-        destination : Well or WellGroup or list(Well)
-            # TODO: List of list of dests that allows you to specify a source to multiple dests
-            Well(s) to transfer liquid to.
+        source : Well or list(Well) or list(tuple(Well, int))
+            Well(s) to transfer liquid from. If the source is given as a list
+            of (Well, int) tuples (ie: source=[(Well, 2), (Well, 5)])
+            the Well is the source well and the int is the number of dispense
+            chips to use from the specified source.
+        destination : Well or WellGroup or list(Well) or list(WellGroup)
+            Well(s) to transfer liquid to. If specifying more than a Well or
+            WellGroup the list of destinations must match the number of sources.
         volume : str or Unit or list(str) or list(Unit)
             Volume(s) of liquid to be transferred from source well to
             destination wells. The number of volumes specified must
-            correspond to the number of destination wells.
+            correspond to the number of destination wells. If specifying more than
+            one volume to be used for all dispenses, the list of volumes must
+            match the length of destinations.
         rows : int, optional
             Number of rows to be concurrently transferred
         columns : int, optional
@@ -969,9 +961,12 @@ class Protocol(object):
         liquid : LiquidClass or list(LiquidClass), optional
             Type(s) of liquid to be dispensed. This affects aspirate and
             dispense behavior including flowrates and physical movements.
+            If the number of Dispense classes specified is more than one
+            then number specified must match the length of sources.
         method : Dispense or list(Dispense), optional
             Integrates with the specified liquid to define a set of physical
-            movements.
+            movements. If the number of Dispense classes specified is more than one
+            then number specified must match the length of sources.
         model : str, optional
             Tempest chip model, currently only support "high_volume".
         chip_material : str, optional
@@ -1050,9 +1045,8 @@ class Protocol(object):
                 volume=[Unit(_, "uL") for _ in range(1, 13)]
             )
 
-        # TODO: Create example
-        Dispensing using multi-dispense and 3 intake hoses in a single source
-        and multi-dispensing to multiple destination columns
+        Using multiple chips in a single source tube. The following example will
+        dispense 100:microliters to the first 3 columns of the destination plate.
 
         .. code-block:: python
 
@@ -1060,52 +1054,83 @@ class Protocol(object):
             from autoprotocol import Protocol
 
             p = Protocol()
-            source = p.ref("source", cont_type="conical-50", discard=True)
+            source = p.ref("source", cont_type="micro-2.0", discard=True).well(0)
             destination = p.ref("destination", cont_type="96-flat", discard=True)
 
             intake_hoses = 3
-            source: List[List[Well]] = [[source.well(0)] * intake_hoses]
-            destination = [
-                destination.well(i)
-                for i in range(0, (intake_hoses*len(source)), intake_hoses)
-            ]
+            source: List[Tuple[Well, int]] = [(source, intake_hoses)]
+
+            destination = [destination.well(0)]
             self.protocol.liquid_handle_dispense(
                 source=source,
                 destination=destination,
                 volume='100:microliter',
-                mode='multi-dispense'
             )
-
 
         See Also
         --------
         :py:class:`autoprotocol.liquid_handle.Dispense`
             Base liquid handling method for dispense operations
         """
-
         default_num_dispense_chips_in_source: int = 1
+        default_max_num_dispense_chips: int = 12
+        remaining_num_chips_to_specify = default_max_num_dispense_chips
+
+        def format_source_well(well: Well, num_chips: int) -> Tuple[Well, int]:
+            return (well, num_chips)
+
+        # Format parameters into lists that map params by index
         if isinstance(source, list):
+            allowable_source_types = {Well, tuple}
+            specified_source_types = {type(i) for i in source}
+            unallowed_source_types = specified_source_types.difference(
+                allowable_source_types
+            )
+            if unallowed_source_types:
+                raise ValueError(
+                    f"The specified list of sources contains invalid source "
+                    f"types {unallowed_source_types}"
+                )
             for i, s in enumerate(source):
                 if isinstance(s, Well):
-                    source[i]: Tuple[Well, int] = (
-                        s,
-                        default_num_dispense_chips_in_source,
+                    source[i]: Tuple[Well, int] = format_source_well(
+                        s, default_num_dispense_chips_in_source
+                    )
+                    remaining_num_chips_to_specify -= (
+                        default_num_dispense_chips_in_source
                     )
                 elif isinstance(s, tuple):
                     sw, chip_num = s
                     if not isinstance(sw, Well) or not isinstance(chip_num, int):
                         raise ValueError(
-                            f"The specified {s} source[{i}] is not a (Well, int)"
+                            f"The specified value {s} in source[{i}] is not a (Well, int)"
                         )
+                    if chip_num > default_max_num_dispense_chips:
+                        raise ValueError(
+                            f"The number of chips specified {chip_num}"
+                            f" in source[{i}] is greater than the "
+                            f"max number of chips available {default_max_num_dispense_chips}"
+                        )
+                    remaining_num_chips_to_specify -= chip_num
+                else:
+                    raise ValueError(
+                        f"The specified value {s} in source[{i}] is not a (Well, int) or Well"
+                    )
         elif isinstance(source, Well):
             source: List[Tuple[Well, int]] = [
-                (source, default_num_dispense_chips_in_source)
+                format_source_well(source, default_num_dispense_chips_in_source)
             ]
+            remaining_num_chips_to_specify -= default_num_dispense_chips_in_source
         else:
             raise ValueError(
                 f"Source must be either "
-                f"Well or list(Well) or list((Well, int)) "
-                f"but received {source}"
+                f"Well or list(Well) or list((Well, int)) but received {source}"
+            )
+        if remaining_num_chips_to_specify < 0:
+            raise ValueError(
+                f"The number of chips configured for the "
+                f"instruction {default_max_num_dispense_chips - remaining_num_chips_to_specify}"
+                f" is greater than the number of chips available {default_max_num_dispense_chips}"
             )
 
         # Check destinations match the number of sources
@@ -1145,7 +1170,7 @@ class Protocol(object):
                 )
             volume: List[Unit] = [
                 [parse_unit(v, "uL") for v in [vol] * len(destination[i])]
-                for i, vol in volume
+                for i, vol in enumerate(volume)
             ]
 
         if not isinstance(liquid, list):
@@ -1181,7 +1206,8 @@ class Protocol(object):
             # The index of the method and liquid classes should line up with
             # source, destination, and volumes you wish to effect. The name of
             # the liquid class will be applied to the transports of the mappings.
-            dm._liquid = lc
+            if not dm._liquid:
+                dm._liquid = lc
 
         transport_locations = []
         shape = LiquidHandle.builders.shape(rows, columns, None)
@@ -1193,6 +1219,7 @@ class Protocol(object):
             sum_dispense_volumes: Unit = (
                 sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
             )
+            total_volume_dispensed: Unit = Unit("0:microliter")
 
             # Aspirate from source
             transport_locations.append(
@@ -1203,6 +1230,9 @@ class Protocol(object):
                         * num_dispense_chips
                     ),
                 )
+            )
+            total_volume_dispensed += sum(
+                [rows * columns * num_dispense_chips * vol for vol in dispense_volumes]
             )
 
             # Prime from source
@@ -1224,6 +1254,12 @@ class Protocol(object):
                         ),
                     )
                 )
+                total_volume_dispensed += (
+                    method[i].get_predispense_volume()
+                    * rows
+                    * columns
+                    * num_dispense_chips
+                )
 
             # Dispense from source to destination
             for destination_location, vol in zip(
@@ -1237,21 +1273,26 @@ class Protocol(object):
                         ),
                     )
                 )
+                # Update destination column volumes with consideration of the num chips specified
+                filled_destination_column_wells: List[Well] = list(
+                    reduce(
+                        lambda a, b: a + b,
+                        [
+                            destination_location.container.wells_from_shape(
+                                destination_location.index + i, shape
+                            ).wells
+                            for i in range(num_dispense_chips)
+                        ],
+                    )
+                )
+                for w in filled_destination_column_wells:
+                    w.add_volume(vol)
 
-            total_volume_dispensed: Unit = (
-                method[i].get_predispense_volume() * rows * columns * num_dispense_chips
-            ) + sum(
-                [rows * columns * num_dispense_chips * vol for vol in dispense_volumes]
-            )
+            # Update source volume
             if source_location.volume:
                 source_location.volume -= total_volume_dispensed
             else:
                 source_location.volume = -total_volume_dispensed
-
-            # Update destination column volumes
-            for w, vol in zip(destination_locations, dispense_volumes):
-                for column_well in w.container.wells_from_shape(w.index, shape):
-                    column_well.add_volume(vol)
 
         device_mode_params = LiquidHandleBuilders.device_mode_params(
             model=model, chip_material=chip_material, nozzle=nozzle

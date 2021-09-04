@@ -236,41 +236,35 @@ class Dispense(LiquidHandleMethod):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def default_prime(volume: Optional[Unit] = None) -> Unit:
+    def default_prime(volume: Optional[Unit] = Unit(600, "uL")) -> Unit:
         """Default priming volume
 
         Parameters
         ----------
-        volume : Optional[Unit]
+        volume : Unit
 
         Returns
         -------
         Unit
             prime volume
         """
-        if volume:
-            return parse_unit(volume, "ul")
-        else:
-            return Unit(600, "uL")
+        return parse_unit(volume, "ul")
 
     # pylint: disable=unused-argument
     @staticmethod
-    def default_predispense(volume: Optional[Unit] = None) -> Unit:
+    def default_predispense(volume: Optional[Unit] = Unit(10, "uL")) -> Unit:
         """Default predispense volume
 
         Parameters
         ----------
-        volume : Optional[Unit]
+        volume : Unit
 
         Returns
         -------
         Unit
             predispense volume
         """
-        if volume:
-            return parse_unit(volume, "ul")
-        else:
-            return Unit(10, "uL")
+        return parse_unit(volume, "ul")
 
     def default_blowout(self, volume):
         pass

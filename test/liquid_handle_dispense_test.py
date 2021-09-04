@@ -24,28 +24,6 @@ class TestDispenseMethod(DispenseMethod):
         self._liquid = ProteinBuffer()
 
 
-def dummy_96():
-    return Container(
-        None,
-        ContainerType(
-            name="dummy",
-            well_count=96,
-            well_depth_mm=None,
-            well_volume_ul=Unit(200, "microliter"),
-            well_coating=None,
-            sterile=False,
-            is_tube=False,
-            cover_types=["universal"],
-            seal_types=None,
-            capabilities=["cover"],
-            shortname="dummy",
-            col_count=12,
-            dead_volume_ul=Unit(15, "microliter"),
-            safe_min_volume_ul=Unit(30, "microliter"),
-        ),
-    )
-
-
 def dummy_tube_well():
     return (
         Container(
@@ -83,12 +61,12 @@ class LiquidHandleTester(object):
         yield Protocol()
 
     @pytest.fixture(autouse=True, scope="function")
-    def setup(self, protocol):
+    def setup(self, protocol, dummy_96):
         self.protocol = protocol
         self.src_tube_1: Well = dummy_tube_well()
         self.src_tube_2: Well = dummy_tube_well()
         self.src_tube_3: Well = dummy_tube_well()
-        self.flat = dummy_96()
+        self.flat = dummy_96
         self.test_volume = "100:uL"
         self.rows = 8
         self.columns = 1
@@ -202,15 +180,9 @@ class TestLiquidHandleMultiDispenseMode:
     @pytest.fixture(autouse=True, scope="function")
     def setup(self):
         self.protocol = Protocol()
-        self.src_tube_1: Well = self.protocol.ref(
-            "src_tube_1", cont_type="micro-2.0", discard=True
-        ).well(0)
-        self.src_tube_2: Well = self.protocol.ref(
-            "src_tube_2", cont_type="micro-2.0", discard=True
-        ).well(0)
-        self.src_tube_3: Well = self.protocol.ref(
-            "src_tube_3", cont_type="micro-2.0", discard=True
-        ).well(0)
+        self.src_tube_1: Well = dummy_tube_well()
+        self.src_tube_2: Well = dummy_tube_well()
+        self.src_tube_3: Well = dummy_tube_well()
         self.src_tube_1.set_volume("50:microliter")
         self.src_tube_2.set_volume("50:microliter")
         self.src_tube_3.set_volume("50:microliter")
@@ -330,8 +302,8 @@ class TestLiquidHandleDispenseMode:
         destinations = self.flat.wells_from(0, 12)
         dispense_vol = Unit(10, "uL")
         aspirate_vol = -(
-            DispenseMethod.default_prime(None)
-            + DispenseMethod.default_predispense(None)
+            DispenseMethod.default_prime()
+            + DispenseMethod.default_predispense()
             + dispense_vol * len(destinations)
         )
         instruction = self.protocol.liquid_handle_dispense(

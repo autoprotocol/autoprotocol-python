@@ -1211,9 +1211,7 @@ class Protocol(object):
 
         transport_locations = []
         shape = LiquidHandle.builders.shape(rows, columns, None)
-        for i, multi_dispense_tup in enumerate(source):
-            source_location: Well = multi_dispense_tup[0]
-            num_dispense_chips: int = multi_dispense_tup[1]
+        for i, (source_location, num_dispense_chips) in enumerate(source):
             destination_locations: WellGroup = destination[i]
             dispense_volumes: List[Unit] = volume[i]
             sum_dispense_volumes: Unit = (
@@ -1289,10 +1287,7 @@ class Protocol(object):
                     w.add_volume(vol)
 
             # Update source volume
-            if source_location.volume:
-                source_location.volume -= total_volume_dispensed
-            else:
-                source_location.volume = -total_volume_dispensed
+            source_location.add_volume(-total_volume_dispensed)
 
         device_mode_params = LiquidHandleBuilders.device_mode_params(
             model=model, chip_material=chip_material, nozzle=nozzle

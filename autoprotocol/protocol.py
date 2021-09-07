@@ -1154,14 +1154,14 @@ class Protocol(object):
                     )
                 destination: List[WellGroup] = [WellGroup(d) for d in destination]
 
-        for (sw, number_of_chips), destinations in zip(source, destination):
-            # Check that the number of destinations match the number of chips specified for each
-            # source destination mapping
-            if len(destinations) != number_of_chips:
-                raise ValueError(
-                    f"The number of destinations {len(destinations)} does not match the number of "
-                    f"chips {number_of_chips} specified for the given source {(sw, number_of_chips)}"
-                )
+                for (sw, number_of_chips), destinations in zip(source, destination):
+                    # Check that the number of destinations match the number of chips specified for each
+                    # source destination mapping
+                    if len(destinations) != number_of_chips:
+                        raise ValueError(
+                            f"The number of destinations {len(destinations)} does not match the number of "
+                            f"chips {number_of_chips} specified for the given source {(sw, number_of_chips)}"
+                        )
 
         len_dests = len(destination)
         if not isinstance(volume, list):

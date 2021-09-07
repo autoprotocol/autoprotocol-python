@@ -92,22 +92,18 @@ class TestLiquidHandleUserConfig(LiquidHandleTester):
                 )
 
     def test_destination_configuration(self):
+        # Destinations must match the number of chips specified in the source tuple
+        source = [(self.src_tube_1, 2), (self.src_tube_2, 1)]
         test_input_types = [
-            (does_not_raise(), self.flat.well(0)),
-            (does_not_raise(), self.flat.wells_from(0, 2)),
-            (does_not_raise(), WellGroup(self.flat.well(0))),
+            (does_not_raise(), [self.flat.wells_from(0, 2), self.flat.well(3)]),
+            (pytest.raises(ValueError), [self.flat.wells_from(0, 2)]),
             (
                 does_not_raise(),
-                [WellGroup(self.flat.well(0)), WellGroup(self.flat.well(1))],
+                [[self.flat.well(0), self.flat.well(1)], self.flat.well(0)],
             ),
-            (
-                pytest.raises(ValueError),
-                [self.flat.well(0), self.flat.well(1), self.flat.well(0)],
-            ),
-            (does_not_raise(), [self.flat.well(0), self.flat.well(1)]),
+            (pytest.raises(ValueError), [self.flat.well(0), self.flat.well(1)]),
             (pytest.raises(ValueError), [self.flat.well(1)]),
         ]
-        source = [(self.src_tube_1, 1), (self.src_tube_2, 1)]
         volume = self.test_volume
         for expectation, test_input_type in test_input_types:
             with expectation:
@@ -203,7 +199,7 @@ class TestLiquidHandleMultiDispenseMode:
     ):
         source = [(self.src_tube_1, num_chips)]
         initial_src_volume = self.src_tube_1.volume
-        destination = [self.flat.well(0)]
+        destination = self.flat.wells_from(0, num_chips)
         total_volume_dispensed: Unit = Unit("0:microliter")
 
         if num_chips > default_max_num_dispense_chips:
@@ -252,15 +248,17 @@ class TestLiquidHandleMultiDispenseMode:
             assert predispense_loc.get("location") == None
             assert len(predispense_loc["transports"]) == num_chips
 
-            destination_loc = instr.locations[3]
-            assert destination_loc["location"] == self.flat.well(0)
-            assert len(destination_loc["transports"]) == num_chips
+            for i, dest_well in enumerate(destination):
+                destination_loc = instr.locations[3 + i]
+                assert destination_loc["location"] == dest_well
+                assert len(destination_loc["transports"]) == 1
+
             filled_destinations = list(
                 reduce(
                     lambda a, b: a + b,
                     [
-                        self.flat.wells_from_shape(col, self.shape).wells
-                        for col in range(num_chips)
+                        self.flat.wells_from_shape(dest_well.index, self.shape).wells
+                        for dest_well in destination
                     ],
                 )
             )

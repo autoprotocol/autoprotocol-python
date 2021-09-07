@@ -947,7 +947,8 @@ class Protocol(object):
             chips to use from the specified source.
         destination : Well or WellGroup or list(Well) or list(WellGroup)
             Well(s) to transfer liquid to. If specifying more than a Well or
-            WellGroup the list of destinations must match the number of sources.
+            WellGroup the list of destinations must match the number of chips
+            specified in the source tuple.
         volume : str or Unit or list(str) or list(Unit)
             Volume(s) of liquid to be transferred from source well to
             destination wells. The number of volumes specified must
@@ -1152,8 +1153,15 @@ class Protocol(object):
                         f"num of destinations {len_dests} != num of sources {len_src}"
                     )
                 destination: List[WellGroup] = [WellGroup(d) for d in destination]
-            else:
-                destination: List[WellGroup] = [WellGroup(destination)]
+
+        for (sw, number_of_chips), destinations in zip(source, destination):
+            # Check that the number of destinations match the number of chips specified for each
+            # source destination mapping
+            if len(destinations) != number_of_chips:
+                raise ValueError(
+                    f"The number of destinations {len(destinations)} does not match the number of "
+                    f"chips {number_of_chips} specified for the given source {(sw, number_of_chips)}"
+                )
 
         len_dests = len(destination)
         if not isinstance(volume, list):
@@ -1266,24 +1274,13 @@ class Protocol(object):
                 transport_locations.append(
                     LiquidHandle.builders.location(
                         location=destination_location,
-                        transports=(
-                            method[i]._dispense_transports(vol) * num_dispense_chips
-                        ),
+                        transports=(method[i]._dispense_transports(vol)),
                     )
                 )
                 # Update destination column volumes with consideration of the num chips specified
-                filled_destination_column_wells: List[Well] = list(
-                    reduce(
-                        lambda a, b: a + b,
-                        [
-                            destination_location.container.wells_from_shape(
-                                destination_location.index + i, shape
-                            ).wells
-                            for i in range(num_dispense_chips)
-                        ],
-                    )
-                )
-                for w in filled_destination_column_wells:
+                for w in destination_location.container.wells_from_shape(
+                    destination_location.index, shape
+                ):
                     w.add_volume(vol)
 
             # Update source volume

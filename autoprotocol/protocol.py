@@ -1136,45 +1136,47 @@ class Protocol(object):
 
         # Check destinations match the number of sources
         len_src = len(source)
-        if not isinstance(destination, list):
-            if isinstance(destination, (WellGroup, Well)):
-                destination: List[WellGroup] = [WellGroup(destination) for _ in source]
-            else:
-                raise ValueError(
-                    f"The destination given {type(destination)} {destination} is not a WellGroup or Well"
-                )
-        else:
-            if len_src > 1:
-                len_dests = len(destination)
-                if len_dests != len_src:
+
+        def configure_destinations(destinations) -> List[WellGroup]:
+            if isinstance(destinations, list):
+                len_dests = len(destinations)
+                if len_dests == 1:
+                    return configure_destinations(destinations[0])
+                elif len_src == 1:
+                    return [WellGroup(destinations)]
+                elif len_src == len_dests:
+                    return [WellGroup(d) for d in destinations]
+                else:
                     raise ValueError(
                         f"When specifying more than one destination locations "
                         f"the number of destinations must match the number of sources "
                         f"num of destinations {len_dests} != num of sources {len_src}"
                     )
-                destination: List[WellGroup] = [WellGroup(d) for d in destination]
+            elif isinstance(destinations, (WellGroup, Well)):
+                return [WellGroup(destinations) for _ in source]
             else:
-                destination: List[WellGroup] = [WellGroup(destination)]
+                raise ValueError(
+                    f"The destination given {type(destinations)} {destinations} is not a WellGroup or Well"
+                )
 
-        # def format_destinations(destinations, idx=None):
-        #     if isinstance(destination, list):
+        destination: List[WellGroup] = configure_destinations(destinations=destination)
 
-        def format_volumes(volumes, idx=None) -> List[List[Unit]]:
+        def configure_volumes(volumes, idx=None) -> List[List[Unit]]:
             if isinstance(volumes, list):
                 len_vols = len(volumes)
                 len_dests = len(destination) if idx is None else len(destination[idx])
                 if len_vols == 1:
                     if len_dests == 1:
-                        return format_volumes(volumes=volumes[0], idx=idx)
+                        return configure_volumes(volumes=volumes[0], idx=idx)
                     elif isinstance(volumes[0], (str, Unit)):
-                        return format_volumes(volumes[0])
+                        return configure_volumes(volumes[0])
                     else:
                         raise ValueError(
                             f"The volume(s) specified volume[0] {volumes} do not align with "
                             f"the destination(s) specified destination[0] {destination}"
                         )
                 elif len_vols == len_dests:
-                    return [format_volumes(vol, i) for i, vol in enumerate(volumes)]
+                    return [configure_volumes(vol, i) for i, vol in enumerate(volumes)]
                 else:
                     if idx is not None:
                         raise ValueError(
@@ -1199,8 +1201,9 @@ class Protocol(object):
                     f"num of volumes {volumes} != num of destinations {destination}"
                 )
 
-        volume: List[List[Unit]] = format_volumes(volumes=volume)
+        volume: List[List[Unit]] = configure_volumes(volumes=volume)
 
+        # Format LiquidClasses
         if not isinstance(liquid, list):
             lc = _validate_as_instance(liquid, LiquidClass)
             liquid: List[LiquidClass] = [lc] * len_src
@@ -1215,6 +1218,7 @@ class Protocol(object):
                     f"liquid list {liquid} did not contain all of type LiquidClass"
                 )
 
+        # Format DispenseMethods
         if not isinstance(method, list):
             dm = _validate_as_instance(method, DispenseMethod)
             method: List[DispenseMethod] = [dm] * len_src
@@ -1235,6 +1239,7 @@ class Protocol(object):
             # source, destination, and volumes you wish to effect. The name of
             # the liquid class will be applied to the transports of the mappings.
             if not dm._liquid:
+                # Do not set a liquid class if the dispense method has one
                 dm._liquid = lc
 
         transport_locations = []

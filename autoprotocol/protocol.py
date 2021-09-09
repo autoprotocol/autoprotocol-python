@@ -1153,33 +1153,53 @@ class Protocol(object):
                         f"num of destinations {len_dests} != num of sources {len_src}"
                     )
                 destination: List[WellGroup] = [WellGroup(d) for d in destination]
+            else:
+                destination: List[WellGroup] = [WellGroup(destination)]
 
-                for (sw, number_of_chips), destinations in zip(source, destination):
-                    # Check that the number of destinations match the number of chips specified for each
-                    # source destination mapping
-                    if len(destinations) != number_of_chips:
+        # def format_destinations(destinations, idx=None):
+        #     if isinstance(destination, list):
+
+        def format_volumes(volumes, idx=None) -> List[List[Unit]]:
+            if isinstance(volumes, list):
+                len_vols = len(volumes)
+                len_dests = len(destination) if idx is None else len(destination[idx])
+                if len_vols == 1:
+                    if len_dests == 1:
+                        return format_volumes(volumes=volumes[0], idx=idx)
+                    elif isinstance(volumes[0], (str, Unit)):
+                        return format_volumes(volumes[0])
+                    else:
                         raise ValueError(
-                            f"The number of destinations {len(destinations)} does not match the number of "
-                            f"chips {number_of_chips} specified for the given source {(sw, number_of_chips)}"
+                            f"The volume(s) specified volume[0] {volumes} do not align with "
+                            f"the destination(s) specified destination[0] {destination}"
                         )
-
-        len_dests = len(destination)
-        if not isinstance(volume, list):
-            volume: List[Unit] = [
-                [parse_unit(v, "uL") for v in [volume] * len(wg)] for wg in destination
-            ]
-        else:
-            len_vols = len(volume)
-            if len_vols != len_dests:
+                elif len_vols == len_dests:
+                    return [format_volumes(vol, i) for i, vol in enumerate(volumes)]
+                else:
+                    if idx is not None:
+                        raise ValueError(
+                            f"The volume(s) specified volume[{idx}] {volume} do not align with "
+                            f"the destination(s) specified destination[{idx}] {destination}"
+                        )
+                    else:
+                        raise ValueError(
+                            f"The volume(s) {volume} do not align with the destination(s) specified {destination}"
+                        )
+            elif isinstance(volumes, (str, Unit)):
+                if idx is not None:
+                    return [parse_unit(volumes, "ul") for _ in destination[idx]]
+                else:
+                    return [
+                        [parse_unit(volumes, "uL") for _ in wg] for wg in destination
+                    ]
+            else:
                 raise ValueError(
                     f"When specifying more than one volume "
                     f"the number of volumes must match the number of destination locations "
-                    f"num of volumes {len_vols} != num of destinations {len_dests}"
+                    f"num of volumes {volumes} != num of destinations {destination}"
                 )
-            volume: List[Unit] = [
-                [parse_unit(v, "uL") for v in [vol] * len(destination[i])]
-                for i, vol in enumerate(volume)
-            ]
+
+        volume: List[List[Unit]] = format_volumes(volumes=volume)
 
         if not isinstance(liquid, list):
             lc = _validate_as_instance(liquid, LiquidClass)

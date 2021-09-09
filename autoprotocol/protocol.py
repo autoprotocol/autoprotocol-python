@@ -1263,7 +1263,7 @@ class Protocol(object):
                 )
             )
             total_volume_dispensed += sum(
-                [rows * columns * num_dispense_chips * vol for vol in dispense_volumes]
+                [rows * columns * len(destination) * vol for vol in dispense_volumes]
             )
 
             # Prime from source

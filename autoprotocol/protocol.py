@@ -1061,7 +1061,7 @@ class Protocol(object):
             intake_hoses = 3
             source: List[Tuple[Well, int]] = [(source, intake_hoses)]
 
-            destination = [destination.well(0)]
+            destination = [destination.wells_from(0, 3)]
             self.protocol.liquid_handle_dispense(
                 source=source,
                 destination=destination,

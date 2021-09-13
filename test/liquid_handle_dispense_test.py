@@ -24,7 +24,7 @@ class TestDispenseMethod(DispenseMethod):
         self._liquid = ProteinBuffer()
 
 
-def dummy_tube_well():
+def dummy_tube_well(name="dummy"):
     return (
         Container(
             None,
@@ -44,6 +44,7 @@ def dummy_tube_well():
                 dead_volume_ul=Unit(3, "milliliter"),
                 safe_min_volume_ul=Unit(2, "milliliter"),
             ),
+            name=name,
         )
         .well(0)
         .set_volume("50:milliliter")
@@ -388,8 +389,10 @@ class TestLiquidHandleMultiDispenseMode:
                 # Vol dispensed to destination
                 total_volume_dispensed_1 += sum(
                     [
-                        self.rows * self.columns * num_chip_1 * Unit(vol)
-                        for vol in [self.test_volume] * len(destination)
+                        self.rows
+                        * self.columns
+                        * Unit(self.test_volume)
+                        * len(destination)
                     ]
                 )
                 # Vol dispensed in predispense
@@ -402,8 +405,10 @@ class TestLiquidHandleMultiDispenseMode:
 
                 total_volume_dispensed_2 += sum(
                     [
-                        self.rows * self.columns * num_chip_2 * Unit(vol)
-                        for vol in [self.test_volume] * len(destination)
+                        self.rows
+                        * self.columns
+                        * Unit(self.test_volume)
+                        * len(destination)
                     ]
                 )
                 # Vol dispensed in predispense
@@ -469,12 +474,12 @@ class TestLiquidHandleMultiDispenseMode:
                         for w in filled_destinations
                     )
 
-    def test_num_multi_chips_for_multiple_srcs_to_mulit_dest(self):
+    def test_num_multi_chips_for_multiple_srcs_to_multi_dest(self):
         test_input_types = [
             (
                 does_not_raise(),
                 [
-                    [(dummy_tube_well(), 2), (dummy_tube_well(), 2)],
+                    [(dummy_tube_well("src1"), 3), (dummy_tube_well("src2"), 2)],
                     [[self.flat.well(0), self.flat.well(1)]],
                 ],
             ),
@@ -496,20 +501,12 @@ class TestLiquidHandleMultiDispenseMode:
                     liquid=self.liquid,
                     method=self.method,
                 )
-
+                destination = destination[0]
                 instr = self.protocol.instructions[-1]
                 # Vol dispensed to destination
-                dispensed_vols = [
-                    self.test_volume for w in [wg for wg in destination[0]]
-                ]
-                # [self.test_volume] * len(
-                #     [w for w in wg for wg in [wg for wg in destination]])
+                dispensed_vols = [self.test_volume for w in [wg for wg in destination]]
                 total_volume_dispensed_1 += sum(
-                    [
-                        self.rows * self.columns * num_chip_1 * Unit(vol)
-                        for vol in dispensed_vols
-                        # for vol in [self.test_volume for _ in wg] in
-                    ]
+                    [self.rows * self.columns * Unit(vol) for vol in dispensed_vols]
                 )
                 # Vol dispensed in predispense
                 total_volume_dispensed_1 += (
@@ -520,11 +517,9 @@ class TestLiquidHandleMultiDispenseMode:
                 )
 
                 total_volume_dispensed_2 += sum(
-                    [
-                        self.rows * self.columns * num_chip_2 * Unit(vol)
-                        for vol in dispensed_vols
-                    ]
+                    [self.rows * self.columns * Unit(vol) for vol in dispensed_vols]
                 )
+
                 # Vol dispensed in predispense
                 total_volume_dispensed_2 += (
                     self.method.get_predispense_volume()
@@ -532,6 +527,7 @@ class TestLiquidHandleMultiDispenseMode:
                     * self.columns
                     * num_chip_2
                 )
+
                 loc_slices, src_count = [], None
                 for loc in instr.locations:
                     if loc["transports"][0]["volume"] < Unit("0:microliter"):
@@ -542,33 +538,57 @@ class TestLiquidHandleMultiDispenseMode:
                             src_count += 1
                     loc_slices[src_count].append(loc)
 
+                loc_list = []
+                loc_idx = 0
+                src_dest_pairs = 0
+                while loc_idx < len(instr.locations):
+                    loc = instr.locations[loc_idx]
+                    if loc["transports"][0]["volume"] < Unit("0:microliter"):
+                        loc_list.append(
+                            {
+                                "src": loc["location"],
+                                "num_chips": len(loc["transports"]),
+                                "destinations": [],
+                                "priming_loc": instr.locations[loc_idx + 1],
+                                "predispense_loc": instr.locations[loc_idx + 2],
+                            }
+                        )
+                        src_dest_pairs += 1
+                        loc_idx += 3
+                    else:
+                        loc_list[src_dest_pairs - 1]["destinations"].append(loc)
+                        loc_idx += 1
+
                 dispensed_volumes = [
                     (initial_src_volume_1, total_volume_dispensed_1),
                     (initial_src_volume_2, total_volume_dispensed_2),
                 ]
+
                 for (
-                    locations,
+                    (location_info),
                     (src_tube, num_chip),
                     (initial_src_volume, total_volume_dispensed),
-                ) in zip(loc_slices, source, dispensed_volumes):
-
-                    source_loc = locations[0]
-                    assert source_loc["location"] == src_tube
-                    assert len(source_loc["transports"]) == num_chip
+                ) in zip(loc_list, source, dispensed_volumes):
+                    assert location_info["src"] == src_tube
+                    assert location_info["num_chips"] == num_chip
                     assert (
                         src_tube.volume == initial_src_volume - total_volume_dispensed
                     )
 
-                    priming_loc = locations[1]
-                    assert priming_loc["location"] == src_tube
-                    assert len(priming_loc["transports"]) == num_chip
+                    assert location_info["priming_loc"]["location"] == src_tube
+                    assert len(location_info["priming_loc"]["transports"]) == num_chip
 
-                    predispense_loc = locations[2]
-                    assert predispense_loc.get("location") == None
-                    assert len(predispense_loc["transports"]) == num_chip
+                    assert location_info["predispense_loc"].get("location") == None
+                    assert (
+                        len(location_info["predispense_loc"]["transports"]) == num_chip
+                    )
 
-                    for i, dest_well in enumerate(destination[0]):
-                        destination_loc = locations[3 + i]
+                    for i, dest_well in enumerate(destination):
+                        destination_loc = location_info["destinations"][i]
+                        assert destination_loc["location"] == dest_well
+                        assert len(destination_loc["transports"]) == 1
+
+                        destination_loc = location_info["destinations"][i]
                         assert destination_loc["location"] == dest_well
                         assert len(destination_loc["transports"]) == 1
                     filled_destinations = list(
@@ -578,13 +598,13 @@ class TestLiquidHandleMultiDispenseMode:
                                 self.flat.wells_from_shape(
                                     dest_well.index, self.shape
                                 ).wells
-                                for dest_well in destination[0]
+                                for dest_well in destination
                             ],
                         )
                     )
                     # Sources are dispensing to the same destination
                     assert all(
-                        w.volume == Unit(self.test_volume) * len(destination[0])
+                        w.volume == Unit(self.test_volume) * len(destination)
                         for w in filled_destinations
                     )
 

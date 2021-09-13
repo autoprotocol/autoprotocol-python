@@ -9,7 +9,7 @@ Module containing the main `Protocol` object and associated functions
 
 import warnings
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
@@ -1137,71 +1137,114 @@ class Protocol(object):
         # Check destinations match the number of sources
         len_src = len(source)
 
-        def configure_destinations(destinations) -> List[WellGroup]:
-            if isinstance(destinations, list):
-                len_dests = len(destinations)
-                if len_dests == 1:
-                    return configure_destinations(destinations[0])
-                elif len_src == 1:
-                    return [WellGroup(destinations)]
-                elif len_src == len_dests:
-                    return [WellGroup(d) for d in destinations]
+        def configure_dest(destinations) -> List[WellGroup]:
+            final_destinations = []
+            if isinstance(destinations, Well):
+                final_destinations.append(convert_to_wellgroup(destinations))
+            elif isinstance(destinations, List):
+                for dest in destinations:
+                    wg = convert_to_wellgroup(dest)
+                    final_destinations.append(wg)
+                if len_src == 1:
+                    final_destinations = [convert_to_wellgroup(final_destinations)]
+                    src_list = []
+                    for _ in range(len(final_destinations)):
+                        src_list.append(source[0])
+            elif isinstance(destinations, WellGroup):
+                final_destinations.append(destinations)
+            else:
+                raise TypeError("Destinations must be of type well, wellgroup, list.")
+            if len(final_destinations) == 1:
+                final_destinations = [final_destinations[0] for _ in range(len_src)]
+            elif len_src == 1:
+                src_list = []
+                for _ in range(len(final_destinations)):
+                    src_list.append(source[0])
+            elif len(final_destinations) != len_src:
+                raise ValueError(
+                    f"If multiple destinations are specified, destinations({len(final_destinations)}) and"
+                    f" sources({len_src}) must be of equal length."
+                )
+            if not all([isinstance(wg, WellGroup) for wg in final_destinations]):
+                raise ValueError(
+                    f"not everything in the dest list of wellgroups is a wellgroup... {final_destinations}"
+                )
+            return final_destinations
+
+        def convert_to_wellgroup(dest) -> WellGroup:
+            if isinstance(dest, Well):
+                ret = WellGroup([dest])
+            elif isinstance(dest, List):
+                ret = WellGroup([])
+                for item in dest:
+                    if isinstance(item, Well):
+                        ret.append(item)
+                    elif isinstance(item, WellGroup):
+                        ret.extend(item)
+                    else:
+                        raise TypeError(
+                            f"Destination {item}({type(item)}) is not a well or wellgroup."
+                        )
+            elif not isinstance(dest, WellGroup):
+                raise TypeError(
+                    f"Destination {dest}({type(dest)}) is not a well or wellgroup."
+                )
+            else:
+                ret = dest
+            return ret
+
+        destination = configure_dest(destinations=destination)
+
+        def equalize_lengths(
+            vols, dest: Union[List[WellGroup], WellGroup]
+        ) -> Union[List[Unit], List[List[Unit]]]:
+            if isinstance(dest, List):
+                if isinstance(vols, List):
+                    vols_list = vols
+                    if len(vols_list) == len(dest):
+                        for i in range(len(vols_list)):
+                            vols_list[i] = equalize_lengths(vols_list[i], dest[i])
+                        return vols_list
+                    elif len(vols_list) == 1:
+                        vols_list = [vols_list for _ in dest]
+                    else:
+                        raise ValueError(
+                            f"If the volumes argument is a list(yours"
+                            f" was length {len(vols_list)}), it must "
+                            f"be length 1 or the same length as the"
+                            f" length of sources(length {len_src})."
+                        )
+                elif isinstance(vols, (Unit, str)):
+                    vols_list = [parse_unit(vols, "uL") for _ in dest]
                 else:
                     raise ValueError(
-                        f"When specifying more than one destination locations "
-                        f"the number of destinations must match the number of sources "
-                        f"num of destinations {len_dests} != num of sources {len_src}"
+                        f"Acceptable volumes argument types are:"
+                        f"Unit, List[Unit], or List[List[Unit]]."
+                        f"{vols}(type {type(vols)}) is not one "
+                        f"of those types."
                     )
-            elif isinstance(destinations, (WellGroup, Well)):
-                return [WellGroup(destinations) for _ in source]
-            else:
-                raise ValueError(
-                    f"The destination given {type(destinations)} {destinations} is not a WellGroup or Well"
-                )
-
-        destination: List[WellGroup] = configure_destinations(destinations=destination)
-
-        def configure_volumes(volumes, idx=None) -> List[List[Unit]]:
-            if isinstance(volumes, list):
-                len_vols = len(volumes)
-                len_dests = len(destination) if idx is None else len(destination[idx])
-                if len_vols == 1:
-                    if len_dests == 1:
-                        return configure_volumes(volumes=volumes[0], idx=idx)
-                    elif isinstance(volumes[0], (str, Unit)):
-                        return configure_volumes(volumes[0])
+            elif isinstance(dest, WellGroup):
+                if isinstance(vols, (Unit, str)):
+                    return [parse_unit(vols) for _ in dest]
+                elif isinstance(vols, List):
+                    if len(vols) == len(dest):
+                        return vols
+                    elif len(vols) == 1 and isinstance(vols[0], Unit):
+                        return [vols[0] for _ in dest]
                     else:
                         raise ValueError(
-                            f"The volume(s) specified volume[0] {volumes} do not align with "
-                            f"the destination(s) specified destination[0] {destination}"
+                            f"Your list of volumes lists is"
+                            f" improperly nested({vols[0]} should"
+                            f" be a Unit) or one of the lists"
+                            f"(length {vols}) is not of the same"
+                            f" length as its corresponding source"
+                            f"(length {len(dest)})."
                         )
-                elif len_vols == len_dests:
-                    return [configure_volumes(vol, i) for i, vol in enumerate(volumes)]
-                else:
-                    if idx is not None:
-                        raise ValueError(
-                            f"The volume(s) specified volume[{idx}] {volume} do not align with "
-                            f"the destination(s) specified destination[{idx}] {destination}"
-                        )
-                    else:
-                        raise ValueError(
-                            f"The volume(s) {volume} do not align with the destination(s) specified {destination}"
-                        )
-            elif isinstance(volumes, (str, Unit)):
-                if idx is not None:
-                    return [parse_unit(volumes, "ul") for _ in destination[idx]]
-                else:
-                    return [
-                        [parse_unit(volumes, "uL") for _ in wg] for wg in destination
-                    ]
-            else:
-                raise ValueError(
-                    f"When specifying more than one volume "
-                    f"the number of volumes must match the number of destination locations "
-                    f"num of volumes {volumes} != num of destinations {destination}"
-                )
+            # vols list will always be defined by now, or the function will have
+            # raised an error because destinations will always be a list of wellgroups
+            return equalize_lengths(vols_list, dest)
 
-        volume: List[List[Unit]] = configure_volumes(volumes=volume)
+        volume: List[List[Unit]] = equalize_lengths(vols=volume, dest=destination)
 
         # Format LiquidClasses
         if not isinstance(liquid, list):
@@ -1245,11 +1288,14 @@ class Protocol(object):
         transport_locations = []
         shape = LiquidHandle.builders.shape(rows, columns, None)
         for i, (source_location, num_dispense_chips) in enumerate(source):
-            destination_locations: WellGroup = destination[i]
             dispense_volumes: List[Unit] = volume[i]
-            sum_dispense_volumes: Unit = (
-                sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
-            )
+            destination_wg: WellGroup = destination[i]
+            try:
+                sum_dispense_volumes: Unit = (
+                    sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
+                )
+            except:
+                raise ValueError(dispense_volumes)
             total_volume_dispensed: Unit = Unit("0:microliter")
 
             # Aspirate from source
@@ -1262,10 +1308,10 @@ class Protocol(object):
                     ),
                 )
             )
+            # there should be the same number of volumes as destinations
             total_volume_dispensed += sum(
-                [rows * columns * len(destination) * vol for vol in dispense_volumes]
+                [rows * columns * vol for vol in dispense_volumes]
             )
-
             # Prime from source
             if method[i].prime:
                 transport_locations.append(
@@ -1291,30 +1337,31 @@ class Protocol(object):
                     * columns
                     * num_dispense_chips
                 )
-
             # Dispense from source to destination
-            for destination_location, vol in zip(
-                destination_locations, dispense_volumes
-            ):
+            # for each src_tuple-dest_wg-vol_list triplicate
+            # for each destination well in the dest_wg
+            # there will always be the same number of wells
+            # in the well group as there are volumes in the list
+            for j in range(len(destination_wg)):
+                vol = dispense_volumes[j]
+                destination_well = destination_wg[j]
                 transport_locations.append(
                     LiquidHandle.builders.location(
-                        location=destination_location,
+                        location=destination_well,
                         transports=(method[i]._dispense_transports(vol)),
                     )
                 )
                 # Update destination column volumes with consideration of the num chips specified
-                for w in destination_location.container.wells_from_shape(
-                    destination_location.index, shape
+                for w in destination_well.container.wells_from_shape(
+                    destination_well.index, shape
                 ):
                     w.add_volume(vol)
 
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
-
         device_mode_params = LiquidHandleBuilders.device_mode_params(
             model=model, chip_material=chip_material, nozzle=nozzle
         )
-
         return self._append_and_return(
             LiquidHandle(
                 locations=transport_locations,

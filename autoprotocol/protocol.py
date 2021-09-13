@@ -1059,9 +1059,10 @@ class Protocol(object):
             destination = p.ref("destination", cont_type="96-flat", discard=True)
 
             intake_hoses = 3
+            number_dispense_columns = 5
             source: List[Tuple[Well, int]] = [(source, intake_hoses)]
 
-            destination = [destination.wells_from(0, 3)]
+            destination = [destination.wells_from(0, num_dispense_columns)]
             self.protocol.liquid_handle_dispense(
                 source=source,
                 destination=destination,

@@ -1,9 +1,13 @@
 # pragma pylint: disable=missing-docstring, no-self-use, invalid-name
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 # pragma pylint: disable=protected-access
+from contextlib import contextmanager
+from functools import reduce
+
 import pytest
 
-from autoprotocol import Protocol, Unit, WellGroup
+from autoprotocol import Container, ContainerType, Protocol, Unit, Well, WellGroup
+from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.liquid_handle.liquid_class import LiquidClass
 
@@ -14,7 +18,598 @@ class ProteinBuffer(LiquidClass):
         self.name = "protein_buffer"
 
 
+class TestDispenseMethod(DispenseMethod):
+    def __init__(self):
+        super(TestDispenseMethod, self).__init__()
+        self._liquid = ProteinBuffer()
+
+
+def dummy_tube_well(name="dummy"):
+    return (
+        Container(
+            None,
+            ContainerType(
+                name="dummy",
+                well_count=1,
+                well_depth_mm=None,
+                well_volume_ul=Unit(50, "milliliter"),
+                well_coating=None,
+                sterile=False,
+                is_tube=True,
+                cover_types=[],
+                seal_types=None,
+                capabilities=[],
+                shortname="dummy",
+                col_count=1,
+                dead_volume_ul=Unit(3, "milliliter"),
+                safe_min_volume_ul=Unit(2, "milliliter"),
+            ),
+            name=name,
+        )
+        .well(0)
+        .set_volume("50:milliliter")
+    )
+
+
+@contextmanager
+def does_not_raise():
+    yield
+
+
 class LiquidHandleTester(object):
+    @pytest.fixture(autouse=True, scope="function")
+    def protocol(self):
+        yield Protocol()
+
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self, protocol, dummy_96):
+        self.protocol = protocol
+        self.src_tube_1: Well = dummy_tube_well()
+        self.src_tube_2: Well = dummy_tube_well()
+        self.src_tube_3: Well = dummy_tube_well()
+        self.flat = dummy_96
+        self.test_volume = "100:uL"
+        self.rows = 8
+        self.columns = 1
+        self.liquid = ProteinBuffer()
+        self.method = TestDispenseMethod()
+        self.shape = LiquidHandle.builders.shape(self.rows, self.columns, None)
+
+
+class TestLiquidHandleUserConfig(LiquidHandleTester):
+    def test_source_configuration(self):
+        test_input_types = [
+            (does_not_raise(), self.src_tube_1),
+            (does_not_raise(), [(self.src_tube_1, 1)]),
+            (pytest.raises(ValueError), [(self.src_tube_1, "1")]),
+            (pytest.raises(ValueError), [self.src_tube_1, 1]),
+        ]
+        destination = self.flat.well(1)
+        volume = self.test_volume
+        for expectation, test_input_type in test_input_types:
+            with expectation:
+                self.protocol.liquid_handle_dispense(
+                    source=test_input_type, destination=destination, volume=volume
+                )
+
+    def test_destination_configuration(self):
+        # Destinations must match the number of chips specified in the source tuple
+        source = [(self.src_tube_1, 2), (self.src_tube_2, 1)]
+        test_input_types = [
+            (does_not_raise(), [self.flat.wells_from(0, 2), self.flat.well(3)]),
+            (does_not_raise(), [self.flat.wells_from(0, 2)]),
+            (does_not_raise(), self.flat.wells_from(0, 2)),
+            (
+                does_not_raise(),
+                [[self.flat.well(0), self.flat.well(1)], self.flat.well(0)],
+            ),
+            (
+                does_not_raise(),
+                [
+                    [self.flat.well(0), self.flat.well(1), self.flat.well(2)],
+                    self.flat.well(0),
+                ],
+            ),
+            (does_not_raise(), [self.flat.well(0), self.flat.well(1)]),
+            (does_not_raise(), [self.flat.well(1)]),
+            (does_not_raise(), self.flat.well(1)),
+        ]
+        volume = self.test_volume
+        for expectation, test_input_type in test_input_types:
+            with expectation:
+                self.protocol.liquid_handle_dispense(
+                    source=source, destination=test_input_type, volume=volume
+                )
+
+    def test_volume_configuration(self):
+        test_input_types = [
+            (does_not_raise(), "3:ul"),
+            (does_not_raise(), Unit("4:ul")),
+            (does_not_raise(), [Unit("5:ul")]),
+            (does_not_raise(), [[Unit("6:ul")], [Unit("7:ul")]]),
+            (does_not_raise(), ["8:ul", "9:ul"]),
+            (pytest.raises(ValueError), ["10:ul", "11:ul", "12:ul"]),
+            (pytest.raises(ValueError), [["13:ul", "14:ul", "15:ul"]]),
+            (pytest.raises(ValueError), [["16:ul", "17:ul", "18:ul"], ["19:ul"]]),
+        ]
+        source = [(self.src_tube_1, 1), (self.src_tube_2, 1)]
+        destination = [self.flat.well(0), self.flat.well(1)]
+        for expectation, test_input_type in test_input_types:
+            with expectation:
+                self.protocol.liquid_handle_dispense(
+                    source=source, destination=destination, volume=test_input_type
+                )
+
+    def test_liquid_class_configuration(self):
+        test_input_types = [
+            (does_not_raise(), LiquidClass()),
+            (does_not_raise(), ProteinBuffer()),
+            (does_not_raise(), [LiquidClass(), LiquidClass()]),
+            (pytest.raises(ValueError), [LiquidClass(), LiquidClass(), LiquidClass()]),
+        ]
+        source = [(self.src_tube_1, 1), (self.src_tube_2, 1)]
+        destination = [self.flat.well(0), self.flat.well(1)]
+        volume = ["42:ul", "42:ul"]
+        for expectation, test_input_type in test_input_types:
+            with expectation:
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=volume,
+                    liquid=test_input_type,
+                )
+
+    def test_dispense_method_configuration(self):
+        test_input_types = [
+            (does_not_raise(), DispenseMethod()),
+            (does_not_raise(), TestDispenseMethod()),
+            (does_not_raise(), [DispenseMethod(), DispenseMethod()]),
+            (
+                pytest.raises(ValueError),
+                [DispenseMethod(), DispenseMethod(), DispenseMethod()],
+            ),
+        ]
+        source = [self.src_tube_1, self.src_tube_2]
+        destination = [self.flat.well(0), self.flat.well(1)]
+        volume = ["42:ul", "42:ul"]
+        liquid = [LiquidClass(), LiquidClass()]
+        for expectation, test_input_type in test_input_types:
+            with expectation:
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=volume,
+                    liquid=liquid,
+                    method=test_input_type,
+                )
+
+
+class TestLiquidHandleMultiDispenseMode:
+    """Test using multiple hoses in one tube that will dispense to multiple columns at once"""
+
+    @pytest.fixture(autouse=True, scope="function")
+    def setup(self):
+        self.protocol = Protocol()
+        self.src_tube_1: Well = dummy_tube_well()
+        self.src_tube_2: Well = dummy_tube_well()
+        self.src_tube_3: Well = dummy_tube_well()
+        self.src_tube_1.set_volume("50:microliter")
+        self.src_tube_2.set_volume("50:microliter")
+        self.src_tube_3.set_volume("50:microliter")
+        self.reagent_name_1 = "reagent_name_1"
+        self.reagent_name_2 = "reagent_name_2"
+        self.reagent_name_3 = "reagent_name_3"
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+        self.test_volume = "100:uL"
+        self.rows = 8
+        self.columns = 1
+        self.liquid = ProteinBuffer()
+        self.method = TestDispenseMethod()
+        self.shape = LiquidHandle.builders.shape(self.rows, self.columns, None)
+
+    @pytest.mark.parametrize("num_chips", [1, 6, 12, 13])
+    @pytest.mark.parametrize("source_tube", [dummy_tube_well()])
+    def test_max_number_of_chips(
+        self, num_chips, source_tube, default_max_num_dispense_chips=12
+    ):
+        source = [(source_tube, num_chips)]
+        initial_src_volume = source_tube.volume
+        destination = self.flat.wells_from(0, num_chips)
+        total_volume_dispensed: Unit = Unit("0:microliter")
+
+        if num_chips > default_max_num_dispense_chips:
+            with pytest.raises(ValueError):
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=self.test_volume,
+                    liquid=self.liquid,
+                    method=self.method,
+                )
+        else:
+            self.protocol.liquid_handle_dispense(
+                source=source,
+                destination=destination,
+                volume=self.test_volume,
+                liquid=self.liquid,
+                method=self.method,
+            )
+            instr = self.protocol.instructions[-1]
+            # Vol dispensed to destination
+            total_volume_dispensed += sum(
+                [
+                    self.rows * self.columns * Unit(vol)
+                    for vol in [self.test_volume] * len(destination)
+                ]
+            )
+            # Vol dispensed in predispense
+            total_volume_dispensed += (
+                self.method.get_predispense_volume()
+                * self.rows
+                * self.columns
+                * num_chips
+            )
+
+            source_loc = instr.locations[0]
+            assert source_loc["location"] == source_tube
+            assert len(source_loc["transports"]) == num_chips
+            assert source_tube.volume == initial_src_volume - total_volume_dispensed
+
+            priming_loc = instr.locations[1]
+            assert priming_loc["location"] == source_tube
+            assert len(priming_loc["transports"]) == num_chips
+
+            predispense_loc = instr.locations[2]
+            assert predispense_loc.get("location") == None
+            assert len(predispense_loc["transports"]) == num_chips
+
+            for i, dest_well in enumerate(destination):
+                destination_loc = instr.locations[3 + i]
+                assert destination_loc["location"] == dest_well
+                assert len(destination_loc["transports"]) == 1
+
+            filled_destinations = list(
+                reduce(
+                    lambda a, b: a + b,
+                    [
+                        self.flat.wells_from_shape(dest_well.index, self.shape).wells
+                        for dest_well in destination
+                    ],
+                )
+            )
+            assert all(w.volume == Unit(self.test_volume) for w in filled_destinations)
+
+    def test_num_chips_vs_num_destinations(self):
+        """Test number of chips >, =, and < number of destinations"""
+        test_input_types = [
+            (does_not_raise(), [4, [self.flat.well(0)]]),
+            (does_not_raise(), [1, [self.flat.well(2)]]),
+            (does_not_raise(), [1, [self.flat.well(3), self.flat.well(4)]]),
+        ]
+        for expectation, (num_chips, destination) in test_input_types:
+            with expectation:
+                source = [(self.src_tube_1, num_chips)]
+                initial_src_volume = self.src_tube_1.volume
+
+                total_volume_dispensed: Unit = Unit("0:microliter")
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=self.test_volume,
+                    liquid=self.liquid,
+                    method=self.method,
+                )
+
+                instr = self.protocol.instructions[-1]
+                # Vol dispensed to destination
+                total_volume_dispensed += sum(
+                    [
+                        self.rows * self.columns * Unit(vol)
+                        for vol in [self.test_volume] * len(destination)
+                    ]
+                )
+                # Vol dispensed in predispense
+                total_volume_dispensed += (
+                    self.method.get_predispense_volume()
+                    * self.rows
+                    * self.columns
+                    * num_chips
+                )
+
+                source_loc = instr.locations[0]
+                assert source_loc["location"] == self.src_tube_1
+                assert len(source_loc["transports"]) == num_chips
+                assert (
+                    self.src_tube_1.volume
+                    == initial_src_volume - total_volume_dispensed
+                )
+
+                priming_loc = instr.locations[1]
+                assert priming_loc["location"] == self.src_tube_1
+                assert len(priming_loc["transports"]) == num_chips
+
+                predispense_loc = instr.locations[2]
+                assert predispense_loc.get("location") == None
+                assert len(predispense_loc["transports"]) == num_chips
+
+                for i, dest_well in enumerate(destination):
+                    destination_loc = instr.locations[3 + i]
+                    assert destination_loc["location"] == dest_well
+                    assert len(destination_loc["transports"]) == 1
+
+                filled_destinations = list(
+                    reduce(
+                        lambda a, b: a + b,
+                        [
+                            self.flat.wells_from_shape(
+                                dest_well.index, self.shape
+                            ).wells
+                            for dest_well in destination
+                        ],
+                    )
+                )
+                assert all(
+                    w.volume == Unit(self.test_volume) for w in filled_destinations
+                )
+
+    def test_num_multi_chips_for_multiple_srcs_to_single_dest(self):
+        test_input_types = [
+            (
+                does_not_raise(),
+                [[(dummy_tube_well(), 2), (dummy_tube_well(), 2)], [self.flat.well(0)]],
+            ),
+            (
+                does_not_raise(),
+                [[(dummy_tube_well(), 2), (dummy_tube_well(), 2)], [self.flat.well(2)]],
+            ),
+            (
+                does_not_raise(),
+                [[(dummy_tube_well(), 2), (dummy_tube_well(), 2)], [self.flat.well(3)]],
+            ),
+        ]
+        for expectation, (source, destination) in test_input_types:
+            with expectation:
+                # source = [(self.src_tube_1, num_chips)]
+                src_tube_1, num_chip_1 = source[0]
+                src_tube_2, num_chip_2 = source[1]
+                initial_src_volume_1 = src_tube_1.volume
+                initial_src_volume_2 = src_tube_2.volume
+
+                total_volume_dispensed_1: Unit = Unit("0:microliter")
+                total_volume_dispensed_2: Unit = Unit("0:microliter")
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=self.test_volume,
+                    liquid=self.liquid,
+                    method=self.method,
+                )
+
+                instr = self.protocol.instructions[-1]
+                # Vol dispensed to destination
+                total_volume_dispensed_1 += sum(
+                    [
+                        self.rows
+                        * self.columns
+                        * Unit(self.test_volume)
+                        * len(destination)
+                    ]
+                )
+                # Vol dispensed in predispense
+                total_volume_dispensed_1 += (
+                    self.method.get_predispense_volume()
+                    * self.rows
+                    * self.columns
+                    * num_chip_1
+                )
+
+                total_volume_dispensed_2 += sum(
+                    [
+                        self.rows
+                        * self.columns
+                        * Unit(self.test_volume)
+                        * len(destination)
+                    ]
+                )
+                # Vol dispensed in predispense
+                total_volume_dispensed_2 += (
+                    self.method.get_predispense_volume()
+                    * self.rows
+                    * self.columns
+                    * num_chip_2
+                )
+                loc_slices, src_count = [], None
+                for loc in instr.locations:
+                    if loc["transports"][0]["volume"] < Unit("0:microliter"):
+                        loc_slices.append([])
+                        if src_count is None:
+                            src_count = 0
+                        else:
+                            src_count += 1
+                    loc_slices[src_count].append(loc)
+
+                dispensed_volumes = [
+                    (initial_src_volume_1, total_volume_dispensed_1),
+                    (initial_src_volume_2, total_volume_dispensed_2),
+                ]
+                for (
+                    locations,
+                    (src_tube, num_chip),
+                    (initial_src_volume, total_volume_dispensed),
+                ) in zip(loc_slices, source, dispensed_volumes):
+
+                    source_loc = locations[0]
+                    assert source_loc["location"] == src_tube
+                    assert len(source_loc["transports"]) == num_chip
+                    assert (
+                        src_tube.volume == initial_src_volume - total_volume_dispensed
+                    )
+
+                    priming_loc = locations[1]
+                    assert priming_loc["location"] == src_tube
+                    assert len(priming_loc["transports"]) == num_chip
+
+                    predispense_loc = locations[2]
+                    assert predispense_loc.get("location") == None
+                    assert len(predispense_loc["transports"]) == num_chip
+
+                    for i, dest_well in enumerate(destination):
+                        destination_loc = locations[3 + i]
+                        assert destination_loc["location"] == dest_well
+                        assert len(destination_loc["transports"]) == 1
+                    filled_destinations = list(
+                        reduce(
+                            lambda a, b: a + b,
+                            [
+                                self.flat.wells_from_shape(
+                                    dest_well.index, self.shape
+                                ).wells
+                                for dest_well in destination
+                            ],
+                        )
+                    )
+                    # Sources are dispensing to the same destination
+                    assert all(
+                        w.volume == Unit(self.test_volume) * len(source)
+                        for w in filled_destinations
+                    )
+
+    def test_num_multi_chips_for_multiple_srcs_to_multi_dest(self):
+        test_input_types = [
+            (
+                does_not_raise(),
+                [
+                    [(dummy_tube_well("src1"), 3), (dummy_tube_well("src2"), 2)],
+                    [[self.flat.well(0), self.flat.well(1)]],
+                ],
+            ),
+        ]
+        for expectation, (source, destination) in test_input_types:
+            with expectation:
+                # source = [(self.src_tube_1, num_chips)]
+                src_tube_1, num_chip_1 = source[0]
+                src_tube_2, num_chip_2 = source[1]
+                initial_src_volume_1 = src_tube_1.volume
+                initial_src_volume_2 = src_tube_2.volume
+
+                total_volume_dispensed_1: Unit = Unit("0:microliter")
+                total_volume_dispensed_2: Unit = Unit("0:microliter")
+                self.protocol.liquid_handle_dispense(
+                    source=source,
+                    destination=destination,
+                    volume=self.test_volume,
+                    liquid=self.liquid,
+                    method=self.method,
+                )
+                destination = destination[0]
+                instr = self.protocol.instructions[-1]
+                # Vol dispensed to destination
+                dispensed_vols = [self.test_volume for w in [wg for wg in destination]]
+                total_volume_dispensed_1 += sum(
+                    [self.rows * self.columns * Unit(vol) for vol in dispensed_vols]
+                )
+                # Vol dispensed in predispense
+                total_volume_dispensed_1 += (
+                    self.method.get_predispense_volume()
+                    * self.rows
+                    * self.columns
+                    * num_chip_1
+                )
+
+                total_volume_dispensed_2 += sum(
+                    [self.rows * self.columns * Unit(vol) for vol in dispensed_vols]
+                )
+
+                # Vol dispensed in predispense
+                total_volume_dispensed_2 += (
+                    self.method.get_predispense_volume()
+                    * self.rows
+                    * self.columns
+                    * num_chip_2
+                )
+
+                loc_slices, src_count = [], None
+                for loc in instr.locations:
+                    if loc["transports"][0]["volume"] < Unit("0:microliter"):
+                        loc_slices.append([])
+                        if src_count is None:
+                            src_count = 0
+                        else:
+                            src_count += 1
+                    loc_slices[src_count].append(loc)
+
+                loc_list = []
+                loc_idx = 0
+                src_dest_pairs = 0
+                while loc_idx < len(instr.locations):
+                    loc = instr.locations[loc_idx]
+                    if loc["transports"][0]["volume"] < Unit("0:microliter"):
+                        loc_list.append(
+                            {
+                                "src": loc["location"],
+                                "num_chips": len(loc["transports"]),
+                                "destinations": [],
+                                "priming_loc": instr.locations[loc_idx + 1],
+                                "predispense_loc": instr.locations[loc_idx + 2],
+                            }
+                        )
+                        src_dest_pairs += 1
+                        loc_idx += 3
+                    else:
+                        loc_list[src_dest_pairs - 1]["destinations"].append(loc)
+                        loc_idx += 1
+
+                dispensed_volumes = [
+                    (initial_src_volume_1, total_volume_dispensed_1),
+                    (initial_src_volume_2, total_volume_dispensed_2),
+                ]
+
+                for (
+                    (location_info),
+                    (src_tube, num_chip),
+                    (initial_src_volume, total_volume_dispensed),
+                ) in zip(loc_list, source, dispensed_volumes):
+                    assert location_info["src"] == src_tube
+                    assert location_info["num_chips"] == num_chip
+                    assert (
+                        src_tube.volume == initial_src_volume - total_volume_dispensed
+                    )
+
+                    assert location_info["priming_loc"]["location"] == src_tube
+                    assert len(location_info["priming_loc"]["transports"]) == num_chip
+
+                    assert location_info["predispense_loc"].get("location") == None
+                    assert (
+                        len(location_info["predispense_loc"]["transports"]) == num_chip
+                    )
+
+                    for i, dest_well in enumerate(destination):
+                        destination_loc = location_info["destinations"][i]
+                        assert destination_loc["location"] == dest_well
+                        assert len(destination_loc["transports"]) == 1
+
+                        destination_loc = location_info["destinations"][i]
+                        assert destination_loc["location"] == dest_well
+                        assert len(destination_loc["transports"]) == 1
+                    filled_destinations = list(
+                        reduce(
+                            lambda a, b: a + b,
+                            [
+                                self.flat.wells_from_shape(
+                                    dest_well.index, self.shape
+                                ).wells
+                                for dest_well in destination
+                            ],
+                        )
+                    )
+                    # Sources are dispensing to the same destination
+                    assert all(
+                        w.volume == Unit(self.test_volume) * len(destination)
+                        for w in filled_destinations
+                    )
+
+
+class TestLiquidHandleDispenseMode:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.protocol = Protocol()
@@ -22,8 +617,6 @@ class LiquidHandleTester(object):
         self.tube.well(0).set_volume("50:microliter")
         self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
 
-
-class TestLiquidHandleDispenseMode(LiquidHandleTester):
     def test_location_count(self):
         volume = "5:uL"
         instruction = self.protocol.liquid_handle_dispense(
@@ -39,8 +632,8 @@ class TestLiquidHandleDispenseMode(LiquidHandleTester):
         destinations = self.flat.wells_from(0, 12)
         dispense_vol = Unit(10, "uL")
         aspirate_vol = -(
-            DispenseMethod.default_prime(None)
-            + DispenseMethod.default_predispense(None)
+            DispenseMethod.default_prime()
+            + DispenseMethod.default_predispense()
             + dispense_vol * len(destinations)
         )
         instruction = self.protocol.liquid_handle_dispense(

@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`7.9.4 <2021-09-21>`
+* :feature:`308` Update `liquid_handle_dispense` instruction to allow for multiple intake hoses in source
+
 * :release:`7.9.3 <2021-09-13>`
 * :feature:`306` Add new containers: `384-ubottom-black-clear-tc` and `384-flat-black-clear-tc`
 * :feature:`305` Add `cold_196` incubation location

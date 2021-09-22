@@ -3,7 +3,6 @@
 Base LiquidHandleMethod used by Protocol.liquid_handle_dispense to generate a
 series of movements that define a dispense from a source into a destination
 """
-from typing import List, Optional, Union
 
 from ..instruction import LiquidHandle
 from ..unit import Unit
@@ -45,33 +44,11 @@ class Dispense(LiquidHandleMethod):
         self.volume_resolution = volume_resolution
 
         # parameters for optional behavior
-        self._set_prime(prime)
-        self._set_predispense(predispense)
+        self.prime = prime
+        self.predispense = predispense
 
         # LiquidHandle parameters that are generated and modified at runtime
         self._liquid = None
-
-    def _set_predispense(self, predispense: Union[Unit, str, bool]) -> None:
-        if isinstance(predispense, Unit):
-            self.predispense = predispense
-        elif isinstance(predispense, str):
-            self.predispense = parse_unit(predispense, "ul")
-        else:
-            if predispense:
-                self.predispense = Dispense.default_predispense()
-            else:
-                self.predispense = Unit("0:microliter")
-
-    def _set_prime(self, prime: Union[Unit, str, bool]) -> None:
-        if isinstance(prime, Unit):
-            self.prime = prime
-        elif isinstance(prime, str):
-            self.prime = parse_unit(prime, "ul")
-        else:
-            if prime:
-                self.prime = Dispense.default_prime()
-            else:
-                self.prime = Unit("0:microliter")
 
     def _transport_aspirate_target_volume(self, volume):
         volume_resolution = self.volume_resolution or self.default_volume_resolution(
@@ -101,7 +78,7 @@ class Dispense(LiquidHandleMethod):
             )
         )
 
-    def _aspirate_transports(self, volume: Unit) -> List[dict]:
+    def _aspirate_transports(self, volume):
         """Generates source well transports
 
         Generates all the transports that should happen to aspirate volume from
@@ -117,16 +94,11 @@ class Dispense(LiquidHandleMethod):
             source well transports corresponding to the aspirate operation
         """
         self._transports = []
-        total_aspirate_volume: Unit = parse_unit(volume, "ul")
-        if self.prime:
-            total_aspirate_volume += self.get_prime_volume()
-        if self.predispense:
-            total_aspirate_volume += self.get_predispense_volume()
-
-        self._transport_aspirate_target_volume(total_aspirate_volume)
+        volume = parse_unit(Unit(volume), "ul")
+        self._transport_aspirate_target_volume(volume)
         return self._transports
 
-    def _dispense_transports(self, volume: Unit) -> List[dict]:
+    def _dispense_transports(self, volume):
         """Generates destination well transports
 
         Generates all the transports that should happen to dispense volume into
@@ -142,11 +114,11 @@ class Dispense(LiquidHandleMethod):
             destination well transports corresponding to the dispense operation
         """
         self._transports = []
-        volume = parse_unit(volume, "ul")
+        volume = parse_unit(Unit(volume), "ul")
         self._transport_dispense_target_volume(volume)
         return self._transports
 
-    def _prime_transports(self, volume: Optional[Unit] = None) -> List[dict]:
+    def _prime_transports(self, volume):
         """Generates transports for priming volume back into the source location
 
         Generates all the transports that should happen to recirculate volume
@@ -154,7 +126,7 @@ class Dispense(LiquidHandleMethod):
 
         Parameters
         ----------
-        volume: Optional[Unit]
+        volume: Unit
 
         Returns
         -------
@@ -162,20 +134,17 @@ class Dispense(LiquidHandleMethod):
             priming transports
         """
         self._transports = []
-        if not volume:
-            self._transport_dispense_target_volume(self.get_prime_volume())
-        else:
-            volume = parse_unit(volume, "ul")
+        volume = parse_unit(Unit(volume), "ul")
 
-            # No transports if no volume specified
-            if volume == Unit("0:ul"):
-                return self._transports
+        # No transports if no volume specified
+        if volume == Unit("0:ul"):
+            return []
 
-            self._transport_dispense_target_volume(volume)
+        self._transport_dispense_target_volume(volume)
 
         return self._transports
 
-    def _predispense_transports(self, volume: Optional[Unit] = None) -> List[dict]:
+    def _predispense_transports(self, volume):
         """Generates transports for predispensing volume back into waste
 
         Generates all the transports that should happen to dispense volume into
@@ -184,7 +153,7 @@ class Dispense(LiquidHandleMethod):
 
         Parameters
         ----------
-        volume: Optional[Unit]
+        volume: Unit
 
         Returns
         -------
@@ -192,29 +161,19 @@ class Dispense(LiquidHandleMethod):
             predispense transports
         """
         self._transports = []
+        volume = parse_unit(Unit(volume), "ul")
 
-        if not volume:
-            self._transport_dispense_target_volume(self.get_predispense_volume())
-        else:
-            volume = parse_unit(volume, "ul")
+        # No transports if no volume specified
+        if volume == Unit("0:ul"):
+            return []
 
-            # No transports if no volume specified
-            if volume == Unit("0:ul"):
-                return self._transports
-
-            self._transport_dispense_target_volume(volume)
+        self._transport_dispense_target_volume(volume)
 
         return self._transports
 
-    def get_prime_volume(self) -> Unit:
-        return self.prime
-
-    def get_predispense_volume(self) -> Unit:
-        return self.predispense
-
     # pylint: disable=unused-argument, redundant-returns-doc
     @staticmethod
-    def default_volume_resolution(volume: Unit) -> None:
+    def default_volume_resolution(volume):
         """Default volume_resolution parameters
 
         Parameters
@@ -236,7 +195,7 @@ class Dispense(LiquidHandleMethod):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def default_prime(volume: Optional[Unit] = Unit(600, "uL")) -> Unit:
+    def default_prime(volume):
         """Default priming volume
 
         Parameters
@@ -248,11 +207,11 @@ class Dispense(LiquidHandleMethod):
         Unit
             prime volume
         """
-        return parse_unit(volume, "ul")
+        return Unit(600, "uL")
 
     # pylint: disable=unused-argument
     @staticmethod
-    def default_predispense(volume: Optional[Unit] = Unit(10, "uL")) -> Unit:
+    def default_predispense(volume):
         """Default predispense volume
 
         Parameters
@@ -264,7 +223,7 @@ class Dispense(LiquidHandleMethod):
         Unit
             predispense volume
         """
-        return parse_unit(volume, "ul")
+        return Unit(10, "uL")
 
     def default_blowout(self, volume):
         pass

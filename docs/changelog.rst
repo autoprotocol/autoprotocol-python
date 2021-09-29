@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`XXX` Add new container: `96-pcr-fs-clear`
+* :feature:`312` Add new container: `96-pcr-fs-clear`
 * :feature:`309` Change container short name `384-flat-black-clear-tc` to `384-flatbottom-black-clear-tc`
 
 * :release:`7.9.4 <2021-09-21>`

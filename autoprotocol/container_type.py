@@ -1280,7 +1280,7 @@ FLAT384BLACKUBOTTOM = ContainerType(
 #:
 FLAT384BLACKTC = ContainerType(
     name="384-well Black Clear Flat Bottom Tissue Culture Microplate",
-    shortname="384-flat-black-clear-tc",
+    shortname="384-flatbottom-black-clear-tc",
     is_tube=False,
     well_coating=None,
     sterile=True,
@@ -1349,5 +1349,5 @@ _CONTAINER_TYPES = {
     "96-ubottom-clear-tc": FALCON96UBOTTOM,
     "96-flat-white-dc": FLAT96DELTA,
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
-    "384-flat-black-clear-tc": FLAT384BLACKTC,
+    "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
 }

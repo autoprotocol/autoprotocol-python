@@ -1379,7 +1379,6 @@ _CONTAINER_TYPES = {
     "96-ubottom-clear-tc": FALCON96UBOTTOM,
     "96-flat-white-dc": FLAT96DELTA,
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
-    "384-flat-black-clear-tc": FLAT384BLACKTC,
     "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
     "96-pcr-fs-clear": PCR96FSC,
 }

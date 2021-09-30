@@ -1316,6 +1316,36 @@ FLAT384BLACKTC = ContainerType(
     cat_no="3764",
 )
 
+#:
+PCR96FSC = ContainerType(
+    name="96-well Polypropylene PCR Microplate, Full Skirt, Clear, Nonsterile",
+    well_count=96,
+    well_depth_mm=14.6,
+    well_volume_ul=Unit(200.0, "microliter"),
+    well_coating=None,
+    sterile=False,
+    is_tube=False,
+    cover_types=None,
+    seal_types=["ultra-clear", "foil"],
+    capabilities=[
+        "liquid_handle",
+        "sangerseq",
+        "spin",
+        "thermocycle",
+        "incubate",
+        "gel_separate",
+        "gel_purify",
+        "seal",
+        "dispense",
+    ],
+    shortname="96-pcr-fs-clear",
+    col_count=12,
+    dead_volume_ul=Unit(3, "microliter"),
+    safe_min_volume_ul=Unit(5, "microliter"),
+    vendor="Axygen",
+    cat_no="PCR-96-FS-C",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -1350,4 +1380,5 @@ _CONTAINER_TYPES = {
     "96-flat-white-dc": FLAT96DELTA,
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
     "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
+    "96-pcr-fs-clear": PCR96FSC,
 }

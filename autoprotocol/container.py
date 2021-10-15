@@ -112,6 +112,13 @@ class EntityProperties(object):
         """
         return json.loads(self.toJSON())
 
+    def __init__(self, container, index):
+        self.container = container
+        self.index = int(index)
+        self.volume = None
+        self.mass = None
+        self.name = None
+        self.properties = {}
 
 class EntityPropertiesMixin:
     """

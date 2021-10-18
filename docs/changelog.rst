@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :release:`unreleased <>`
+* :release:`7.9.6 <2021-10-18>`
 * :feature:`316` Add new container: `96-pcr-fs-clear`
 
 * :release:`7.9.5 <2021-09-30>`

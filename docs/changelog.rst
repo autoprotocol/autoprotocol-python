@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`318` Update all pre-commit hooks except pylint to latest versions
+
 * :release:`7.10.0 <2021-10-25>`
 * :support:`321` Support `mass=None` assignment
 * :feature:`319` Support Python 3.10

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :support:`320` Bump pytest and pytest-cov versions for python 3.10 support
+
 * :release:`7.9.6 <2021-10-18>`
 * :feature:`316` Add new container: `96-pcr-fs-clear`
 

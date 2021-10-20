@@ -28,7 +28,7 @@ class PyTest(TestCommand):
 
 # Test and Documentation dependencies
 test_deps = [
-    "coverage>=4.5, <5",
+    "coverage>=6, <7",
     "pre-commit>=2.4, <3",
     "pylint==2.5.2",  # should be consistent with .pre-commit-config.yaml
     "pytest>=6.2.5, <7",

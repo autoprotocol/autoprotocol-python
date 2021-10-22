@@ -137,6 +137,11 @@ class Well(object):
         TypeError
             Incorrect input-type given
         """
+        if mass is None:
+            # Set mass as None if no mass is known, as this is different from a mass of 0:mg
+            self.mass = None
+            return self
+
         if not isinstance(mass, str) and not isinstance(mass, Unit):
             raise TypeError(
                 f"Mass {mass} is of type {type(mass)}, it should be either "

@@ -541,6 +541,22 @@ class TestManifest(object):
         )
         assert parsed["cont"].well(0).mass == Unit(100, "milligram")
 
+        # Test mass value is None
+        parsed_no_mass = protocol_info2.parse(
+            self.protocol,
+            {
+                "refs": {
+                    "other_plate": {
+                        "type": "384-echo",
+                        "discard": True,
+                        "aliquots": {"0": {"volume": "10:microliter", "mass": None}},
+                    }
+                },
+                "parameters": {"cont": "other_plate"},
+            },
+        )
+        assert parsed_no_mass["cont"].well(0).mass is None
+
     # Test parsing of local manifest file
     def test_json_parse(self):
         with open("test/manifest_test.json", "r") as f:

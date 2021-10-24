@@ -2,11 +2,12 @@
 Changelog
 =========
 
+* :support:`321` Support `mass=None` assignment
 * :feature:`319` Support Python 3.10
 * :support:`320` Bump pytest, pytest-cov and coverage versions for python 3.10 support
 
 * :release:`7.9.6 <2021-10-18>`
-* :feature:`316` Add new container: `96-pcr-fs-clear`
+* :feature:`316` Refactor extracted `mass_mg` -> `mass`
 
 * :release:`7.9.5 <2021-09-30>`
 * :feature:`312` Add new container: `96-pcr-fs-clear`

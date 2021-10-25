@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.10.0 <2021-10-25>`
 * :support:`321` Support `mass=None` assignment
 * :feature:`319` Support Python 3.10
 * :support:`320` Bump pytest, pytest-cov and coverage versions for python 3.10 support

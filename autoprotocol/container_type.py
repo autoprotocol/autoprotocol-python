@@ -502,7 +502,7 @@ FLAT384WHITETC = ContainerType(
     sterile=True,
     is_tube=False,
     cover_types=["standard", "universal"],
-    seal_types=None,
+    seal_types=["ultra-clear", "foil"],
     capabilities=[
         "absorbance",
         "cover",
@@ -514,6 +514,7 @@ FLAT384WHITETC = ContainerType(
         "liquid_handle",
         "spin",
         "uncover",
+        "seal",
     ],
     shortname="384-flat-white-white-tc",
     col_count=24,

@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :feature:`320` Add seal ["ultra-clear", "foil"] to FLAT384WHITETC
 * :support:`318` Update all pre-commit hooks except pylint to latest versions
 
 * :release:`7.10.0 <2021-10-25>`

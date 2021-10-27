@@ -502,7 +502,7 @@ FLAT384WHITETC = ContainerType(
     sterile=True,
     is_tube=False,
     cover_types=["standard", "universal"],
-    seal_types=None,
+    seal_types=["ultra-clear", "foil"],
     capabilities=[
         "absorbance",
         "cover",

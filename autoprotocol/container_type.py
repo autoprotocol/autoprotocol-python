@@ -514,6 +514,7 @@ FLAT384WHITETC = ContainerType(
         "liquid_handle",
         "spin",
         "uncover",
+        "seal",
     ],
     shortname="384-flat-white-white-tc",
     col_count=24,

@@ -662,15 +662,85 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None, cover=None):
+    def __init__(self, id, container_type, name=None, storage=None, cover=None, properties={}, contextual_custom_properties=None):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
         self.cover = cover
+        self.properties = properties
+        self.contextual_custom_properties = contextual_custom_properties
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")
+        for ccp in range(len(contextual_custom_properties)):
+            custom_properties = contextual_custom_properties[ccp]
+            for key in custom_properties.keys():
+                self.generate_access_method(type(key), key)
+
+    def generate_access_method(self, propertyType, key):
+        def set_attribute(self, value):
+            try:
+                if propertyType == type(value):
+                    self.contextual_custom_properties[key] = value
+                else:
+                    raise TypeError
+            finally:
+                pass
+
+        def get_attribute(self):
+            return self.contextual_custom_properties[key]
+        setattr(self.__class__, 'set' + key.capitalize(), set_attribute)
+        setattr(self.__class__, 'get' + key.capitalize(), get_attribute)
+    
+    def set_properties(self, properties):
+        """
+        Set properties for a Container. Existing property dictionary
+        will be completely overwritten with the new dictionary.
+        Parameters
+        ----------
+        properties : dict
+            Custom properties for a Container in dictionary form.
+        Returns
+        -------
+        Container
+            Container with modified properties
+        """
+        self.properties = properties.copy()
+        return self
+
+    def add_properties(self, properties):
+        """
+        Add properties to the properties attribute of a Container.
+
+        If any property with the same key already exists for the Container then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to add to a Container.
+
+        Returns
+        -------
+        Container
+            Container with modified properties
+        """
+        for key, value in properties.items():
+            if key in self.properties:
+                values_are_lists = all(
+                    isinstance(_, list) for _ in [value, self.properties[key]]
+                )
+                if values_are_lists:
+                    self.properties[key].extend(value)
+                else:
+                    message = f"Overwriting existing property {key} for {self}"
+                    warnings.warn(message=message)
+                    self.properties[key] = value
+            else:
+                self.properties[key] = value
+        return self
 
     def well(self, i):
         """

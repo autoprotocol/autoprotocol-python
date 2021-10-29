@@ -676,22 +676,37 @@ class Container(object):
         for ccp in range(len(contextual_custom_properties)):
             custom_properties = contextual_custom_properties[ccp]
             for key in custom_properties.keys():
-                self.generate_access_method(type(key), key)
+                self.generate_access_method(key)
 
-    def generate_access_method(self, propertyType, key):
+    def generate_access_method(self, key):
         def set_attribute(self, value):
-            try:
-                if propertyType == type(value):
-                    self.contextual_custom_properties[key] = value
-                else:
-                    raise TypeError
-            finally:
-                pass
+            self.contextual_custom_properties[key] = value
 
         def get_attribute(self):
             return self.contextual_custom_properties[key]
         setattr(self.__class__, 'set' + key.capitalize(), set_attribute)
         setattr(self.__class__, 'get' + key.capitalize(), get_attribute)
+
+    @staticmethod
+    def validate_properties(properties):
+        if not isinstance(properties, dict):
+            raise TypeError(
+                f"Aliquot properties {properties} are of type "
+                f"{type(properties)}, they should be a `dict`."
+            )
+        for key, value in properties.items():
+            if not isinstance(key, str):
+                raise TypeError(
+                    f"Aliquot property {key} : {value} has a key of type "
+                    f"{type(key)}, it should be a 'str'."
+                )
+            try:
+                json.dumps(value)
+            except TypeError:
+                raise TypeError(
+                    f"Aliquot property {key} : {value} has a value of type "
+                    f"{type(value)}, that isn't JSON serializable."
+                )
     
     def set_properties(self, properties):
         """
@@ -706,6 +721,7 @@ class Container(object):
         Container
             Container with modified properties
         """
+        self.validate_properties(properties)
         self.properties = properties.copy()
         return self
 
@@ -727,6 +743,7 @@ class Container(object):
         Container
             Container with modified properties
         """
+        self.validate_properties(properties)
         for key, value in properties.items():
             if key in self.properties:
                 values_are_lists = all(

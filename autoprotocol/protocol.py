@@ -184,7 +184,7 @@ class Protocol(object):
 
     # pragma pylint: disable=redefined-builtin
     def ref(
-        self, name, id=None, cont_type=None, storage=None, discard=None, cover=None
+        self, name, id=None, cont_type=None, storage=None, discard=None, cover=None, properties={}, contextual_custom_properties=[]
     ):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
@@ -300,6 +300,8 @@ class Protocol(object):
             name=name,
             storage=storage if storage else None,
             cover=cover if cover else None,
+            properties=properties,
+            contextual_custom_properties=contextual_custom_properties
         )
         self.refs[name] = Ref(name, opts, container)
         return container

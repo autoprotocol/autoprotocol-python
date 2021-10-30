@@ -452,6 +452,8 @@ class ProtocolInfo(object):
                 storage=ref.get("store"),
                 discard=ref.get("discard"),
                 cover=ref.get("cover"),
+                properties=ref.get("properties"),
+                contextual_custom_properties=ref.get("contextual_custom_properties")
             )
             aqs = ref.get("aliquots")
             if aqs:

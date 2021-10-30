@@ -662,7 +662,7 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None, cover=None, properties={}, contextual_custom_properties=None):
+    def __init__(self, id, container_type, name=None, storage=None, cover=None, properties={}, contextual_custom_properties=[]):
         self.name = name
         self.id = id
         self.container_type = container_type
@@ -673,10 +673,11 @@ class Container(object):
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")
-        for ccp in range(len(contextual_custom_properties)):
-            custom_properties = contextual_custom_properties[ccp]
-            for key in custom_properties.keys():
-                self.generate_access_method(key)
+        if contextual_custom_properties:
+            for ccp in range(len(contextual_custom_properties)):
+                custom_properties = contextual_custom_properties[ccp]
+                for key in custom_properties.keys():
+                    self.generate_access_method(key)
 
     def generate_access_method(self, key):
         def set_attribute(self, value):

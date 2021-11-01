@@ -706,3 +706,41 @@ class TestManifest(object):
             )
 
         assert "foo is not an acceptable Compound format." in str(e.value)
+
+    def test_new_container_attributes(self):
+        contextual_custom_properties= [
+            {
+                "id": 12,
+                "contextual_custom_properties_config_id": "690e57be",
+                "context_type": "Container",
+                "context_id": "ct1g6w2uxvycf4z",
+                "value": "Others",
+                "created_at": "2021-10-17T22:54:47.995-07:00",
+                "updated_at": "2021-10-27T02:40:55.095-07:00"
+            }
+        ]
+        test = self.protocol.ref("test", None, "96-flat-uv", storage="cold_20", contextual_custom_properties=contextual_custom_properties)
+
+        assert test.properties == {}
+        assert test.contextual_custom_properties == contextual_custom_properties
+        protocol = ProtocolInfo(
+            {
+                "name": "Test Container Volumes",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        parsed = protocol.parse(
+            self.protocol,
+            {
+                "refs": {
+                    "echo_plate": {
+                        "type": "384-echo",
+                        "discard": True,
+                        "aliquots": {"0": {"volume": "135:microliter"}},
+                        "contextual_custom_properties": contextual_custom_properties
+                    }
+                },
+                "parameters": {"cont": "echo_plate"},
+            },
+        )
+        assert parsed["cont"].contextual_custom_properties == contextual_custom_properties

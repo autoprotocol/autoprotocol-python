@@ -10,6 +10,8 @@ Container, Well, WellGroup objects and associated functions
 import json
 import warnings
 
+from typing import Dict, Union
+
 from autoprotocol.util import parse_unit
 
 from .constants import SBS_FORMAT_SHAPES
@@ -20,7 +22,135 @@ SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
-class Well(object):
+class ContextualCustomProperty(object):
+    def __init__(self, dict_: Dict):
+        self.__dict__.update(dict_)
+
+    def setProperty(self, key: str, value: Union[str, dict]):
+        if isinstance(key, str):
+            if isinstance(value, dict):
+                self.__dict__[key] = json.loads(
+                    json.dumps(value), object_hook=ContextualCustomProperty
+                )
+            elif isinstance(value, (str, list)):
+                self.__dict__[key] = value
+            else:
+                raise ValueError(
+                    f"Type {type(value)} is not a valid {self.__class__} value type"
+                )
+        else:
+            raise ValueError(f"Invalid key type {type(key)}")
+
+    def getProperty(self, key: str):
+        if isinstance(key, str):
+            return self.__dict__.get(key)
+        else:
+            raise ValueError(f"{key} - {type(key)} is not a valid str")
+
+    def items(self):
+        return self._as_dict(self.__dict__).items()
+
+    def _as_dict(self, ctx_props):
+        if isinstance(ctx_props, ContextualCustomProperty):
+            d = {k: self._as_dict(v) for k, v in ctx_props.__dict__.items()}
+        elif isinstance(ctx_props, dict):
+            d = {k: self._as_dict(v) for k, v in ctx_props.items()}
+        elif isinstance(ctx_props, list):
+            d = [self._as_dict(elem) for elem in ctx_props]
+        else:
+            d = ctx_props
+        return d
+
+
+class EntityPropertiesMixin:
+    def validate_properties(self, properties):
+        raise NotImplementedError
+
+    def set_properties(self, properties):
+        """
+        Set properties for an entitiy (ie: Container or Well). Existing property dictionary
+        will be completely overwritten with the new dictionary.
+        Parameters
+        ----------
+        properties : dict
+            Custom properties for an entity in dictionary form.
+
+        Returns
+        -------
+        self
+            Container or Well with modified properties
+        """
+        self.validate_properties(properties)
+        self.properties = properties.copy()
+        return self
+
+    def add_properties(self, properties):
+        """
+        Add properties to the properties attribute of an entity (ie: Container or Well).
+
+        If any property with the same key already exists for the entity then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
+
+        Parameters
+        ----------
+        properties : dict
+            Dictionary of properties to add to a entity.
+
+        Returns
+        -------
+        self
+            Container or Well with modified properties
+        """
+        self.validate_properties(properties)
+        for key, value in properties.items():
+            if key in self.properties:
+                values_are_lists = all(
+                    isinstance(_, list) for _ in [value, self.properties[key]]
+                )
+                if values_are_lists:
+                    self.properties[key].extend(value)
+                else:
+                    message = f"Overwriting existing property {key} for {self}"
+                    warnings.warn(message=message)
+                    self.properties[key] = value
+            else:
+                self.properties[key] = value
+        return self
+
+    def fromDict(self, dict_: Dict):
+        if dict_ is not None:
+            self.validate_properties(dict_)
+            return json.loads(
+                json.dumps(dict_.copy()), object_hook=ContextualCustomProperty
+            )
+        else:
+            return dict()
+
+    def set_ctx_properties(self, dict_: Dict):
+        self.contextual_custom_properties = self.fromDict(dict_.copy())
+        return self
+
+    def add_ctx_properties(self, dict_: Dict):
+        self.validate_properties(dict_)
+        for key, value in dict_.copy().items():
+            current_value = self.contextual_custom_properties.getProperty(key)
+            if current_value:
+                values_are_lists = all(
+                    isinstance(_, list) for _ in [value, current_value]
+                )
+                if values_are_lists:
+                    current_value.extend(value)
+                else:
+                    message = f"Overwriting existing property {key} for {self}"
+                    warnings.warn(message=message)
+                    self.contextual_custom_properties.setProperty(key, value)
+            else:
+                self.contextual_custom_properties.setProperty(key, value)
+        return self
+
+
+class Well(EntityPropertiesMixin):
     """
     A Well object describes a single location within a container.
 
@@ -33,16 +163,23 @@ class Well(object):
         The Container this well belongs to.
     index : int
         The index of this well within the container.
+    properties : dict, optional
+        mapping of key value properties associated to the Container
+    contextual_custom_properties : dict, optional
+        mapping of key value properties associated to the Container
 
     """
 
-    def __init__(self, container, index):
+    def __init__(
+        self, container, index, properties=None, contextual_custom_properties=None
+    ):
         self.container = container
         self.index = index
         self.volume = None
         self.mass = None
         self.name = None
-        self.properties = {}
+        self.properties = properties if properties else dict()
+        self.contextual_custom_properties = self.fromDict(contextual_custom_properties)
 
     @staticmethod
     def validate_properties(properties):
@@ -64,59 +201,6 @@ class Well(object):
                     f"Aliquot property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
                 )
-
-    def set_properties(self, properties):
-        """
-        Set properties for a Well. Existing property dictionary
-        will be completely overwritten with the new dictionary.
-
-        Parameters
-        ----------
-        properties : dict
-            Custom properties for a Well in dictionary form.
-
-        Returns
-        -------
-        Well
-            Well with modified properties
-        """
-        self.validate_properties(properties)
-        self.properties = properties.copy()
-        return self
-
-    def add_properties(self, properties):
-        """
-        Add properties to the properties attribute of a Well.
-
-        If any property with the same key already exists for the Well then:
-         - if both old and new properties are lists then append the new property
-         - otherwise overwrite the old property with the new one
-
-        Parameters
-        ----------
-        properties : dict
-            Dictionary of properties to add to a Well.
-
-        Returns
-        -------
-        Well
-            Well with modified properties
-        """
-        self.validate_properties(properties)
-        for key, value in properties.items():
-            if key in self.properties:
-                values_are_lists = all(
-                    isinstance(_, list) for _ in [value, self.properties[key]]
-                )
-                if values_are_lists:
-                    self.properties[key].extend(value)
-                else:
-                    message = f"Overwriting existing property {key} for {self}"
-                    warnings.warn(message=message)
-                    self.properties[key] = value
-            else:
-                self.properties[key] = value
-        return self
 
     def set_mass(self, mass):
         """
@@ -628,7 +712,7 @@ class WellGroup(object):
 
 
 # pylint: disable=redefined-builtin
-class Container(object):
+class Container(EntityPropertiesMixin):
     """
     A reference to a specific physical container (e.g. a tube or 96-well
     microplate).
@@ -654,6 +738,10 @@ class Container(object):
         name of the storage condition.
     cover : str, optional
         name of the cover on the container.
+    properties : dict, optional
+        mapping of key value properties associated to the Container
+    contextual_custom_properties : dict, optional
+        mapping of key value properties associated to the Container
 
     Raises
     ------
@@ -662,103 +750,47 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None, cover=None, properties={}, contextual_custom_properties=[]):
+    def __init__(
+        self,
+        id,
+        container_type,
+        name=None,
+        storage=None,
+        cover=None,
+        properties=None,
+        contextual_custom_properties=None,
+    ):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
         self.cover = cover
-        self.properties = properties
-        self.contextual_custom_properties = contextual_custom_properties
+        self.properties = properties if properties else dict()
+        self.contextual_custom_properties = self.fromDict(contextual_custom_properties)
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")
-        if contextual_custom_properties:
-            for ccp in range(len(contextual_custom_properties)):
-                custom_properties = contextual_custom_properties[ccp]
-                for key in custom_properties.keys():
-                    self.generate_access_method(key)
-
-    def generate_access_method(self, key):
-        def set_attribute(self, value):
-            self.contextual_custom_properties[key] = value
-
-        def get_attribute(self):
-            return self.contextual_custom_properties[key]
-        setattr(self.__class__, 'set' + key.capitalize(), set_attribute)
-        setattr(self.__class__, 'get' + key.capitalize(), get_attribute)
 
     @staticmethod
     def validate_properties(properties):
         if not isinstance(properties, dict):
             raise TypeError(
-                f"Aliquot properties {properties} are of type "
+                f"Container properties {properties} are of type "
                 f"{type(properties)}, they should be a `dict`."
             )
         for key, value in properties.items():
             if not isinstance(key, str):
                 raise TypeError(
-                    f"Aliquot property {key} : {value} has a key of type "
+                    f"Container property {key} : {value} has a key of type "
                     f"{type(key)}, it should be a 'str'."
                 )
             try:
                 json.dumps(value)
             except TypeError:
                 raise TypeError(
-                    f"Aliquot property {key} : {value} has a value of type "
+                    f"Container property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
                 )
-    
-    def set_properties(self, properties):
-        """
-        Set properties for a Container. Existing property dictionary
-        will be completely overwritten with the new dictionary.
-        Parameters
-        ----------
-        properties : dict
-            Custom properties for a Container in dictionary form.
-        Returns
-        -------
-        Container
-            Container with modified properties
-        """
-        self.validate_properties(properties)
-        self.properties = properties.copy()
-        return self
-
-    def add_properties(self, properties):
-        """
-        Add properties to the properties attribute of a Container.
-
-        If any property with the same key already exists for the Container then:
-         - if both old and new properties are lists then append the new property
-         - otherwise overwrite the old property with the new one
-
-        Parameters
-        ----------
-        properties : dict
-            Dictionary of properties to add to a Container.
-
-        Returns
-        -------
-        Container
-            Container with modified properties
-        """
-        self.validate_properties(properties)
-        for key, value in properties.items():
-            if key in self.properties:
-                values_are_lists = all(
-                    isinstance(_, list) for _ in [value, self.properties[key]]
-                )
-                if values_are_lists:
-                    self.properties[key].extend(value)
-                else:
-                    message = f"Overwriting existing property {key} for {self}"
-                    warnings.warn(message=message)
-                    self.properties[key] = value
-            else:
-                self.properties[key] = value
-        return self
 
     def well(self, i):
         """

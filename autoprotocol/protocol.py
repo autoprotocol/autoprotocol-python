@@ -184,7 +184,15 @@ class Protocol(object):
 
     # pragma pylint: disable=redefined-builtin
     def ref(
-        self, name, id=None, cont_type=None, storage=None, discard=None, cover=None, properties={}, contextual_custom_properties=[]
+        self,
+        name,
+        id=None,
+        cont_type=None,
+        storage=None,
+        discard=None,
+        cover=None,
+        properties=None,
+        contextual_custom_properties=None,
     ):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
@@ -247,6 +255,10 @@ class Protocol(object):
             the container being referenced will be discarded after a run.
         cover: str, optional
             name of the cover which will be on the container/ref
+        properties : dict, optional
+            mapping of key value properties associated to the Container
+        contextual_custom_properties : dict, optional
+            mapping of key value properties associated to the Container
 
         Returns
         -------
@@ -301,7 +313,7 @@ class Protocol(object):
             storage=storage if storage else None,
             cover=cover if cover else None,
             properties=properties,
-            contextual_custom_properties=contextual_custom_properties
+            contextual_custom_properties=contextual_custom_properties,
         )
         self.refs[name] = Ref(name, opts, container)
         return container
@@ -869,27 +881,32 @@ class Protocol(object):
         RuntimeError
             If either refs or instructions attribute is empty
         """
-        outs = {}
+        outs = defaultdict(lambda: defaultdict(dict))
         # pragma pylint: disable=protected-access
         for n, ref in self.refs.items():
-            for well in ref.container._wells:
-                if well.name or len(well.properties) > 0:
-                    if n not in outs.keys():
-                        outs[n] = {}
-                    outs[n][str(well.index)] = {}
-                    if well.name:
-                        outs[n][str(well.index)]["name"] = well.name
-                    if len(well.properties) > 0:
-                        outs[n][str(well.index)]["properties"] = well.properties
             # assign any storage or discard condition changes to ref
             if "store" in ref.opts:
-                ref.opts["store"] = {"where": ref.container.storage}
+                ref.opts["store"]["where"] = ref.container.storage
             if ref.container.storage is None and "discard" not in ref.opts:
                 ref.opts["discard"] = True
                 del ref.opts["store"]
             elif ref.container.storage is not None and "discard" in ref.opts:
                 ref.opts["store"] = {"where": ref.container.storage}
                 del ref.opts["discard"]
+
+            if ref.container.properties:
+                outs[n]["properties"] = ref.container.properties
+
+            if ref.container.contextual_custom_properties:
+                for k, v in ref.container.contextual_custom_properties.items():
+                    outs[n]["contextual_custom_properties"][k] = v
+
+            for well in ref.container._wells:
+                if well.name or len(well.properties) > 0:
+                    if well.name:
+                        outs[n][str(well.index)]["name"] = well.name
+                    if len(well.properties) > 0:
+                        outs[n][str(well.index)]["properties"] = well.properties
         # pragma pylint: enable=protected-access
 
         if outs:

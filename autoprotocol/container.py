@@ -23,10 +23,39 @@ COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
 class ContextualCustomProperty(object):
+    """
+    A ContextualCustomProperty object is a mapping of an entity's custom properties
+    unique to the user.
+
+    Do not construct directly -- retrieve it from the related Container or Well
+    object.
+
+    Parameters
+    ----------
+    dict_ : Dict
+        Is the mapping of properties from a user's Container or Well
+    """
+
     def __init__(self, dict_: Dict):
         self.__dict__.update(dict_)
 
     def setProperty(self, key: str, value: Union[str, dict]):
+        """
+        Sets a value for the specified key on the ContextualCustomProperty
+
+        Parameters
+        ----------
+        key : str
+            The string key which maps to the value you wish to set
+        value : str, Dict
+            The value that will be associated to the key specified
+
+        Raises
+        ------
+        ValueError
+            If key type is not str
+
+        """
         if isinstance(key, str):
             if isinstance(value, dict):
                 self.__dict__[key] = json.loads(
@@ -42,34 +71,69 @@ class ContextualCustomProperty(object):
             raise ValueError(f"Invalid key type {type(key)}")
 
     def getProperty(self, key: str):
+        """
+        Gets a value for the specified key on the ContextualCustomProperty
+
+        Parameters
+        ----------
+        key : str
+            The string key which maps to the value you wish to set
+
+        Raises
+        ------
+        ValueError
+            If key type is not str
+
+        Returns
+        -------
+        str, Dict, None
+            The value that maps to the key specified
+        """
         if isinstance(key, str):
             return self.__dict__.get(key)
         else:
             raise ValueError(f"{key} - {type(key)} is not a valid str")
 
-    def items(self):
-        return self._as_dict(self.__dict__).items()
+    def toDict(self):
+        """
+        Generates a dictionary from the ContextualCustomProperty associated to
+        entity (ie: Container or Well)
 
-    def _as_dict(self, ctx_props):
+        Returns
+        -------
+        dict
+            The mapping of an entity's contextual_custom_properties
+        """
+        return {k: v for k, v in self._traverse(self.__dict__).items()}
+
+    def _traverse(self, ctx_props):
+        """Traverses ContextualCustomProperty mapping to generate a dictionary"""
         if isinstance(ctx_props, ContextualCustomProperty):
-            d = {k: self._as_dict(v) for k, v in ctx_props.__dict__.items()}
+            d = {k: self._traverse(v) for k, v in ctx_props.__dict__.items()}
         elif isinstance(ctx_props, dict):
-            d = {k: self._as_dict(v) for k, v in ctx_props.items()}
+            d = {k: self._traverse(v) for k, v in ctx_props.items()}
         elif isinstance(ctx_props, list):
-            d = [self._as_dict(elem) for elem in ctx_props]
+            d = [self._traverse(elem) for elem in ctx_props]
         else:
             d = ctx_props
         return d
 
 
 class EntityPropertiesMixin:
+    """
+    The mixin for Container and Well entities used to mutate the entity instance
+     contextual_custom_properties and properties
+    """
+
     def validate_properties(self, properties):
+        """Validates that properties are valid"""
         raise NotImplementedError
 
     def set_properties(self, properties):
         """
-        Set properties for an entitiy (ie: Container or Well). Existing property dictionary
+        Set properties for an entity (ie: Container or Well). Existing property dictionary
         will be completely overwritten with the new dictionary.
+
         Parameters
         ----------
         properties : dict
@@ -119,19 +183,64 @@ class EntityPropertiesMixin:
         return self
 
     def fromDict(self, dict_: Dict):
+        """
+        Generates the ContextualCustomProperty mapping from a dictionary
+
+        Parameters
+        ----------
+        dict_ : dict
+            Dictionary of properties to associate to a entity's
+            custom_contextual_properties.
+
+        Returns
+        -------
+        ContextualCustomProperty
+            The custom_contextual_properties mapping
+        """
         if dict_ is not None:
             self.validate_properties(dict_)
             return json.loads(
                 json.dumps(dict_.copy()), object_hook=ContextualCustomProperty
             )
         else:
-            return dict()
+            return json.loads(json.dumps(dict()), object_hook=ContextualCustomProperty)
 
     def set_ctx_properties(self, dict_: Dict):
+        """
+        Sets custom_contextual_properties for an entity (ie: Container or Well).
+         Existing property dictionary will be completely overwritten with the new dictionary.
+
+        Parameters
+        ----------
+        dict_ : dict
+            Custom custom_contextual_properties for an entity in dictionary form.
+
+        Returns
+        -------
+        self
+            Container or Well with modified custom_contextual_properties
+        """
         self.contextual_custom_properties = self.fromDict(dict_.copy())
         return self
 
     def add_ctx_properties(self, dict_: Dict):
+        """
+        Add properties to the custom_contextual_properties attribute of an entity (ie: Container or Well).
+
+        If any custom_contextual_properties with the same key already exists for the entity then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
+
+        Parameters
+        ----------
+        dict_ : dict
+            Dictionary of properties to add to a entity.
+
+        Returns
+        -------
+        self
+            Container or Well with modified custom_contextual_properties
+        """
         self.validate_properties(dict_)
         for key, value in dict_.copy().items():
             current_value = self.contextual_custom_properties.getProperty(key)

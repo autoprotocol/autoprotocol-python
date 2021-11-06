@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from autoprotocol import Protocol, Unit, Well, WellGroup
+from autoprotocol import Container, Protocol, Unit, Well, WellGroup
 from autoprotocol.harness import (
     Manifest,
     ProtocolInfo,
@@ -557,6 +557,61 @@ class TestManifest(object):
         )
         assert parsed_no_mass["cont"].well(0).mass is None
 
+    def test_container_properties(self):
+        protocol_info = ProtocolInfo(
+            {
+                "name": "Test Container Properties",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        inputs = {
+            "parameters": {"cont": "source_plate"},
+            "refs": {
+                "source_plate": {
+                    "label": "source_plate",
+                    "type": "res-sw384-lp",
+                    "store": "cold_80",
+                    "cover": None,
+                    "properties": {"key": "value"},
+                    "contextual_custom_properties": {
+                        "orig_key": "orig_val",
+                        "orig_attr": {"akey": "aval"},
+                        "orig_ct_list": ["akey", "aval"],
+                    },
+                    "aliquots": {
+                        "0": {
+                            "name": None,
+                            "volume": "42.0:microliter",
+                            "properties": {},
+                            "contextual_custom_properties": {
+                                "orig_key": "aliquot value"
+                            },
+                        }
+                    },
+                }
+            },
+        }
+        parsed = protocol_info.parse(self.protocol, inputs)
+        source_plate = parsed["cont"]
+        assert isinstance(source_plate, Container)
+        assert source_plate.properties.get("key") == "value"
+        assert source_plate.contextual_custom_properties.orig_key == "orig_val"
+        assert source_plate.contextual_custom_properties.getProperty("orig_attr") == {
+            "akey": "aval"
+        }
+        assert source_plate.contextual_custom_properties.orig_ct_list == [
+            "akey",
+            "aval",
+        ]
+        assert (
+            source_plate.well(0).contextual_custom_properties.orig_key
+            == "aliquot value"
+        )
+        assert (
+            source_plate.well(0).contextual_custom_properties.getProperty("orig_key")
+            == "aliquot value"
+        )
+
     # Test parsing of local manifest file
     def test_json_parse(self):
         with open("test/manifest_test.json", "r") as f:
@@ -708,7 +763,7 @@ class TestManifest(object):
         assert "foo is not an acceptable Compound format." in str(e.value)
 
     def test_new_container_attributes(self):
-        contextual_custom_properties= [
+        contextual_custom_properties = [
             {
                 "id": 12,
                 "contextual_custom_properties_config_id": "690e57be",
@@ -716,10 +771,16 @@ class TestManifest(object):
                 "context_id": "ct1g6w2uxvycf4z",
                 "value": "Others",
                 "created_at": "2021-10-17T22:54:47.995-07:00",
-                "updated_at": "2021-10-27T02:40:55.095-07:00"
+                "updated_at": "2021-10-27T02:40:55.095-07:00",
             }
         ]
-        test = self.protocol.ref("test", None, "96-flat-uv", storage="cold_20", contextual_custom_properties=contextual_custom_properties)
+        test = self.protocol.ref(
+            "test",
+            None,
+            "96-flat-uv",
+            storage="cold_20",
+            contextual_custom_properties=contextual_custom_properties,
+        )
 
         assert test.properties == {}
         assert test.contextual_custom_properties == contextual_custom_properties
@@ -737,10 +798,12 @@ class TestManifest(object):
                         "type": "384-echo",
                         "discard": True,
                         "aliquots": {"0": {"volume": "135:microliter"}},
-                        "contextual_custom_properties": contextual_custom_properties
+                        "contextual_custom_properties": contextual_custom_properties,
                     }
                 },
                 "parameters": {"cont": "echo_plate"},
             },
         )
-        assert parsed["cont"].contextual_custom_properties == contextual_custom_properties
+        assert (
+            parsed["cont"].contextual_custom_properties == contextual_custom_properties
+        )

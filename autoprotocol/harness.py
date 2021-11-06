@@ -470,8 +470,6 @@ class ProtocolInfo(object):
                         c.well(idx).set_ctx_properties(
                             aq.get("contextual_custom_properties")
                         )
-                        # raise ValueError(c.well(idx).contextual_custom_properties.__dict__)
-                        # raise ValueError(aq.get("contextual_custom_properties"))
 
         out_params = {}
         for k in self.input_types:

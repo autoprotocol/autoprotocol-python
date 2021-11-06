@@ -1,5 +1,7 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init,no-self-use
+import warnings
+
 import pytest
 
 from autoprotocol.container import Container, Well, WellGroup
@@ -315,7 +317,10 @@ class TestAliquotProperties(HasDummyContainers):
     def test_wells(self):
         test_property = {"foo": "bar"}
         self.c.well(0).set_properties(test_property)
+        self.c.well(0).set_ctx_properties(test_property)
         assert self.c.well(0).properties == test_property
+        assert self.c.well(0).contextual_custom_properties.getProperty("foo") == "bar"
+        assert self.c.well(0).contextual_custom_properties.foo == "bar"
 
     def test_wellgroups(self):
         test_property = {"foo": "bar"}
@@ -435,3 +440,133 @@ class TestAsShapeOrigin(HasDummyContainers):
         assert dummy_24.wells_from_shape(
             0, SHAPE(rows=8, columns=12)
         ) == dummy_24.wells(wells)
+
+
+class TestContainerProperties(HasDummyContainers):
+    def test_containers(self):
+        test_property = {"foo": "bar"}
+        self.c.set_properties(test_property)
+        self.c.set_ctx_properties(test_property)
+        assert self.c.properties == test_property
+        assert self.c.contextual_custom_properties.getProperty("foo") == "bar"
+        assert self.c.contextual_custom_properties.foo == "bar"
+
+
+class TestValidateProperties(HasDummyContainers):
+    def test_rejects_incorrect_types(self):
+        with pytest.raises(TypeError):
+            self.c.set_properties(["property", "value"])
+        with pytest.raises(TypeError):
+            self.c.set_properties({"property", True})
+        with pytest.raises(TypeError):
+            self.c.set_properties({("property"), "value"})
+
+    def test_can_use_nonstring_properties(self):
+        self.c.set_properties({"foo": [1, 2, 3]})
+        self.c.add_properties({"bar": [1, 2, 3]})
+
+    def test_fails_to_set_unserializable_property(self):
+        with pytest.raises(TypeError):
+            self.c.set_properties({"test": {1}})
+
+    def test_rejects_incorrect_ctx_types(self):
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties(["property", "value"])
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties({"property", True})
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties({("property"), "value"})
+
+    def test_can_use_nonstring_ctx_properties(self):
+        self.c.set_ctx_properties({"foo": [1, 2, 3]})
+        self.c.add_ctx_properties({"bar": [1, 2, 3]})
+
+    def test_fails_to_set_unserializable_ctx_property(self):
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties({"test": {1}})
+
+
+class TestSetProperties(HasDummyContainers):
+    def test_sets_properties(self):
+        test_property = {"foo": "bar"}
+        self.c.set_properties(test_property)
+        assert self.c.properties == test_property
+
+    def test_overwrites_properties(self):
+        new_property = {"bar": True}
+        self.c.set_properties({"foo": True})
+        self.c.set_properties(new_property)
+        assert self.c.properties == new_property
+
+    def test_sets_ctx_properties(self):
+        test_property = {"foo": "bar"}
+        self.c.set_ctx_properties(test_property)
+        assert self.c.contextual_custom_properties.toDict() == test_property
+
+    def test_overwrites_ctx_properties(self):
+        new_property = {"bar": True}
+        self.c.set_ctx_properties({"foo": True})
+        self.c.set_ctx_properties(new_property)
+        assert self.c.contextual_custom_properties.toDict() == new_property
+
+
+class TestAddProperties(HasDummyContainers):
+    def test_adds_properties(self):
+        test_property = {"foo": "bar"}
+        self.c.set_properties(test_property)
+        assert self.c.properties == test_property
+
+    def test_adds_ctx_properties(self):
+        test_property = {"foo": "bar"}
+        self.c.set_ctx_properties(test_property)
+        assert self.c.contextual_custom_properties.toDict() == test_property
+
+    def test_doesnt_overwrite_properties(self):
+        old_property = {"foo": True}
+        new_property = {"bar": False}
+        self.c.add_properties(old_property)
+        self.c.add_properties(new_property)
+        merged_properties = old_property.copy()
+        merged_properties.update(new_property)
+        assert self.c.properties == merged_properties
+
+    def test_doesnt_overwrite_ctx_properties(self):
+        old_property = {"foo": True}
+        new_property = {"bar": False}
+        self.c.add_ctx_properties(old_property)
+        self.c.add_ctx_properties(new_property)
+        merged_properties = old_property.copy()
+        merged_properties.update(new_property)
+        assert self.c.contextual_custom_properties.toDict() == merged_properties
+
+    def test_add_properties_appends_lists(self):
+        self.c.set_properties({"foo": ["bar"]})
+        self.c.add_properties({"foo": ["baz"]})
+        assert self.c.properties == {"foo": ["bar", "baz"]}
+
+    def test_add_ctx_properties_appends_lists(self):
+        self.c.set_ctx_properties({"foo": ["bar"]})
+        self.c.add_ctx_properties({"foo": ["baz"]})
+        assert self.c.contextual_custom_properties.foo == ["bar", "baz"]
+        assert self.c.contextual_custom_properties.getProperty("foo") == ["bar", "baz"]
+        assert self.c.contextual_custom_properties.toDict() == {"foo": ["bar", "baz"]}
+
+    def test_warns_when_overwriting_property(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.c.set_properties({"foo": "bar"})
+            self.c.add_properties({"foo": "bar"})
+            assert len(w) == 1
+            for message in w:
+                assert "Overwriting existing property" in str(message.message)
+
+    def test_doesnt_warn_when_not_overwriting_property(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.c.set_properties({"field1": True})
+            self.c.add_properties({"field2": False})
+            assert len(w) == 0
+
+    def test_doesnt_warn_when_not_overwriting_ctx_property(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.c.set_ctx_properties({"field1": True})
+            self.c.add_ctx_properties({"field2": False})
+            assert len(w) == 0

@@ -61,7 +61,7 @@ class ContextualCustomProperty(object):
                 self.__dict__[key] = json.loads(
                     json.dumps(value), object_hook=ContextualCustomProperty
                 )
-            elif isinstance(value, (str, list)):
+            elif isinstance(value, (str, list, bool)):
                 self.__dict__[key] = value
             else:
                 raise ValueError(
@@ -90,7 +90,11 @@ class ContextualCustomProperty(object):
             The value that maps to the key specified
         """
         if isinstance(key, str):
-            return self.__dict__.get(key)
+            prop = self.__dict__.get(key)
+            if isinstance(prop, ContextualCustomProperty):
+                return self._traverse(prop)
+            else:
+                return prop
         else:
             raise ValueError(f"{key} - {type(key)} is not a valid str")
 
@@ -104,19 +108,18 @@ class ContextualCustomProperty(object):
         dict
             The mapping of an entity's contextual_custom_properties
         """
-        return {k: v for k, v in self._traverse(self.__dict__).items()}
+        return self._traverse(self.__dict__)
 
     def _traverse(self, ctx_props):
         """Traverses ContextualCustomProperty mapping to generate a dictionary"""
         if isinstance(ctx_props, ContextualCustomProperty):
-            d = {k: self._traverse(v) for k, v in ctx_props.__dict__.items()}
+            return {k: self._traverse(v) for k, v in ctx_props.__dict__.items()}
         elif isinstance(ctx_props, dict):
-            d = {k: self._traverse(v) for k, v in ctx_props.items()}
+            return {k: self._traverse(v) for k, v in ctx_props.items()}
         elif isinstance(ctx_props, list):
-            d = [self._traverse(elem) for elem in ctx_props]
+            return [self._traverse(elem) for elem in ctx_props]
         else:
-            d = ctx_props
-        return d
+            return ctx_props
 
 
 class EntityPropertiesMixin:

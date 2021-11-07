@@ -211,19 +211,27 @@ class EntityPropertiesMixin:
     def set_ctx_properties(self, dict_: Dict):
         """
         Sets custom_contextual_properties for an entity (ie: Container or Well).
-         Existing property dictionary will be completely overwritten with the new dictionary.
+        Existing property dictionary will be completely overwritten with the new dictionary.
 
         Parameters
         ----------
         dict_ : dict
             Custom custom_contextual_properties for an entity in dictionary form.
 
+        Raises
+        ------
+        TypeError
+            If dict_ is not of type dict
+
         Returns
         -------
         self
             Container or Well with modified custom_contextual_properties
         """
-        self.contextual_custom_properties = self.fromDict(dict_.copy())
+        if isinstance(dict_, dict):
+            self.contextual_custom_properties = self.fromDict(dict_.copy())
+        else:
+            raise TypeError(f"Specified {type(dict_)} to set is not of {type(dict)}")
         return self
 
     def add_ctx_properties(self, dict_: Dict):

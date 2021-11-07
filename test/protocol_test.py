@@ -409,13 +409,37 @@ class TestRefify(object):
                 }
             ],
         }
-        a = dummy_protocol.ref("test", cont_type="96-flat", discard=True)
+        outs = {
+            "test": {
+                "properties": {"key": "value"},
+                "contextual_custom_properties": {"cont_key": "cont_value"},
+                "0": {
+                    "properties": {"aliquot_property": "valuable value"},
+                    "contextual_custom_properties": {"ali_key": "ali_value"},
+                },
+            }
+        }
+
+        a = dummy_protocol.ref(
+            "test",
+            cont_type="96-flat",
+            discard=True,
+            properties=outs.get("test").get("properties"),
+            contextual_custom_properties=outs.get("test").get(
+                "contextual_custom_properties"
+            ),
+        )
+        a.well(0).set_properties(outs.get("test").get("0").get("properties"))
+        a.well(0).set_ctx_properties(
+            outs.get("test").get("0").get("contextual_custom_properties")
+        )
         dummy_protocol.incubate(a, "ambient", "5:minute")
         # time_constraints is not serialized if empty
         assert "time_constraints" not in dummy_protocol.as_dict().keys()
         dummy_protocol.add_time_constraint(
             {"mark": 0, "state": "end"}, {"mark": 1, "state": "start"}, ideal="5:second"
         )
+        expected["outs"] = outs
         assert dummy_protocol.as_dict() == expected
 
 

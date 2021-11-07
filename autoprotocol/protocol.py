@@ -7,6 +7,7 @@ Module containing the main `Protocol` object and associated functions
 
 """
 
+import json
 import warnings
 
 from typing import List, Tuple, Union
@@ -897,7 +898,7 @@ class Protocol(object):
             if ref.container.properties:
                 outs[n]["properties"] = ref.container.properties
 
-            if ref.container.contextual_custom_properties:
+            if ref.container.contextual_custom_properties.toDict():
                 outs[n][
                     "contextual_custom_properties"
                 ] = ref.container.contextual_custom_properties.toDict()
@@ -908,7 +909,7 @@ class Protocol(object):
                         outs[n][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
                         outs[n][str(well.index)]["properties"] = well.properties
-                    if well.contextual_custom_properties:
+                    if well.contextual_custom_properties.toDict():
                         outs[n][str(well.index)][
                             "contextual_custom_properties"
                         ] = well.contextual_custom_properties.toDict()
@@ -916,7 +917,7 @@ class Protocol(object):
         # pragma pylint: enable=protected-access
 
         if outs:
-            setattr(self, "outs", outs)
+            setattr(self, "outs", json.loads(json.dumps(outs)))
 
         prop_list = [
             a

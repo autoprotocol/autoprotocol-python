@@ -425,9 +425,7 @@ class TestRefify(object):
             cont_type="96-flat",
             discard=True,
             properties=outs.get("test").get("properties"),
-            contextual_custom_properties=outs.get("test").get(
-                "contextual_custom_properties"
-            ),
+            ctx_properties=outs.get("test").get("contextual_custom_properties"),
         )
         a.well(0).set_properties(outs.get("test").get("0").get("properties"))
         a.well(0).set_ctx_properties(

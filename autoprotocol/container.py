@@ -6,7 +6,6 @@ Container, Well, WellGroup objects and associated functions
     :license: BSD, see LICENSE for more details
 
 """
-
 import json
 import warnings
 
@@ -22,9 +21,9 @@ SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
-class ContextualCustomProperty(object):
+class EntityProperties(object):
     """
-    A ContextualCustomProperty object is a mapping of an entity's custom properties
+    A EntityProperties object is a mapping of an entity's custom properties
     unique to the user.
 
     Do not construct directly -- retrieve it from the related Container or Well
@@ -39,9 +38,9 @@ class ContextualCustomProperty(object):
     def __init__(self, dict_: Dict):
         self.__dict__.update(dict_)
 
-    def setProperty(self, key: str, value: Union[str, dict]):
+    def set(self, key: str, value: Union[str, dict]):
         """
-        Sets a value for the specified key on the ContextualCustomProperty
+        Sets a value for the specified key on the EntityProperties
 
         Parameters
         ----------
@@ -59,20 +58,20 @@ class ContextualCustomProperty(object):
         if isinstance(key, str):
             if isinstance(value, dict):
                 self.__dict__[key] = json.loads(
-                    json.dumps(value), object_hook=ContextualCustomProperty
+                    json.dumps(value), object_hook=EntityProperties
                 )
             elif isinstance(value, (str, list, bool, int)):
                 self.__dict__[key] = value
             else:
                 raise TypeError(
-                    f"Value type {type(value)} is not one of the valid {(str, list, bool, int)} value types"
+                    f"Value type {str(value.__class__.__name__)} is not one of the valid {(str, list, bool, int)} value types"
                 )
         else:
             raise TypeError(f"Invalid key type {type(key)}, key must be string")
 
-    def getProperty(self, key: str):
+    def get(self, key: str):
         """
-        Gets a value for the specified key on the ContextualCustomProperty
+        Gets a value for the specified key on the EntityProperties
 
         Parameters
         ----------
@@ -91,45 +90,78 @@ class ContextualCustomProperty(object):
         """
         if isinstance(key, str):
             prop = self.__dict__.get(key)
-            if isinstance(prop, ContextualCustomProperty):
-                return self._traverse(prop)
+            if isinstance(prop, EntityProperties):
+                return prop.toDict()
             else:
                 return prop
         else:
             raise TypeError(f"Key {key} - {type(key)} is not a valid str")
 
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
+
     def toDict(self):
         """
-        Generates a dictionary from the ContextualCustomProperty associated to
+        Generates a dictionary from the EntityProperties associated to
         entity (ie: Container or Well)
 
         Returns
         -------
-        dict
-            The mapping of an entity's contextual_custom_properties
+        Dict
+            The mapping of an entity's ctx_properties
         """
-        return self._traverse(self.__dict__)
-
-    def _traverse(self, ctx_props):
-        """Traverses ContextualCustomProperty mapping to generate a dictionary"""
-        if isinstance(ctx_props, ContextualCustomProperty):
-            return {k: self._traverse(v) for k, v in ctx_props.__dict__.items()}
-        elif isinstance(ctx_props, dict):
-            return {k: self._traverse(v) for k, v in ctx_props.items()}
-        elif isinstance(ctx_props, list):
-            return [self._traverse(elem) for elem in ctx_props]
-        else:
-            return ctx_props
+        return json.loads(self.toJSON())
 
 
 class EntityPropertiesMixin:
     """
     The mixin for Container and Well entities used to mutate the entity instance
-     contextual_custom_properties and properties
+     ctx_properties and properties
     """
 
-    def validate_properties(self, properties):
+    @classmethod
+    def validate_properties(cls, properties):
         """Validates that properties are valid"""
+        entity = cls.__name__
+        if not isinstance(properties, dict):
+            raise TypeError(
+                f"{str(entity)} properties {properties} are of type "
+                f"{type(properties)}, they should be a `dict`."
+            )
+        for key, value in properties.items():
+            if not isinstance(key, str):
+                raise TypeError(
+                    f"{str(entity)} property {key} : {value} has a key of type "
+                    f"{type(key)}, it should be a 'str'."
+                )
+            try:
+                json.dumps(value)
+            except TypeError:
+                raise TypeError(
+                    f"{str(entity)} property {key} : {value} has a value of type "
+                    f"{type(value)}, that isn't JSON serializable."
+                )
+
+    def fromDict(self, dict_: Dict):
+        """
+        Generates the EntityProperties mapping from a dictionary
+
+        Parameters
+        ----------
+        dict_ : dict
+            Dictionary of properties to associate to a entity's
+            custom_contextual_properties.
+
+        Returns
+        -------
+        EntityProperties
+            The custom_contextual_properties mapping
+        """
+        if dict_ is not None:
+            self.validate_properties(dict_)
+            return json.loads(json.dumps(dict_), object_hook=EntityProperties)
+        else:
+            return json.loads(json.dumps(dict()), object_hook=EntityProperties)
 
     def set_properties(self, properties):
         """
@@ -184,29 +216,6 @@ class EntityPropertiesMixin:
                 self.properties[key] = value
         return self
 
-    def fromDict(self, dict_: Dict):
-        """
-        Generates the ContextualCustomProperty mapping from a dictionary
-
-        Parameters
-        ----------
-        dict_ : dict
-            Dictionary of properties to associate to a entity's
-            custom_contextual_properties.
-
-        Returns
-        -------
-        ContextualCustomProperty
-            The custom_contextual_properties mapping
-        """
-        if dict_ is not None:
-            self.validate_properties(dict_)
-            return json.loads(
-                json.dumps(dict_.copy()), object_hook=ContextualCustomProperty
-            )
-        else:
-            return json.loads(json.dumps(dict()), object_hook=ContextualCustomProperty)
-
     def set_ctx_properties(self, dict_: Dict):
         """
         Sets custom_contextual_properties for an entity (ie: Container or Well).
@@ -227,10 +236,8 @@ class EntityPropertiesMixin:
         self
             Container or Well with modified custom_contextual_properties
         """
-        if isinstance(dict_, dict):
-            self.contextual_custom_properties = self.fromDict(dict_.copy())
-        else:
-            raise TypeError(f"Specified {type(dict_)} to set is not of {type(dict)}")
+        self.validate_properties(dict_)
+        self.ctx_properties = self.fromDict(dict_)
         return self
 
     def add_ctx_properties(self, dict_: Dict):
@@ -253,7 +260,7 @@ class EntityPropertiesMixin:
         """
         self.validate_properties(dict_)
         for key, value in dict_.copy().items():
-            current_value = self.contextual_custom_properties.getProperty(key)
+            current_value = self.ctx_properties.get(key)
             if current_value:
                 values_are_lists = all(
                     isinstance(_, list) for _ in [value, current_value]
@@ -263,9 +270,9 @@ class EntityPropertiesMixin:
                 else:
                     message = f"Overwriting existing property {key} for {self}"
                     warnings.warn(message=message)
-                    self.contextual_custom_properties.setProperty(key, value)
+                    self.ctx_properties.set(key, value)
             else:
-                self.contextual_custom_properties.setProperty(key, value)
+                self.ctx_properties.set(key, value)
         return self
 
 
@@ -284,42 +291,19 @@ class Well(EntityPropertiesMixin):
         The index of this well within the container.
     properties : dict, optional
         mapping of key value properties associated to the Container
-    contextual_custom_properties : dict, optional
+    ctx_properties : dict, optional
         mapping of key value properties associated to the Container
 
     """
 
-    def __init__(
-        self, container, index, properties=None, contextual_custom_properties=None
-    ):
+    def __init__(self, container, index, properties=None, ctx_properties=None):
         self.container = container
         self.index = index
         self.volume = None
         self.mass = None
         self.name = None
-        self.properties = properties if properties else dict()
-        self.contextual_custom_properties = self.fromDict(contextual_custom_properties)
-
-    @staticmethod
-    def validate_properties(properties):
-        if not isinstance(properties, dict):
-            raise TypeError(
-                f"Aliquot properties {properties} are of type "
-                f"{type(properties)}, they should be a `dict`."
-            )
-        for key, value in properties.items():
-            if not isinstance(key, str):
-                raise TypeError(
-                    f"Aliquot property {key} : {value} has a key of type "
-                    f"{type(key)}, it should be a 'str'."
-                )
-            try:
-                json.dumps(value)
-            except TypeError:
-                raise TypeError(
-                    f"Aliquot property {key} : {value} has a value of type "
-                    f"{type(value)}, that isn't JSON serializable."
-                )
+        self.properties = properties if isinstance(properties, dict) else dict()
+        self.ctx_properties = self.fromDict(ctx_properties)
 
     def set_mass(self, mass):
         """
@@ -859,7 +843,7 @@ class Container(EntityPropertiesMixin):
         name of the cover on the container.
     properties : dict, optional
         mapping of key value properties associated to the Container
-    contextual_custom_properties : dict, optional
+    ctx_properties : dict, optional
         mapping of key value properties associated to the Container
 
     Raises
@@ -877,39 +861,18 @@ class Container(EntityPropertiesMixin):
         storage=None,
         cover=None,
         properties=None,
-        contextual_custom_properties=None,
+        ctx_properties=None,
     ):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
         self.cover = cover
-        self.properties = properties if properties else dict()
-        self.contextual_custom_properties = self.fromDict(contextual_custom_properties)
+        self.properties = properties if isinstance(properties, dict) else dict()
+        self.ctx_properties = self.fromDict(ctx_properties)
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")
-
-    @staticmethod
-    def validate_properties(properties):
-        if not isinstance(properties, dict):
-            raise TypeError(
-                f"Container properties {properties} are of type "
-                f"{type(properties)}, they should be a `dict`."
-            )
-        for key, value in properties.items():
-            if not isinstance(key, str):
-                raise TypeError(
-                    f"Container property {key} : {value} has a key of type "
-                    f"{type(key)}, it should be a 'str'."
-                )
-            try:
-                json.dumps(value)
-            except TypeError:
-                raise TypeError(
-                    f"Container property {key} : {value} has a value of type "
-                    f"{type(value)}, that isn't JSON serializable."
-                )
 
     def well(self, i):
         """

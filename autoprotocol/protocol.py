@@ -193,7 +193,7 @@ class Protocol(object):
         discard=None,
         cover=None,
         properties=None,
-        contextual_custom_properties=None,
+        ctx_properties=None,
     ):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
@@ -258,7 +258,7 @@ class Protocol(object):
             name of the cover which will be on the container/ref
         properties : dict, optional
             mapping of key value properties associated to the Container
-        contextual_custom_properties : dict, optional
+        ctx_properties : dict, optional
             mapping of key value properties associated to the Container
 
         Returns
@@ -314,7 +314,7 @@ class Protocol(object):
             storage=storage if storage else None,
             cover=cover if cover else None,
             properties=properties,
-            contextual_custom_properties=contextual_custom_properties,
+            ctx_properties=ctx_properties,
         )
         self.refs[name] = Ref(name, opts, container)
         return container
@@ -898,10 +898,10 @@ class Protocol(object):
             if ref.container.properties:
                 outs[n]["properties"] = ref.container.properties
 
-            if ref.container.contextual_custom_properties.toDict():
+            if ref.container.ctx_properties.toDict():
                 outs[n][
                     "contextual_custom_properties"
-                ] = ref.container.contextual_custom_properties.toDict()
+                ] = ref.container.ctx_properties.toDict()
 
             for well in ref.container._wells:
                 if well.name or len(well.properties) > 0:
@@ -909,10 +909,10 @@ class Protocol(object):
                         outs[n][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
                         outs[n][str(well.index)]["properties"] = well.properties
-                    if well.contextual_custom_properties.toDict():
+                    if well.ctx_properties.toDict():
                         outs[n][str(well.index)][
                             "contextual_custom_properties"
-                        ] = well.contextual_custom_properties.toDict()
+                        ] = well.ctx_properties.toDict()
 
         # pragma pylint: enable=protected-access
 

@@ -564,7 +564,7 @@ class TestManifest(object):
                 "inputs": {"cont": {"type": "container"}},
             }
         )
-        inputs = {
+        user_launch_request_inputs = {
             "parameters": {"cont": "source_plate"},
             "refs": {
                 "source_plate": {
@@ -591,26 +591,18 @@ class TestManifest(object):
                 }
             },
         }
-        parsed = protocol_info.parse(self.protocol, inputs)
+        parsed = protocol_info.parse(self.protocol, user_launch_request_inputs)
         source_plate = parsed["cont"]
         assert isinstance(source_plate, Container)
         assert source_plate.properties.get("key") == "value"
-        assert source_plate.contextual_custom_properties.orig_key == "orig_val"
-        assert source_plate.contextual_custom_properties.getProperty("orig_attr") == {
-            "akey": "aval"
-        }
-        assert source_plate.contextual_custom_properties.orig_ct_list == [
+        assert source_plate.ctx_properties.orig_key == "orig_val"
+        assert source_plate.ctx_properties.get("orig_attr") == {"akey": "aval"}
+        assert source_plate.ctx_properties.orig_ct_list == [
             "akey",
             "aval",
         ]
-        assert (
-            source_plate.well(0).contextual_custom_properties.orig_key
-            == "aliquot value"
-        )
-        assert (
-            source_plate.well(0).contextual_custom_properties.getProperty("orig_key")
-            == "aliquot value"
-        )
+        assert source_plate.well(0).ctx_properties.orig_key == "aliquot value"
+        assert source_plate.well(0).ctx_properties.get("orig_key") == "aliquot value"
 
     # Test parsing of local manifest file
     def test_json_parse(self):

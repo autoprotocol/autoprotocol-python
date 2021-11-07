@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.11.0 <2021-11-07>`
 * :feature:`327` Update container class to have contextual custom properties
 
 * :release:`7.10.1 <2021-10-27>`

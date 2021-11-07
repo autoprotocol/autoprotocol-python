@@ -52,7 +52,7 @@ class ContextualCustomProperty(object):
 
         Raises
         ------
-        ValueError
+        TypeError
             If key type is not str
 
         """
@@ -61,14 +61,14 @@ class ContextualCustomProperty(object):
                 self.__dict__[key] = json.loads(
                     json.dumps(value), object_hook=ContextualCustomProperty
                 )
-            elif isinstance(value, (str, list, bool)):
+            elif isinstance(value, (str, list, bool, int)):
                 self.__dict__[key] = value
             else:
-                raise ValueError(
-                    f"Type {type(value)} is not a valid {self.__class__} value type"
+                raise TypeError(
+                    f"Value type {type(value)} is not one of the valid {(str, list, bool, int)} value types"
                 )
         else:
-            raise ValueError(f"Invalid key type {type(key)}")
+            raise TypeError(f"Invalid key type {type(key)}, key must be string")
 
     def getProperty(self, key: str):
         """
@@ -81,7 +81,7 @@ class ContextualCustomProperty(object):
 
         Raises
         ------
-        ValueError
+        TypeError
             If key type is not str
 
         Returns
@@ -96,7 +96,7 @@ class ContextualCustomProperty(object):
             else:
                 return prop
         else:
-            raise ValueError(f"{key} - {type(key)} is not a valid str")
+            raise TypeError(f"Key {key} - {type(key)} is not a valid str")
 
     def toDict(self):
         """
@@ -130,7 +130,6 @@ class EntityPropertiesMixin:
 
     def validate_properties(self, properties):
         """Validates that properties are valid"""
-        raise NotImplementedError
 
     def set_properties(self, properties):
         """

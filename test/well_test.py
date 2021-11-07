@@ -21,6 +21,8 @@ class TestValidateProperties(HasDummyWell):
             self.well.set_properties({"property", True})
         with pytest.raises(TypeError):
             self.well.set_properties({("property"), "value"})
+        with pytest.raises(TypeError):
+            self.well.set_properties({True: "value"})
 
     def test_can_use_nonstring_properties(self):
         self.well.set_properties({"foo": [1, 2, 3]})
@@ -37,6 +39,8 @@ class TestValidateProperties(HasDummyWell):
             self.well.set_ctx_properties({"property", True})
         with pytest.raises(TypeError):
             self.well.set_ctx_properties({("property"), "value"})
+        with pytest.raises(TypeError):
+            self.well.set_ctx_properties({True: "value"})
 
     def test_can_use_nonstring_ctx_properties(self):
         self.well.set_ctx_properties({"foo": [1, 2, 3]})

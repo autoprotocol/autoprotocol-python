@@ -451,6 +451,19 @@ class TestContainerProperties(HasDummyContainers):
         assert self.c.contextual_custom_properties.getProperty("foo") == "bar"
         assert self.c.contextual_custom_properties.foo == "bar"
 
+        test_property["foo"] = {"key": "val"}
+        self.c.set_ctx_properties(test_property)
+        assert self.c.contextual_custom_properties.toDict() == test_property
+
+        with pytest.raises(TypeError):
+            self.c.contextual_custom_properties.getProperty(0)
+
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties({0: "valuable value"})
+
+        with pytest.raises(TypeError):
+            self.c.set_ctx_properties({self.c: "valuable value"})
+
 
 class TestValidateProperties(HasDummyContainers):
     def test_rejects_incorrect_types(self):
@@ -555,6 +568,14 @@ class TestAddProperties(HasDummyContainers):
         with warnings.catch_warnings(record=True) as w:
             self.c.set_properties({"foo": "bar"})
             self.c.add_properties({"foo": "bar"})
+            assert len(w) == 1
+            for message in w:
+                assert "Overwriting existing property" in str(message.message)
+
+    def test_warns_when_overwriting_ctx_property(self):
+        with warnings.catch_warnings(record=True) as w:
+            self.c.set_ctx_properties({"foo": "bar"})
+            self.c.add_ctx_properties({"foo": "bar"})
             assert len(w) == 1
             for message in w:
                 assert "Overwriting existing property" in str(message.message)

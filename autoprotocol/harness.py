@@ -452,6 +452,8 @@ class ProtocolInfo(object):
                 storage=ref.get("store"),
                 discard=ref.get("discard"),
                 cover=ref.get("cover"),
+                properties=ref.get("properties"),
+                ctx_properties=ref.get("contextual_custom_properties"),
             )
             aqs = ref.get("aliquots")
             if aqs:
@@ -464,6 +466,10 @@ class ProtocolInfo(object):
                         c.well(idx).set_mass(aq["mass"])
                     if "properties" in aq:
                         c.well(idx).set_properties(aq.get("properties"))
+                    if "contextual_custom_properties" in aq:
+                        c.well(idx).set_ctx_properties(
+                            aq.get("contextual_custom_properties")
+                        )
 
         out_params = {}
         for k in self.input_types:

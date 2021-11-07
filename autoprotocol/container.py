@@ -6,9 +6,10 @@ Container, Well, WellGroup objects and associated functions
     :license: BSD, see LICENSE for more details
 
 """
-
 import json
 import warnings
+
+from typing import Dict, Union
 
 from autoprotocol.util import parse_unit
 
@@ -20,65 +21,162 @@ SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
 
 
-class Well(object):
+class EntityProperties(object):
     """
-    A Well object describes a single location within a container.
+    A EntityProperties object is a mapping of an entity's custom properties
+    unique to the user.
 
-    Do not construct a Well directly -- retrieve it from the related Container
+    Do not construct directly -- retrieve it from the related Container or Well
     object.
 
     Parameters
     ----------
-    container : Container
-        The Container this well belongs to.
-    index : int
-        The index of this well within the container.
-
+    dict_ : Dict
+        Is the mapping of properties from a user's Container or Well
     """
 
-    def __init__(self, container, index):
-        self.container = container
-        self.index = index
-        self.volume = None
-        self.mass = None
-        self.name = None
-        self.properties = {}
+    def __init__(self, dict_: Dict):
+        self.__dict__.update(dict_)
 
-    @staticmethod
-    def validate_properties(properties):
+    def set(self, key: str, value: Union[str, dict]):
+        """
+        Sets a value for the specified key on the EntityProperties
+
+        Parameters
+        ----------
+        key : str
+            The string key which maps to the value you wish to set
+        value : str, Dict
+            The value that will be associated to the key specified
+
+        Raises
+        ------
+        TypeError
+            If key type is not str
+
+        """
+        if isinstance(key, str):
+            if isinstance(value, dict):
+                self.__dict__[key] = json.loads(
+                    json.dumps(value), object_hook=EntityProperties
+                )
+            elif isinstance(value, (str, list, bool, int)):
+                self.__dict__[key] = value
+            else:
+                raise TypeError(
+                    f"Value type {str(value.__class__.__name__)} is not one of the valid {(str, list, bool, int)} value types"
+                )
+        else:
+            raise TypeError(f"Invalid key type {type(key)}, key must be string")
+
+    def get(self, key: str):
+        """
+        Gets a value for the specified key on the EntityProperties
+
+        Parameters
+        ----------
+        key : str
+            The string key which maps to the value you wish to set
+
+        Raises
+        ------
+        TypeError
+            If key type is not str
+
+        Returns
+        -------
+        str, Dict, None
+            The value that maps to the key specified
+        """
+        if isinstance(key, str):
+            prop = self.__dict__.get(key)
+            if isinstance(prop, EntityProperties):
+                return prop.toDict()
+            else:
+                return prop
+        else:
+            raise TypeError(f"Key {key} - {type(key)} is not a valid str")
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
+
+    def toDict(self):
+        """
+        Generates a dictionary from the EntityProperties associated to
+        entity (ie: Container or Well)
+
+        Returns
+        -------
+        Dict
+            The mapping of an entity's ctx_properties
+        """
+        return json.loads(self.toJSON())
+
+
+class EntityPropertiesMixin:
+    """
+    The mixin for Container and Well entities used to mutate the entity instance
+     ctx_properties and properties
+    """
+
+    @classmethod
+    def validate_properties(cls, properties):
+        """Validates that properties are valid"""
+        entity = cls.__name__
         if not isinstance(properties, dict):
             raise TypeError(
-                f"Aliquot properties {properties} are of type "
+                f"{str(entity)} properties {properties} are of type "
                 f"{type(properties)}, they should be a `dict`."
             )
         for key, value in properties.items():
             if not isinstance(key, str):
                 raise TypeError(
-                    f"Aliquot property {key} : {value} has a key of type "
+                    f"{str(entity)} property {key} : {value} has a key of type "
                     f"{type(key)}, it should be a 'str'."
                 )
             try:
                 json.dumps(value)
             except TypeError:
                 raise TypeError(
-                    f"Aliquot property {key} : {value} has a value of type "
+                    f"{str(entity)} property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
                 )
 
+    def fromDict(self, dict_: Dict):
+        """
+        Generates the EntityProperties mapping from a dictionary
+
+        Parameters
+        ----------
+        dict_ : dict
+            Dictionary of properties to associate to a entity's
+            custom_contextual_properties.
+
+        Returns
+        -------
+        EntityProperties
+            The custom_contextual_properties mapping
+        """
+        if dict_ is not None:
+            self.validate_properties(dict_)
+            return json.loads(json.dumps(dict_), object_hook=EntityProperties)
+        else:
+            return json.loads(json.dumps(dict()), object_hook=EntityProperties)
+
     def set_properties(self, properties):
         """
-        Set properties for a Well. Existing property dictionary
+        Set properties for an entity (ie: Container or Well). Existing property dictionary
         will be completely overwritten with the new dictionary.
 
         Parameters
         ----------
         properties : dict
-            Custom properties for a Well in dictionary form.
+            Custom properties for an entity in dictionary form.
 
         Returns
         -------
-        Well
-            Well with modified properties
+        self
+            Container or Well with modified properties
         """
         self.validate_properties(properties)
         self.properties = properties.copy()
@@ -86,21 +184,21 @@ class Well(object):
 
     def add_properties(self, properties):
         """
-        Add properties to the properties attribute of a Well.
+        Add properties to the properties attribute of an entity (ie: Container or Well).
 
-        If any property with the same key already exists for the Well then:
+        If any property with the same key already exists for the entity then:
          - if both old and new properties are lists then append the new property
          - otherwise overwrite the old property with the new one
 
         Parameters
         ----------
         properties : dict
-            Dictionary of properties to add to a Well.
+            Dictionary of properties to add to a entity.
 
         Returns
         -------
-        Well
-            Well with modified properties
+        self
+            Container or Well with modified properties
         """
         self.validate_properties(properties)
         for key, value in properties.items():
@@ -117,6 +215,95 @@ class Well(object):
             else:
                 self.properties[key] = value
         return self
+
+    def set_ctx_properties(self, dict_: Dict):
+        """
+        Sets custom_contextual_properties for an entity (ie: Container or Well).
+        Existing property dictionary will be completely overwritten with the new dictionary.
+
+        Parameters
+        ----------
+        dict_ : dict
+            Custom custom_contextual_properties for an entity in dictionary form.
+
+        Raises
+        ------
+        TypeError
+            If dict_ is not of type dict
+
+        Returns
+        -------
+        self
+            Container or Well with modified custom_contextual_properties
+        """
+        self.validate_properties(dict_)
+        self.ctx_properties = self.fromDict(dict_)
+        return self
+
+    def add_ctx_properties(self, dict_: Dict):
+        """
+        Add properties to the custom_contextual_properties attribute of an entity (ie: Container or Well).
+
+        If any custom_contextual_properties with the same key already exists for the entity then:
+         - if both old and new properties are lists then append the new property
+         - otherwise overwrite the old property with the new one
+
+        Parameters
+        ----------
+        dict_ : dict
+            Dictionary of properties to add to a entity.
+
+        Returns
+        -------
+        self
+            Container or Well with modified custom_contextual_properties
+        """
+        self.validate_properties(dict_)
+        for key, value in dict_.copy().items():
+            current_value = self.ctx_properties.get(key)
+            if current_value:
+                values_are_lists = all(
+                    isinstance(_, list) for _ in [value, current_value]
+                )
+                if values_are_lists:
+                    current_value.extend(value)
+                else:
+                    message = f"Overwriting existing property {key} for {self}"
+                    warnings.warn(message=message)
+                    self.ctx_properties.set(key, value)
+            else:
+                self.ctx_properties.set(key, value)
+        return self
+
+
+class Well(EntityPropertiesMixin):
+    """
+    A Well object describes a single location within a container.
+
+    Do not construct a Well directly -- retrieve it from the related Container
+    object.
+
+    Parameters
+    ----------
+    container : Container
+        The Container this well belongs to.
+    index : int
+        The index of this well within the container.
+    properties : dict, optional
+        mapping of key value properties associated to the Container
+    ctx_properties : dict, optional
+        mapping of key value properties associated to the Container
+
+    """
+
+    def __init__(self, container, index, properties=None, ctx_properties=None):
+        self.container = container
+        self.index = index
+        self.volume = None
+        self.mass = None
+        self.name = None
+        self.properties = properties if isinstance(properties, dict) else dict()
+        self.ctx_properties = self.fromDict(ctx_properties)
 
     def set_mass(self, mass):
         """
@@ -628,7 +815,7 @@ class WellGroup(object):
 
 
 # pylint: disable=redefined-builtin
-class Container(object):
+class Container(EntityPropertiesMixin):
     """
     A reference to a specific physical container (e.g. a tube or 96-well
     microplate).
@@ -654,6 +841,10 @@ class Container(object):
         name of the storage condition.
     cover : str, optional
         name of the cover on the container.
+    properties : dict, optional
+        mapping of key value properties associated to the Container
+    ctx_properties : dict, optional
+        mapping of key value properties associated to the Container
 
     Raises
     ------
@@ -662,12 +853,23 @@ class Container(object):
 
     """
 
-    def __init__(self, id, container_type, name=None, storage=None, cover=None):
+    def __init__(
+        self,
+        id,
+        container_type,
+        name=None,
+        storage=None,
+        cover=None,
+        properties=None,
+        ctx_properties=None,
+    ):
         self.name = name
         self.id = id
         self.container_type = container_type
         self.storage = storage
         self.cover = cover
+        self.properties = properties if isinstance(properties, dict) else dict()
+        self.ctx_properties = self.fromDict(ctx_properties)
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")

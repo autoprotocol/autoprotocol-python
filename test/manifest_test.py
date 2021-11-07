@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from autoprotocol import Protocol, Unit, Well, WellGroup
+from autoprotocol import Container, Protocol, Unit, Well, WellGroup
 from autoprotocol.harness import (
     Manifest,
     ProtocolInfo,
@@ -556,6 +556,53 @@ class TestManifest(object):
             },
         )
         assert parsed_no_mass["cont"].well(0).mass is None
+
+    def test_container_properties(self):
+        protocol_info = ProtocolInfo(
+            {
+                "name": "Test Container Properties",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        user_launch_request_inputs = {
+            "parameters": {"cont": "source_plate"},
+            "refs": {
+                "source_plate": {
+                    "label": "source_plate",
+                    "type": "res-sw384-lp",
+                    "store": "cold_80",
+                    "cover": None,
+                    "properties": {"key": "value"},
+                    "contextual_custom_properties": {
+                        "orig_key": "orig_val",
+                        "orig_attr": {"akey": "aval"},
+                        "orig_ct_list": ["akey", "aval"],
+                    },
+                    "aliquots": {
+                        "0": {
+                            "name": None,
+                            "volume": "42.0:microliter",
+                            "properties": {},
+                            "contextual_custom_properties": {
+                                "orig_key": "aliquot value"
+                            },
+                        }
+                    },
+                }
+            },
+        }
+        parsed = protocol_info.parse(self.protocol, user_launch_request_inputs)
+        source_plate = parsed["cont"]
+        assert isinstance(source_plate, Container)
+        assert source_plate.properties.get("key") == "value"
+        assert source_plate.ctx_properties.orig_key == "orig_val"
+        assert source_plate.ctx_properties.get("orig_attr") == {"akey": "aval"}
+        assert source_plate.ctx_properties.orig_ct_list == [
+            "akey",
+            "aval",
+        ]
+        assert source_plate.well(0).ctx_properties.orig_key == "aliquot value"
+        assert source_plate.well(0).ctx_properties.get("orig_key") == "aliquot value"
 
     # Test parsing of local manifest file
     def test_json_parse(self):

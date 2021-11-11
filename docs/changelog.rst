@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.12.0 <2021-11-11>`
 * :feature:`330` Update allowed step_size in `Dispense`
 
 * :release:`7.11.0 <2021-11-07>`

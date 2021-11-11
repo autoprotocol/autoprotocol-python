@@ -470,6 +470,8 @@ class ProtocolInfo(object):
                         c.well(idx).set_ctx_properties(
                             aq.get("contextual_custom_properties")
                         )
+                    if "compounds" in aq:
+                        c.well(idx).set_compounds(aq.get("compounds"))
 
         out_params = {}
         for k in self.input_types:

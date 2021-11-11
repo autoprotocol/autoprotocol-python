@@ -2158,8 +2158,9 @@ class Protocol(object):
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
-            multiple of the step_size. Currently, step_size must be either
-            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+            multiple of the step_size. Currently, step_size must be one of
+            5 uL, 0.5 uL, 0.05 uL. If set to None, will use vendor
+            specified defaults.
         flowrate : str or Unit, optional
             The rate at which liquid is dispensed into the ref in units
             of volume/time.
@@ -2197,7 +2198,7 @@ class Protocol(object):
             Invalid pre-dispense volume
 
         """
-        _VALID_STEP_SIZES = [Unit(5, "uL"), Unit(0.5, "uL")]
+        _VALID_STEP_SIZES = [Unit(5, "uL"), Unit(0.5, "uL"), Unit(0.05, "uL")]
         _DEFAULT_NOZZLE_COUNT = 8
 
         if not isinstance(ref, Container):
@@ -2416,8 +2417,9 @@ class Protocol(object):
             Specifies that the dispense operation must be executed
             using a peristaltic pump with the given step size. Note
             that the volume dispensed in each column must be an integer
-            multiple of the step_size. Currently, step_size must be either
-            5 uL or 0.5 uL. If set to None, will use vendor specified defaults.
+            multiple of the step_size. Currently, step_size must one of
+            5 uL, 0.5 uL, 0.05 uL. If set to None, will use vendor
+            specified defaults.
         flowrate : str or Unit, optional
             The rate at which liquid is dispensed into the ref in units
             of volume/time.

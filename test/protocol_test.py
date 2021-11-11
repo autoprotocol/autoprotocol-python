@@ -2374,6 +2374,16 @@ class TestDispense(object):
         )
         assert p.instructions[-1].data["step_size"] == Unit(0.5, "microliter")
 
+        # Test p.dispense with step_size of 0.5 microliter
+        p.dispense(
+            container,
+            "rs17gmh5wafm5p",
+            [{"column": 2, "volume": "0.5:microliter"}],
+            is_resource_id=True,
+            step_size="0.05:microliter",
+        )
+        assert p.instructions[-1].data["step_size"] == Unit(0.05, "microliter")
+
         # Test p.dispense with step_size in nanoliters
         p.dispense(
             container,

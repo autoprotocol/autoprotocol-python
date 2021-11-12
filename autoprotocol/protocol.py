@@ -6255,7 +6255,7 @@ class Protocol(object):
         )
 
     def _ref_for_well(self, well):
-        return "%s/%d" % (self._ref_for_container(well.container), well.index)
+        return f"{self._ref_for_container(well.container)}/{well.index}"
 
     def _ref_for_container(self, container):
         for k in self.refs:

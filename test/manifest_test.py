@@ -786,6 +786,6 @@ class TestManifest(object):
             },
         )
         expected_compounds_list = [
-            {"id": "123", "molecularWeight": Unit(100, "g/mol"), "smiles": "CCCC"}
+            {"id": "123", "molecular_weight": Unit(100, "g/mol"), "smiles": "CCCC"}
         ]
         assert parsed["cont"].well(0).compounds == expected_compounds_list

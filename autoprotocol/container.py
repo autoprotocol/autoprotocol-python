@@ -409,8 +409,10 @@ class Well(EntityPropertiesMixin):
                 raise RuntimeError(
                     "Compound information must include `id`, `molecularWeight`, and `smiles` keys."
                 )
-            # Transform string molecularWeight -> Unit molecularWeight
-            compound["molecularWeight"] = Unit(compound["molecularWeight"], "g/mol")
+            # Transform {"molecularWeight": float} -> {"molecular_weight": Unit}
+            compound["molecular_weight"] = Unit(
+                compound.pop("molecularWeight"), "g/mol"
+            )
 
         self.compounds = compounds
         return self

@@ -298,10 +298,11 @@ class Well(EntityPropertiesMixin):
 
     def __init__(self, container, index, properties=None, ctx_properties=None):
         self.container = container
-        self.index = index
+        self.index = int(index)
         self.volume = None
         self.mass = None
         self.name = None
+        self.compounds = None
         self.properties = properties if isinstance(properties, dict) else dict()
         self.ctx_properties = self.fromDict(ctx_properties)
 
@@ -373,6 +374,47 @@ class Well(EntityPropertiesMixin):
                 f"volume {max_vol}."
             )
         self.volume = v
+        return self
+
+    def set_compounds(self, compounds):
+        """
+        Sets the list of associated compounds, and their metadata, to an aliquot.
+
+        Parameters
+        ----------
+        compounds : list
+            List of compounds associated to a well.
+
+        Returns
+        -------
+        Well
+            Well with associated compounds
+
+        Raises
+        ------
+        TypeError
+            Incorrect input-type given
+        RuntimeError
+            Compound information does not contain required keys
+        """
+        expected_keys = {"id", "molecularWeight", "smiles"}
+        if not isinstance(compounds, list):
+            raise TypeError(
+                f"Compound list {compounds} is of type {type(compounds)}, it should be a 'list'."
+            )
+
+        for compound in compounds:
+            # Check all expected keys aer present
+            if set(compound.keys()) != expected_keys:
+                raise RuntimeError(
+                    "Compound information must include `id`, `molecularWeight`, and `smiles` keys."
+                )
+            # Transform {"molecularWeight": float} -> {"molecular_weight": Unit}
+            compound["molecular_weight"] = Unit(
+                compound.pop("molecularWeight"), "g/mol"
+            )
+
+        self.compounds = compounds
         return self
 
     def add_volume(self, vol: Unit):

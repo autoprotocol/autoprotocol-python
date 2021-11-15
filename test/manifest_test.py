@@ -753,3 +753,39 @@ class TestManifest(object):
             )
 
         assert "foo is not an acceptable Compound format." in str(e.value)
+
+    def test_compound_linkage_list(self):
+        protocol_info = ProtocolInfo(
+            {
+                "name": "Test Container With Compounds",
+                "inputs": {"cont": {"type": "container"}},
+            }
+        )
+        parsed = protocol_info.parse(
+            self.protocol,
+            {
+                "refs": {
+                    "echo_plate": {
+                        "type": "384-echo",
+                        "discard": True,
+                        "aliquots": {
+                            "0": {
+                                "volume": "10:microliter",
+                                "compounds": [
+                                    {
+                                        "id": "123",
+                                        "molecularWeight": 100,
+                                        "smiles": "CCCC",
+                                    }
+                                ],
+                            }
+                        },
+                    }
+                },
+                "parameters": {"cont": "echo_plate"},
+            },
+        )
+        expected_compounds_list = [
+            {"id": "123", "molecular_weight": Unit(100, "g/mol"), "smiles": "CCCC"}
+        ]
+        assert parsed["cont"].well(0).compounds == expected_compounds_list

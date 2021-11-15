@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`7.13.0 <2021-11-15>`
+* :feature:`332` Extract compound metadata from JSON payload
+
 * :release:`7.12.0 <2021-11-11>`
 * :feature:`330` Update allowed step_size in `Dispense`
 

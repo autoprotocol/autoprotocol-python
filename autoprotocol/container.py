@@ -397,7 +397,13 @@ class Well(EntityPropertiesMixin):
         RuntimeError
             Compound information does not contain required keys
         """
-        expected_keys = {"id", "molecularWeight", "smiles", "concentration", "solubilityFlag"}
+        expected_keys = {
+            "id",
+            "molecularWeight",
+            "smiles",
+            "concentration",
+            "solubilityFlag",
+        }
         if not isinstance(compounds, list):
             raise TypeError(
                 f"Compound list {compounds} is of type {type(compounds)}, it should be a 'list'."

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`334` Addition of `concentration` and `solubility_flag` keys to compound metadata
+
 * :release:`7.13.0 <2021-11-15>`
 * :feature:`332` Extract compound metadata from JSON payload
 

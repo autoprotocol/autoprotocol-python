@@ -776,6 +776,8 @@ class TestManifest(object):
                                         "id": "123",
                                         "molecularWeight": 100,
                                         "smiles": "CCCC",
+                                        "solubilityFlag": False,
+                                        "concentration": 10,
                                     }
                                 ],
                             }
@@ -786,6 +788,12 @@ class TestManifest(object):
             },
         )
         expected_compounds_list = [
-            {"id": "123", "molecular_weight": Unit(100, "g/mol"), "smiles": "CCCC"}
+            {
+                "id": "123",
+                "molecular_weight": Unit(100, "g/mol"),
+                "smiles": "CCCC",
+                "solubility_flag": False,
+                "concentration": 10,
+            }
         ]
         assert parsed["cont"].well(0).compounds == expected_compounds_list

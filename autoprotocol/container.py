@@ -420,6 +420,9 @@ class Well(EntityPropertiesMixin):
                 compound.pop("molecularWeight"), "g/mol"
             )
             compound["solubility_flag"] = compound.pop("solubilityFlag")
+            compound["concentration"] = Unit(
+                compound.pop("concentration"), "millimol/liter"
+            )
 
         self.compounds = compounds
         return self

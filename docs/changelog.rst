@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.13.1 <2021-12-02>`
 * :feature:`334` Addition of `concentration` and `solubility_flag` keys to compound metadata
 
 * :release:`7.13.0 <2021-11-15>`

@@ -793,7 +793,7 @@ class TestManifest(object):
                 "molecular_weight": Unit(100, "g/mol"),
                 "smiles": "CCCC",
                 "solubility_flag": False,
-                "concentration": 10,
+                "concentration": Unit(10, "millimol/liter"),
             }
         ]
         assert parsed["cont"].well(0).compounds == expected_compounds_list

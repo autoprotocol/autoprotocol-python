@@ -780,7 +780,17 @@ class TestManifest(object):
                                         "concentration": 10,
                                     }
                                 ],
-                            }
+                            },
+                            "1": {
+                                "volume": "10:microliter",
+                                "compounds": [
+                                    {
+                                        "id": "123",
+                                        "molecularWeight": 100,
+                                        "concentration": 10,
+                                    }
+                                ],
+                            },
                         },
                     }
                 },
@@ -796,4 +806,15 @@ class TestManifest(object):
                 "concentration": Unit(10, "millimol/liter"),
             }
         ]
+        expected_compounds_list_default = [
+            {
+                "id": "123",
+                "molecular_weight": Unit(100, "g/mol"),
+                "smiles": None,
+                "solubility_flag": None,
+                "concentration": Unit(10, "millimol/liter"),
+            }
+        ]
         assert parsed["cont"].well(0).compounds == expected_compounds_list
+        # check non-specified values set to None
+        assert parsed["cont"].well(1).compounds == expected_compounds_list_default

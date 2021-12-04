@@ -429,7 +429,6 @@ class Well(EntityPropertiesMixin):
                     else:
                         # set unspecified keys using preferred param string
                         compound[expected_params[k]] = None
-
             else:
                 pass
 

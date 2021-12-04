@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`-` Update requirements for tracking concentration on compounds
+* :feature:`-` Update requirements for tracking concentration on compounds, set defaults
 
 * :release:`7.13.1 <2021-12-02>`
 * :feature:`334` Addition of `concentration` and `solubility_flag` keys to compound metadata

@@ -394,8 +394,6 @@ class Well(EntityPropertiesMixin):
         ------
         TypeError
             Incorrect input-type given
-        RuntimeError
-            Compound information does not contain required keys
         """
         expected_keys = {
             "id",
@@ -410,19 +408,20 @@ class Well(EntityPropertiesMixin):
             )
 
         for compound in compounds:
-            # Check all expected keys aer present
-            if set(compound.keys()) != expected_keys:
-                raise RuntimeError(
-                    "Compound information must include `id`, `molecularWeight`, `concentration`, `solubilityFlag` and `smiles` keys."
-                )
-            # Transform {"molecularWeight": float} -> {"molecular_weight": Unit}
-            compound["molecular_weight"] = Unit(
-                compound.pop("molecularWeight"), "g/mol"
-            )
-            compound["solubility_flag"] = compound.pop("solubilityFlag")
-            compound["concentration"] = Unit(
-                compound.pop("concentration"), "millimol/liter"
-            )
+            if isinstance(compound, dict):
+                if compound.get("molecular_weight"):
+                    # transform {"molecularWeight": float} -> {"molecular_weight": Unit}
+                    compound["molecular_weight"] = Unit(
+                        compound.pop("molecularWeight"), "g/mol"
+                    )
+                if compound.get("solubility_flag"):
+                    compound["solubility_flag"] = compound.pop("solubilityFlag")
+                if compound["concentration"]:
+                    compound["concentration"] = Unit(
+                        compound.pop("concentration"), "millimol/liter"
+                    )
+            else:
+                pass
 
         self.compounds = compounds
         return self

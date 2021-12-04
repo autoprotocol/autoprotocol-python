@@ -790,7 +790,7 @@ class TestManifest(object):
                                         "concentration": 10,
                                     }
                                 ],
-                            }
+                            },
                         },
                     }
                 },

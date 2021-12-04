@@ -418,9 +418,13 @@ class Well(EntityPropertiesMixin):
                                 compound.pop("molecularWeight"), "g/mol"
                             )
                         elif k == "solubilityFlag":
-                            compound[expected_params[k]] = compound.pop("solubilityFlag")
+                            compound[expected_params[k]] = compound.pop(
+                                "solubilityFlag"
+                            )
                         elif k == "concentration":
-                            compound[expected_params[k]] = Unit(compound.pop("concentration"), "millimol/liter")
+                            compound[expected_params[k]] = Unit(
+                                compound.pop("concentration"), "millimol/liter"
+                            )
                         elif k == "smiles":
                             # TODO: validation on smiles
                             pass

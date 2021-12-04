@@ -395,12 +395,13 @@ class Well(EntityPropertiesMixin):
         TypeError
             Incorrect input-type given
         """
-        expected_keys = {
-            "id",
-            "molecularWeight",
-            "smiles",
-            "concentration",
-            "solubilityFlag",
+        # expected parameters and label transformations
+        expected_params = {
+            "id": "id",
+            "molecularWeight": "molecular_weight",
+            "smiles": "smiles",
+            "concentration": "concentration",
+            "solubilityFlag": "solubility_flag",
         }
         if not isinstance(compounds, list):
             raise TypeError(
@@ -409,24 +410,25 @@ class Well(EntityPropertiesMixin):
 
         for compound in compounds:
             if isinstance(compound, dict):
-                if compound.get("molecular_weight"):
-                    # transform {"molecularWeight": float} -> {"molecular_weight": Unit}
-                    compound["molecular_weight"] = Unit(
-                        compound.pop("molecularWeight"), "g/mol"
-                    )
-                if compound.get("solubility_flag"):
-                    compound["solubility_flag"] = compound.pop("solubilityFlag")
-                if compound["concentration"]:
-                    compound["concentration"] = Unit(
-                        compound.pop("concentration"), "millimol/liter"
-                    )
-                if compound.get("smiles"):
-                    # TODO: validation on smiles
-                    pass
-                else:
-                    compound["smiles"] = None
-                if not compound.get("id"):
-                    compound["id"] = None
+                for k in expected_params:
+                    if k in compound:
+                        # transform {"molecularWeight": float} -> {"molecular_weight": Unit}
+                        if k == "molecularWeight":
+                            compound[expected_params[k]] = Unit(
+                                compound.pop("molecularWeight"), "g/mol"
+                            )
+                        elif k == "solubilityFlag":
+                            compound[expected_params[k]] = compound.pop("solubilityFlag")
+                        elif k == "concentration":
+                            compound[expected_params[k]] = Unit(compound.pop("concentration"), "millimol/liter")
+                        elif k == "smiles":
+                            # TODO: validation on smiles
+                            pass
+                        else:
+                            pass
+                    else:
+                        # set unspecified keys using preferred param string
+                        compound[expected_params[k]] = None
 
             else:
                 pass

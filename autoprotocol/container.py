@@ -420,6 +420,14 @@ class Well(EntityPropertiesMixin):
                     compound["concentration"] = Unit(
                         compound.pop("concentration"), "millimol/liter"
                     )
+                if compound.get("smiles"):
+                    # TODO: validation on smiles
+                    pass
+                else:
+                    compound["smiles"] = None
+                if not compound.get("id"):
+                    compound["id"] = None
+
             else:
                 pass
 

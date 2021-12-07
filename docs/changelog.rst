@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :support:`338` Fix Unit handling in `set_compounds` for None, null values
+* :support:`339` Fix Unit handling in `set_compounds` for None, null values
 
 * :release:`7.14.0 <2021-12-04>`
 * :feature:`337` Update requirements for tracking concentration on compounds, set defaults

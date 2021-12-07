@@ -423,7 +423,7 @@ class Well(EntityPropertiesMixin):
                             compound[expected_params[k]] = compound.pop(k)
                         elif k == "concentration":
                             try:
-                                conc = Unit(compound.pop(k), "millimol/liter")
+                                conc = Unit(compound.pop(k), "millimole/liter")
                             except (UnitError):
                                 conc = None
                             compound[expected_params[k]] = conc

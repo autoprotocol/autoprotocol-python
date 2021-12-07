@@ -2,6 +2,7 @@
 Changelog
 =========
 
+* :release:`7.14.1 <2021-12-06>`
 * :support:`339` Fix Unit handling in `set_compounds` for None, null values
 
 * :release:`7.14.0 <2021-12-04>`

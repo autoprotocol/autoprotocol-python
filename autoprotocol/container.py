@@ -14,7 +14,7 @@ from typing import Dict, Union
 from autoprotocol.util import parse_unit
 
 from .constants import SBS_FORMAT_SHAPES
-from .unit import Unit
+from .unit import Unit, UnitError
 
 
 SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
@@ -414,17 +414,19 @@ class Well(EntityPropertiesMixin):
                     if k in compound:
                         # transform {"molecularWeight": float} -> {"molecular_weight": Unit}
                         if k == "molecularWeight":
-                            compound[expected_params[k]] = Unit(
-                                compound.pop("molecularWeight"), "g/mol"
-                            )
+                            try:
+                                mw = Unit(compound.pop(k), "g/mol")
+                            except (UnitError):
+                                mw = None
+                            compound[expected_params[k]] = mw
                         elif k == "solubilityFlag":
-                            compound[expected_params[k]] = compound.pop(
-                                "solubilityFlag"
-                            )
+                            compound[expected_params[k]] = compound.pop(k)
                         elif k == "concentration":
-                            compound[expected_params[k]] = Unit(
-                                compound.pop("concentration"), "millimol/liter"
-                            )
+                            try:
+                                conc = Unit(compound.pop(k), "millimol/liter")
+                            except (UnitError):
+                                conc = None
+                            compound[expected_params[k]] = conc
                         elif k == "smiles":
                             # TODO: validation on smiles
                             pass

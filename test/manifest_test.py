@@ -804,7 +804,7 @@ class TestManifest(object):
                 "molecular_weight": Unit(100, "g/mol"),
                 "smiles": "CCCC",
                 "solubility_flag": False,
-                "concentration": Unit(10, "millimol/liter"),
+                "concentration": Unit(10, "millimole/liter"),
             }
         ]
         expected_compounds_list_default = [

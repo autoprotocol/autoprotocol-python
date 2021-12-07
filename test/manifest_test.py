@@ -786,7 +786,7 @@ class TestManifest(object):
                                 "compounds": [
                                     {
                                         "id": "123",
-                                        "molecularWeight": 100,
+                                        "molecularWeight": None,
                                         "concentration": 10,
                                     }
                                 ],
@@ -809,7 +809,7 @@ class TestManifest(object):
         expected_compounds_list_default = [
             {
                 "id": "123",
-                "molecular_weight": Unit(100, "g/mol"),
+                "molecular_weight": None,
                 "smiles": None,
                 "solubility_flag": None,
                 "concentration": Unit(10, "millimol/liter"),

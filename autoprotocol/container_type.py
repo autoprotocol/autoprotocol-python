@@ -1072,6 +1072,42 @@ ROUND384CLEAR = ContainerType(
 )
 
 #:
+ROUND384LV = ContainerType(
+    name="384-well round-bottom low-volume non-binding-surface Corning-4513 plate",
+    well_count=384,
+    well_depth_mm=6.58,
+    well_volume_ul=Unit(20.0, "microliter"),
+    well_coating="Corning NBS(nonbinding surface)",
+    sterile=False,
+    is_tube=False,
+    cover_types=["universal", "standard"],
+    seal_types=["ultra-clear", "foil"],
+    capabilities=[
+        "incubate",
+        "seal",
+        "deseal",
+        "liquid_handle",
+        "dispense",
+        "spin",
+        "fluorescence",
+        "cover",
+        "uncover",
+        "echo_dest",
+        "stamp",
+        "transfer",
+        "provision",
+        "pipette",
+        "envision",
+    ],
+    shortname="384-Corning-4513-round-lv",
+    col_count=24,
+    dead_volume_ul=Unit(2, "microliter"),
+    safe_min_volume_ul=Unit(2, "microliter"),
+    vendor="Corning",
+    cat_no="4513",
+)
+
+#:
 RESSW384LP = ContainerType(
     name="384-well singlewell lowprofile reservoir",
     well_count=1,
@@ -1373,6 +1409,7 @@ _CONTAINER_TYPES = {
     "384-v-clear-clear": V384CLEAR,
     "384-round-clear-clear": ROUND384CLEAR,
     "res-sw384-lp": RESSW384LP,
+    "384-Corning-4513-round-lv": ROUND384LV,
     "384-echo-ldv": ECHO384LDV,
     "384-echo-ldv-plus": ECHO384LDVPLUS,
     "384-flat-white-clear": FLAT384WHITECLEAR,

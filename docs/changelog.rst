@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`7.14.2 <2022-01-11>`
+* :feature:`343` Add new container: `384-corning-4513-round-lv`
+
 * :release:`7.14.1 <2021-12-06>`
 * :support:`339` Fix Unit handling in `set_compounds` for None, null values
 

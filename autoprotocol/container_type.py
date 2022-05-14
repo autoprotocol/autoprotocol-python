@@ -1178,6 +1178,28 @@ ECHO384LDVPLUS = ContainerType(
 )
 
 #:
+ECHO1536LDV = ContainerType(
+    # Compatible with Labcyte Echo 550, 555 and 650
+    name="1536-well Echo low dead volume Beckman-001-6969 plate",
+    well_count=1536,
+    well_depth_mm=5.15,
+    well_volume_ul=Unit(5.5, "microliter"),
+    well_coating=None,
+    sterile=None,
+    is_tube=False,
+    cover_types=["universal"],
+    seal_types=["foil", "ultra-clear"],
+    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
+    shortname="1536-echo-ldv",
+    col_count=48,
+    dead_volume_ul=Unit(1, "microliter"),
+    safe_min_volume_ul=Unit(1, "microliter"),
+    true_max_vol_ul=Unit(5.5, "microliter"),
+    vendor="Beckman",
+    cat_no="001-6969",
+)
+
+#:
 FLAT384WHITECLEAR = ContainerType(
     name="384-well flat-bottom polystyrene plate",
     well_count=384,
@@ -1412,6 +1434,7 @@ _CONTAINER_TYPES = {
     "384-corning-4513-round-lv": ROUND384LV,
     "384-echo-ldv": ECHO384LDV,
     "384-echo-ldv-plus": ECHO384LDVPLUS,
+    "1536-echo-ldv": ECHO1536LDV,
     "384-flat-white-clear": FLAT384WHITECLEAR,
     "96-well-v-bottom": V96CC,
     "96-ubottom-clear-tc": FALCON96UBOTTOM,

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`345` Add new container type: `1536-echo-ldv`
+
 * :release:`7.14.2 <2022-01-11>`
 * :feature:`343` Add new container: `384-corning-4513-round-lv`
 

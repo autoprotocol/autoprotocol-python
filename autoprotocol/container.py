@@ -90,10 +90,7 @@ class EntityProperties(object):
         """
         if isinstance(key, str):
             prop = self.__dict__.get(key)
-            if isinstance(prop, EntityProperties):
-                return prop.toDict()
-            else:
-                return prop
+            return prop
         else:
             raise TypeError(f"Key {key} - {type(key)} is not a valid str")
 
@@ -141,27 +138,6 @@ class EntityPropertiesMixin:
                     f"{str(entity)} property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
                 )
-
-    def fromDict(self, dict_: Dict):
-        """
-        Generates the EntityProperties mapping from a dictionary
-
-        Parameters
-        ----------
-        dict_ : dict
-            Dictionary of properties to associate to a entity's
-            custom_contextual_properties.
-
-        Returns
-        -------
-        EntityProperties
-            The custom_contextual_properties mapping
-        """
-        if dict_ is not None:
-            self.validate_properties(dict_)
-            return json.loads(json.dumps(dict_), object_hook=EntityProperties)
-        else:
-            return json.loads(json.dumps(dict()), object_hook=EntityProperties)
 
     def set_properties(self, properties):
         """
@@ -237,7 +213,7 @@ class EntityPropertiesMixin:
             Container or Well with modified custom_contextual_properties
         """
         self.validate_properties(dict_)
-        self.ctx_properties = self.fromDict(dict_)
+        self.ctx_properties = dict_
         return self
 
     def add_ctx_properties(self, dict_: Dict):
@@ -259,20 +235,17 @@ class EntityPropertiesMixin:
             Container or Well with modified custom_contextual_properties
         """
         self.validate_properties(dict_)
-        for key, value in dict_.copy().items():
+        for key, new_value in dict_.items():
             current_value = self.ctx_properties.get(key)
             if current_value:
-                values_are_lists = all(
-                    isinstance(_, list) for _ in [value, current_value]
-                )
-                if values_are_lists:
-                    current_value.extend(value)
+                if isinstance(current_value, list) and isinstance(new_value, list):
+                    current_value.extend(new_value)
                 else:
                     message = f"Overwriting existing property {key} for {self}"
                     warnings.warn(message=message)
-                    self.ctx_properties.set(key, value)
+                    self.ctx_properties[key] = new_value
             else:
-                self.ctx_properties.set(key, value)
+                self.ctx_properties[key] = new_value
         return self
 
 
@@ -304,7 +277,9 @@ class Well(EntityPropertiesMixin):
         self.name = None
         self.compounds = None
         self.properties = properties if isinstance(properties, dict) else dict()
-        self.ctx_properties = self.fromDict(ctx_properties)
+        self.ctx_properties = (
+            ctx_properties if isinstance(ctx_properties, dict) else dict()
+        )
 
     def set_mass(self, mass):
         """
@@ -935,7 +910,9 @@ class Container(EntityPropertiesMixin):
         self.storage = storage
         self.cover = cover
         self.properties = properties if isinstance(properties, dict) else dict()
-        self.ctx_properties = self.fromDict(ctx_properties)
+        self.ctx_properties = (
+            ctx_properties if isinstance(ctx_properties, dict) else dict()
+        )
         self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
         if self.cover and not (self.is_covered() or self.is_sealed()):
             raise AttributeError(f"{cover} is not a valid seal or cover type.")

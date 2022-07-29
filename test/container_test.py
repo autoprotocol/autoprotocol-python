@@ -320,7 +320,6 @@ class TestAliquotProperties(HasDummyContainers):
         self.c.well(0).set_ctx_properties(test_property)
         assert self.c.well(0).properties == test_property
         assert self.c.well(0).ctx_properties.get("foo") == "bar"
-        assert self.c.well(0).ctx_properties.foo == "bar"
 
     def test_wellgroups(self):
         test_property = {"foo": "bar"}
@@ -449,14 +448,10 @@ class TestContainerProperties(HasDummyContainers):
         self.c.set_ctx_properties(test_property)
         assert self.c.properties == test_property
         assert self.c.ctx_properties.get("foo") == "bar"
-        assert self.c.ctx_properties.foo == "bar"
 
         test_property["foo"] = {"key": "val"}
         self.c.set_ctx_properties(test_property)
-        assert self.c.ctx_properties.toDict() == test_property
-
-        with pytest.raises(TypeError):
-            self.c.ctx_properties.get(0)
+        assert self.c.ctx_properties == test_property
 
         with pytest.raises(TypeError):
             self.c.set_ctx_properties({0: "valuable value"})
@@ -514,13 +509,13 @@ class TestSetProperties(HasDummyContainers):
     def test_sets_ctx_properties(self):
         test_property = {"foo": "bar"}
         self.c.set_ctx_properties(test_property)
-        assert self.c.ctx_properties.toDict() == test_property
+        assert self.c.ctx_properties == test_property
 
     def test_overwrites_ctx_properties(self):
         new_property = {"bar": True}
         self.c.set_ctx_properties({"foo": True})
         self.c.set_ctx_properties(new_property)
-        assert self.c.ctx_properties.toDict() == new_property
+        assert self.c.ctx_properties == new_property
 
 
 class TestAddProperties(HasDummyContainers):
@@ -532,7 +527,7 @@ class TestAddProperties(HasDummyContainers):
     def test_adds_ctx_properties(self):
         test_property = {"foo": "bar"}
         self.c.set_ctx_properties(test_property)
-        assert self.c.ctx_properties.toDict() == test_property
+        assert self.c.ctx_properties == test_property
 
     def test_doesnt_overwrite_properties(self):
         old_property = {"foo": True}
@@ -550,7 +545,7 @@ class TestAddProperties(HasDummyContainers):
         self.c.add_ctx_properties(new_property)
         merged_properties = old_property.copy()
         merged_properties.update(new_property)
-        assert self.c.ctx_properties.toDict() == merged_properties
+        assert self.c.ctx_properties == merged_properties
 
     def test_add_properties_appends_lists(self):
         self.c.set_properties({"foo": ["bar"]})
@@ -560,9 +555,8 @@ class TestAddProperties(HasDummyContainers):
     def test_add_ctx_properties_appends_lists(self):
         self.c.set_ctx_properties({"foo": ["bar"]})
         self.c.add_ctx_properties({"foo": ["baz"]})
-        assert self.c.ctx_properties.foo == ["bar", "baz"]
         assert self.c.ctx_properties.get("foo") == ["bar", "baz"]
-        assert self.c.ctx_properties.toDict() == {"foo": ["bar", "baz"]}
+        assert self.c.ctx_properties == {"foo": ["bar", "baz"]}
 
     def test_warns_when_overwriting_property(self):
         with warnings.catch_warnings(record=True) as w:
@@ -590,4 +584,17 @@ class TestAddProperties(HasDummyContainers):
         with warnings.catch_warnings(record=True) as w:
             self.c.set_ctx_properties({"field1": True})
             self.c.add_ctx_properties({"field2": False})
+            assert self.c.ctx_properties == {"field1": True, "field2": False}
             assert len(w) == 0
+
+    def test_building_ctx_properties_behavior(self):
+        self.c.set_ctx_properties({"field1": True})
+        self.c.add_ctx_properties({"field2": ["valuable value1"]})
+        self.c.add_ctx_properties({"field2": ["valuable value2"]})
+        self.c.add_ctx_properties({"field3": {"key": ["valuable value3"]}})
+        self.c.add_ctx_properties({"field3": {"key": ["valuable value4"]}})
+        assert self.c.ctx_properties == {
+            "field1": True,
+            "field2": ["valuable value1", "valuable value2"],
+            "field3": {"key": ["valuable value4"]},
+        }

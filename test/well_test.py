@@ -66,13 +66,13 @@ class TestSetProperties(HasDummyWell):
     def test_sets_ctx_properties(self):
         test_property = {"foo": "bar"}
         self.well.set_ctx_properties(test_property)
-        assert self.well.ctx_properties.toDict() == test_property
+        assert self.well.ctx_properties == test_property
 
     def test_overwrites_ctx_properties(self):
         new_property = {"bar": True}
         self.well.set_ctx_properties({"foo": True})
         self.well.set_ctx_properties(new_property)
-        assert self.well.ctx_properties.toDict() == new_property
+        assert self.well.ctx_properties == new_property
 
 
 class TestAddProperties(HasDummyWell):
@@ -84,7 +84,7 @@ class TestAddProperties(HasDummyWell):
     def test_adds_ctx_properties(self):
         test_property = {"foo": "bar"}
         self.well.set_ctx_properties(test_property)
-        assert self.well.ctx_properties.toDict() == test_property
+        assert self.well.ctx_properties == test_property
 
     def test_doesnt_overwrite_properties(self):
         old_property = {"foo": True}
@@ -102,7 +102,7 @@ class TestAddProperties(HasDummyWell):
         self.well.add_ctx_properties(new_property)
         merged_properties = old_property.copy()
         merged_properties.update(new_property)
-        assert self.well.ctx_properties.toDict() == merged_properties
+        assert self.well.ctx_properties == merged_properties
 
     def test_add_properties_appends_lists(self):
         self.well.set_properties({"foo": ["bar"]})
@@ -112,12 +112,11 @@ class TestAddProperties(HasDummyWell):
     def test_add_ctx_properties_appends_lists(self):
         self.well.set_ctx_properties({"foo": ["bar"]})
         self.well.add_ctx_properties({"foo": ["baz"]})
-        assert self.well.ctx_properties.foo == ["bar", "baz"]
         assert self.well.ctx_properties.get("foo") == [
             "bar",
             "baz",
         ]
-        assert self.well.ctx_properties.toDict() == {"foo": ["bar", "baz"]}
+        assert self.well.ctx_properties == {"foo": ["bar", "baz"]}
 
     def test_warns_when_overwriting_property(self):
         with warnings.catch_warnings(record=True) as w:
@@ -137,4 +136,5 @@ class TestAddProperties(HasDummyWell):
         with warnings.catch_warnings(record=True) as w:
             self.well.set_ctx_properties({"field1": True})
             self.well.add_ctx_properties({"field2": False})
+            assert self.well.ctx_properties == {"field1": True, "field2": False}
             assert len(w) == 0

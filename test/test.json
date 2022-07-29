@@ -1,0 +1,39 @@
+    {
+      "op": "liquid_handle",
+      "locations": [
+        {                                     # Aspirate from source
+          "location": "src_tube_1/0",
+          "transports": [
+            {"volume": "-710:microliter", "mode_params": {}},
+            {"volume": "-710:microliter", "mode_params": {}},
+          ]
+        },
+        {                                    # Dispense/Load Tempest Internal Chamber
+          "location": "src_tube_1/0",
+          "transports": [
+            {"volume": "600:microliter", "mode_params": {}},
+            {"volume": "600:microliter", "mode_params": {}},
+          ]
+        },
+        {                                  # Predispense into Tempest not Destination
+          "transports": [
+            {"volume": "10:microliter", "mode_params": {}},
+            {"volume": "10:microliter", "mode_params": {}},
+          ]
+        },
+        {                                 # Dispense into specified Destination
+          "location": "flat/0",
+          "transports": [
+            {"volume": "100:microliter", "mode_params": {}},
+          ]
+        },
+        {                                 # Dispense into specified Destination
+          "location": "flat/4",
+          "transports": [
+            {"volume": "100:microliter", "mode_params": {}},
+          ]
+        }
+      ],
+      "shape": {"rows": 8, "columns": 1, "format": "SBS96"},
+      "mode": "dispense"
+    }

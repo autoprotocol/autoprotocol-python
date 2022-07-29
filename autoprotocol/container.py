@@ -9,7 +9,7 @@ Container, Well, WellGroup objects and associated functions
 import json
 import warnings
 
-from typing import Dict, Union
+from typing import Dict
 
 from autoprotocol.util import parse_unit
 
@@ -19,95 +19,6 @@ from .unit import Unit, UnitError
 
 SEAL_TYPES = ["ultra-clear", "foil", "breathable"]
 COVER_TYPES = ["standard", "low_evaporation", "universal"]
-
-
-class EntityProperties(object):
-    """
-    A EntityProperties object is a mapping of an entity's custom properties
-    unique to the user.
-
-    Do not construct directly -- retrieve it from the related Container or Well
-    object.
-
-    Parameters
-    ----------
-    dict_ : Dict
-        Is the mapping of properties from a user's Container or Well
-    """
-
-    def __init__(self, dict_: Dict):
-        self.__dict__.update(dict_)
-
-    def set(self, key: str, value: Union[str, dict]):
-        """
-        Sets a value for the specified key on the EntityProperties
-
-        Parameters
-        ----------
-        key : str
-            The string key which maps to the value you wish to set
-        value : str, Dict
-            The value that will be associated to the key specified
-
-        Raises
-        ------
-        TypeError
-            If key type is not str
-
-        """
-        if isinstance(key, str):
-            if isinstance(value, dict):
-                self.__dict__[key] = json.loads(
-                    json.dumps(value), object_hook=EntityProperties
-                )
-            elif isinstance(value, (str, list, bool, int)):
-                self.__dict__[key] = value
-            else:
-                raise TypeError(
-                    f"Value type {str(value.__class__.__name__)} is not one of the valid {(str, list, bool, int)} value types"
-                )
-        else:
-            raise TypeError(f"Invalid key type {type(key)}, key must be string")
-
-    def get(self, key: str):
-        """
-        Gets a value for the specified key on the EntityProperties
-
-        Parameters
-        ----------
-        key : str
-            The string key which maps to the value you wish to set
-
-        Raises
-        ------
-        TypeError
-            If key type is not str
-
-        Returns
-        -------
-        str, Dict, None
-            The value that maps to the key specified
-        """
-        if isinstance(key, str):
-            prop = self.__dict__.get(key)
-            return prop
-        else:
-            raise TypeError(f"Key {key} - {type(key)} is not a valid str")
-
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
-
-    def toDict(self):
-        """
-        Generates a dictionary from the EntityProperties associated to
-        entity (ie: Container or Well)
-
-        Returns
-        -------
-        Dict
-            The mapping of an entity's ctx_properties
-        """
-        return json.loads(self.toJSON())
 
 
 class EntityPropertiesMixin:
@@ -177,19 +88,17 @@ class EntityPropertiesMixin:
             Container or Well with modified properties
         """
         self.validate_properties(properties)
-        for key, value in properties.items():
+        for key, new_value in properties.items():
+            current_value = self.properties.get(key)
             if key in self.properties:
-                values_are_lists = all(
-                    isinstance(_, list) for _ in [value, self.properties[key]]
-                )
-                if values_are_lists:
-                    self.properties[key].extend(value)
+                if isinstance(current_value, list) and isinstance(new_value, list):
+                    current_value.extend(new_value)
                 else:
                     message = f"Overwriting existing property {key} for {self}"
                     warnings.warn(message=message)
-                    self.properties[key] = value
+                    self.properties[key] = new_value
             else:
-                self.properties[key] = value
+                self.properties[key] = new_value
         return self
 
     def set_ctx_properties(self, dict_: Dict):

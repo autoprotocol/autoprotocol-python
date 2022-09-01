@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release:`7.14.4 <2022-09-01>`
+* :feature:`347` update: container and well ctx_properties
+
 * :release:`7.14.3 <2022-05-19>`
 * :feature:`345` Add new container type: `1536-echo-ldv-beckman-001-6969`
 

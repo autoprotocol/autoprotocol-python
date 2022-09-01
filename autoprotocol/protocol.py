@@ -898,10 +898,8 @@ class Protocol(object):
             if ref.container.properties:
                 outs[n]["properties"] = ref.container.properties
 
-            if ref.container.ctx_properties.toDict():
-                outs[n][
-                    "contextual_custom_properties"
-                ] = ref.container.ctx_properties.toDict()
+            if ref.container.ctx_properties:
+                outs[n]["contextual_custom_properties"] = ref.container.ctx_properties
 
             for well in ref.container._wells:
                 if well.name or len(well.properties) > 0:
@@ -909,10 +907,10 @@ class Protocol(object):
                         outs[n][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
                         outs[n][str(well.index)]["properties"] = well.properties
-                    if well.ctx_properties.toDict():
+                    if well.ctx_properties:
                         outs[n][str(well.index)][
                             "contextual_custom_properties"
-                        ] = well.ctx_properties.toDict()
+                        ] = well.ctx_properties
 
         # pragma pylint: enable=protected-access
 

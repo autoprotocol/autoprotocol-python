@@ -1405,6 +1405,35 @@ PCR96FSC = ContainerType(
     cat_no="PCR-96-FS-C",
 )
 
+# TODO confirm the values for commented objects
+#:
+V384FLAT1 = ContainerType(
+    name="384-virtual-well Nunc™ OmniTray™ Single-Well Plate",
+    well_count=384,
+    well_depth_mm=11.43,
+    well_volume_ul=Unit(80.0, "microliter"),
+    well_coating=None,
+    # sterile=False,
+    # is_tube=False,
+    cover_types=["universal"],
+    # seal_types=None,
+    capabilities=[
+        "colonize",
+        "echo_dest",
+        "image_plate",
+        "incubate",
+        "provision",
+        "cover",
+        "uncover"
+    ],
+    shortname="384-virtual-well-1-flat",
+    col_count=24,
+    # dead_volume_ul=Unit(3, "microliter"),
+    # safe_min_volume_ul=Unit(5, "microliter"),
+    vendor="Thermo (Teknova)",
+    cat_no="140156 (L2004)",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -1442,4 +1471,5 @@ _CONTAINER_TYPES = {
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
     "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
     "96-pcr-fs-clear": PCR96FSC,
+    "384-virtual-well-1-flat": V384FLAT1
 }

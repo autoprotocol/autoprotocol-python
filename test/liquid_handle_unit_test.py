@@ -243,9 +243,9 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         prime_aspirate = self.asp_transport.copy()
         prime_dispense = self.asp_transport.copy()
         prime_aspirate["volume"] = -prime_vol
-        prime_aspirate["pump_override_volume"] = -prime_vol
+        prime_aspirate["pump_override_volume"] = None
         prime_dispense["volume"] = prime_vol
-        prime_dispense["pump_override_volume"] = prime_vol
+        prime_dispense["pump_override_volume"] = None
         assert self.lhm._transports[1] == prime_aspirate
         assert self.lhm._transports[3] == prime_dispense
 

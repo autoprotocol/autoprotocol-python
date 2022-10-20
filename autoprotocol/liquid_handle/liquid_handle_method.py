@@ -428,7 +428,6 @@ class LiquidHandleMethod(object):
             LiquidHandle.builders.transport(
                 volume=-prime_vol,
                 density=density,
-                pump_override_volume=-prime_vol,
                 flowrate=asp_flowrate,
                 mode_params=mode_params,
                 delay_time=delay_time,
@@ -445,7 +444,6 @@ class LiquidHandleMethod(object):
             LiquidHandle.builders.transport(
                 volume=prime_vol,
                 density=density,
-                pump_override_volume=prime_vol,
                 flowrate=dsp_flowrate,
                 mode_params=mode_params,
                 delay_time=delay_time,

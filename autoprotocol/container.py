@@ -253,10 +253,17 @@ class Well(EntityPropertiesMixin):
         v = Unit(vol)
         max_vol = self.container.container_type.true_max_vol_ul
         if v > max_vol:
+            containerIdInfo = ""
+            if self.container.id is not None and len(self.container.id) > 0:
+                containerIdInfo = "with container id [" + self.container.id + "]"
+
             raise ValueError(
-                f"Theoretical volume {v} to be set exceeds maximum well "
-                f"volume {max_vol}."
+                f"Failure at container [{self.container.name}] {containerIdInfo} "
+                f"when setting the volume for well [{self.index}]: "
+                f"Theoretical volume [{v}] to be set exceeds maximum well "
+                f"volume [{max_vol}]."
             )
+
         self.volume = v
         return self
 

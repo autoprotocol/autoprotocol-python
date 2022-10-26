@@ -258,10 +258,9 @@ class Well(EntityPropertiesMixin):
                 containerIdInfo = f" with container ID: {self.container.id}"
 
             raise ValueError(
-                f"Failure at container '{self.container.name}'{containerIdInfo} "
-                f"when setting the volume for well {self.index}: "
                 f"Theoretical volume [{v}] to be set exceeds maximum well "
-                f"volume [{max_vol}]."
+                f"volume [{max_vol}] for container '{self.container.name}'{containerIdInfo} "
+                f"when setting the volume for well {self.index}."
             )
 
         self.volume = v

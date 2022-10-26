@@ -1405,6 +1405,45 @@ PCR96FSC = ContainerType(
     cat_no="PCR-96-FS-C",
 )
 
+#:
+SPL384UVMAX = ContainerType(
+    name="384-well Crystal-Grade Polystyrene Microplate, Film-Bottom",
+    well_count=384,
+    well_depth_mm=11.5,
+    well_volume_ul=Unit(90, "microliter"),
+    well_coating=None,
+    sterile=False,
+    is_tube=False,
+    cover_types=["universal"],
+    seal_types=["ultra-clear", "foil"],
+    capabilities=[
+        "pipette",
+        "spin",
+        "incubate",
+        "cover",
+        "stamp",
+        "dispense",
+        "dispense-destination",
+        "echo_dest",
+        "provision",
+        "uncover",
+        "seal",
+        "unseal",
+        "liquid_handle",
+        "absorbance",
+        "fluorescence",
+        "luminescence",
+        "bluewash",
+        "spectophotometry",
+    ],
+    shortname="384-spl-uv-max",
+    col_count=24,
+    dead_volume_ul=Unit(20, "microliter"),
+    safe_min_volume_ul=Unit(20, "microliter"),
+    vendor="SPL Life Sciences",
+    cat_no="SPL-330384",
+)
+
 _CONTAINER_TYPES = {
     "384-flat": FLAT384,
     "384-pcr": PCR384,
@@ -1442,4 +1481,5 @@ _CONTAINER_TYPES = {
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
     "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
     "96-pcr-fs-clear": PCR96FSC,
+    "384-spl-uv-max": SPL384UVMAX
 }

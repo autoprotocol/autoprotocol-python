@@ -255,7 +255,7 @@ class Well(EntityPropertiesMixin):
         if v > max_vol:
             containerIdInfo = ""
             if self.container.id:
-                containerIdInfo = " with container id " + self.container.id
+                containerIdInfo = f" with container ID: {self.container.id}"
 
             raise ValueError(
                 f"Failure at container '{self.container.name}'{containerIdInfo} "

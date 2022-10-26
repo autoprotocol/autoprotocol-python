@@ -254,7 +254,7 @@ class Well(EntityPropertiesMixin):
         max_vol = self.container.container_type.true_max_vol_ul
         if v > max_vol:
             containerIdInfo = ""
-            if self.container.id is not None and len(self.container.id) > 0:
+            if self.container.id:
                 containerIdInfo = " with container id " + self.container.id
 
             raise ValueError(

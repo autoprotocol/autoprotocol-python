@@ -212,15 +212,33 @@ class TestWellVolume(HasDummyContainers):
             == dummy_384.container_type.well_volume_ul
         )
 
-    def test_echo_max_vol(self):
+    @pytest.mark.parametrize("test_containerid", [None, "ct1gkv7q3nbbd4j"])
+    def test_echo_max_vol(self, test_containerid):
+        test_container_name = "echo"
+        test_well_index = 0
+        test_well_vol_max = "135"
+        test_well_vol_to_set = "136"
+
         from autoprotocol.protocol import Protocol
 
         p = Protocol()
-        echo_w = p.ref("echo", None, "384-echo", discard=True).well(0)
-        echo_w.set_volume("135:microliter")
+        echo_w = p.ref(
+            test_container_name, test_containerid, "384-echo", discard=True
+        ).well(test_well_index)
+        echo_w.set_volume(test_well_vol_max + ":microliter")
         assert echo_w.volume == Unit(135, "microliter")
-        with pytest.raises(ValueError):
-            echo_w.set_volume("136:microliter")
+
+        with pytest.raises(ValueError) as the_error:
+            echo_w.set_volume(test_well_vol_to_set + ":microliter")
+
+        assert the_error is not None
+        error_msg = str(the_error.value)
+        assert test_container_name in error_msg
+        assert str(test_well_index) in error_msg
+        assert test_well_vol_to_set in error_msg
+        assert test_well_vol_max in error_msg
+        if test_containerid:
+            assert test_containerid in error_msg
 
 
 class TestWellName(HasDummyContainers):

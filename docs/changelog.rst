@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* :release:`7.15.0 <2022-10-27>`
+* :feature:`354` Added new container type: `96-spl-flat-uv-ps`
+* :feature:`353` Added new container type: `384-spl-flat-uv-ps`
+
 * :release:`7.14.4 <2022-09-01>`
 * :feature:`347` update: container and well ctx_properties
 

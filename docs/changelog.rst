@@ -2,7 +2,8 @@
 Changelog
 =========
 
-* :feature:`349` Added new container type: `384-spl-uv-max`
+* :release:`7.14.5 <2022-10-27>`
+* :feature:`349` Added new container types: `384-spl-flat-uv-ps` and `96-spl-flat-uv-ps`
 
 * :release:`7.14.4 <2022-09-01>`
 * :feature:`347` update: container and well ctx_properties

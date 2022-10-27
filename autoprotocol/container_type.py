@@ -1481,5 +1481,5 @@ _CONTAINER_TYPES = {
     "384-ubottom-black-clear-tc": FLAT384BLACKUBOTTOM,
     "384-flatbottom-black-clear-tc": FLAT384BLACKTC,
     "96-pcr-fs-clear": PCR96FSC,
-    "384-spl-uv-max": SPL384UVMAX
+    "384-spl-uv-max": SPL384UVMAX,
 }

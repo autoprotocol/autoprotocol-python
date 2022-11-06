@@ -6,6 +6,8 @@ Module containing a Units library
     :license: BSD, see LICENSE for more details
 
 """
+from typing import Any, Optional
+from dataclasses import dataclass
 
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
@@ -145,6 +147,7 @@ class UnitUnitsError(UnitError):
     )
 
 
+@dataclass(eq=False)
 class Unit(_Quantity):
     """
     A representation of a measure of physical quantities such as length,
@@ -183,6 +186,9 @@ class Unit(_Quantity):
 
     """
 
+    value: Any
+    units: Optional[Any] = None
+
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry
         cls.force_ndarray = False
@@ -204,9 +210,10 @@ class Unit(_Quantity):
         except UndefinedUnitError as e:
             raise UnitUnitsError(units) from e
 
-    def __init__(self, value, units=None):  # pylint: disable=unused-argument
+    def __post_init__(self):
         super(Unit, self).__init__()
-        self.unit = self.units.__str__()
+        self.units = self._units.__str__()
+        self.unit = self._units.__str__()
 
     def __str__(self, ndigits=12):
         """

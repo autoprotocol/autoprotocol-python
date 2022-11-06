@@ -862,13 +862,11 @@ class Container(EntityPropertiesMixin):
                 f"{self.cover} is not a valid seal or cover type."
             )
 
-        self.properties = (
-            self.properties if isinstance(self.properties, dict) else dict()
-        )
+        if not isinstance(self.properties, dict):
+            self.properties = dict()
 
-        self.ctx_properties = (
-            self.ctx_properties if isinstance(self.ctx_properties, dict) else dict()
-        )
+        if not isinstance(self.ctx_properties, dict):
+            self.ctx_properties = dict()
 
         self._wells = [Well(self, idx) for idx in range(self.container_type.well_count)]
 

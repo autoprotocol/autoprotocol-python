@@ -56,7 +56,7 @@ setup(
     maintainer_email="support@strateos.com",
     version=__version__,  # pylint: disable=undefined-variable
     install_requires=["Pint==0.9"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     tests_require=test_deps,
     extras_require={"docs": doc_deps, "test": test_deps},
     cmdclass={"pytest": PyTest},
@@ -71,7 +71,6 @@ setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",

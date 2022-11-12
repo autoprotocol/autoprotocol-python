@@ -284,8 +284,8 @@ class ContainerType(
             )
         try:
             well_ref = int(well_ref)
-        except TypeError as e:
-            raise TypeError(
+        except ValueError as e:
+            raise ValueError(
                 "ContainerType.humanize(): Well reference given"
                 "is not parseable into 'int' format."
             ) from e
@@ -334,7 +334,7 @@ class ContainerType(
 
         Raises
         ------
-        TypeError
+        ValueError
             If well reference given is not an accepted type.
         ValueError
             If well reference given exceeds container dimensions.

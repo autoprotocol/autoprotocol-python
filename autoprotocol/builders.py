@@ -613,10 +613,10 @@ class DispenseBuilders(InstructionBuilders):
     # pragma pylint: disable=missing-param-doc
     def shake_after(
         self,
-        duration: Optional[Unit, str],
-        frequency: Optional[Unit, str] = None,
+        duration: Optional[Union[Unit, str]],
+        frequency: Optional[Union[Unit, str]] = None,
         path: Optional[str] = None,
-        amplitude: Optional[Unit, str] = None,
+        amplitude: Optional[Union[Unit, str]] = None,
     ):
         """
         Generates a validated shake_after parameter.
@@ -698,7 +698,7 @@ class SpectrophotometryBuilders(InstructionBuilders):
     def wavelength_selection(
         shortpass: Optional[Union[Unit, str]] = None,
         longpass: Optional[Union[Unit, str]] = None,
-        ideal: Optional[Unit, str] = None,
+        ideal: Optional[Union[Unit, str]] = None,
     ):
         """
         Generates a representation of a wavelength selection by either

@@ -42,9 +42,11 @@ test_deps = [
 ]
 
 doc_deps = [
+    "jinja2==3.0.0",
     "releases>=1.6.3, <2",
-    "Sphinx>=2.4, <3",
-    "sphinx_rtd_theme>=0.4.3, <1",
+    "sphinx==4.2.0",
+    "sphinx_rtd_theme==1.0.0",
+    "readthedocs-sphinx-search==0.1.1",
     "semantic-version==2.6.0",
     "six>=1.15.0, <2",
     "click==8.0.2",

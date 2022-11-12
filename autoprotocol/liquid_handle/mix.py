@@ -157,8 +157,8 @@ class Mix(LiquidHandleMethod):
             liquid_class=self._liquid.name,
         )
 
-    # pylint: disable=unused-argument
-    def default_repetitions(self, volume):
+    # pylint: disable=unused-argument, missing-param-doc
+    def default_repetitions(self, volume: Unit):
         """Default mix repetitions
 
         Parameters
@@ -177,8 +177,8 @@ class Mix(LiquidHandleMethod):
         """
         return 10
 
-    # pylint: disable=unused-argument
-    def default_position_z(self, volume):
+    # pylint: disable=unused-argument, missing-param-doc
+    def default_position_z(self, volume: Unit):
         """Default position_z
 
         Parameters

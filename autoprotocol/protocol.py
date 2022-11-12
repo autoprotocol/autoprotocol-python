@@ -291,8 +291,10 @@ class Protocol(object):
                 opts["id"] = id
             elif cont_type:
                 opts["new"] = cont_type.shortname
-        except ValueError:
-            raise RuntimeError(f"{cont_type} is not a recognized container type.")
+        except ValueError as e:
+            raise RuntimeError(
+                f"{cont_type} is not a recognized container type."
+            ) from e
 
         if storage:
             opts["store"] = {"where": storage}
@@ -1166,7 +1168,7 @@ class Protocol(object):
             final_destinations = []
             if isinstance(destinations, Well):
                 final_destinations.append(convert_to_wellgroup(destinations))
-            elif isinstance(destinations, List):
+            elif isinstance(destinations, list):
                 for dest in destinations:
                     wg = convert_to_wellgroup(dest)
                     final_destinations.append(wg)
@@ -1199,7 +1201,7 @@ class Protocol(object):
         def convert_to_wellgroup(dest) -> WellGroup:
             if isinstance(dest, Well):
                 ret = WellGroup([dest])
-            elif isinstance(dest, List):
+            elif isinstance(dest, list):
                 ret = WellGroup([])
                 for item in dest:
                     if isinstance(item, Well):
@@ -1223,8 +1225,8 @@ class Protocol(object):
         def equalize_lengths(
             vols, dest: Union[List[WellGroup], WellGroup]
         ) -> Union[List[Unit], List[List[Unit]]]:
-            if isinstance(dest, List):
-                if isinstance(vols, List):
+            if isinstance(dest, list):
+                if isinstance(vols, list):
                     vols_list = vols
                     if len(vols_list) == len(dest):
                         for i in range(len(vols_list)):
@@ -1251,7 +1253,7 @@ class Protocol(object):
             elif isinstance(dest, WellGroup):
                 if isinstance(vols, (Unit, str)):
                     return [parse_unit(vols) for _ in dest]
-                elif isinstance(vols, List):
+                elif isinstance(vols, list):
                     if len(vols) == len(dest):
                         return vols
                     elif len(vols) == 1 and isinstance(vols[0], Unit):
@@ -1319,8 +1321,8 @@ class Protocol(object):
                 sum_dispense_volumes: Unit = (
                     sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
                 )
-            except:
-                raise ValueError(dispense_volumes)
+            except ValueError as e:
+                raise ValueError(dispense_volumes) from e
             total_volume_dispensed: Unit = Unit("0:microliter")
 
             # Aspirate from source
@@ -1644,13 +1646,13 @@ class Protocol(object):
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError, TypeError):
+            except (ValueError, AttributeError, TypeError) as e:
                 raise RuntimeError(
                     "When transferring liquid from multiple wells containing "
                     "the same substance to multiple other wells, each source "
                     "Well must have a volume attribute (aliquot) associated "
                     "with it."
-                )
+                ) from e
 
         for s, d, v in list(zip(source.wells, dest.wells, volume)):
             self._remove_cover(s.container, "acoustic_transfer")
@@ -2563,7 +2565,7 @@ class Protocol(object):
         try:
             duration = Unit(duration)
         except ValueError as e:
-            raise ValueError(f"Duration must be a unit. {e}")
+            raise ValueError(f"Duration must be a unit. {e}") from e
 
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
@@ -3287,8 +3289,8 @@ class Protocol(object):
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'settle_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'settle_time' must be of type Unit.") from e
 
         return self._append_and_return(
             Absorbance(
@@ -3499,8 +3501,8 @@ class Protocol(object):
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'settle_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'settle_time' must be of type Unit.") from e
         if lag_time:
             try:
                 lag_time = Unit(lag_time)
@@ -3508,8 +3510,8 @@ class Protocol(object):
                     raise ValueError(
                         "'lag_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'lag_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'lag_time' must be of type Unit.") from e
         if integration_time:
             try:
                 integration_time = Unit(integration_time)
@@ -3518,8 +3520,8 @@ class Protocol(object):
                         "'integration_time' must be a time equal "
                         "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'integration_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'integration_time' must be of type Unit.") from e
         if position_z:
             valid_pos_z = ["manual", "calculated_from_wells"]
             if not isinstance(position_z, dict):
@@ -3542,8 +3544,8 @@ class Protocol(object):
                             "'manual' z_position must be a length equal "
                             "to or greater than 0."
                         )
-                except UnitError:
-                    raise UnitError("'manual' position_z must be of type Unit.")
+                except UnitError as e:
+                    raise UnitError("'manual' position_z must be of type Unit.") from e
             if "calculated_from_wells" in position_z.keys():
                 # blocking calculated_from_wells until fully implemented
                 # remove below RunTimeError to release feature
@@ -3575,13 +3577,13 @@ class Protocol(object):
                 if isinstance(ref, Container):
                     try:
                         valid_z_ws = ref.wells(z_ws)
-                    except ValueError:
+                    except ValueError as e:
                         raise ValueError(
                             "Well indices specified for "
                             "'calculated_from_wells' must "
                             "be valid wells of the ref'd "
                             "container."
-                        )
+                        ) from e
                 # pragma pylint: enable=unreachable, unused-variable
 
         return self._append_and_return(
@@ -3713,8 +3715,8 @@ class Protocol(object):
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'settle_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'settle_time' must be of type Unit.") from e
         if integration_time:
             try:
                 integration_time = Unit(integration_time)
@@ -3723,8 +3725,8 @@ class Protocol(object):
                         "'integration_time' must be a time equal "
                         "to or greater than 0."
                     )
-            except UnitError:
-                raise UnitError("'integration_time' must be of type Unit.")
+            except UnitError as e:
+                raise UnitError("'integration_time' must be of type Unit.") from e
 
         return self._append_and_return(
             Luminescence(
@@ -3956,8 +3958,8 @@ class Protocol(object):
 
         try:
             max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
-        except (AttributeError, IndexError):
-            raise RuntimeError("Matrix specified is not properly formatted.")
+        except (AttributeError, IndexError) as e:
+            raise RuntimeError("Matrix specified is not properly formatted.") from e
 
         volume = Unit(volume)
         if volume <= Unit("0:microliter"):
@@ -4775,7 +4777,7 @@ class Protocol(object):
                 raise ValueError(
                     f"Each sample or control must indicate a "
                     f"volume of type unit. {e}"
-                )
+                ) from e
             if s.get("captured_events") and not isinstance(
                 s.get("captured_events"), int
             ):
@@ -4865,11 +4867,11 @@ class Protocol(object):
                         if c.get("emission_wavelength"):
                             try:
                                 Unit(c.get("emission_wavelength"))
-                            except (UnitError):
+                            except (UnitError) as e:
                                 raise UnitError(
                                     "Each `emission_wavelength` "
                                     "must be of type unit."
-                                )
+                                ) from e
                         else:
                             raise ValueError(
                                 "Each color must have an " "`emission_wavelength`."
@@ -4877,11 +4879,11 @@ class Protocol(object):
                         if c.get("excitation_wavelength"):
                             try:
                                 Unit(c.get("excitation_wavelength"))
-                            except (UnitError):
+                            except (UnitError) as e:
                                 raise UnitError(
                                     "Each `excitation_wavelength` "
                                     "must be of type unit."
-                                )
+                                ) from e
                         else:
                             raise ValueError(
                                 "Each color must have an " "`excitation_wavelength`."
@@ -8041,7 +8043,7 @@ class Protocol(object):
 
             x_distance = abs(point_a[0] - point_b[0])
             y_distance = abs(point_a[1] - point_b[1])
-            return sqrt(x_distance ** 2 + y_distance ** 2)
+            return sqrt(x_distance**2 + y_distance**2)
 
         # Check validity of Well inputs
         if not isinstance(source, Well):

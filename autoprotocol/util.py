@@ -81,8 +81,8 @@ def parse_unit(unit, accepted_unit=None):
     if not isinstance(unit, Unit):
         try:
             unit = Unit(unit)
-        except (UnitStringError, UnitValueError):
-            raise TypeError(f"{unit} is not of type Unit/str")
+        except (UnitStringError, UnitValueError) as e:
+            raise TypeError(f"{unit} is not of type Unit/str") from e
     if accepted_unit is not None:
         # Note: This is hacky. We should formalize the concept of base Units
         # in AP-Py
@@ -128,8 +128,8 @@ def _validate_as_instance(item, target_type):
     if not isinstance(item, target_type):
         try:
             item = _validate_as_instance(item(), target_type)
-        except:
-            raise TypeError(f"{item} can't be parsed as a {target_type}.")
+        except TypeError as e:
+            raise TypeError(f"{item} can't be parsed as a {target_type}.") from e
     return item
 
 

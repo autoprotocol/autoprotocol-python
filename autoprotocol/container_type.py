@@ -284,11 +284,11 @@ class ContainerType(
             )
         try:
             well_ref = int(well_ref)
-        except:
+        except TypeError as e:
             raise TypeError(
                 "ContainerType.humanize(): Well reference given"
                 "is not parseable into 'int' format."
-            )
+            ) from e
         # Check bounds
         if well_ref >= well_count or well_ref < 0:
             raise ValueError(

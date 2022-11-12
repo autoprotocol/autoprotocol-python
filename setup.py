@@ -6,7 +6,12 @@ from setuptools.command.test import test as TestCommand
 
 
 # Load version
-exec(open("autoprotocol/version.py").read())  # pylint: disable=exec-used
+# exec(open("autoprotocol/version.py").read())  # pylint: disable=exec-used
+with open("autoprotocol/version.py", encoding="utf-8") as file:
+    __version__ = file.read()
+
+with open("README.rst", encoding="utf-8") as file:
+    long_description = file.read()
 
 # Test Runner (reference: https://docs.pytest.org/en/latest/goodpractices.html)
 class PyTest(TestCommand):
@@ -42,6 +47,8 @@ doc_deps = [
     "sphinx_rtd_theme>=0.4.3, <1",
     "semantic-version==2.6.0",
     "six>=1.15.0, <2",
+    "click==8.0.2",
+    "black==22.3.0",
 ]
 
 
@@ -50,7 +57,7 @@ setup(
     url="https://github.com/autoprotocol/autoprotocol-python",
     maintainer="The Autoprotocol Development Team",
     description="Python library for generating Autoprotocol",
-    long_description=open("README.rst").read(),
+    long_description=long_description,
     long_description_content_type="text/x-rst",
     license="BSD",
     maintainer_email="support@strateos.com",

@@ -195,14 +195,14 @@ class Unit(_Quantity):
         if not units and isinstance(value, str):
             try:
                 value, units = value.split(":")
-            except ValueError:
-                raise UnitStringError(value)
+            except ValueError as e:
+                raise UnitStringError(value) from e
         try:
             return super(Unit, cls).__new__(cls, Decimal(str(value)), units)
-        except (ValueError, InvalidOperation):
-            raise UnitValueError(value)
-        except UndefinedUnitError:
-            raise UnitUnitsError(units)
+        except (ValueError, InvalidOperation) as e:
+            raise UnitValueError(value) from e
+        except UndefinedUnitError as e:
+            raise UnitUnitsError(units) from e
 
     def __init__(self, value, units=None):  # pylint: disable=unused-argument
         super(Unit, self).__init__()
@@ -272,11 +272,11 @@ class Unit(_Quantity):
     def magnitude(self, magnitude):
         try:
             self._magnitude = to_decimal(magnitude)
-        except ValueError:
+        except ValueError as e:
             raise RuntimeError(
                 f"Tried to set Unit's magnitude {magnitude} but it was of type "
                 f"{type(magnitude)}. Magnitudes must be numeric."
-            )
+            ) from e
 
     @staticmethod
     def fromstring(s):

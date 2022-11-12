@@ -25,7 +25,6 @@ from .util import _check_container_type_with_shape, _validate_as_instance
 
 
 class Ref(object):
-
     """
     Link a ref name (string) to a Container instance.
 
@@ -1022,6 +1021,8 @@ class Protocol(object):
             if nozzle is not standard
         ValueError
             if chip_material is not in silicone or pfe
+        TypeError
+            if volume is not one of the defined allowable types
 
 
         Examples
@@ -1321,8 +1322,8 @@ class Protocol(object):
                 sum_dispense_volumes: Unit = (
                     sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
                 )
-            except ValueError as e:
-                raise ValueError(dispense_volumes) from e
+            except TypeError as e:
+                raise TypeError(dispense_volumes) from e
             total_volume_dispensed: Unit = Unit("0:microliter")
 
             # Aspirate from source

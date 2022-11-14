@@ -6,13 +6,12 @@ Module containing a Units library
     :license: BSD, see LICENSE for more details
 
 """
-from typing import Any, Optional
-from dataclasses import dataclass
-
 from collections import defaultdict
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from math import ceil, floor
 from numbers import Number
+from typing import Any, Optional
 
 from pint import UnitRegistry
 from pint.errors import UndefinedUnitError

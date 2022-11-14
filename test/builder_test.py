@@ -3,6 +3,7 @@
 import pytest
 
 from autoprotocol.builders import InstructionBuilders
+from autoprotocol.container import Container, Well
 from autoprotocol.instruction import (
     SPE,
     Dispense,
@@ -12,7 +13,6 @@ from autoprotocol.instruction import (
     Spectrophotometry,
     Thermocycle,
 )
-from autoprotocol.container import Container, Well
 from autoprotocol.unit import Unit, UnitError
 
 

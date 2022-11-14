@@ -9,14 +9,13 @@ Container, Well, WellGroup objects and associated functions
 import json
 import warnings
 
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass
 from typing import Dict, Optional, Union
 
-from .container_type import ContainerType, _CONTAINER_TYPES
 from autoprotocol.util import parse_unit
 
 from .constants import SBS_FORMAT_SHAPES
+from .container_type import _CONTAINER_TYPES, ContainerType
 from .unit import Unit, UnitError
 
 

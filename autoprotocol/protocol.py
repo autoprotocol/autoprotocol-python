@@ -6035,15 +6035,6 @@ class Protocol(object):
         rinse: Optional[List[dict]] = None,
     ):
         """
-        well : Well
-        cartridge : str
-        pressure_mode : str
-        load_sample: dict
-        elute: list(dict)
-        condition: list(dict), optional
-        equilibrate: list(dict), optional
-        rinse: list(dict), optional
-
         Apply a solid phase extraction (spe) technique to a sample.
 
         Example Usage:

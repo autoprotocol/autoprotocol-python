@@ -4616,14 +4616,6 @@ class Protocol(object):
         pos_controls: Optional[List[dict]] = None,
     ):
         """
-        dataref : str
-        FSC : dict
-        SSC : dict
-        neg_controls : list(dict)
-        samples : list(dict)
-        colors : list(dict), optional
-        pos_controls : list(dict), optional
-
         Perform flow cytometry. The instruction will be executed within the
         voltage range specified for each channel, optimized for the best sample
         separation/distribution that can be achieved within these limits. The

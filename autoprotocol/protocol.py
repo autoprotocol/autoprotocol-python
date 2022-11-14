@@ -5126,7 +5126,7 @@ class Protocol(object):
         self,
         head: str,
         container: Container,
-        duration: Union[str, Union],
+        duration: Union[str, Unit],
         new_tip: bool = False,
         new_instruction: bool = False,
     ):

@@ -6237,15 +6237,6 @@ class Protocol(object):
         magnification: float = 1.0,
     ):
         """
-        rinse: Optional[List[dict]]
-        ref : Container
-        mode : Enum("top", "bottom", "side")
-        num_images : int
-        dataref : str
-        backlighting : Bool, optional
-        magnification : float
-        exposure : dict, optional
-
         Capture an image of the specified container.
 
                 Example Usage:

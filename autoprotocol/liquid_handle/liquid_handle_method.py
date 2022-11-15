@@ -739,7 +739,8 @@ class LiquidHandleMethod(object):
             blowout_params = LiquidHandle.builders.blowout(**blowout)
             self._dispense_simple(liquid_class="air", **blowout_params)
 
-    def default_blowout(self, volume):
+    # pylint: disable=missing-param-doc
+    def default_blowout(self, volume: Unit):
         """Default blowout behavior
 
         Parameters

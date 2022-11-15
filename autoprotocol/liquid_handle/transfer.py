@@ -272,7 +272,8 @@ class Transfer(LiquidHandleMethod):
                 **mix_before
             )
 
-    def default_mix_before(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_mix_before(self, volume: Unit):
         """Default mix_before parameters
 
         Parameters
@@ -367,7 +368,8 @@ class Transfer(LiquidHandleMethod):
                 density=density,
             )
 
-    def default_aspirate_z(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_aspirate_z(self, volume: Unit):
         """Default aspirate_z parameters
 
         Parameters
@@ -390,8 +392,8 @@ class Transfer(LiquidHandleMethod):
             aspirate_z = self.default_well_bottom_position_z()
         return aspirate_z
 
-    # pylint: disable=no-self-use
-    def default_prime(self, volume):
+    # pylint: disable=no-self-use, missing-param-doc
+    def default_prime(self, volume: Unit):
         """Default prime volume
 
         Parameters
@@ -466,7 +468,8 @@ class Transfer(LiquidHandleMethod):
                 liquid_class="air",
             )
 
-    def default_transit(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_transit(self, volume: Unit):
         """Default transit volume
 
         Parameters
@@ -520,7 +523,8 @@ class Transfer(LiquidHandleMethod):
             density=density,
         )
 
-    def default_dispense_z(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_dispense_z(self, volume: Unit):
         """Default aspirate_z parameters
 
         Parameters
@@ -572,7 +576,8 @@ class Transfer(LiquidHandleMethod):
                 **mix_after
             )
 
-    def default_mix_after(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_mix_after(self, volume: Unit):
         """Default mix_after parameters
 
         Parameters
@@ -729,7 +734,8 @@ class PreMixBlowoutTransfer(Transfer):
             pre_mix_blowout = LiquidHandle.builders.blowout(**pre_mix_blowout)
             self._dispense_simple(liquid_class="air", **pre_mix_blowout)
 
-    def default_pre_mix_blowout(self, volume):
+    # pragma pylint: disable=missing-param-doc
+    def default_pre_mix_blowout(self, volume: Unit):
         """Default pre_mix_blowout parameters
 
         Parameters

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`35X` Depriciate Python 3.6
+
 * :release:`7.15.1 <2022-10-27>`
 * :feature:`350` update: set pump_override_volume to default to None
 

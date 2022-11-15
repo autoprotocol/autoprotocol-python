@@ -71,8 +71,8 @@ def get_protocol_preview(protocol, name, manifest="manifest.json"):
     """
     try:
         manifest_json = io.open(manifest, encoding="utf-8").read()
-    except IOError:
-        raise RuntimeError(f"'{manifest}' file not found in directory.")
+    except IOError as e:
+        raise RuntimeError(f"'{manifest}' file not found in directory.") from e
     manifest = Manifest(json.loads(manifest_json))
 
     source = [m for m in manifest.protocols if m["name"] == name]
@@ -177,63 +177,63 @@ def convert_param(protocol, val, type_desc):
             container = ("/").join(val.split("/")[0:-1])
             well_idx = val.split("/")[-1]
             return protocol.refs[container].container.well(well_idx)
-        except (KeyError, AttributeError, ValueError):
+        except (KeyError, AttributeError, ValueError) as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"'{val}' (supplied to input '{label}') is not "
                 f"a valid reference to an aliquot"
-            )
+            ) from e
     elif type == "aliquot+":
         try:
             return WellGroup([convert_param(protocol, a, "aliquot") for a in val])
-        except:
+        except RuntimeError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type aliquot+) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "aliquot++":
         try:
             return [convert_param(protocol, aqs, "aliquot+") for aqs in val]
-        except:
+        except RuntimeError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type aliquot++) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "compound":
         try:
             return Compound(val["format"], val["value"])
         except CompoundError as e:
-            raise RuntimeError(f"Invalid Compound; Details: {e.value}")
+            raise RuntimeError(f"Invalid Compound; Details: {e.value}") from e
     elif type == "compound+":
         try:
             return [convert_param(protocol, cont, "compound") for cont in val]
-        except:
+        except RuntimeError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type compound+) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "container":
 
         try:
             return protocol.refs[val].container
-        except KeyError:
+        except KeyError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"'{val}' (supplied to input '{label}') is not "
                 f"a valid reference to a container"
-            )
+            ) from e
     elif type == "container+":
         try:
             return [convert_param(protocol, cont, "container") for cont in val]
-        except:
+        except RuntimeError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type container+) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type in [
         "amount_concentration",
         "frequency",
@@ -253,7 +253,7 @@ def convert_param(protocol, val, type_desc):
                 f"The value supplied ({e.value}) as a unit of '{type}' is "
                 f"improperly formatted. Units of {type} must be in the form: "
                 f"'number:unit'"
-            )
+            ) from e
     elif type == "temperature":
         try:
             if val in [
@@ -275,7 +275,7 @@ def convert_param(protocol, val, type_desc):
                 f"storage conditions (ex: 'cold_20') or "
                 f"temperature units in the form of "
                 f"'number:unit'"
-            )
+            ) from e
     elif type in "bool":
         return bool(val)
     elif type in "csv":
@@ -285,21 +285,21 @@ def convert_param(protocol, val, type_desc):
     elif type == "integer":
         try:
             return int(val)
-        except ValueError:
+        except ValueError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type integer) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "decimal":
         try:
             return float(val)
-        except ValueError:
+        except ValueError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type decimal) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "group":
         try:
             return {
@@ -311,13 +311,13 @@ def convert_param(protocol, val, type_desc):
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type group) is "
                 f"missing a(n) {e} field."
-            )
-        except AttributeError:
+            ) from e
+        except AttributeError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type group) is "
                 f"improperly formatted."
-            )
+            ) from e
     elif type == "group+":
         try:
             return [
@@ -327,17 +327,17 @@ def convert_param(protocol, val, type_desc):
                 }
                 for x in val
             ]
-        except (TypeError, AttributeError):
+        except (TypeError, AttributeError) as e:
             raise RuntimeError(
                 f"The value supplied to input '{type_desc['label']}' "
                 f"(type group+) must be in the form of a list of dictionaries"
-            )
+            ) from e
         except KeyError as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The value supplied to input '{label}' (type group+) is "
                 f"missing a(n) {e} field."
-            )
+            ) from e
     elif type == "group-choice":
         try:
             return {
@@ -358,7 +358,7 @@ def convert_param(protocol, val, type_desc):
                 raise RuntimeError(
                     f"The value supplied to input '{label}' "
                     f"(type group-choice) is missing a(n) {e} field."
-                )
+                ) from e
     elif type == "thermocycle":
         try:
             return [
@@ -371,8 +371,8 @@ def convert_param(protocol, val, type_desc):
                 }
                 for g in val
             ]
-        except (TypeError, KeyError):
-            raise RuntimeError(_thermocycle_error_text())
+        except (TypeError, KeyError) as e:
+            raise RuntimeError(_thermocycle_error_text()) from e
 
     elif type == "thermocycle_step":
         try:
@@ -381,7 +381,7 @@ def convert_param(protocol, val, type_desc):
             raise RuntimeError(
                 f"Invalid duration value for {e.value}: duration input types "
                 f"must be time units in the form of 'number:unit'"
-            )
+            ) from e
 
         try:
             if "gradient" in val:
@@ -396,7 +396,7 @@ def convert_param(protocol, val, type_desc):
                 f"Invalid temperature value for {e.value}: thermocycle "
                 f"temperature input types must be temperature units in the "
                 f"form of 'number:unit'"
-            )
+            ) from e
 
         if "read" in val:
             output["read"] = val["read"]
@@ -422,14 +422,14 @@ def convert_param(protocol, val, type_desc):
 
             return values
 
-        except (AttributeError, IndexError, TypeError):
+        except (AttributeError, IndexError, TypeError) as e:
             label = type_desc.get("label") or "[unknown]"
             raise RuntimeError(
                 f"The values supplied to {label} (type csv-table) are "
                 f"improperly formatted. Format must be a list of dictionaries "
                 f"with the first dictionary comprising keys with associated "
                 f"column input types."
-            )
+            ) from e
 
     else:
         raise ValueError(f"Unknown input type {type!r}")
@@ -519,12 +519,12 @@ class Manifest(object):
     def protocol_info(self, name):
         try:
             return ProtocolInfo(next(p for p in self.protocols if p["name"] == name))
-        except StopIteration:
+        except StopIteration as e:
             raise RuntimeError(
                 f"Harness.run(): {name} does not match the "
                 f"'name' field of any protocol in the "
                 f"associated manifest.json file."
-            )
+            ) from e
 
 
 def run(fn, protocol_name=None, seal_after_run=True, protocol_class=None):

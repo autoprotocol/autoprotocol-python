@@ -44,11 +44,11 @@ class EntityPropertiesMixin:
                 )
             try:
                 json.dumps(value)
-            except TypeError:
+            except TypeError as e:
                 raise TypeError(
                     f"{str(entity)} property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
-                )
+                ) from e
 
     def set_properties(self, properties):
         """

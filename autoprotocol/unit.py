@@ -185,8 +185,8 @@ class Unit(_Quantity):
 
     """
 
-    value: Any
-    units: Optional[Any] = None
+    value: Union[int, float, str]
+    units: Optional[str] = None
 
     def __new__(cls, value, units=None):
         cls._REGISTRY = _UnitRegistry

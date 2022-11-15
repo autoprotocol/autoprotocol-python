@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from math import ceil, floor
 from numbers import Number
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from pint import UnitRegistry
 from pint.errors import UndefinedUnitError

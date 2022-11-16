@@ -2,10 +2,7 @@
 Changelog
 =========
 
-* :release:`8.0.0 <2022-11-16>`
-* :feature:`358` Dataclass enhancements to support objects schema-ready and de/serialization
-* :support:`360` typing for Protocol.instruction() methods
-* :feature:`359` Depriciate Python 3.6
+* :feature:`35X` Depriciate Python 3.6
 
 * :release:`7.15.1 <2022-10-27>`
 * :feature:`350` update: set pump_override_volume to default to None

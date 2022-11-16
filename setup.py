@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+import re
 import sys
 
-from autoprotocol.version import __version__
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
+
+# Load version
+with open("autoprotocol/version.py", encoding="utf-8") as file:
+    pattern = re.compile(r"[0-9]+.[0-9]+.[0-9]+")
+    __version__ = pattern.findall(file.read()).pop()
 
 with open("README.rst", encoding="utf-8") as file:
     long_description = file.read()

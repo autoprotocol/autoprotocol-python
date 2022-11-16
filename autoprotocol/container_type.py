@@ -10,7 +10,6 @@ import re
 
 from collections import namedtuple
 
-from .container import Well
 from .unit import Unit
 
 
@@ -182,6 +181,8 @@ class ContainerType(
 
     @staticmethod
     def robotize_static(well_ref, well_count, col_count):
+        from .container import Well
+
         if isinstance(well_ref, list):
             return [
                 ContainerType.robotize_static(well, well_count, col_count)
@@ -363,6 +364,8 @@ class ContainerType(
             Index given is not of the right parameter type
 
         """
+        from .container import Well
+
         if not isinstance(idx, (int, str, Well)):
             raise TypeError("Well index given is not of type 'int' or " "'str'.")
         idx = self.robotize(idx)

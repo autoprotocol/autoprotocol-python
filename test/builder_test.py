@@ -2,8 +2,8 @@
 
 import pytest
 
-from autoprotocol import Unit, Well
 from autoprotocol.builders import InstructionBuilders
+from autoprotocol.container import Container, Well
 from autoprotocol.instruction import (
     SPE,
     Dispense,
@@ -13,7 +13,7 @@ from autoprotocol.instruction import (
     Spectrophotometry,
     Thermocycle,
 )
-from autoprotocol.unit import UnitError
+from autoprotocol.unit import Unit, UnitError
 
 
 # pylint: disable=protected-access
@@ -197,7 +197,9 @@ def merge_dicts(*dicts):
 
 
 class TestSpectrophotometryBuilders(object):
-    wells = [Well("foo", 0)]
+    test_container = Container(container_type="96-flat")
+    wells = [Well(test_container, 0)]
+
     filter_selection = {"shortpass": "500:nanometer", "longpass": "600:nanometer"}
     monochromator_selection = {"ideal": "550:nanometer"}
     shake = {

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 
 from setuptools import setup
@@ -6,9 +7,9 @@ from setuptools.command.test import test as TestCommand
 
 
 # Load version
-# exec(open("autoprotocol/version.py").read())  # pylint: disable=exec-used
 with open("autoprotocol/version.py", encoding="utf-8") as file:
-    __version__ = file.read()
+    pattern = re.compile(r"[0-9]+.[0-9]+.[0-9]+")
+    __version__ = pattern.findall(file.read()).pop()
 
 with open("README.rst", encoding="utf-8") as file:
     long_description = file.read()

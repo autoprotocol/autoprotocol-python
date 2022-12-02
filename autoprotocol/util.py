@@ -41,6 +41,59 @@ def is_valid_well(well):
             return False
     return True
 
+def listify_wells(wells):
+    """
+    Allows for multiple well groups or lists to be provided, returns standardized output format
+
+    Parameters
+    ----------
+    wells: Well or WellGroup or list(Well) or list(WellGroup) or list(list(well))
+
+    Returns
+    -------
+    Wraps provided wells to return either a list(WellGroup) or a list(list(well))
+    """
+    from autoprotocol.container import WellGroup
+    if isinstance(wells, list):
+        # Potentially list(well), list(WellGroup), or list(list(well))
+        if all(isinstance(well, (list, WellGroup)) for well in wells):
+            return wells # Wells is already a list(list(wells)) already in expected output
+        else:
+            return [wells]
+    elif isinstance(wells, WellGroup):
+        return [wells]
+    else:
+        # wells is just a single object, needs double wrapping for standardization
+        return [[wells]]
+
+def parse_pick_group(autopick_group):
+    """
+    Extracts required fields from autopick group parameter element if available.
+
+    Parameters
+    ----------
+    autopick_group: dict
+        "source": Well, WellGroup, or list(Well)
+        "destination": Well, WellGroup, or list(Well)
+        "min_abort": int, defaults to 0
+
+    Returns
+    -------
+    source, destination, min_abort
+    """
+    SOURCE_KEY = "source"
+    DEST_KEY = "destination"
+    ABORT_KEY = "min_abort"
+
+    if autopick_group is None:
+        raise TypeError("autopick_group is None/null/Nil")
+
+    for key in [SOURCE_KEY, DEST_KEY]:
+        if key not in autopick_group:
+            raise TypeError(f"Autopick group missing required key: {key}")
+    
+    return autopick_group.get(SOURCE_KEY), autopick_group.get(DEST_KEY), autopick_group.get(ABORT_KEY, 0)
+
 
 def parse_unit(unit, accepted_unit=None):
     """

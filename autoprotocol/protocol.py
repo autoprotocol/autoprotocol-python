@@ -21,7 +21,7 @@ from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .unit import Unit, UnitError
-from .util import _check_container_type_with_shape, _validate_as_instance
+from .util import _check_container_type_with_shape, _validate_as_instance, parse_pick_group
 
 
 class Ref(object):
@@ -4963,7 +4963,7 @@ class Protocol(object):
         """
         return self._append_and_return(Oligosynthesize(oligos))
 
-    def autopick(self, sources, dests, min_abort=0, criteria=None, dataref="autopick"):
+    def autopick(self, pick_groups, min_abort=0, criteria=None, dataref="autopick"):
         """
 
         Pick colonies from the agar-containing location(s) specified in
@@ -4979,15 +4979,30 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : Well or WellGroup or list(Well)
-            Reference wells containing agar and colonies to pick
-        dests : Well or WellGroup or list(Well)
-            List of destination(s) for picked colonies
+        pick_groups: list(dict)
+            list of groups containing source(s), destination(s) and a min_abort for each group
+            source : List of: (Well or WellGroup or list(Well))
+                Grouped reference wells containing agar and colonies to pick
+            destination : List of: (Well or WellGroup or list(Well))
+                Grouped list of destination(s) for picked colonies, must have same # of groupings as source_groups
+            min_abort : int, optional
+                Total number of colonies that must be detected in the aggregate
+                list of `from` wells to avoid aborting the entire run.
+                Default of 0.
+            Example:
+                [
+                    {
+                        "source": well1,
+                        "destination": [well2, well3]
+                    },
+                    {
+                        "source": [well5, well6, well 7],
+                        "destination": well_group2
+                        "min_abort": 2
+                    }
+                ]
         criteria : dict
             Dictionary of autopicking criteria.
-        min_abort : int, optional
-            Total number of colonies that must be detected in the aggregate
-            list of `from` wells to avoid aborting the entire run.
         dataref: str
             Name of dataset to save the picked colonies to
 
@@ -4999,12 +5014,30 @@ class Protocol(object):
 
         Raises
         ------
+        AssertionError
+            Number of Source Groupings does not match number of Destination Groupings
         TypeError
             Invalid input types for sources and dests
         ValueError
             Source wells are not all from the same container
 
         """
+        groups = []
+        for group in pick_groups:
+            sources, dests, min_abort = parse_pick_group(group)
+            groups.append(self.__process_pick_group(sources, dests, min_abort))
+
+        for group in groups:
+            for s in group["from"]:
+                self._remove_cover(s.container, "autopick")
+            for d in group["to"]:
+                self._remove_cover(d.container, "autopick")
+
+        criteria = {} if criteria is None else criteria
+
+        return self._append_and_return(Autopick(group, criteria, dataref))
+
+    def __process_pick_group(self, sources, dests, min_abort):
         # Check valid well inputs
         if not is_valid_well(sources):
             raise TypeError(
@@ -5026,17 +5059,7 @@ class Protocol(object):
         dests = WellGroup(dests)
         pick["to"] = dests
         pick["min_abort"] = min_abort
-
-        group = [pick]
-
-        for s in pick["from"]:
-            self._remove_cover(s.container, "autopick")
-        for d in pick["to"]:
-            self._remove_cover(d.container, "autopick")
-
-        criteria = {} if criteria is None else criteria
-
-        return self._append_and_return(Autopick(group, criteria, dataref))
+        return pick
 
     def mag_dry(self, head, container, duration, new_tip=False, new_instruction=False):
         """

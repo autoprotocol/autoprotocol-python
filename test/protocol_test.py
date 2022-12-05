@@ -1768,7 +1768,6 @@ class TestAutopick(object):
         source1 = [agar_plate.well(0), agar_plate.well(1)]
         dest1 = [dest_plate.well(1)] * 4
         pick_group = AutopickGroupClass(source1, dest1)
-        pick_group = ([agar_plate.well(0), agar_plate.well(1)], [dest_plate.well(1)] * 4, 0)
 
         p.autopick2([pick_group], dataref="1")
 

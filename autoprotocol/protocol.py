@@ -5085,7 +5085,7 @@ class Protocol(object):
         """
         groups = []
         for group in pick_groups:
-            sources, dests, min_abort = pick_groups
+            sources, dests, min_abort = group
             groups.append(self.__process_pick_group(sources, dests, min_abort))
 
         # Current device requirement is that all autopick group sources are from the same container

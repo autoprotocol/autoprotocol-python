@@ -1696,84 +1696,11 @@ class TestAutopick(object):
         dest1 = [dest_plate.well(1)] * 4
         pick_group1 = AutopickGroup(source1, dest1)
 
-        p.autopick([pick_group], dataref="1")
+        p.autopick([pick_group1], dataref="1")
 
         assert len(p.instructions) == 1
         assert len(p.instructions[0].groups) == 1
         assert len(p.instructions[0].groups[0]["from"]) == 2
-
-class TestAutopick(object):
-    def test_autopick1(self):
-        """
-        Test example for Tuple based signature.
-        Benifits:
-            - Strongly typed
-            - Doesn't require consumer to hunt down and import any specific dataclass
-        Cons:
-            - While it will be clarified in documentation, tuples somewhat suffer from
-            magical positioning wherein you have to know through documentation or other
-            what the first, second, third, etc positions of the tuple correspond with. This
-            is quite common of a pattern however so not anything new or specific to this.
-            - While we can potentially write it to have an optional 3rd value for min_abort,
-            the signature clarity would suffer. As a result this format changes from previous
-            signature which allowed for optional passing of min_abort setting and now will
-            require those wishing the previous default value of 0 to explicitly provide it.
-            Explicit passing isn't a huge negative as the code becomes more obvious on face
-            value, however is a slight quality of life hit.
-        """
-        p = Protocol()
-        dest_plate = p.ref("dest", None, "96-flat", discard=True)
-
-        p.refs["agar_plate"] = Ref(
-            "agar_plate",
-            {"reserve": "ki17reefwqq3sq", "discard": True},
-            Container(None, p.container_type("6-flat"), name="agar_plate"),
-        )
-
-        agar_plate = Container(None, p.container_type("6-flat"), name="agar_plate")
-        source1 = [agar_plate.well(0), agar_plate.well(1)]
-        dest1 = [dest_plate.well(1)] * 4
-        pick_group = (source1, dest1, 0)
-
-        p.autopick1([pick_group], dataref="1")
-
-        assert len(p.instructions) == 1
-        assert len(p.instructions[0].groups) == 1
-        assert len(p.instructions[0].groups[0]["from"]) == 2
-
-    def test_autopick2(self):
-        """
-        Test example of Dataclass based signature.
-        Benefits:
-        - Strongly typed
-        - No magical positioning, each component of this structure is labeled such as "source",
-        "destination", "min_abort".
-        Cons:
-        - Requires the user find where we have this dataclass defined in our library, import it
-        and use it just to pass the collection of values back to us. For more complex objects
-        this would be expected but for 2-3 values it's bordering on being heavy handed.
-        """
-        from autoprotocol.types.protocol import AutopickGroupClass
-        p = Protocol()
-        dest_plate = p.ref("dest", None, "96-flat", discard=True)
-
-        p.refs["agar_plate"] = Ref(
-            "agar_plate",
-            {"reserve": "ki17reefwqq3sq", "discard": True},
-            Container(None, p.container_type("6-flat"), name="agar_plate"),
-        )
-
-        agar_plate = Container(None, p.container_type("6-flat"), name="agar_plate")
-        source1 = [agar_plate.well(0), agar_plate.well(1)]
-        dest1 = [dest_plate.well(1)] * 4
-        pick_group = AutopickGroupClass(source1, dest1)
-
-        p.autopick2([pick_group], dataref="1")
-
-        assert len(p.instructions) == 1
-        assert len(p.instructions[0].groups) == 1
-        assert len(p.instructions[0].groups[0]["from"]) == 2
-
 
 class TestMeasureConcentration(object):
     def test_measure_concentration_single_well(self, dummy_protocol):

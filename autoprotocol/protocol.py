@@ -12,7 +12,7 @@ import warnings
 
 from typing import Dict, List, Tuple, Type, Union
 
-from autoprotocol.types.protocol import AutopickGroupClass, AutopickGroupTuple
+from autoprotocol.types.protocol import AutopickGroup
 
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
@@ -5034,79 +5034,9 @@ class Protocol(object):
         """
         return self._append_and_return(Oligosynthesize(oligos))
 
-    def autopick1(
+    def autopick(
         self,
-        pick_groups: list[AutopickGroupTuple],
-        criteria: Optional[dict] = None,
-        dataref: str = "autopick",
-    ):
-        """
-
-        Pick colonies from the agar-containing location(s) specified in
-        `sources` to the location(s) specified in `dests` in highest to lowest
-        rank order until there are no more colonies available.  If fewer than
-        min_abort pickable colonies have been identified from the location(s)
-        specified in `sources`, the run will stop and no further instructions
-        will be executed.
-
-        Example Usage:
-
-        Autoprotocol Output:
-
-        Parameters
-        ----------
-        pick_groups: List of tuple[sources, destinations, min_abort]
-            sources : Well or WellGroup or list(Well) or list(WellGroup) or list(list(Well))
-                Reference wells containing agar and colonies to pick
-            destinations : Well or WellGroup or list(Well) or list(WellGroup) or list(list(Well))
-                List of destination(s) for picked colonies
-            min_abort : int
-                Total number of colonies that must be detected in the aggregate
-                list of `from` wells to avoid aborting the entire run. Value of 0
-                prevents aborting regardless of amount detected.
-        criteria : dict
-            Dictionary of autopicking criteria.
-        dataref: str
-            Name of dataset to save the picked colonies to
-
-        Returns
-        -------
-        Autopick
-            Returns the :py:class:`autoprotocol.instruction.Autopick`
-            instruction created from the specified parameters
-
-        Raises
-        ------
-        TypeError
-            Invalid input types for sources and dests
-        ValueError
-            Source wells are not all from the same container
-
-        """
-        groups = []
-        for group in pick_groups:
-            sources, dests, min_abort = group
-            groups.append(self.__process_pick_group(sources, dests, min_abort))
-
-        # Current device requirement is that all autopick group sources are from the same container
-        if len(set([s.container for pick in groups for s in pick["from"]])) > 1:
-            raise ValueError(
-                "All source wells for autopick must exist " "on the same container"
-            )
-
-        for group in groups:
-            for s in group["from"]:
-                self._remove_cover(s.container, "autopick")
-            for d in group["to"]:
-                self._remove_cover(d.container, "autopick")
-
-        criteria = {} if criteria is None else criteria
-
-        return self._append_and_return(Autopick(groups, criteria, dataref))
-
-    def autopick2(
-        self,
-        pick_groups: list[AutopickGroupClass],
+        pick_groups: list[AutopickGroup],
         criteria: Optional[dict] = None,
         dataref: str = "autopick",
     ):

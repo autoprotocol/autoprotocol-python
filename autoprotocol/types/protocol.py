@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import Union
+from typing import List, Union
 
 from autoprotocol.container import Well, WellGroup
 
-WellParam = Union[Well, list[Well], WellGroup]
+WellParam = Union[Well, List[Well], WellGroup]
 
 @dataclass
 class AutopickGroup:

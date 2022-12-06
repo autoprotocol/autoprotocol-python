@@ -10,7 +10,7 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from typing import Dict, List, Tuple, Type, Union
+from typing import Dict, List, Tuple, Union
 
 from autoprotocol.types.protocol import AutopickGroup
 
@@ -5036,7 +5036,7 @@ class Protocol(object):
 
     def autopick(
         self,
-        pick_groups: list[AutopickGroup],
+        pick_groups: List[AutopickGroup],
         criteria: Optional[dict] = None,
         dataref: str = "autopick",
     ):

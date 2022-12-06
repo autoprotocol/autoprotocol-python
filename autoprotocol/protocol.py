@@ -10,6 +10,7 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
+from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
 from .compound import Compound
@@ -23,7 +24,6 @@ from .liquid_handle import LiquidClass, Mix, Transfer
 from .types.protocol import AutopickGroup
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
-
 
 class Ref(object):
     """

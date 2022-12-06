@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Union
 
-from autoprotocol.container import Well, WellGroup
+from ..container import Well, WellGroup
 
 WellParam = Union[Well, List[Well], WellGroup]
 

@@ -7,9 +7,9 @@ Container-type object and associated functions
 
 """
 import re
-from typing import List, Union
 
 from collections import namedtuple
+from typing import List, Union
 
 from .unit import Unit
 

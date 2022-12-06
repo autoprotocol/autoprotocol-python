@@ -27,6 +27,7 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import Protocol, Ref
+from autoprotocol.types.protocol import AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -1681,7 +1682,6 @@ class TestMagneticTransfer(object):
 
 class TestAutopick(object):
     def test_autopick(self):
-        from autoprotocol.types.protocol import AutopickGroup
         p = Protocol()
         dest_plate = p.ref("dest", None, "96-flat", discard=True)
 

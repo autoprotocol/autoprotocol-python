@@ -12,8 +12,6 @@ import warnings
 
 from typing import Dict, List, Tuple, Union
 
-from autoprotocol.types.protocol import AutopickGroup
-
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
@@ -22,6 +20,7 @@ from .informatics import Informatics
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
+from .types.protocol import AutopickGroup
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
 

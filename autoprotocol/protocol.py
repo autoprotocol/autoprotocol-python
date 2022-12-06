@@ -10,7 +10,6 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from dataclasses import dataclass
 from typing import Dict, List, Tuple, Union
 
 from .compound import Compound

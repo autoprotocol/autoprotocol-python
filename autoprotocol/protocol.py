@@ -5083,9 +5083,7 @@ class Protocol(object):
         groups = []
         for group in pick_groups:
             groups.append(
-                self.__process_pick_group(
-                    group.source, group.destination, group.min_abort
-                )
+                self.__process_pick_group(group)
             )
 
         # Current device requirement is that all autopick group sources are from the same container
@@ -5104,24 +5102,27 @@ class Protocol(object):
 
         return self._append_and_return(Autopick(groups, criteria, dataref))
 
-    def __process_pick_group(self, sources, dests, min_abort):
+    def __process_pick_group(self, pick_group: AutopickGroup) -> dict:
+        if not isinstance(pick_group, AutopickGroup):
+            raise TypeError(
+                "Autopick groups must use provided AutopickGroup dataclass."
+            )
+
         # Check valid well inputs
-        if not is_valid_well(sources):
+        if not is_valid_well(pick_group.source):
             raise TypeError(
                 "Source must be of type Well, list of Wells, or " "WellGroup."
             )
-        if not is_valid_well(dests):
+        if not is_valid_well(pick_group.destination):
             raise TypeError(
                 "Destinations (dests) must be of type Well, "
                 "list of Wells, or WellGroup."
             )
         pick = {}
 
-        sources = WellGroup(sources)
-        pick["from"] = sources
-        dests = WellGroup(dests)
-        pick["to"] = dests
-        pick["min_abort"] = min_abort
+        pick["from"] = WellGroup(pick_group.source)
+        pick["to"] = WellGroup(pick_group.destination)
+        pick["min_abort"] = pick_group.min_abort
         return pick
 
     def mag_dry(

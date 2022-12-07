@@ -27,6 +27,7 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import Protocol, Ref
+from autoprotocol.types.protocol import AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -1691,13 +1692,11 @@ class TestAutopick(object):
         )
 
         agar_plate = Container(None, p.container_type("6-flat"), name="agar_plate")
+        source1 = [agar_plate.well(0), agar_plate.well(1)]
+        dest1 = [dest_plate.well(1)] * 4
+        pick_group1 = AutopickGroup(source1, dest1)
 
-        p.autopick(
-            [agar_plate.well(0), agar_plate.well(1)],
-            [dest_plate.well(1)] * 4,
-            min_abort=0,
-            dataref="1",
-        )
+        p.autopick([pick_group1], dataref="1")
 
         assert len(p.instructions) == 1
         assert len(p.instructions[0].groups) == 1

@@ -869,7 +869,7 @@ class Container(EntityPropertiesMixin):
 
         self._wells = [Well(self, idx) for idx in range(self.container_type.well_count)]
 
-    def well(self, i):
+    def well(self, i) -> Well:
         """
         Return a Well object representing the well at the index specified of
         this Container.

@@ -9,6 +9,7 @@ Container-type object and associated functions
 import re
 
 from collections import namedtuple
+from typing import List, Union
 
 from .unit import Unit
 
@@ -226,7 +227,7 @@ class ContainerType(
                     "'A1' format or be an integer."
                 )
 
-    def robotize(self, well_ref):
+    def robotize(self, well_ref) -> Union[int, List[int]]:
         """
         Return a robot-friendly well reference from a number of well reference
         formats.

@@ -10,7 +10,7 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from typing import Dict, List, Tuple, Type, Union
+from typing import Dict, List, Tuple, Union
 
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
@@ -20,6 +20,7 @@ from .informatics import Informatics
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
+from .types.protocol import AutopickGroup
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
 
@@ -675,9 +676,7 @@ class Protocol(object):
             raise ValueError("Instruction index less than 0")
         return instruction_index
 
-    def _append_and_return(
-        self, instructions: Union[Type[Instruction], List[Type[Instruction]]]
-    ):
+    def _append_and_return(self, instructions: Union[Instruction, List[Instruction]]):
         """
         Append instruction(s) to the Protocol list and returns the
         Instruction(s).
@@ -719,7 +718,7 @@ class Protocol(object):
             Instruction object(s) to be appended and returned
 
         """
-        if type(instructions) is list:
+        if isinstance(instructions, list):
             self.instructions.extend(instructions)
         else:
             self.instructions.append(instructions)
@@ -5034,9 +5033,7 @@ class Protocol(object):
 
     def autopick(
         self,
-        sources: Union[Well, WellGroup, List[Well]],
-        dests: Union[Well, WellGroup, List[Well]],
-        min_abort: int = 0,
+        pick_groups: List[AutopickGroup],
         criteria: Optional[dict] = None,
         dataref: str = "autopick",
     ):
@@ -5055,15 +5052,17 @@ class Protocol(object):
 
         Parameters
         ----------
-        sources : Well or WellGroup or list(Well)
-            Reference wells containing agar and colonies to pick
-        dests : Well or WellGroup or list(Well)
-            List of destination(s) for picked colonies
+        pick_groups: List of AutopickGroups
+            sources : Well or WellGroup or list(Well) or list(WellGroup) or list(list(Well))
+                Reference wells containing agar and colonies to pick
+            destinations : Well or WellGroup or list(Well) or list(WellGroup) or list(list(Well))
+                List of destination(s) for picked colonies
+            min_abort : int
+                Total number of colonies that must be detected in the aggregate
+                list of `from` wells to avoid aborting the entire run. Value of 0
+                prevents aborting regardless of amount detected.
         criteria : dict
             Dictionary of autopicking criteria.
-        min_abort : int, optional
-            Total number of colonies that must be detected in the aggregate
-            list of `from` wells to avoid aborting the entire run.
         dataref: str
             Name of dataset to save the picked colonies to
 
@@ -5081,38 +5080,48 @@ class Protocol(object):
             Source wells are not all from the same container
 
         """
+        groups = []
+        for group in pick_groups:
+            groups.append(self.__process_pick_group(group))
+
+        # Current device requirement is that all autopick group sources are from the same container
+        if len(set([s.container for pick in groups for s in pick["from"]])) > 1:
+            raise ValueError(
+                "All source wells for autopick must exist " "on the same container"
+            )
+
+        for group in groups:
+            for s in group["from"]:
+                self._remove_cover(s.container, "autopick")
+            for d in group["to"]:
+                self._remove_cover(d.container, "autopick")
+
+        criteria = {} if criteria is None else criteria
+
+        return self._append_and_return(Autopick(groups, criteria, dataref))
+
+    def __process_pick_group(self, pick_group: AutopickGroup) -> dict:
+        if not isinstance(pick_group, AutopickGroup):
+            raise TypeError(
+                "Autopick groups must use provided AutopickGroup dataclass."
+            )
+
         # Check valid well inputs
-        if not is_valid_well(sources):
+        if not is_valid_well(pick_group.source):
             raise TypeError(
                 "Source must be of type Well, list of Wells, or " "WellGroup."
             )
-        if not is_valid_well(dests):
+        if not is_valid_well(pick_group.destination):
             raise TypeError(
                 "Destinations (dests) must be of type Well, "
                 "list of Wells, or WellGroup."
             )
         pick = {}
 
-        sources = WellGroup(sources)
-        pick["from"] = sources
-        if len(set([s.container for s in pick["from"]])) > 1:
-            raise ValueError(
-                "All source wells for autopick must exist " "on the same container"
-            )
-        dests = WellGroup(dests)
-        pick["to"] = dests
-        pick["min_abort"] = min_abort
-
-        group = [pick]
-
-        for s in pick["from"]:
-            self._remove_cover(s.container, "autopick")
-        for d in pick["to"]:
-            self._remove_cover(d.container, "autopick")
-
-        criteria = {} if criteria is None else criteria
-
-        return self._append_and_return(Autopick(group, criteria, dataref))
+        pick["from"] = WellGroup(pick_group.source)
+        pick["to"] = WellGroup(pick_group.destination)
+        pick["min_abort"] = pick_group.min_abort
+        return pick
 
     def mag_dry(
         self,

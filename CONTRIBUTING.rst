@@ -65,6 +65,14 @@ Documentation:
    cd docs  # Assuming you're in the root cloned directory
    sphinx-build -W -b html -d tmp/doctrees . tmp/html
 
+Adding New Packages:
+    Because of how the tox setup is configured, if you're attempting
+    to add a new package into the directory structure of autoprotocol,
+    you'll need to add the package name into the root setup.py file's
+    setup package list. Without adding the new package to this list
+    you'll get failures when attempting to run the doc generator or
+    linting steps.
+
 Package Structure
 -----------------
 

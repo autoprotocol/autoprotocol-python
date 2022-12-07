@@ -70,7 +70,7 @@ setup(
     tests_require=test_deps,
     extras_require={"docs": doc_deps, "test": test_deps},
     cmdclass={"pytest": PyTest},
-    packages=["autoprotocol", "autoprotocol.liquid_handle"],
+    packages=["autoprotocol", "autoprotocol.liquid_handle", "autoprotocol.types"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",

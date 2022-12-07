@@ -1702,6 +1702,7 @@ class TestAutopick(object):
         assert len(p.instructions[0].groups) == 1
         assert len(p.instructions[0].groups[0]["from"]) == 2
 
+
 class TestMeasureConcentration(object):
     def test_measure_concentration_single_well(self, dummy_protocol):
         p = dummy_protocol

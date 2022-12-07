@@ -24,6 +24,7 @@ from .types.protocol import AutopickGroup
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
 
+
 class Ref(object):
     """
     Link a ref name (string) to a Container instance.
@@ -675,9 +676,7 @@ class Protocol(object):
             raise ValueError("Instruction index less than 0")
         return instruction_index
 
-    def _append_and_return(
-        self, instructions: Union[Instruction, List[Instruction]]
-    ):
+    def _append_and_return(self, instructions: Union[Instruction, List[Instruction]]):
         """
         Append instruction(s) to the Protocol list and returns the
         Instruction(s).
@@ -5083,7 +5082,11 @@ class Protocol(object):
         """
         groups = []
         for group in pick_groups:
-            groups.append(self.__process_pick_group(group.source, group.destination, group.min_abort))
+            groups.append(
+                self.__process_pick_group(
+                    group.source, group.destination, group.min_abort
+                )
+            )
 
         # Current device requirement is that all autopick group sources are from the same container
         if len(set([s.container for pick in groups for s in pick["from"]])) > 1:

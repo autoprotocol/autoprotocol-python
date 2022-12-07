@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+* :feature:`365` Update autopick method signature to allow for multiple pick groups per instruction
 
 * :release:`8.0.0 <2022-11-16>`
 * :feature:`358` Dataclass enhancements to support objects schema-ready and de/serialization

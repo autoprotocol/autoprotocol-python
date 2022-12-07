@@ -5082,9 +5082,7 @@ class Protocol(object):
         """
         groups = []
         for group in pick_groups:
-            groups.append(
-                self.__process_pick_group(group)
-            )
+            groups.append(self.__process_pick_group(group))
 
         # Current device requirement is that all autopick group sources are from the same container
         if len(set([s.container for pick in groups for s in pick["from"]])) > 1:

@@ -28,6 +28,7 @@ from collections import defaultdict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
 from functools import reduce
 from numbers import Number
+from typing import List, Optional, Union
 
 from .constants import SBS_FORMAT_SHAPES
 from .container import Container, Well, WellGroup
@@ -526,8 +527,12 @@ class DispenseBuilders(InstructionBuilders):
         self.SHAKE_PATHS = ["landscape_linear"]
 
     @staticmethod
-    # pragma pylint: disable=unused-argument
-    def nozzle_position(position_x=None, position_y=None, position_z=None):
+    # pragma pylint: disable=unused-argument, missing-param-doc
+    def nozzle_position(
+        position_x: Optional[Unit] = None,
+        position_y: Optional[Unit] = None,
+        position_z: Optional[Unit] = None,
+    ):
         """
         Generates a validated nozzle_position parameter.
 
@@ -552,9 +557,9 @@ class DispenseBuilders(InstructionBuilders):
         return position_dict
 
     # pragma pylint: enable=unused-argument
-
+    # pragma pylint: disable=missing-param-doc
     @staticmethod
-    def column(column, volume):
+    def column(column: int, volume: Union[str, Unit]):
         """
         Generates a validated column parameter.
 
@@ -571,7 +576,8 @@ class DispenseBuilders(InstructionBuilders):
         """
         return {"column": int(column), "volume": parse_unit(volume, "uL")}
 
-    def columns(self, columns):
+    # pragma pylint: disable=missing-param-doc
+    def columns(self, columns: List[dict]):
         """
         Generates a validated columns parameter.
 
@@ -604,7 +610,14 @@ class DispenseBuilders(InstructionBuilders):
 
         return column_list
 
-    def shake_after(self, duration, frequency=None, path=None, amplitude=None):
+    # pragma pylint: disable=missing-param-doc
+    def shake_after(
+        self,
+        duration: Optional[Union[Unit, str]],
+        frequency: Optional[Union[Unit, str]] = None,
+        path: Optional[str] = None,
+        amplitude: Optional[Union[Unit, str]] = None,
+    ):
         """
         Generates a validated shake_after parameter.
 
@@ -680,8 +693,13 @@ class SpectrophotometryBuilders(InstructionBuilders):
             "closest_distance_without_saturation",
         ]
 
+    # pragma pylint: disable=missing-param-doc
     @staticmethod
-    def wavelength_selection(shortpass=None, longpass=None, ideal=None):
+    def wavelength_selection(
+        shortpass: Optional[Union[Unit, str]] = None,
+        longpass: Optional[Union[Unit, str]] = None,
+        ideal: Optional[Union[Unit, str]] = None,
+    ):
         """
         Generates a representation of a wavelength selection by either
         filters (using shortpass/longpass) or monochromators (using ideal)

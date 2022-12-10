@@ -1,8 +1,20 @@
 =========
 Changelog
 =========
+* :release:`8.0.1 <2022-12-07>`
+* :feature:`365` Update autopick method signature to allow for multiple pick groups per instruction
 
-* :feature:`349` Added new container type: `384-spl-uv-max`
+* :release:`8.0.0 <2022-11-16>`
+* :feature:`358` Dataclass enhancements to support objects schema-ready and de/serialization
+* :support:`360` typing for Protocol.instruction() methods
+* :feature:`359` Depriciate Python 3.6
+
+* :release:`7.15.1 <2022-10-27>`
+* :feature:`350` update: set pump_override_volume to default to None
+
+* :release:`7.15.0 <2022-10-27>`
+* :feature:`354` Added new container type: `96-spl-flat-uv-ps`
+* :feature:`353` Added new container type: `384-spl-flat-uv-ps`
 
 * :release:`7.14.4 <2022-09-01>`
 * :feature:`347` update: container and well ctx_properties

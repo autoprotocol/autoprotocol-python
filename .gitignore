@@ -39,3 +39,6 @@ doctrees/
 docs/make.bat
 .pytest_cache/
 .idea/
+
+# MacOS
+.DS_Store

@@ -212,7 +212,7 @@ class Dispense(LiquidHandleMethod):
     def get_predispense_volume(self) -> Unit:
         return self.predispense
 
-    # pylint: disable=unused-argument, redundant-returns-doc
+    # pylint: disable=unused-argument, redundant-returns-doc, missing-param-doc
     @staticmethod
     def default_volume_resolution(volume: Unit) -> None:
         """Default volume_resolution parameters
@@ -234,7 +234,7 @@ class Dispense(LiquidHandleMethod):
         """
         return None
 
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, missing-param-doc
     @staticmethod
     def default_prime(volume: Optional[Unit] = Unit(600, "uL")) -> Unit:
         """Default priming volume
@@ -250,7 +250,7 @@ class Dispense(LiquidHandleMethod):
         """
         return parse_unit(volume, "ul")
 
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, missing-param-doc
     @staticmethod
     def default_predispense(volume: Optional[Unit] = Unit(10, "uL")) -> Unit:
         """Default predispense volume

@@ -67,18 +67,19 @@ napoleon_use_rtype = True
 master_doc = "index"
 
 # General information about the project.
-project = u"Autoprotocol"
+project = "Autoprotocol"
 year = datetime.now().year
 # pylint: disable=redefined-builtin
 copyright = (
-    u"%d, The Autoprotocol Development Team, see AUTHORS for more details." % year
+    "%d, The Autoprotocol Development Team, see AUTHORS for more details." % year
 )
 # pylint: enable=redefined-builtin
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-exec(open("../autoprotocol/version.py").read())  # pylint: disable=exec-used
+with open("../autoprotocol/version.py", encoding="utf-8") as file:
+    __version__ = file.read()
 # The short X.Y version.
 version = __version__  # pylint: disable=undefined-variable
 # The full version, including alpha/beta/rc tags.
@@ -226,8 +227,8 @@ latex_documents = [
     (
         "index",
         "Autoprotocol.tex",
-        u"Autoprotocol Documentation",
-        u"Autoprotocol Development Team",
+        "Autoprotocol Documentation",
+        "Autoprotocol Development Team",
         "manual",
     )
 ]
@@ -261,8 +262,8 @@ man_pages = [
     (
         "index",
         "autoprotocol",
-        u"Autoprotocol Documentation",
-        [u"Autoprotocol Development Team"],
+        "Autoprotocol Documentation",
+        ["Autoprotocol Development Team"],
         1,
     )
 ]
@@ -280,8 +281,8 @@ texinfo_documents = [
     (
         "index",
         "Autoprotocol",
-        u"Autoprotocol Documentation",
-        u"Autoprotocol Development Team",
+        "Autoprotocol Documentation",
+        "Autoprotocol Development Team",
         "Autoprotocol",
         "An open standard for encoding biological protocols.",
         "Miscellaneous",

@@ -11,6 +11,7 @@ import warnings
 
 from typing import Dict, List, Tuple
 
+from . import UserError
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
@@ -129,13 +130,15 @@ class OligosynthesizeOligoPurification(enum.Enum):
 
 @dataclass
 class OligosynthesizeOligo:
-    destination: Union[str, Well]
+    destination: Well
     sequence: str
-    scale: OligosynthesizeOligoScale
+    scale: str
     purification: OligosynthesizeOligoPurification = "standard"
 
     def __post_init__(self):
-        self.scale = self.scale[1:]
+        allowable_scales = ["25nm", "100nm", "250nm", "1um"]
+        if self.scale not in allowable_scales:
+            raise UserError(f"Scale entered {self.scale} not in {allowable_scales}")
 
 @dataclass
 class IlluminaSeqLane:

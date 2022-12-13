@@ -23,11 +23,8 @@ supports.
 from dataclasses import dataclass
 from typing import Optional
 
-# from . import LiquidClass
-from .. import Unit
 from ..instruction import LiquidHandle
 
-# from ..unit import Unit
 from ..util import parse_unit
 from .tip_type import TipType
 

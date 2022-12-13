@@ -8,10 +8,10 @@ Module containing the main `Protocol` object and associated functions
 """
 import json
 import warnings
+from dataclasses import field
 
 from typing import Dict, List, Tuple
 
-from . import UserError
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
@@ -133,12 +133,12 @@ class OligosynthesizeOligo:
     destination: Well
     sequence: str
     scale: str
-    purification: OligosynthesizeOligoPurification = "standard"
+    purification: OligosynthesizeOligoPurification = OligosynthesizeOligoPurification.standard
 
     def __post_init__(self):
         allowable_scales = ["25nm", "100nm", "250nm", "1um"]
         if self.scale not in allowable_scales:
-            raise UserError(f"Scale entered {self.scale} not in {allowable_scales}")
+            raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
 
 @dataclass
 class IlluminaSeqLane:
@@ -168,12 +168,14 @@ class ThermocycleTemperatureGradient:
     gradient: TemperatureGradient
     read: bool = False
 
+@dataclass
 class PlateReaderIncubateBeforeShaking:
     amplitude: Union[str, Unit]
     orbital: Union[str, Unit]
 
+@dataclass
 class PlateReaderIncubateBefore:
-    duration: Union[str, Unit]
+    duration: Unit
     shake_amplitude: Optional[Union[str, Unit]]
     shake_orbital: Optional[bool]
     shaking: Optional[dict]
@@ -222,17 +224,17 @@ class FlowAnalyzeChannel:
     height: bool
     weight: bool
 
-
+@dataclass
 class FlowAnalyzeNegControls:
     well: Well
     volume: Union[str, Unit]
-    captured_events: Optional[int] = None
     channel: str
+    captured_events: Optional[int] = None
 
 @dataclass
 class FlowAnalyzeSample:
     well: Well
-    volume: Union[str, Union]
+    volume: Union[str, Unit]
     captured_events: int
 
 @dataclass
@@ -332,10 +334,10 @@ class ImageExposure:
 
 @dataclass
 class Protocol:
-    refs: Optional[Dict[str, Ref]] = None,
-    instructions: List[Instruction] = [],
-    propagate_properties: bool = False,
-    time_constraints: List[TimeConstraint] = [],
+    refs: Optional[Dict[str, Ref]] = None
+    instructions: List[Instruction] = field(default_factory=list)
+    propagate_properties: bool = False
+    time_constraints: List[TimeConstraint] = field(default_factory=list)
     """
     A Protocol is a sequence of instructions to be executed, and a set of
     containers on which those instructions act.
@@ -3634,7 +3636,7 @@ class Protocol:
         gain: Optional[float] = None,
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
         detection_mode: Optional[str] = None,
-        position_z: Optional[PlateReaderPositionZCalculated, PlateReaderPositionZManual] = None,
+        position_z: Optional[Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]] = None,
         settle_time: Optional[Unit] = None,
         lag_time: Optional[Unit] = None,
         integration_time: Optional[Unit] = None,

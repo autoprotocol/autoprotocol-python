@@ -10,7 +10,7 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
@@ -139,7 +139,7 @@ class Protocol(object):
         refs: Optional[List[Ref]] = None,
         instructions: List[Instruction] = None,
         propagate_properties: bool = False,
-        time_constraints: List[dict] = None,
+        time_constraints: List[Dict[Any, Any]] = None,
     ):
         super(Protocol, self).__init__()
         self.refs = refs or {}
@@ -192,8 +192,8 @@ class Protocol(object):
         storage: Optional[str] = None,
         discard: Optional[bool] = None,
         cover: Optional[str] = None,
-        properties: Optional[dict] = None,
-        ctx_properties: Optional[dict] = None,
+        properties: Optional[Dict[str, str]] = None,
+        ctx_properties: Optional[Dict[str, str]] = None,
     ):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
@@ -325,8 +325,8 @@ class Protocol(object):
 
     def add_time_constraint(
         self,
-        from_dict: dict,
-        to_dict: dict,
+        from_dict: Dict[Any, Any],
+        to_dict: Dict[Any, Any],
         less_than: Optional[Union[str, Unit]] = None,
         more_than: Optional[Union[str, Unit]] = None,
         mirror: bool = False,
@@ -1695,7 +1695,7 @@ class Protocol(object):
     def illuminaseq(
         self,
         flowcell: str,
-        lanes: List[dict],
+        lanes: List[Dict[Any, Any]],
         sequencer: str,
         mode: str,
         index: str,
@@ -2055,8 +2055,8 @@ class Protocol(object):
         flowrate: Optional[Union[str, Unit]] = None,
         nozzle_position: Optional[Union[str, Unit]] = None,
         pre_dispense: Optional[Union[str, Unit]] = None,
-        shape: Optional[dict] = None,
-        shake_after: Optional[dict] = None,
+        shape: Optional[Dict[Any, Any]] = None,
+        shake_after: Optional[Dict[Any, Any]] = None,
     ):
         """
         Dispense specified reagent to specified columns.
@@ -2334,8 +2334,8 @@ class Protocol(object):
         flowrate: Optional[Union[str, Unit]] = None,
         nozzle_position: Optional[Union[str, Unit]] = None,
         pre_dispense: Optional[Union[str, Unit]] = None,
-        shape: Optional[dict] = None,
-        shake_after: Optional[dict] = None,
+        shape: Optional[Dict[Any, Any]] = None,
+        shake_after: Optional[Dict[Any, Any]] = None,
     ):
         """
         Dispense the specified amount of the specified reagent to every well
@@ -2610,7 +2610,7 @@ class Protocol(object):
         speed: Union[str, Unit],
         duration: Union[str, Unit],
         temperature: Optional[Union[Unit, str]] = None,
-        mode_params: Optional[dict] = None,
+        mode_params: Optional[Dict[Any, Any]] = None,
     ):
         """
         Agitate a container in a specific condition for a given duration. If
@@ -2749,7 +2749,7 @@ class Protocol(object):
     def thermocycle(
         self,
         ref: Container,
-        groups: List[dict],
+        groups: List[Dict[Any, Any]],
         volume: Optional[Union[str, Unit]] = "10:microliter",
         dataref: Optional[str] = None,
         dyes: Optional[Dict[str, str]] = None,
@@ -3106,7 +3106,7 @@ class Protocol(object):
         co2: float = 0,
         uncovered: bool = False,
         target_temperature: Optional[Union[Unit, str]] = None,
-        shaking_params: Optional[dict] = None,
+        shaking_params: Optional[Dict[Any, Any]] = None,
     ):
         """
         Move plate to designated thermoisolater or ambient area for incubation
@@ -3212,7 +3212,7 @@ class Protocol(object):
         wavelength: Union[str, Unit],
         dataref: str,
         flashes: int = 25,
-        incubate_before: Optional[dict] = None,
+        incubate_before: Optional[Dict[Any, Any]] = None,
         temperature: Optional[Union[str, Unit]] = None,
         settle_time: Optional[Unit] = None,
     ):
@@ -3347,9 +3347,9 @@ class Protocol(object):
         flashes: Optional[int] = 25,
         temperature: Optional[Union[str, Unit]] = None,
         gain: Optional[float] = None,
-        incubate_before: Optional[dict] = None,
+        incubate_before: Optional[Dict[Any, Any]] = None,
         detection_mode: Optional[str] = None,
-        position_z: Optional[dict] = None,
+        position_z: Optional[Dict[Any, Any]] = None,
         settle_time: Optional[Unit] = None,
         lag_time: Optional[Unit] = None,
         integration_time: Optional[Unit] = None,
@@ -3642,7 +3642,7 @@ class Protocol(object):
         ref: Union[str, Container],
         wells: Union[List[Well], WellGroup, Well],
         dataref: str,
-        incubate_before: Union[dict] = None,
+        incubate_before: Union[Dict[Any, Any]] = None,
         temperature: Optional[Union[str, Unit]] = None,
         settle_time: Optional[Unit] = None,
         integration_time: Optional[Unit] = None,
@@ -3881,7 +3881,7 @@ class Protocol(object):
 
     def gel_purify(
         self,
-        extracts: List[dict],
+        extracts: List[Dict[Any, Any]],
         volume: Union[str, Unit],
         matrix: str,
         ladder: str,
@@ -4445,8 +4445,8 @@ class Protocol(object):
         self,
         dataref: str,
         samples: Union[List[Well], Well, WellGroup],
-        lasers: List[dict],
-        collection_conditions: dict,
+        lasers: List[Dict[Any, Any]],
+        collection_conditions: Dict[Any, Any],
         width_threshold: Optional[Union[int, float]] = None,
         window_extension: Optional[Union[int, float]] = None,
         remove_coincident_events: Optional[bool] = None,
@@ -4607,12 +4607,12 @@ class Protocol(object):
     def flow_analyze(
         self,
         dataref: str,
-        FSC: dict,
-        SSC: dict,
-        neg_controls: List[dict],
-        samples: List[dict],
-        colors: Optional[List[dict]] = None,
-        pos_controls: Optional[List[dict]] = None,
+        FSC: Dict[Any, Any],
+        SSC: Dict[Any, Any],
+        neg_controls: List[Dict[Any, Any]],
+        samples: List[Dict[Any, Any]],
+        colors: Optional[List[Dict[Any, Any]]] = None,
+        pos_controls: Optional[List[Dict[Any, Any]]] = None,
     ):
         """
         Perform flow cytometry. The instruction will be executed within the
@@ -4962,7 +4962,7 @@ class Protocol(object):
             FlowAnalyze(dataref, FSC, SSC, neg_controls, samples, colors, pos_controls)
         )
 
-    def oligosynthesize(self, oligos: List[dict]):
+    def oligosynthesize(self, oligos: List[Dict[Any, Any]]):
         """
         Specify a list of oligonucleotides to be synthesized and a destination
         for each product.
@@ -5034,7 +5034,7 @@ class Protocol(object):
     def autopick(
         self,
         pick_groups: List[AutopickGroup],
-        criteria: Optional[dict] = None,
+        criteria: Optional[Dict[Any, Any]] = None,
         dataref: str = "autopick",
     ):
         """
@@ -5100,7 +5100,7 @@ class Protocol(object):
 
         return self._append_and_return(Autopick(groups, criteria, dataref))
 
-    def __process_pick_group(self, pick_group: AutopickGroup) -> dict:
+    def __process_pick_group(self, pick_group: AutopickGroup) -> Dict[Any, Any]:
         if not isinstance(pick_group, AutopickGroup):
             raise TypeError(
                 "Autopick groups must use provided AutopickGroup dataclass."
@@ -5638,7 +5638,7 @@ class Protocol(object):
         dests: Union[Well, WellGroup, List[Well]],
         amounts: Optional[Union[str, Unit, List[Unit], List[str]]] = None,
         volumes: Optional[Union[str, Unit, List[Unit], List[str]]] = None,
-        informatics: Optional[List[dict]] = None,
+        informatics: Optional[List[Dict[Any, Any]]] = None,
     ):
         """
         Provision a commercial resource from a catalog into the specified
@@ -6030,10 +6030,10 @@ class Protocol(object):
         cartridge: str,
         pressure_mode: str,
         load_sample: Dict,
-        elute: List[dict],
-        condition: Optional[List[dict]] = None,
-        equilibrate: Optional[List[dict]] = None,
-        rinse: Optional[List[dict]] = None,
+        elute: List[Dict[Any, Any]],
+        condition: Optional[List[Dict[Any, Any]]] = None,
+        equilibrate: Optional[List[Dict[Any, Any]]] = None,
+        rinse: Optional[List[Dict[Any, Any]]] = None,
     ):
         """
         Apply a solid phase extraction (spe) technique to a sample.
@@ -6220,12 +6220,12 @@ class Protocol(object):
 
     def image(
         self,
-        ref: Optional[List[dict]],
+        ref: Optional[List[Dict[Any, Any]]],
         mode: str,
         dataref: str,
         num_images: int = 1,
         backlighting: str = None,
-        exposure: Optional[dict] = None,
+        exposure: Optional[Dict[Any, Any]] = None,
         magnification: float = 1.0,
     ):
         """
@@ -6448,7 +6448,7 @@ class Protocol(object):
             )
 
     # pylint: disable=protected-access
-    def _refify(self, op_data: Union[dict, str, list]):
+    def _refify(self, op_data: Union[Dict[Any, Any], str, list]):
         """
         Unpacks protocol objects into Autoprotocol compliant ones
 
@@ -6487,7 +6487,7 @@ class Protocol(object):
         else:
             return op_data
 
-    def _ref_containers_and_wells(self, params: dict):
+    def _ref_containers_and_wells(self, params: Dict[Any, Any]):
         """
         Used by harness.run() to process JSON container and well references
 
@@ -6919,7 +6919,7 @@ class Protocol(object):
         interval: Optional[Union[Unit, str]] = None,
         num_intervals: Optional[int] = None,
         temperature: Optional[Union[Unit, str]] = None,
-        shake_before: Optional[dict] = None,
+        shake_before: Optional[Dict[Any, Any]] = None,
     ):
         """
         Generates an instruction with one or more plate reading steps
@@ -7181,7 +7181,7 @@ class Protocol(object):
         one_tip: bool = False,
         density: Optional[Union[Unit, str]] = None,
         mode: Optional[str] = None,
-        informatics: Optional[List[dict]] = None,
+        informatics: Optional[List[Dict[Any, Any]]] = None,
     ):
         """Generates LiquidHandle instructions between wells
 
@@ -8293,7 +8293,7 @@ class Protocol(object):
         mode: str,
         duration: Union[Unit, str],
         evaporator_temperature: Union[Unit, str],
-        mode_params: Optional[dict] = None,
+        mode_params: Optional[Dict[Any, Any]] = None,
     ):
         """
         Removes liquid or moisture from a container using the mode specified.

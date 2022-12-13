@@ -23,12 +23,14 @@ See Also
 Instruction
     Instructions corresponding to each of the builders
 """
+import enum
 
 from collections import defaultdict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
+from dataclasses import dataclass
 from functools import reduce
 from numbers import Number
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .constants import SBS_FORMAT_SHAPES
 from .container import Container, Well, WellGroup
@@ -408,7 +410,7 @@ class SPEBuilders(InstructionBuilders):
 
     def spe_params(self, params, is_elute=False):
         if not isinstance(params, list):
-            raise ValueError("SPE mobile phase parameters {} must be a list.")
+            raise ValueError(f"SPE mobile phase parameters {params} must be a list.")
         parsed_params = []
         for param in params:
             parsed_params.append(self.mobile_phase_params(is_elute=is_elute, **param))
@@ -416,15 +418,15 @@ class SPEBuilders(InstructionBuilders):
 
     def mobile_phase_params(
         self,
-        volume,
-        loading_flowrate,
-        settle_time,
-        processing_time,
-        flow_pressure,
-        resource_id=None,
-        is_sample=False,
-        destination_well=None,
-        is_elute=False,
+        volume: Union[str, Unit],
+        loading_flowrate: Union[str, Unit],
+        settle_time: Optional[bool],
+        processing_time: Union[str, Unit],
+        flow_pressure: Union[str, Unit],
+        resource_id: Optional[str] = None,
+        is_sample: bool = False,
+        destination_well: Optional[Well] = None,
+        is_elute: bool = False,
     ):
         """
         Create a dictionary with mobile phase parameters which can be
@@ -1083,7 +1085,13 @@ class SpectrophotometryBuilders(InstructionBuilders):
             duration=duration, frequency=frequency, path=path, amplitude=amplitude
         )
 
-    def shake_before(self, duration, frequency=None, path=None, amplitude=None):
+    def shake_before(
+        self,
+        duration: Union[str, Unit],
+        frequency: Optional[Union[str, Unit]] = None,
+        path: Optional[str] = None,
+        amplitude: Optional[Union[str, Unit]] = None,
+    ):
         """
         Parameters
         ----------
@@ -2015,6 +2023,13 @@ class PlateReaderBuilders(InstructionBuilders):
         }
 
 
+class EvaporateModeParamsMode(enum.Enum):
+    rotary = enum.auto()
+    centrifugal = enum.auto()
+    vortex = enum.auto()
+    blowdown = enum.auto()
+
+
 class EvaporateBuilders(InstructionBuilders):
     """
     Helpers for building Evaporate instructions
@@ -2022,7 +2037,7 @@ class EvaporateBuilders(InstructionBuilders):
 
     def __init__(self):
         super(EvaporateBuilders, self).__init__()
-        self.valid_modes = ["rotate", "centrifuge", "vortex", "blowdown"]
+        self.valid_modes = ["rotary", "centrifugal", "vortex", "blowdown"]
         self.valid_gases = ["nitrogen", "argon", "helium"]
         self.rotary_params = [
             "flask_volume",
@@ -2042,7 +2057,9 @@ class EvaporateBuilders(InstructionBuilders):
         ]
         self.blowdown_params = ["gas", "blow_rate", "vortex_speed"]
 
-    def get_mode_params(self, mode, mode_params):
+    def get_mode_params(
+        self, mode: EvaporateModeParamsMode, mode_params: Dict[str, Any]
+    ):
         """
         Checks on the validity of mode and mode_params, and
         creates a dictionary for mode_params
@@ -2144,10 +2161,32 @@ class EvaporateBuilders(InstructionBuilders):
         return mode_param_output
 
 
+@dataclass()
+class GelPurifyBandSizeRange:
+    min_bp: int
+    max_bp: int
+
+
+@dataclass
+class GelPurifyBand:
+    elution_buffer: str
+    elution_volume: Union[str, Unit]
+    destination: Well
+    min_bp: Optional[int]
+    max_bp: Optional[int]
+    band_size_range: Optional[GelPurifyBandSizeRange]
+
+
 class GelPurifyBuilders(InstructionBuilders):
     """Helpers for building GelPurify instructions"""
 
-    def extract(self, source, band_list, lane=None, gel=None):
+    def extract(
+        self,
+        source: Well,
+        band_list: List[GelPurifyBand],
+        lane: Optional[int] = None,
+        gel: Optional[int] = None,
+    ):
         """Helper for building extract params for gel_purify
 
         Parameters
@@ -2178,7 +2217,17 @@ class GelPurifyBuilders(InstructionBuilders):
         if not isinstance(band_list, list):
             band_list = [band_list]
 
-        band_list = [self.band(**_) for _ in band_list]
+        band_list = [
+            self.band(
+                elution_buffer=band.elution_buffer,
+                elution_volume=band.elution_volume,
+                destination=band.destination,
+                min_bp=band.min_bp,
+                max_bp=band.max_bp,
+                band_size_range=band.band_size_range,
+            )
+            for band in band_list
+        ]
 
         return {"source": source, "band_list": band_list, "lane": lane, "gel": gel}
 
@@ -2547,6 +2596,41 @@ class MagneticTransferBuilders(InstructionBuilders):
         }
 
 
+class FlowCytometryChannelTriggerLogic(enum.Enum):
+    and_ = enum.auto()
+    or_ = enum.auto()
+
+
+@dataclass
+class FlowCytometryChannelMeasurments:
+    area: Optional[bool] = None
+    height: Optional[bool] = None
+    width: Optional[bool] = None
+
+
+@dataclass
+class FlowCytometryChannelEmissionFilter:
+    channel_name: str
+    shortpass: Union[str, Unit] = None
+    longpass: Union[str, Unit] = None
+
+
+@dataclass
+class FlowCytometryChannel:
+    emission_filter: FlowCytometryChannelEmissionFilter
+    detector_gain: Union[str, Unit]
+    measurements: Optional[FlowCytometryChannelMeasurments] = None
+    trigger_threshold: Optional[int] = None
+    trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None
+
+
+@dataclass()
+class FlowCytometryCollectionConditionStopCriteria:
+    volume: Optional[Union[str, Unit]] = None
+    events: Optional[int] = None
+    time: Union[str, Unit] = None
+
+
 class FlowCytometryBuilders(InstructionBuilders):
     """
     Builders for FlowCytometry instructions.
@@ -2556,7 +2640,13 @@ class FlowCytometryBuilders(InstructionBuilders):
         super(FlowCytometryBuilders, self).__init__()
         self.gating_modes = ("FSC", "SSC")
 
-    def laser(self, channels, excitation=None, power=None, area_scaling_factor=None):
+    def laser(
+        self,
+        channels: List[FlowCytometryChannel],
+        excitation: Union[str, Unit] = None,
+        power: Union[str, Unit] = None,
+        area_scaling_factor: Optional[int] = None,
+    ):
         """
         Generates a dict of laser parameters.
 
@@ -2604,7 +2694,16 @@ class FlowCytometryBuilders(InstructionBuilders):
         if excitation is not None:
             excitation = parse_unit(excitation, "nanometers")
 
-        channels = [self.channel(**_) for _ in channels]
+        channels = [
+            self.channel(
+                emission_filter=c.emission_filter,
+                detector_gain=c.detector_gain,
+                measurements=c.measurements,
+                trigger_threshold=c.trigger_threshold,
+                trigger_logic=c.trigger_logic,
+            )
+            for c in channels
+        ]
 
         # Gating modes do not allow specification of excitation parameter
         channel_names = set(
@@ -2624,11 +2723,11 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     def channel(
         self,
-        emission_filter,
-        detector_gain,
-        measurements=None,
-        trigger_threshold=None,
-        trigger_logic=None,
+        emission_filter: FlowCytometryChannelEmissionFilter,
+        detector_gain: Union[str, Unit],
+        measurements: Optional[FlowCytometryChannelMeasurments] = None,
+        trigger_threshold: Optional[int] = None,
+        trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None,
     ):
         """
         Generates a dict of channel parameters.
@@ -2662,14 +2761,18 @@ class FlowCytometryBuilders(InstructionBuilders):
         if trigger_threshold is not None and not isinstance(trigger_threshold, int):
             raise TypeError("trigger_threshold must be of type int.")
 
-        trigger_modes = ("and", "or")
+        trigger_modes = ("and_", "or_")
         if trigger_logic is not None and trigger_logic not in trigger_modes:
             raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
 
         if measurements is None:
             measurements = self.measurements()
         else:
-            measurements = self.measurements(**measurements)
+            measurements = self.measurements(
+                area=measurements.area,
+                height=measurements.height,
+                width=measurements.width,
+            )
 
         emission_filter = self.emission_filter(**emission_filter)
         detector_gain = parse_unit(detector_gain, "millivolts")
@@ -2679,10 +2782,15 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic,
+            "trigger_logic": trigger_logic[-1:],
         }
 
-    def emission_filter(self, channel_name, shortpass=None, longpass=None):
+    def emission_filter(
+        self,
+        channel_name: str,
+        shortpass: Union[str, Unit] = None,
+        longpass: Union[str, Unit] = None,
+    ):
         """
         Generates a dict of emission filter parameters.
 
@@ -2727,7 +2835,11 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     @staticmethod
-    def measurements(area=None, height=None, width=None):
+    def measurements(
+        area: Optional[bool] = None,
+        height: Optional[bool] = None,
+        width: Optional[bool] = None,
+    ):
         """
         Generates a dict of measurements parameters.
 
@@ -2758,13 +2870,13 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     def collection_conditions(
         self,
-        acquisition_volume,
-        flowrate,
-        wait_time,
-        mix_cycles,
-        mix_volume,
-        rinse_cycles,
-        stop_criteria=None,
+        acquisition_volume: Union[str, Unit],
+        flowrate: Union[str, Unit],
+        wait_time: Union[str, Unit],
+        mix_cycles: int,
+        mix_volume: Union[str, Unit],
+        rinse_cycles: int,
+        stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria],
     ):
         """
         Generates a dict of collection_conditions parameters.
@@ -2825,7 +2937,11 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     @staticmethod
-    def stop_criteria(volume=None, events=None, time=None):
+    def stop_criteria(
+        volume: Optional[Union[str, Unit]] = None,
+        events: Optional[int] = None,
+        time: Union[str, Unit] = None,
+    ):
         """
         Generates a dict of stop_criteria parameters.
 

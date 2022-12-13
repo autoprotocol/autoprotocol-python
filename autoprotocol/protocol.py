@@ -7,6 +7,7 @@ Module containing the main `Protocol` object and associated functions
 
 """
 
+import dataclasses
 import json
 import warnings
 
@@ -23,6 +24,34 @@ from .liquid_handle import LiquidClass, Mix, Transfer
 from .types.protocol import AutopickGroup
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
+
+
+@dataclasses.dataclass
+class DispenseNozzlePosition:
+    position_x: Unit
+    position_y: Unit
+    position_z: Unit
+
+
+@dataclasses.dataclass
+class DispenseShape:
+    rows: int
+    columns: int
+    format: str
+
+
+@dataclasses.dataclass
+class DispenseShakeAfter:
+    duration: Optional[Union[Unit, str]] = None
+    frequency: Optional[Union[Unit, str]] = None
+    path: Optional[str] = None
+    amplitude: Optional[Union[Unit, str]] = None
+
+
+@dataclasses.dataclass
+class MicrowaveAgitate:
+    mode: str
+    speed: Union[str, Unit]
 
 
 class Ref(object):
@@ -2055,8 +2084,8 @@ class Protocol(object):
         flowrate: Optional[Union[str, Unit]] = None,
         nozzle_position: Optional[Union[str, Unit]] = None,
         pre_dispense: Optional[Union[str, Unit]] = None,
-        shape: Optional[Dict[Any, Any]] = None,
-        shake_after: Optional[Dict[Any, Any]] = None,
+        shape: Optional[DispenseShape] = None,
+        shake_after: Optional[DispenseShakeAfter] = None,
     ):
         """
         Dispense specified reagent to specified columns.
@@ -2334,8 +2363,8 @@ class Protocol(object):
         flowrate: Optional[Union[str, Unit]] = None,
         nozzle_position: Optional[Union[str, Unit]] = None,
         pre_dispense: Optional[Union[str, Unit]] = None,
-        shape: Optional[Dict[Any, Any]] = None,
-        shake_after: Optional[Dict[Any, Any]] = None,
+        shape: Optional[DispenseShape] = None,
+        shake_after: Optional[DispenseShakeAfter] = None,
     ):
         """
         Dispense the specified amount of the specified reagent to every well

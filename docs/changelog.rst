@@ -1,7 +1,7 @@
 =========
 Changelog
 =========
-* :release:`8.0.2 <2022-12-13>`
+* :release:`8.1.0 <2022-12-13>`
 * :feature:`368` Added new container type: `384-corning-4512-round-lv`
 
 * :release:`8.0.1 <2022-12-07>`

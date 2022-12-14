@@ -45,6 +45,7 @@ class DispenseShakeAfter:
     path: Optional[str] = None
     amplitude: Optional[Union[Unit, str]] = None
 
+
 class Location(enum.Enum):
     warm_37 = enum.auto()
     warm_30 = enum.auto()
@@ -53,14 +54,17 @@ class Location(enum.Enum):
     cold_20 = enum.auto()
     cold_80 = enum.auto()
 
+
 @dataclass
 class StorageLocation:
     where: Location
+
 
 @dataclass
 class RefOpts:
     discard: bool
     store: StorageLocation
+
 
 @dataclass
 class Ref:
@@ -82,6 +86,7 @@ class Ref:
 class DispenseColumn:
     column: int
     volume: Union[str, Unit]
+
 
 @dataclass
 class IncubateShakingParams:
@@ -108,6 +113,7 @@ class TimeConstraintState:
     start = enum.auto()
     end = enum.auto()
 
+
 @dataclass
 class TimeConstraintFromToDict:
     mark: Union[int, Container]
@@ -115,17 +121,16 @@ class TimeConstraintFromToDict:
 
 
 class OligosynthesizeOligoScale(enum.Enum):
-    _25nm =enum.auto()
-    _100nm =enum.auto()
-    _250nm =enum.auto()
-    _1um =enum.auto()
+    _25nm = enum.auto()
+    _100nm = enum.auto()
+    _250nm = enum.auto()
+    _1um = enum.auto()
 
 
 class OligosynthesizeOligoPurification(enum.Enum):
     standard = enum.auto()
     page = enum.auto()
     hplc = enum.auto()
-
 
 
 @dataclass
@@ -140,10 +145,12 @@ class OligosynthesizeOligo:
         if self.scale not in allowable_scales:
             raise UserError(f"Scale entered {self.scale} not in {allowable_scales}")
 
+
 @dataclass
 class IlluminaSeqLane:
     object: Well
     library_concentration: float
+
 
 @dataclass
 class AgitateModeParams:
@@ -151,16 +158,19 @@ class AgitateModeParams:
     bar_shape: str
     bar_length: Union[str, Unit]
 
+
 @dataclass
 class ThermocycleTemperature:
     duration: Union[str, Unit]
     temperature: Union[str, Unit]
     read: bool = False
 
+
 @dataclass
 class TemperatureGradient:
     top: Union[str, Unit]
     bottom: Union[str, Unit]
+
 
 @dataclass
 class ThermocycleTemperatureGradient:
@@ -168,23 +178,28 @@ class ThermocycleTemperatureGradient:
     gradient: TemperatureGradient
     read: bool = False
 
+
 class PlateReaderIncubateBeforeShaking:
     amplitude: Union[str, Unit]
     orbital: Union[str, Unit]
+
 
 class PlateReaderIncubateBefore:
     duration: Union[str, Unit]
     shake_amplitude: Optional[Union[str, Unit]]
     shake_orbital: Optional[bool]
-    shaking: Optional[dict]
+    shaking: Optional[IncubateShakingParams] = None
+
 
 @dataclass
 class PlateReaderPositionZManual:
     manual: Unit
 
+
 @dataclass
 class PlateReaderPositionZCalculated:
     calculated_from_wells: List[Well]
+
 
 @dataclass
 class GelPurifyExtract:
@@ -193,12 +208,14 @@ class GelPurifyExtract:
     lane: Optional[int] = None
     gel: Optional[int] = None
 
+
 @dataclass
 class FlowCytometryLaser:
     channels: List[FlowCytometryChannel]
     excitation: Union[str, Unit] = None
     power: Union[str, Unit] = None
     area_scaling_factor: Optional[int] = None
+
 
 @dataclass
 class FlowCytometryCollectionCondition:
@@ -210,10 +227,12 @@ class FlowCytometryCollectionCondition:
     rinse_cycles: int
     stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria]
 
+
 @dataclass
 class FlowAnalyzeChannelVoltageRange:
     low: Union[str, Unit]
     high: Union[str, Unit]
+
 
 @dataclass
 class FlowAnalyzeChannel:
@@ -229,11 +248,13 @@ class FlowAnalyzeNegControls:
     captured_events: Optional[int] = None
     channel: str
 
+
 @dataclass
 class FlowAnalyzeSample:
     well: Well
     volume: Union[str, Union]
     captured_events: int
+
 
 @dataclass
 class FlowAnalyzeColors:
@@ -245,10 +266,12 @@ class FlowAnalyzeColors:
     height: bool = False
     weight: bool = False
 
+
 @dataclass
 class FlowAnalyzePosControlsMinimizeBleed:
     from_: FlowAnalyzeColors
     to: FlowAnalyzeColors
+
 
 @dataclass
 class FlowAnalyzePosControls:
@@ -258,12 +281,13 @@ class FlowAnalyzePosControls:
     minimize_bleed: List[FlowAnalyzePosControlsMinimizeBleed]
     captured_events: Optional[int] = None
 
+
 @dataclass
 class SpectrophotometryShakeBefore:
-    duration : Union[str, Unit]
-    frequency : Optional[Union[str, Unit]]=None
-    path : Optional[str]=None
-    amplitude : Optional[Union[str, Unit]]=None
+    duration: Union[str, Unit]
+    frequency: Optional[Union[str, Unit]] = None
+    path: Optional[str] = None
+    amplitude: Optional[Union[str, Unit]] = None
 
 
 class EvaporateModeParamsGas(enum.Enum):
@@ -285,6 +309,7 @@ class EvaporateMode(enum.Enum):
     vortex = enum.auto()
     blowdown = enum.auto()
 
+
 @dataclass
 class SpeElute:
     loading_flowrate: Union[str, Unit]
@@ -294,6 +319,7 @@ class SpeElute:
     flow_pressure: Union[str, Unit]
     destination_well: Well
     processing_time: Union[str, Unit]
+
 
 @dataclass
 class SpeLoadSample:
@@ -306,7 +332,8 @@ class SpeLoadSample:
     destination_well: Optional[Well] = None
     is_elute: bool = False
 
-@dataclass()
+
+@dataclass
 class SpeParams:
     volume: Union[str, Unit]
     loading_flowrate: Union[str, Unit]
@@ -323,6 +350,7 @@ class ImageMode(enum.Enum):
     bottom = enum.auto()
     side = enum.auto()
 
+
 @dataclass
 class ImageExposure:
     shutter_speed: Optional[Unit]
@@ -332,10 +360,10 @@ class ImageExposure:
 
 @dataclass
 class Protocol:
-    refs: Optional[Dict[str, Ref]] = None,
-    instructions: List[Instruction] = [],
-    propagate_properties: bool = False,
-    time_constraints: List[TimeConstraint] = [],
+    refs: Optional[Dict[str, Ref]] = (None,)
+    instructions: List[Instruction] = ([],)
+    propagate_properties: bool = (False,)
+    time_constraints: List[TimeConstraint] = ([],)
     """
     A Protocol is a sequence of instructions to be executed, and a set of
     containers on which those instructions act.
@@ -427,10 +455,10 @@ class Protocol:
               ]
             }
     """
+
     def __post_init__(self):
         if not self.refs:
             self.refs: Dict[str, Ref] = {}
-
 
     def __repr__(self):
         return f"Protocol({self.__dict__})"
@@ -3634,7 +3662,9 @@ class Protocol:
         gain: Optional[float] = None,
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
         detection_mode: Optional[str] = None,
-        position_z: Optional[PlateReaderPositionZCalculated, PlateReaderPositionZManual] = None,
+        position_z: Optional[
+            PlateReaderPositionZCalculated, PlateReaderPositionZManual
+        ] = None,
         settle_time: Optional[Unit] = None,
         lag_time: Optional[Unit] = None,
         integration_time: Optional[Unit] = None,
@@ -4876,12 +4906,15 @@ class Protocol:
             if not isinstance(remove_coincident_events, bool):
                 raise TypeError("remove_coincident_events must be of type " "bool.")
 
-        lasers = [FlowCytometry.builders.laser(
-            channels=l.channels,
-            excitation=l.excitation,
-            power=l.power,
-            area_scaling_factor=l.area_scaling_factor,
-        ) for l in lasers]
+        lasers = [
+            FlowCytometry.builders.laser(
+                channels=l.channels,
+                excitation=l.excitation,
+                power=l.power,
+                area_scaling_factor=l.area_scaling_factor,
+            )
+            for l in lasers
+        ]
 
         collection_conditions = FlowCytometry.builders.collection_conditions(
             acquisition_volume=collection_conditions.acquisition_volume,
@@ -5335,7 +5368,7 @@ class Protocol:
     def autopick(
         self,
         pick_groups: List[AutopickGroup],
-        criteria: Optional[dict] = None,
+        criteria: Optional[Dict[str, Any]] = None,
         dataref: str = "autopick",
     ):
         """
@@ -5401,7 +5434,9 @@ class Protocol:
 
         return self._append_and_return(Autopick(groups, criteria, dataref))
 
-    def __process_pick_group(self, pick_group: AutopickGroup) -> Dict[str, Union[WellGroup, int]]:
+    def __process_pick_group(
+        self, pick_group: AutopickGroup
+    ) -> Dict[str, Union[WellGroup, int]]:
         if not isinstance(pick_group, AutopickGroup):
             raise TypeError(
                 "Autopick groups must use provided AutopickGroup dataclass."
@@ -6749,7 +6784,21 @@ class Protocol:
             )
 
     # pylint: disable=protected-access
-    def _refify(self, op_data: Union[Dict[str, Any], List[Any], Well, WellGroup, Container, Unit, Instruction, Ref, Compound, Informatics]):
+    def _refify(
+        self,
+        op_data: Union[
+            Dict[str, Any],
+            List[Any],
+            Well,
+            WellGroup,
+            Container,
+            Unit,
+            Instruction,
+            Ref,
+            Compound,
+            Informatics,
+        ],
+    ):
         """
         Unpacks protocol objects into Autoprotocol compliant ones
 
@@ -8553,7 +8602,7 @@ class Protocol:
         return self._append_and_return(LiquidHandle(location))
 
     def _transfer_volume(
-        self, source: Well, destination: Well, volume: Unit, shape: dict
+        self, source: Well, destination: Well, volume: Unit, shape: DispenseShape
     ):
         """
         Transfers volume and properties between aliquots.

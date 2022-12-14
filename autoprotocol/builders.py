@@ -2782,7 +2782,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic[-1:],
+            "trigger_logic": trigger_logic,
         }
 
     def emission_filter(

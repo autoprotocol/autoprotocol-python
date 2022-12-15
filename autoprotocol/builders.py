@@ -2024,8 +2024,8 @@ class PlateReaderBuilders(InstructionBuilders):
 
 
 class EvaporateModeParamsMode(enum.Enum):
-    rotary = enum.auto()
-    centrifugal = enum.auto()
+    rotate = enum.auto()
+    centrifuge = enum.auto()
     vortex = enum.auto()
     blowdown = enum.auto()
 
@@ -2037,15 +2037,15 @@ class EvaporateBuilders(InstructionBuilders):
 
     def __init__(self):
         super(EvaporateBuilders, self).__init__()
-        self.valid_modes = ["rotary", "centrifugal", "vortex", "blowdown"]
+        self.valid_modes = ["rotate", "centrifuge", "vortex", "blowdown"]
         self.valid_gases = ["nitrogen", "argon", "helium"]
-        self.rotary_params = [
+        self.rotate_params = [
             "flask_volume",
             "rotation_speed",
             "vacuum_pressure",
             "condenser_temperature",
         ]
-        self.centrifugal_params = [
+        self.centrifuge_params = [
             "spin_acceleration",
             "vacuum_pressure",
             "condenser_temperature",
@@ -2094,8 +2094,8 @@ class EvaporateBuilders(InstructionBuilders):
 
         """
         mode_to_param_dict = {
-            "rotary": self.rotary_params,
-            "centrifugal": self.centrifugal_params,
+            "rotate": self.rotate_params,
+            "centrifuge": self.centrifuge_params,
             "vortex": self.vortex_params,
             "blowdown": self.blowdown_params,
         }

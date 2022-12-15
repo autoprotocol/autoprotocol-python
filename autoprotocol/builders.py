@@ -2596,9 +2596,19 @@ class MagneticTransferBuilders(InstructionBuilders):
         }
 
 
-class FlowCytometryChannelTriggerLogic(enum.Enum):
+class FlowCytometryChannelTriggerLogicEnum(enum.Enum):
     and_ = enum.auto()
     or_ = enum.auto()
+
+
+@dataclass
+class FlowCytometryChannelTriggerLogic:
+    value: FlowCytometryChannelTriggerLogicEnum
+
+    def __post_init__(self):
+        trigger_modes = ("and_", "or_")
+        if self.value is not None and self.value not in trigger_modes:
+            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
 
 
 @dataclass
@@ -2761,10 +2771,6 @@ class FlowCytometryBuilders(InstructionBuilders):
         if trigger_threshold is not None and not isinstance(trigger_threshold, int):
             raise TypeError("trigger_threshold must be of type int.")
 
-        trigger_modes = ("and_", "or_")
-        if trigger_logic is not None and trigger_logic not in trigger_modes:
-            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
-
         if measurements is None:
             measurements = self.measurements()
         else:
@@ -2782,7 +2788,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic,
+            "trigger_logic": trigger_logic.value,
         }
 
     def emission_filter(

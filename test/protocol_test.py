@@ -1376,6 +1376,20 @@ class TestAcousticTransfer(object):
                 "1.31:microliter",
             )
 
+    def test_propagate_properties(self, dummy_protocol):
+        p = dummy_protocol
+        p.propagate_properties = True
+        echo = p.ref("echo", None, "384-echo", discard=True)
+        dest = p.ref("dest", None, "384-echo", discard=True)
+        echo.well(0).add_properties({"test_well_property": True})
+        p.acoustic_transfer(
+            echo.well(0).set_volume("2:microliter"),
+            dest.well(0),
+            "50:nanoliter"
+        )
+        echo_prop = echo.well(0).properties["test_well_property"]
+        assert echo_prop == dest.well(0).properties["test_well_property"]
+
 
 class TestMagneticTransfer(object):
     def test_head_type(self, dummy_protocol):

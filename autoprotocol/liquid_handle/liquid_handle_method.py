@@ -428,7 +428,6 @@ class LiquidHandleMethod(object):
             LiquidHandle.builders.transport(
                 volume=-prime_vol,
                 density=density,
-                pump_override_volume=-prime_vol,
                 flowrate=asp_flowrate,
                 mode_params=mode_params,
                 delay_time=delay_time,
@@ -445,7 +444,6 @@ class LiquidHandleMethod(object):
             LiquidHandle.builders.transport(
                 volume=prime_vol,
                 density=density,
-                pump_override_volume=prime_vol,
                 flowrate=dsp_flowrate,
                 mode_params=mode_params,
                 delay_time=delay_time,
@@ -741,7 +739,8 @@ class LiquidHandleMethod(object):
             blowout_params = LiquidHandle.builders.blowout(**blowout)
             self._dispense_simple(liquid_class="air", **blowout_params)
 
-    def default_blowout(self, volume):
+    # pylint: disable=missing-param-doc
+    def default_blowout(self, volume: Unit):
         """Default blowout behavior
 
         Parameters

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 
 from setuptools import setup
@@ -6,7 +7,12 @@ from setuptools.command.test import test as TestCommand
 
 
 # Load version
-exec(open("autoprotocol/version.py").read())  # pylint: disable=exec-used
+with open("autoprotocol/version.py", encoding="utf-8") as file:
+    pattern = re.compile(r"[0-9]+.[0-9]+.[0-9]+")
+    __version__ = pattern.findall(file.read()).pop()
+
+with open("README.rst", encoding="utf-8") as file:
+    long_description = file.read()
 
 # Test Runner (reference: https://docs.pytest.org/en/latest/goodpractices.html)
 class PyTest(TestCommand):
@@ -37,11 +43,15 @@ test_deps = [
 ]
 
 doc_deps = [
+    "jinja2==3.0.0",
     "releases>=1.6.3, <2",
-    "Sphinx>=2.4, <3",
-    "sphinx_rtd_theme>=0.4.3, <1",
+    "sphinx==4.2.0",
+    "sphinx_rtd_theme==1.0.0",
+    "readthedocs-sphinx-search==0.1.1",
     "semantic-version==2.6.0",
     "six>=1.15.0, <2",
+    "click==8.0.2",
+    "black==22.3.0",
 ]
 
 
@@ -50,17 +60,17 @@ setup(
     url="https://github.com/autoprotocol/autoprotocol-python",
     maintainer="The Autoprotocol Development Team",
     description="Python library for generating Autoprotocol",
-    long_description=open("README.rst").read(),
+    long_description=long_description,
     long_description_content_type="text/x-rst",
     license="BSD",
     maintainer_email="support@strateos.com",
     version=__version__,  # pylint: disable=undefined-variable
     install_requires=["Pint==0.9"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     tests_require=test_deps,
     extras_require={"docs": doc_deps, "test": test_deps},
     cmdclass={"pytest": PyTest},
-    packages=["autoprotocol", "autoprotocol.liquid_handle"],
+    packages=["autoprotocol", "autoprotocol.liquid_handle", "autoprotocol.types"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -71,7 +81,6 @@ setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",

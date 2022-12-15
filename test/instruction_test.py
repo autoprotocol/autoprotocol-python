@@ -50,21 +50,15 @@ class TestBaseInstruction(object):
             [dict(some_bool=True, empty=[])]
         )
 
-        assert (
-            Instruction(
-                op="some instruction",
-                data={"not_empty": {"foo": "bar"}, "empty": {"foo": None, "bar": None}},
-            ).data
-            == {"not_empty": {"foo": "bar"}}
-        )
+        assert Instruction(
+            op="some instruction",
+            data={"not_empty": {"foo": "bar"}, "empty": {"foo": None, "bar": None}},
+        ).data == {"not_empty": {"foo": "bar"}}
 
-        assert (
-            Instruction(
-                op="some instruction",
-                data={"not_empty": ["foo", "bar"], "empty": [None, None]},
-            ).data
-            == {"not_empty": ["foo", "bar"]}
-        )
+        assert Instruction(
+            op="some instruction",
+            data={"not_empty": ["foo", "bar"], "empty": [None, None]},
+        ).data == {"not_empty": ["foo", "bar"]}
 
         assert (
             Instruction(

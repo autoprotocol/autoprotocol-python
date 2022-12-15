@@ -604,7 +604,7 @@ class TestManifest(object):
 
     # Test parsing of local manifest file
     def test_json_parse(self):
-        with open("test/manifest_test.json", "r") as f:
+        with open("test/manifest_test.json", "r", encoding="utf-8") as f:
             manifest_json = f.read()
             manifest = Manifest(json.loads(manifest_json))
             source = json.loads(manifest_json)["protocols"][0]["preview"]

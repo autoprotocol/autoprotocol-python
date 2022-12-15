@@ -1385,9 +1385,7 @@ class TestAcousticTransfer(object):
         echo.well(0).set_properties({"test_well_property": True})
         dest.well(0).set_properties({"test_well_property": False})
         p.acoustic_transfer(
-            echo.well(0).set_volume("2:microliter"),
-            dest.wells(0, 1),
-            "50:nanoliter"
+            echo.well(0).set_volume("2:microliter"), dest.wells(0, 1), "50:nanoliter"
         )
         echo_prop = echo.well(0).properties["test_well_property"]
         # Tests property overwrite

@@ -1665,6 +1665,8 @@ class Protocol(object):
                 s.volume -= v
             if v > Unit(0, "microliter"):
                 transfers.append(xfer)
+            if self.propagate_properties:
+                d.add_properties(s.properties)
 
         if not transfers:
             raise RuntimeError(

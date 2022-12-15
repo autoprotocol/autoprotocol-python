@@ -33,8 +33,13 @@ class TestContainerRobotize(object):
     def test_humanize_1536(self, dummy_1536):
         assert ["AF48", "K37", "A1"] == dummy_1536.humanize([1535, 516, 0])
         for ref in [1.0, 2.3, "abc", "2a2"]:
-            with pytest.raises(TypeError):
-                dummy_1536.humanize(ref)
+            if isinstance(ref, float):
+                with pytest.raises(TypeError):
+                    dummy_1536.humanize(ref)
+            else:
+                with pytest.raises(ValueError):
+                    dummy_1536.humanize(ref)
+
         for ref in [-1, 1536]:
             with pytest.raises(ValueError):
                 dummy_1536.humanize(ref)
@@ -64,11 +69,11 @@ class TestContainerRobotize(object):
         assert ["A1", "B2"] == dummy_type.humanize([0, 6])
         assert ["A1", "B2"] == dummy_type.humanize(["0", "6"])
 
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             dummy_type.humanize("0.1")
         with pytest.raises(ValueError):
             dummy_type.humanize(15)
-        with pytest.raises(TypeError):
+        with pytest.raises(ValueError):
             dummy_type.humanize("A1")
 
 

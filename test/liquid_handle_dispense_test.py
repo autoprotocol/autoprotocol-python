@@ -129,7 +129,7 @@ class TestLiquidHandleUserConfig(LiquidHandleTester):
             (does_not_raise(), [[Unit("6:ul")], [Unit("7:ul")]]),
             (does_not_raise(), ["8:ul", "9:ul"]),
             (pytest.raises(ValueError), ["10:ul", "11:ul", "12:ul"]),
-            (pytest.raises(ValueError), [["13:ul", "14:ul", "15:ul"]]),
+            (pytest.raises(TypeError), [["13:ul", "14:ul", "15:ul"]]),
             (pytest.raises(ValueError), [["16:ul", "17:ul", "18:ul"], ["19:ul"]]),
         ]
         source = [(self.src_tube_1, 1), (self.src_tube_2, 1)]

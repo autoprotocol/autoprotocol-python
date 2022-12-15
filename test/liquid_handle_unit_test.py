@@ -243,11 +243,32 @@ class TestLiquidHandleMethod(LiquidHandleMethodTester):
         prime_aspirate = self.asp_transport.copy()
         prime_dispense = self.asp_transport.copy()
         prime_aspirate["volume"] = -prime_vol
-        prime_aspirate["pump_override_volume"] = -prime_vol
+        prime_aspirate["pump_override_volume"] = None
         prime_dispense["volume"] = prime_vol
-        prime_dispense["pump_override_volume"] = prime_vol
+        prime_dispense["pump_override_volume"] = None
         assert self.lhm._transports[1] == prime_aspirate
         assert self.lhm._transports[3] == prime_dispense
+
+    def test_pump_override_volume(self):
+        prime_vol = Unit(5, "microliter")
+        tip_position = self.asp_transport["mode_params"]["tip_position"]
+        self.lhm._aspirate_with_prime(
+            # pylint: disable=invalid-unary-operand-type
+            volume=-self.asp_transport["volume"],
+            prime_vol=prime_vol,
+            # pylint: disable=invalid-unary-operand-type
+            initial_z=self.well_top_z,
+            position_x=tip_position["position_x"],
+            position_y=tip_position["position_y"],
+            asp_flowrate=self.asp_transport["flowrate"],
+            dsp_flowrate=self.asp_transport["flowrate"],
+            delay_time=self.asp_transport["delay_time"],
+            liquid_class=self.asp_transport["mode_params"]["liquid_class"],
+        )
+        if self.lhm._transports[0]["pump_override_volume"] is not None:
+            raise AssertionError
+        if self.lhm._transports[1]["pump_override_volume"] is not None:
+            raise AssertionError
 
     def test_aspirate_simple_with_density(self):
         tip_position = self.asp_transport["mode_params"]["tip_position"]

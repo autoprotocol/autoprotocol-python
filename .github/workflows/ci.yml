@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - "3.6"
           - "3.7"
           - "3.8"
           - "3.9"
@@ -40,17 +39,17 @@ jobs:
 
     - name: Run Tox
       run: tox -e py
-      if: ${{matrix.python-version != 3.6 }}
+      if: ${{matrix.python-version != 3.7 }}
 
     - name: Run Tox with coverage
       run: tox -e clean,py,stats_xml
-      if: ${{ matrix.python-version == 3.6 }}
+      if: ${{ matrix.python-version == 3.7 }}
 
     - name: Upload to CodeCov
       uses: codecov/codecov-action@v1
       with:
         file: ./coverage.xml
-      if: ${{ matrix.python-version == 3.6 }}
+      if: ${{ matrix.python-version == 3.7 }}
 
   docs:
     name: Docs
@@ -63,7 +62,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install Tox
       run:  |
@@ -84,7 +83,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install Tox
       run:  |
@@ -107,7 +106,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install pypa/build
       run:  |

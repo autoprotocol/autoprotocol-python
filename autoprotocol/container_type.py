@@ -9,8 +9,8 @@ Container-type object and associated functions
 import re
 
 from collections import namedtuple
+from typing import List, Union
 
-from .container import Well
 from .unit import Unit
 
 
@@ -182,6 +182,8 @@ class ContainerType(
 
     @staticmethod
     def robotize_static(well_ref, well_count, col_count):
+        from .container import Well
+
         if isinstance(well_ref, list):
             return [
                 ContainerType.robotize_static(well, well_count, col_count)
@@ -225,7 +227,7 @@ class ContainerType(
                     "'A1' format or be an integer."
                 )
 
-    def robotize(self, well_ref):
+    def robotize(self, well_ref) -> Union[int, List[int]]:
         """
         Return a robot-friendly well reference from a number of well reference
         formats.
@@ -284,11 +286,11 @@ class ContainerType(
             )
         try:
             well_ref = int(well_ref)
-        except:
-            raise TypeError(
+        except ValueError as e:
+            raise ValueError(
                 "ContainerType.humanize(): Well reference given"
                 "is not parseable into 'int' format."
-            )
+            ) from e
         # Check bounds
         if well_ref >= well_count or well_ref < 0:
             raise ValueError(
@@ -334,7 +336,7 @@ class ContainerType(
 
         Raises
         ------
-        TypeError
+        ValueError
             If well reference given is not an accepted type.
         ValueError
             If well reference given exceeds container dimensions.
@@ -363,6 +365,8 @@ class ContainerType(
             Index given is not of the right parameter type
 
         """
+        from .container import Well
+
         if not isinstance(idx, (int, str, Well)):
             raise TypeError("Well index given is not of type 'int' or " "'str'.")
         idx = self.robotize(idx)
@@ -400,6 +404,7 @@ FLAT384 = ContainerType(
         "cover",
         "dispense",
         "seal",
+        "provision",
     ],
     shortname="384-flat",
     col_count=24,
@@ -430,6 +435,7 @@ PCR384 = ContainerType(
         "gel_purify",
         "seal",
         "dispense",
+        "provision",
     ],
     shortname="384-pcr",
     col_count=24,
@@ -451,7 +457,15 @@ ECHO384 = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
+    capabilities=[
+        "liquid_handle",
+        "seal",
+        "spin",
+        "incubate",
+        "dispense",
+        "cover",
+        "provision",
+    ],
     shortname="384-echo",
     col_count=24,
     dead_volume_ul=Unit(15, "microliter"),
@@ -483,6 +497,7 @@ FLAT384WHITELV = ContainerType(
         "liquid_handle",
         "spin",
         "uncover",
+        "provision",
     ],
     shortname="384-flat-white-white-lv",
     col_count=24,
@@ -515,6 +530,7 @@ FLAT384WHITETC = ContainerType(
         "spin",
         "uncover",
         "seal",
+        "provision",
     ],
     shortname="384-flat-white-white-tc",
     col_count=24,
@@ -547,6 +563,7 @@ FLAT384CLEAR = ContainerType(
         "luminescence",
         "liquid_handle",
         "uncover",
+        "provision",
     ],
     shortname="384-flat-clear-clear",
     col_count=24,
@@ -578,6 +595,7 @@ FLAT96 = ContainerType(
         "gel_purify",
         "cover",
         "dispense",
+        "provision",
     ],
     shortname="96-flat",
     col_count=12,
@@ -609,6 +627,7 @@ FLAT96UV = ContainerType(
         "gel_purify",
         "cover",
         "dispense",
+        "provision",
     ],
     shortname="96-flat-uv",
     col_count=12,
@@ -639,6 +658,7 @@ PCR96 = ContainerType(
         "gel_purify",
         "seal",
         "dispense",
+        "provision",
     ],
     shortname="96-pcr",
     col_count=12,
@@ -667,6 +687,7 @@ DEEP96 = ContainerType(
         "cover",
         "dispense",
         "seal",
+        "provision",
     ],
     shortname="96-deep",
     is_tube=False,
@@ -698,6 +719,7 @@ V96KF = ContainerType(
         "mag_mix",
         "cover",
         "dispense",
+        "provision",
     ],
     shortname="96-v-kf",
     is_tube=False,
@@ -729,6 +751,7 @@ DEEP96KF = ContainerType(
         "mag_mix",
         "cover",
         "dispense",
+        "provision",
     ],
     shortname="96-deep-kf",
     is_tube=False,
@@ -766,6 +789,7 @@ V96CC = ContainerType(
         "envision",
         "absorbance",
         "fluorescence",
+        "provision",
     ],
     shortname="96-well-v-bottom",
     col_count=12,
@@ -793,6 +817,7 @@ DEEP24 = ContainerType(
         "gel_purify",
         "dispense",
         "seal",
+        "provision",
     ],
     shortname="24-deep",
     is_tube=False,
@@ -813,7 +838,14 @@ MICRO2 = ContainerType(
     sterile=False,
     cover_types=None,
     seal_types=None,
-    capabilities=["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
+    capabilities=[
+        "liquid_handle",
+        "gel_separate",
+        "gel_purify",
+        "incubate",
+        "spin",
+        "provision",
+    ],
     shortname="micro-2.0",
     is_tube=True,
     col_count=1,
@@ -833,7 +865,14 @@ MICRO15 = ContainerType(
     sterile=False,
     cover_types=None,
     seal_types=None,
-    capabilities=["liquid_handle", "gel_separate", "gel_purify", "incubate", "spin"],
+    capabilities=[
+        "liquid_handle",
+        "gel_separate",
+        "gel_purify",
+        "incubate",
+        "spin",
+        "provision",
+    ],
     shortname="micro-1.5",
     is_tube=True,
     col_count=1,
@@ -853,7 +892,7 @@ FLAT6 = ContainerType(
     sterile=False,
     cover_types=["standard", "universal"],
     seal_types=None,
-    capabilities=["cover", "incubate", "image_plate"],
+    capabilities=["cover", "incubate", "image_plate", "provision"],
     shortname="6-flat",
     is_tube=False,
     col_count=3,
@@ -873,7 +912,7 @@ FLAT1 = ContainerType(
     sterile=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["cover", "incubate"],
+    capabilities=["cover", "incubate", "provision"],
     shortname="1-flat",
     is_tube=False,
     col_count=1,
@@ -893,7 +932,7 @@ FLAT6TC = ContainerType(
     sterile=False,
     cover_types=["standard", "universal"],
     seal_types=None,
-    capabilities=["cover", "incubate", "image_plate"],
+    capabilities=["cover", "incubate", "image_plate", "provision"],
     shortname="6-flat-tc",
     is_tube=False,
     col_count=3,
@@ -914,7 +953,14 @@ RESSW96HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "cover",
+        "dispense",
+        "liquid_handle",
+        "provision",
+    ],
     shortname="res-sw96-hp",
     col_count=1,
     dead_volume_ul=Unit(25, "milliliter"),
@@ -935,7 +981,14 @@ RESMW8HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "cover",
+        "dispense",
+        "liquid_handle",
+        "provision",
+    ],
     shortname="res-mw8-hp",
     col_count=1,
     dead_volume_ul=Unit(2.5, "milliliter"),
@@ -956,7 +1009,14 @@ RESMW12HP = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=None,
-    capabilities=["liquid_handle", "incubate", "cover", "dispense", "liquid_handle"],
+    capabilities=[
+        "liquid_handle",
+        "incubate",
+        "cover",
+        "dispense",
+        "liquid_handle",
+        "provision",
+    ],
     shortname="res-mw12-hp",
     col_count=12,
     dead_volume_ul=Unit(1.8, "milliliter"),
@@ -988,6 +1048,7 @@ FLAT96CLEARTC = ContainerType(
         "gel_purify",
         "cover",
         "dispense",
+        "provision",
     ],
     shortname="96-flat-clear-clear-tc",
     col_count=12,
@@ -1025,6 +1086,7 @@ V384CLEAR = ContainerType(
         "luminescence",
         "cover",
         "thermocycle",
+        "provision",
     ],
     shortname="384-v-clear-clear",
     col_count=24,
@@ -1062,6 +1124,7 @@ ROUND384CLEAR = ContainerType(
         "luminescence",
         "cover",
         "thermocycle",
+        "provision",
     ],
     shortname="384-round-clear-clear",
     col_count=24,
@@ -1103,8 +1166,46 @@ ROUND384LV = ContainerType(
     col_count=24,
     dead_volume_ul=Unit(2, "microliter"),
     safe_min_volume_ul=Unit(2, "microliter"),
+    true_max_vol_ul=Unit(35, "microliter"),
     vendor="Corning",
     cat_no="4513",
+)
+
+#:
+ROUND384LVNC = ContainerType(
+    name="384-well round-bottom low-volume Corning-4512 plate",
+    well_count=384,
+    well_depth_mm=6.58,
+    well_volume_ul=Unit(20.0, "microliter"),
+    well_coating="nonbinding_surface",
+    sterile=False,
+    is_tube=False,
+    cover_types=["universal", "standard"],
+    seal_types=["ultra-clear", "foil"],
+    capabilities=[
+        "incubate",
+        "seal",
+        "deseal",
+        "liquid_handle",
+        "dispense",
+        "spin",
+        "fluorescence",
+        "cover",
+        "uncover",
+        "echo_dest",
+        "stamp",
+        "transfer",
+        "provision",
+        "pipette",
+        "envision",
+    ],
+    shortname="384-corning-4512-round-lv",
+    col_count=24,
+    dead_volume_ul=Unit(2, "microliter"),
+    safe_min_volume_ul=Unit(2, "microliter"),
+    true_max_vol_ul=Unit(35, "microliter"),
+    vendor="Corning",
+    cat_no="4512",
 )
 
 #:
@@ -1125,6 +1226,7 @@ RESSW384LP = ContainerType(
         "dispense",
         "liquid_handle",
         "sbs384_compatible",
+        "provision",
     ],
     shortname="res-sw384-lp",
     col_count=1,
@@ -1147,7 +1249,15 @@ ECHO384LDV = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
+    capabilities=[
+        "liquid_handle",
+        "seal",
+        "spin",
+        "incubate",
+        "dispense",
+        "cover",
+        "provision",
+    ],
     shortname="384-echo-ldv",
     col_count=24,
     dead_volume_ul=Unit(2.5, "microliter"),
@@ -1168,7 +1278,15 @@ ECHO384LDVPLUS = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
+    capabilities=[
+        "liquid_handle",
+        "seal",
+        "spin",
+        "incubate",
+        "dispense",
+        "cover",
+        "provision",
+    ],
     shortname="384-echo-ldv-plus",
     col_count=24,
     dead_volume_ul=Unit(4.5, "microliter"),
@@ -1189,7 +1307,15 @@ ECHO1536LDV = ContainerType(
     is_tube=False,
     cover_types=["universal"],
     seal_types=["foil", "ultra-clear"],
-    capabilities=["liquid_handle", "seal", "spin", "incubate", "dispense", "cover"],
+    capabilities=[
+        "liquid_handle",
+        "seal",
+        "spin",
+        "incubate",
+        "dispense",
+        "cover",
+        "provision",
+    ],
     shortname="1536-echo-ldv-beckman-001-6969",
     col_count=48,
     dead_volume_ul=Unit(1, "microliter"),
@@ -1222,6 +1348,7 @@ FLAT384WHITECLEAR = ContainerType(
         "cover",
         "dispense",
         "seal",
+        "provision",
     ],
     shortname="384-flat-white-clear",
     col_count=24,
@@ -1255,6 +1382,7 @@ FALCON96UBOTTOM = ContainerType(
         "uncover",
         "seal",
         "unseal",
+        "provision",
     ],
     cover_types=["universal"],
     seal_types=["ultra-clear", "foil"],
@@ -1396,6 +1524,7 @@ PCR96FSC = ContainerType(
         "gel_purify",
         "seal",
         "dispense",
+        "provision",
     ],
     shortname="96-pcr-fs-clear",
     col_count=12,
@@ -1510,6 +1639,7 @@ _CONTAINER_TYPES = {
     "384-round-clear-clear": ROUND384CLEAR,
     "res-sw384-lp": RESSW384LP,
     "384-corning-4513-round-lv": ROUND384LV,
+    "384-corning-4512-round-lv": ROUND384LVNC,
     "384-echo-ldv": ECHO384LDV,
     "384-echo-ldv-plus": ECHO384LDVPLUS,
     "1536-echo-ldv-beckman-001-6969": ECHO1536LDV,

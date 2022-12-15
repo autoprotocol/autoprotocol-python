@@ -9,11 +9,13 @@ Container, Well, WellGroup objects and associated functions
 import json
 import warnings
 
-from typing import Dict
+from dataclasses import dataclass
+from typing import Dict, Optional, Union
 
 from autoprotocol.util import parse_unit
 
 from .constants import SBS_FORMAT_SHAPES
+from .container_type import _CONTAINER_TYPES, ContainerType
 from .unit import Unit, UnitError
 
 
@@ -44,11 +46,11 @@ class EntityPropertiesMixin:
                 )
             try:
                 json.dumps(value)
-            except TypeError:
+            except TypeError as e:
                 raise TypeError(
                     f"{str(entity)} property {key} : {value} has a value of type "
                     f"{type(value)}, that isn't JSON serializable."
-                )
+                ) from e
 
     def set_properties(self, properties):
         """
@@ -158,6 +160,7 @@ class EntityPropertiesMixin:
         return self
 
 
+@dataclass(eq=False)
 class Well(EntityPropertiesMixin):
     """
     A Well object describes a single location within a container.
@@ -178,17 +181,27 @@ class Well(EntityPropertiesMixin):
 
     """
 
-    def __init__(self, container, index, properties=None, ctx_properties=None):
-        self.container = container
-        self.index = int(index)
-        self.volume = None
-        self.mass = None
-        self.name = None
-        self.compounds = None
-        self.properties = properties if isinstance(properties, dict) else dict()
-        self.ctx_properties = (
-            ctx_properties if isinstance(ctx_properties, dict) else dict()
-        )
+    container: "Container"  # Forward references
+    index: int
+    volume: Optional[Union[str, Unit]] = None
+    mass: Optional[Union[str, Unit]] = None
+    name: Optional[str] = None
+    compounds: Optional[list] = None
+    properties: Optional[dict] = None
+    ctx_properties: Optional[dict] = None
+
+    def __post_init__(self):
+        if not isinstance(self.container, Container):
+            raise TypeError(
+                f"Well initialization: Input 'container' for well [{self.index}] "
+                f"is not valid: {self.container}"
+            )
+
+        if not isinstance(self.properties, dict):
+            self.properties = dict()
+
+        if not isinstance(self.ctx_properties, dict):
+            self.ctx_properties = dict()
 
     def set_mass(self, mass):
         """
@@ -245,11 +258,13 @@ class Well(EntityPropertiesMixin):
         ValueError
             Volume set exceeds maximum well volume
         """
+
         if not isinstance(vol, str) and not isinstance(vol, Unit):
             raise TypeError(
                 f"Volume {vol} is of type {type(vol)}, it should be either "
                 f"'str' or 'Unit'."
             )
+
         v = Unit(vol)
         max_vol = self.container.container_type.true_max_vol_ul
         if v > max_vol:
@@ -771,6 +786,7 @@ class WellGroup(object):
 
 
 # pylint: disable=redefined-builtin
+@dataclass(eq=False)
 class Container(EntityPropertiesMixin):
     """
     A reference to a specific physical container (e.g. a tube or 96-well
@@ -809,30 +825,51 @@ class Container(EntityPropertiesMixin):
 
     """
 
-    def __init__(
-        self,
-        id,
-        container_type,
-        name=None,
-        storage=None,
-        cover=None,
-        properties=None,
-        ctx_properties=None,
-    ):
-        self.name = name
-        self.id = id
-        self.container_type = container_type
-        self.storage = storage
-        self.cover = cover
-        self.properties = properties if isinstance(properties, dict) else dict()
-        self.ctx_properties = (
-            ctx_properties if isinstance(ctx_properties, dict) else dict()
-        )
-        self._wells = [Well(self, idx) for idx in range(container_type.well_count)]
-        if self.cover and not (self.is_covered() or self.is_sealed()):
-            raise AttributeError(f"{cover} is not a valid seal or cover type.")
+    id: Optional[str] = None
+    container_type: Union[ContainerType, str] = ""
+    name: Optional[str] = None
+    storage: Optional[str] = None
+    cover: Optional[str] = None
+    properties: Optional[dict] = None
+    ctx_properties: Optional[dict] = None
 
-    def well(self, i):
+    def __post_init__(self):
+        # Validate
+        container_name = ""
+        if self.name:
+            container_name = f" Container '{self.name}'"
+        container_id = ""
+        if self.id:
+            container_id = f" with ID [{self.id}]"
+        if not isinstance(self.container_type, (ContainerType, str)):
+            raise TypeError(
+                f"Container initialization:{container_name}{container_id} failed! "
+                f"Input 'container_type' object is not valid: {self.container_type}"
+            )
+        elif isinstance(self.container_type, str):
+            container_type_str = self.container_type
+            self.container_type = _CONTAINER_TYPES.get(container_type_str)
+            if not self.container_type:
+                raise TypeError(
+                    f"Container initialization:{container_name}{container_id} failed! "
+                    f"Input 'container_type' did not exist: {container_type_str}"
+                )
+
+        if self.cover and not (self.is_covered() or self.is_sealed()):
+            raise AttributeError(
+                f"Container initialization:{container_name}{container_id} failed! "
+                f"{self.cover} is not a valid seal or cover type."
+            )
+
+        if not isinstance(self.properties, dict):
+            self.properties = dict()
+
+        if not isinstance(self.ctx_properties, dict):
+            self.ctx_properties = dict()
+
+        self._wells = [Well(self, idx) for idx in range(self.container_type.well_count)]
+
+    def well(self, i) -> Well:
         """
         Return a Well object representing the well at the index specified of
         this Container.

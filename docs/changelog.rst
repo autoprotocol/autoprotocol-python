@@ -1,6 +1,9 @@
 =========
 Changelog
 =========
+* :release:`Unreleased <2022-12-16>`
+* :feature:`372` Support for propagate_properties in acoustic_transfer
+
 * :release:`8.0.1 <2022-12-07>`
 * :feature:`365` Update autopick method signature to allow for multiple pick groups per instruction
 

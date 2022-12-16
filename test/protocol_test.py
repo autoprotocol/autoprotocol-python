@@ -1382,11 +1382,10 @@ class TestAcousticTransfer(object):
         p.propagate_properties = True
         echo = p.ref("echo", None, "384-echo", discard=True)
         dest = p.ref("dest", None, "384-echo", discard=True)
+        echo.well(0).set_volume("2:microliter")
         echo.well(0).set_properties({"test_well_property": True})
         dest.well(0).set_properties({"test_well_property": False})
-        p.acoustic_transfer(
-            echo.well(0).set_volume("2:microliter"), dest.wells(0, 1), "50:nanoliter"
-        )
+        p.acoustic_transfer(echo.well(0), dest.wells(0, 1), "50:nanoliter")
         echo_prop = echo.well(0).properties["test_well_property"]
         # Tests property overwrite
         assert echo_prop == dest.well(0).properties["test_well_property"]

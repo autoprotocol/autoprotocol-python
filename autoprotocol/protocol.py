@@ -11,7 +11,6 @@ import warnings
 
 from typing import Dict, List, Tuple
 
-from . import UserError
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
 from .container import COVER_TYPES, SEAL_TYPES, Container, Well
@@ -143,7 +142,7 @@ class OligosynthesizeOligo:
     def __post_init__(self):
         allowable_scales = ["25nm", "100nm", "250nm", "1um"]
         if self.scale not in allowable_scales:
-            raise UserError(f"Scale entered {self.scale} not in {allowable_scales}")
+            raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
 
 
 @dataclass
@@ -252,7 +251,7 @@ class FlowAnalyzeNegControls:
 @dataclass
 class FlowAnalyzeSample:
     well: Well
-    volume: Union[str, Union]
+    volume: Union[str, Unit]
     captured_events: int
 
 
@@ -3663,11 +3662,11 @@ class Protocol:
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
         detection_mode: Optional[str] = None,
         position_z: Optional[
-            PlateReaderPositionZCalculated, PlateReaderPositionZManual
+            Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]
         ] = None,
         settle_time: Optional[Unit] = None,
         lag_time: Optional[Unit] = None,
-        integration_time: Optional[Unit] = None,
+        integration_time: Optional[str] = None,
     ):
         """
         Read the fluoresence for the indicated wavelength for the indicated

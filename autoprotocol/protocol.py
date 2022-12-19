@@ -1544,7 +1544,8 @@ class Protocol(object):
         ------
         TypeError
             Incorrect input types, e.g. source/dest are not Well or WellGroup
-            or list of Well
+            or list of Well; or container_type does not have 'acoustic_transfer'
+            capability.
         RuntimeError
             Incorrect length for source and destination
         RuntimeError
@@ -1561,6 +1562,23 @@ class Protocol(object):
                 "Destination (dest) must be of type Well, list of Wells, or "
                 "WellGroup."
             )
+
+        # Check valid container_type capability
+        wells = []
+        if isinstance(source, Well):
+            wells.append(source)
+        elif isinstance(source, WellGroup):
+            wells = source.wells
+        elif isinstance(source, list):
+            wells = source
+        for well in wells:
+            if "acoustic_transfer" not in well.container.container_type.capabilities:
+                raise TypeError(
+                    f"AcousticTransfer: Source does not have 'acoustic_transfer' "
+                    f"capability for well '{well.index}' of container name "
+                    f"'{well.container.name}' with container ID '{well.container.id}' "
+                    f"and container type '{well.container.container_type.shortname}'!"
+                )
 
         transfers = []
         source = WellGroup(source)

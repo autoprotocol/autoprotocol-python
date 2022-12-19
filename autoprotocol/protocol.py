@@ -6,6 +6,7 @@ Module containing the main `Protocol` object and associated functions
     :license: BSD, see LICENSE for more details
 
 """
+import dataclasses
 import json
 import warnings
 
@@ -162,7 +163,7 @@ class AgitateModeParams:
 class ThermocycleTemperature:
     duration: Union[str, Unit]
     temperature: Union[str, Unit]
-    read: bool = False
+    read: bool = dataclasses.field(default=False)
 
 
 @dataclass
@@ -175,7 +176,7 @@ class TemperatureGradient:
 class ThermocycleTemperatureGradient:
     duration: Union[str, Unit]
     gradient: TemperatureGradient
-    read: bool = False
+    read: bool = dataclasses.field(default=False)
 
 
 class PlateReaderIncubateBeforeShaking:
@@ -261,9 +262,9 @@ class FlowAnalyzeColors:
     emission_wavelength: Union[str, Unit]
     excitation_wavelength: Union[str, Unit]
     voltage_range: FlowAnalyzeChannelVoltageRange
-    area: bool = True
-    height: bool = False
-    weight: bool = False
+    area: bool = dataclasses.field(default=True)
+    height: bool = dataclasses.field(default=False)
+    weight: bool = dataclasses.field(default=False)
 
 
 @dataclass
@@ -329,7 +330,7 @@ class SpeLoadSample:
     flow_pressure: Union[str, Unit]
     resource_id: Optional[str] = None
     destination_well: Optional[Well] = None
-    is_elute: bool = False
+    is_elute: bool = dataclasses.field(default=False)
 
 
 @dataclass
@@ -340,7 +341,7 @@ class SpeParams:
     processing_time: Union[str, Unit]
     flow_pressure: Union[str, Unit]
     resource_id: Optional[str] = None
-    is_sample: bool = False
+    is_sample: bool = dataclasses.field(default=False)
     destination_well: Optional[Well] = None
 
 
@@ -359,10 +360,10 @@ class ImageExposure:
 
 @dataclass
 class Protocol:
-    refs: Optional[Dict[str, Ref]] = (None,)
-    instructions: List[Instruction] = ([],)
-    propagate_properties: bool = (False,)
-    time_constraints: List[TimeConstraint] = ([],)
+    refs: Optional[Dict[str, Ref]] = dataclasses.field(default_factory=dict)
+    instructions: List[Instruction] = dataclasses.field(default_factory=list)
+    propagate_properties: bool = dataclasses.field(default=False)
+    time_constraints: List[TimeConstraint] = dataclasses.field(default_factory=list)
     """
     A Protocol is a sequence of instructions to be executed, and a set of
     containers on which those instructions act.

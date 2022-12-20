@@ -3177,7 +3177,7 @@ class TestImage(object):
     def test_image(self):
         self.p.image(
             ref=self.c1,
-            mode=ImageMode.top,
+            mode="top",
             num_images=3,
             dataref="dataref_1",
             backlighting=False,
@@ -3188,7 +3188,7 @@ class TestImage(object):
         assert self.p.instructions[-1].data["magnification"] == 1.5
 
     def test_image_default(self):
-        self.p.image(self.c1, mode=ImageMode.top, num_images=1, dataref="dataref_1")
+        self.p.image(self.c1, mode="top", num_images=1, dataref="dataref_1")
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["magnification"] == 1.0
         assert self.p.instructions[-1].data["num_images"] == 1
@@ -3196,7 +3196,7 @@ class TestImage(object):
     def test_image_params(self):
         self.p.image(
             self.c1,
-            mode=ImageMode.top,
+            mode="top",
             num_images=1,
             dataref="dataref_2",
             backlighting=True,
@@ -3217,7 +3217,7 @@ class TestImage(object):
                 mode="top",
                 dataref="dataref_1",
                 exposure={"iso": "true"},
-                num_images=2,
+                num_images=0,
             )
 
 

@@ -3188,7 +3188,11 @@ class TestImage(object):
         assert self.p.instructions[-1].data["magnification"] == 1.5
 
     def test_image_default(self):
+<<<<<<< HEAD
         self.p.image(self.c1, mode='top', num_images=1, dataref="dataref_1")
+=======
+        self.p.image(self.c1, mode="top", num_images=1, dataref="dataref_1")
+>>>>>>> a4417eddd8a690870ae694b67b5bd34dbc942958
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["magnification"] == 1.0
         assert self.p.instructions[-1].data["num_images"] == 1

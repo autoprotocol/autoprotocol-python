@@ -6558,7 +6558,7 @@ class Protocol:
     def image(
         self,
         ref: Container,
-        mode: ImageMode,
+        mode: Union[str, ImageMode],
         num_images: int,
         dataref: str,
         backlighting: Optional[bool] = None,

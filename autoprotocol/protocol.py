@@ -8075,19 +8075,19 @@ class Protocol:
             # if density is None, it should still be a list of None
             density = [density] * count
 
-        if not isinstance(source_liquid, list):
-            source_liquid = [source_liquid] * count
-        source_liquid = [_validate_as_instance(_, LiquidClass) for _ in source_liquid]
+        # if not isinstance(source_liquid, list):
+        #     source_liquid = [source_liquid] * count
+        source_liquid = [source_liquid] * count
 
         if not isinstance(destination_liquid, list):
             destination_liquid = [destination_liquid] * count
-        destination_liquid = [
-            _validate_as_instance(_, LiquidClass) for _ in destination_liquid
-        ]
+        # destination_liquid = [
+        #     _validate_as_instance(_, LiquidClass) for _ in destination_liquid
+        # ]
 
         if not isinstance(method, list):
             method = [method] * count
-        method = [_validate_as_instance(_, Transfer) for _ in method]
+        # method = [_validate_as_instance(_, Transfer) for _ in method]
 
         # if informatics is provided for multiple wells, split Informatics for each destination well
         # with the specified compounds.

@@ -26,7 +26,7 @@ from autoprotocol.instruction import (
     Thermocycle,
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
-from autoprotocol.protocol import ImageExposure, ImageMode, Protocol, Ref
+from autoprotocol.protocol import ImageExposure, Protocol, Ref
 from autoprotocol.types.protocol import AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
@@ -3188,11 +3188,7 @@ class TestImage(object):
         assert self.p.instructions[-1].data["magnification"] == 1.5
 
     def test_image_default(self):
-<<<<<<< HEAD
-        self.p.image(self.c1, mode='top', num_images=1, dataref="dataref_1")
-=======
         self.p.image(self.c1, mode="top", num_images=1, dataref="dataref_1")
->>>>>>> a4417eddd8a690870ae694b67b5bd34dbc942958
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["magnification"] == 1.0
         assert self.p.instructions[-1].data["num_images"] == 1
@@ -3230,7 +3226,7 @@ class TestImage(object):
                 dataref="dataref_1",
                 exposure={"iso": "true"},
                 num_images=3,
-                magnification=0
+                magnification=0,
             )
 
 

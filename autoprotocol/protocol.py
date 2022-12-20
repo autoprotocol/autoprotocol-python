@@ -6649,7 +6649,7 @@ class Protocol:
         ValueError
             Invalid exposure parameter supplied
         """
-        allowed_image_modes = ImageMode.__dict__.get('_member_names_')
+        allowed_image_modes = ImageMode.__dict__.get("_member_names_")
         if not mode in allowed_image_modes:
             raise ValueError(f"image mode must be one of: {allowed_image_modes}")
         if num_images <= 0:

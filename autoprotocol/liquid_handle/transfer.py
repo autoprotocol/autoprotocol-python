@@ -8,6 +8,7 @@ Base LiquidHandleMethod used by Protocol.transfer to generate a series of
 movements between pairs of wells.
 """
 import dataclasses
+
 from typing import Optional, Union
 
 from ..instruction import LiquidHandle
@@ -15,33 +16,13 @@ from ..unit import Unit
 from ..util import parse_unit
 from .liquid_handle_method import LiquidHandleMethod
 
+
 # pylint: disable=unused-argument,too-many-instance-attributes,protected-access
 @dataclasses.dataclass
 class Transfer(LiquidHandleMethod):
     """LiquidHandleMethod for generating transfers between pairs of wells
 
     LiquidHandleMethod for transferring volume from one well to another.
-
-    Attributes
-    ----------
-    _source_liquid : LiquidClass
-        used to determine calibration, flowrates, and sensing thresholds
-    _destination_liquid : LiquidClass
-        used to determine calibration, flowrates, and sensing thresholds
-
-    Notes
-    -----
-    The primary entry points that for this class are:
-        - _aspirate_transports : generates transports for a source location
-        - _dispense_transports : generates transports for a destination location
-
-
-    See Also
-    --------
-    LiquidHandleMethod : base LiquidHandleMethod with reused functionality
-    Protocol.transfer : the standard interface for interacting with Transfer
-    """
-    """
     Parameters
     ----------
     tip_type : str, optional
@@ -82,7 +63,27 @@ class Transfer(LiquidHandleMethod):
         position references the `liquid_surface` then dispense
         will track the surface with the defined offset.
         See Also LiquidHandle.builders.position_z
+
+    Attributes
+    ----------
+    _source_liquid : LiquidClass
+        used to determine calibration, flowrates, and sensing thresholds
+    _destination_liquid : LiquidClass
+        used to determine calibration, flowrates, and sensing thresholds
+
+    Notes
+    -----
+    The primary entry points that for this class are:
+        - _aspirate_transports : generates transports for a source location
+        - _dispense_transports : generates transports for a destination location
+
+
+    See Also
+    --------
+    LiquidHandleMethod : base LiquidHandleMethod with reused functionality
+    Protocol.transfer : the standard interface for interacting with Transfer
     """
+
     tip_type: Optional[str] = None
     blowout: Optional[Union[bool, dict]] = True
     prime: Optional[Union[bool, Unit]] = True

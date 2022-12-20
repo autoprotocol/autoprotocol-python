@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+* :release:`9.0.0 <2022-12-20>`
 * :feature:`372` Acoustic transfer propagates well properties
 * :feature:`371` Added new container type: `384-corning-4512-round-lv`
 

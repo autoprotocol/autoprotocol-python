@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* :feature:`36X` Acoustic transfer propagates well properties
+* :feature:`372` Acoustic transfer propagates well properties
 
 * :release:`8.0.1 <2022-12-07>`
 * :feature:`365` Update autopick method signature to allow for multiple pick groups per instruction

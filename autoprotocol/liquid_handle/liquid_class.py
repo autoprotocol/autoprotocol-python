@@ -111,12 +111,12 @@ class LiquidClass:
     Protocol.mix : accepts a LiquidClass argument to determine behavior
     """
 
-    calibrated_volume: Optional["Unit"]
-    aspirate_flowrate: Optional[dict]
-    dispense_flowrate: Optional[dict]
-    delay_time: Optional["Unit"]
-    clld_threshold: Optional["Unit"]
-    plld_threshold: Optional["Unit"]
+    calibrated_volume: Optional["Unit"] = None
+    aspirate_flowrate: Optional[dict] = None
+    dispense_flowrate: Optional[dict] = None
+    delay_time: Optional["Unit"] = None
+    clld_threshold: Optional["Unit"] = None
+    plld_threshold: Optional["Unit"] = None
 
     """
     Parameters

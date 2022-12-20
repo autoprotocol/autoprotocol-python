@@ -23,6 +23,7 @@ supports.
 from dataclasses import dataclass
 from typing import Optional
 
+from ..unit import Unit
 from ..instruction import LiquidHandle
 from ..util import parse_unit
 from .tip_type import TipType

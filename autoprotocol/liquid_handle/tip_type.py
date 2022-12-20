@@ -6,20 +6,19 @@ Generic tip type and device class mappings for LiquidHandleMethods
     :license: BSD, see LICENSE for more details
 """
 import dataclasses
-from collections import namedtuple
+from typing import Union
 
 from ..util import parse_unit
 
 @dataclasses.dataclass(init=False)
 class TipType:
-# class TipType(namedtuple("TipType", ["name", "volume"])):
     """
     The TipType class holds the properties of a TipType
     """
     name: str
     volume: 'Unit'
 
-    def __new__(cls, name, volume):
+    def __new__(cls, name: str, volume: Union[str, 'Unit']):
         """
         Parameters
         ----------
@@ -45,4 +44,6 @@ class TipType:
         if not isinstance(name, str):
             raise TypeError(f"TipType name {name} was not a str.")
         volume = parse_unit(volume, "uL")
-        return super(TipType, cls).__new__(cls, name, volume)
+        cls.name = name
+        cls.volume = volume
+        return cls

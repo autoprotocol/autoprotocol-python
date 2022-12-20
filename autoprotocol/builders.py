@@ -2694,16 +2694,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         if excitation is not None:
             excitation = parse_unit(excitation, "nanometers")
 
-        channels = [
-            self.channel(
-                emission_filter=c.emission_filter,
-                detector_gain=c.detector_gain,
-                measurements=c.measurements,
-                trigger_threshold=c.trigger_threshold,
-                trigger_logic=c.trigger_logic,
-            )
-            for c in channels
-        ]
+        channels = [self.channel(**c) for c in channels]
 
         # Gating modes do not allow specification of excitation parameter
         channel_names = set(
@@ -2764,11 +2755,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         if measurements is None:
             measurements = self.measurements()
         else:
-            measurements = self.measurements(
-                area=measurements.area,
-                height=measurements.height,
-                width=measurements.width,
-            )
+            measurements = self.measurements(**measurements)
 
         emission_filter = self.emission_filter(**emission_filter)
         detector_gain = parse_unit(detector_gain, "millivolts")
@@ -2778,7 +2765,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic.value,
+            "trigger_logic": trigger_logic,
         }
 
     def emission_filter(

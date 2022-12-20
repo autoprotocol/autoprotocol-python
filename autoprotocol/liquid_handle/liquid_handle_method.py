@@ -181,7 +181,7 @@ class LiquidHandleMethod:
         """
         return sorted(self._get_tip_types(), key=lambda t: t.volume)
 
-    def _rec_tip_type(self, volume: "Unit"):
+    def _rec_tip_type(self, volume: Unit):
         """For a given volume gets the smallest appropriate tip type
 
         Parameters

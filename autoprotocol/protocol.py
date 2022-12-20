@@ -353,9 +353,9 @@ class ImageMode(enum.Enum):
 
 @dataclass
 class ImageExposure:
-    shutter_speed: Optional[Unit]
-    iso: Optional[float]
-    aperture: Optional[float]
+    shutter_speed: Optional[Unit] = None
+    iso: Optional[float] = None
+    aperture: Optional[float] = None
 
 
 @dataclass
@@ -3829,12 +3829,7 @@ class Protocol:
             )
 
         if incubate_before:
-            Fluorescence.builders.incubate_params(
-                duration=incubate_before.duration,
-                shake_amplitude=incubate_before.shake_amplitude,
-                shake_orbital=incubate_before.shake_orbital,
-                shaking=incubate_before.shaking,
-            )
+            Fluorescence.builders.incubate_params(**incubate_before)
 
         valid_detection_modes = ["top", "bottom"]
         if detection_mode and detection_mode not in valid_detection_modes:
@@ -6648,46 +6643,13 @@ class Protocol:
         ValueError
             Invalid exposure parameter supplied
         """
-        valid_image_modes = ["top", "bottom", "side"]
-        if not isinstance(ref, Container):
-            raise TypeError(f"image ref: {ref} has to be of type Container")
-        if mode not in valid_image_modes:
-            raise ValueError(
-                f"specified mode: {mode} must be one of " f"{valid_image_modes}"
-            )
-        if not isinstance(dataref, str):
-            raise TypeError("dataref must be of type String.")
-        if not isinstance(num_images, int) or num_images <= 0:
+        allowed_image_modes = [ImageMode.top, ImageMode.bottom, ImageMode.side]
+        if not mode in allowed_image_modes:
+            raise ValueError(f"image mode must be one of: {allowed_image_modes}")
+        if num_images <= 0:
             raise TypeError("num_images must be a positive integer.")
-        if magnification:
-            if not isinstance(magnification, (float, int)) or magnification <= 0:
-                raise TypeError("magnification must be a number.")
-        if backlighting:
-            if not isinstance(backlighting, bool):
-                raise TypeError("backlighting must be a boolean.")
-        if exposure:
-            valid_exposure_params = ["shutter_speed", "iso", "aperture"]
-            if not isinstance(exposure, dict):
-                raise TypeError(
-                    f"exposure must be a dict with optional keys: "
-                    f"{valid_exposure_params}."
-                )
-            if not all(k in valid_exposure_params for k in exposure):
-                raise ValueError(
-                    f"Invalid exposure param.  Valid params: "
-                    f"{valid_exposure_params}."
-                )
-            shutter_speed = exposure.get("shutter_speed")
-            if shutter_speed:
-                shutter_speed = parse_unit(shutter_speed, "millimeter/s")
-            iso = exposure.get("iso")
-            if iso:
-                if not isinstance(iso, (float, int)):
-                    raise TypeError("iso must be a number.")
-            aperture = exposure.get("aperture")
-            if aperture:
-                if not isinstance(aperture, (float, int)):
-                    raise TypeError("aperture must be a number.")
+        if magnification <= 0:
+            raise TypeError("magnification must be a number.")
 
         return self._append_and_return(
             Image(ref, mode, dataref, num_images, backlighting, exposure, magnification)
@@ -8131,7 +8093,7 @@ class Protocol:
 
         # apply tip types to transfer methods
         for vol, met in zip(volume, method):
-            if met._has_calibration() and not met.tip_type:
+            if not met.tip_type:
                 try:
                     met.tip_type = met._rec_tip_type(vol)
                 except RuntimeError:

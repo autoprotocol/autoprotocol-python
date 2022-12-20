@@ -2217,17 +2217,7 @@ class GelPurifyBuilders(InstructionBuilders):
         if not isinstance(band_list, list):
             band_list = [band_list]
 
-        band_list = [
-            self.band(
-                elution_buffer=band.elution_buffer,
-                elution_volume=band.elution_volume,
-                destination=band.destination,
-                min_bp=band.min_bp,
-                max_bp=band.max_bp,
-                band_size_range=band.band_size_range,
-            )
-            for band in band_list
-        ]
+        band_list = [self.band(**i) for i in band_list]
 
         return {"source": source, "band_list": band_list, "lane": lane, "gel": gel}
 

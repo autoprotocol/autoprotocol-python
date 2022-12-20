@@ -24,7 +24,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ..instruction import LiquidHandle
-
 from ..util import parse_unit
 from .tip_type import TipType
 
@@ -179,7 +178,7 @@ class LiquidHandleMethod:
         """
         return sorted(self._get_tip_types(), key=lambda t: t.volume)
 
-    def _rec_tip_type(self, volume: "Unit"):
+    def _rec_tip_type(self, volume: Unit):
         """For a given volume gets the smallest appropriate tip type
 
         Parameters

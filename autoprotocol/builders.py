@@ -2024,8 +2024,8 @@ class PlateReaderBuilders(InstructionBuilders):
 
 
 class EvaporateModeParamsMode(enum.Enum):
-    rotary = enum.auto()
-    centrifugal = enum.auto()
+    rotate = enum.auto()
+    centrifuge = enum.auto()
     vortex = enum.auto()
     blowdown = enum.auto()
 
@@ -2037,15 +2037,15 @@ class EvaporateBuilders(InstructionBuilders):
 
     def __init__(self):
         super(EvaporateBuilders, self).__init__()
-        self.valid_modes = ["rotary", "centrifugal", "vortex", "blowdown"]
+        self.valid_modes = ["rotate", "centrifuge", "vortex", "blowdown"]
         self.valid_gases = ["nitrogen", "argon", "helium"]
-        self.rotary_params = [
+        self.rotate_params = [
             "flask_volume",
             "rotation_speed",
             "vacuum_pressure",
             "condenser_temperature",
         ]
-        self.centrifugal_params = [
+        self.centrifuge_params = [
             "spin_acceleration",
             "vacuum_pressure",
             "condenser_temperature",
@@ -2094,8 +2094,8 @@ class EvaporateBuilders(InstructionBuilders):
 
         """
         mode_to_param_dict = {
-            "rotary": self.rotary_params,
-            "centrifugal": self.centrifugal_params,
+            "rotate": self.rotate_params,
+            "centrifuge": self.centrifuge_params,
             "vortex": self.vortex_params,
             "blowdown": self.blowdown_params,
         }
@@ -2217,17 +2217,7 @@ class GelPurifyBuilders(InstructionBuilders):
         if not isinstance(band_list, list):
             band_list = [band_list]
 
-        band_list = [
-            self.band(
-                elution_buffer=band.elution_buffer,
-                elution_volume=band.elution_volume,
-                destination=band.destination,
-                min_bp=band.min_bp,
-                max_bp=band.max_bp,
-                band_size_range=band.band_size_range,
-            )
-            for band in band_list
-        ]
+        band_list = [self.band(**i) for i in band_list]
 
         return {"source": source, "band_list": band_list, "lane": lane, "gel": gel}
 
@@ -2596,9 +2586,19 @@ class MagneticTransferBuilders(InstructionBuilders):
         }
 
 
-class FlowCytometryChannelTriggerLogic(enum.Enum):
+class FlowCytometryChannelTriggerLogicEnum(enum.Enum):
     and_ = enum.auto()
     or_ = enum.auto()
+
+
+@dataclass
+class FlowCytometryChannelTriggerLogic:
+    value: FlowCytometryChannelTriggerLogicEnum
+
+    def __post_init__(self):
+        trigger_modes = ("and_", "or_")
+        if self.value is not None and self.value not in trigger_modes:
+            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
 
 
 @dataclass
@@ -2761,10 +2761,6 @@ class FlowCytometryBuilders(InstructionBuilders):
         if trigger_threshold is not None and not isinstance(trigger_threshold, int):
             raise TypeError("trigger_threshold must be of type int.")
 
-        trigger_modes = ("and_", "or_")
-        if trigger_logic is not None and trigger_logic not in trigger_modes:
-            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
-
         if measurements is None:
             measurements = self.measurements()
         else:
@@ -2782,7 +2778,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             "detector_gain": detector_gain,
             "measurements": measurements,
             "trigger_threshold": trigger_threshold,
-            "trigger_logic": trigger_logic[-1:],
+            "trigger_logic": trigger_logic.value,
         }
 
     def emission_filter(

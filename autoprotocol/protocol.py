@@ -6,10 +6,11 @@ Module containing the main `Protocol` object and associated functions
     :license: BSD, see LICENSE for more details
 
 """
+import dataclasses
 import json
 import warnings
-from dataclasses import field
 
+from dataclasses import field
 from typing import Dict, List, Tuple
 
 from .compound import Compound
@@ -45,6 +46,7 @@ class DispenseShakeAfter:
     path: Optional[str] = None
     amplitude: Optional[Union[Unit, str]] = None
 
+
 class Location(enum.Enum):
     warm_37 = enum.auto()
     warm_30 = enum.auto()
@@ -53,14 +55,17 @@ class Location(enum.Enum):
     cold_20 = enum.auto()
     cold_80 = enum.auto()
 
+
 @dataclass
 class StorageLocation:
     where: Location
+
 
 @dataclass
 class RefOpts:
     discard: bool
     store: StorageLocation
+
 
 @dataclass
 class Ref:
@@ -82,6 +87,7 @@ class Ref:
 class DispenseColumn:
     column: int
     volume: Union[str, Unit]
+
 
 @dataclass
 class IncubateShakingParams:
@@ -108,6 +114,7 @@ class TimeConstraintState:
     start = enum.auto()
     end = enum.auto()
 
+
 @dataclass
 class TimeConstraintFromToDict:
     mark: Union[int, Container]
@@ -115,10 +122,10 @@ class TimeConstraintFromToDict:
 
 
 class OligosynthesizeOligoScale(enum.Enum):
-    _25nm =enum.auto()
-    _100nm =enum.auto()
-    _250nm =enum.auto()
-    _1um =enum.auto()
+    _25nm = enum.auto()
+    _100nm = enum.auto()
+    _250nm = enum.auto()
+    _1um = enum.auto()
 
 
 class OligosynthesizeOligoPurification(enum.Enum):
@@ -127,23 +134,26 @@ class OligosynthesizeOligoPurification(enum.Enum):
     hplc = enum.auto()
 
 
-
 @dataclass
 class OligosynthesizeOligo:
     destination: Well
     sequence: str
     scale: str
-    purification: OligosynthesizeOligoPurification = OligosynthesizeOligoPurification.standard
+    purification: OligosynthesizeOligoPurification = (
+        OligosynthesizeOligoPurification.standard
+    )
 
     def __post_init__(self):
         allowable_scales = ["25nm", "100nm", "250nm", "1um"]
         if self.scale not in allowable_scales:
             raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
 
+
 @dataclass
 class IlluminaSeqLane:
     object: Well
     library_concentration: float
+
 
 @dataclass
 class AgitateModeParams:
@@ -151,42 +161,50 @@ class AgitateModeParams:
     bar_shape: str
     bar_length: Union[str, Unit]
 
+
 @dataclass
 class ThermocycleTemperature:
     duration: Union[str, Unit]
     temperature: Union[str, Unit]
-    read: bool = False
+    read: bool = dataclasses.field(default=False)
+
 
 @dataclass
 class TemperatureGradient:
     top: Union[str, Unit]
     bottom: Union[str, Unit]
 
+
 @dataclass
 class ThermocycleTemperatureGradient:
     duration: Union[str, Unit]
     gradient: TemperatureGradient
-    read: bool = False
+    read: bool = dataclasses.field(default=False)
+
 
 @dataclass
 class PlateReaderIncubateBeforeShaking:
     amplitude: Union[str, Unit]
     orbital: Union[str, Unit]
 
+
 @dataclass
 class PlateReaderIncubateBefore:
     duration: Unit
     shake_amplitude: Optional[Union[str, Unit]]
     shake_orbital: Optional[bool]
-    shaking: Optional[dict]
+    shaking: Optional[IncubateShakingParams] = None
+
 
 @dataclass
 class PlateReaderPositionZManual:
     manual: Unit
 
+
 @dataclass
 class PlateReaderPositionZCalculated:
     calculated_from_wells: List[Well]
+
 
 @dataclass
 class GelPurifyExtract:
@@ -195,12 +213,14 @@ class GelPurifyExtract:
     lane: Optional[int] = None
     gel: Optional[int] = None
 
+
 @dataclass
 class FlowCytometryLaser:
     channels: List[FlowCytometryChannel]
     excitation: Union[str, Unit] = None
     power: Union[str, Unit] = None
     area_scaling_factor: Optional[int] = None
+
 
 @dataclass
 class FlowCytometryCollectionCondition:
@@ -212,10 +232,12 @@ class FlowCytometryCollectionCondition:
     rinse_cycles: int
     stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria]
 
+
 @dataclass
 class FlowAnalyzeChannelVoltageRange:
     low: Union[str, Unit]
     high: Union[str, Unit]
+
 
 @dataclass
 class FlowAnalyzeChannel:
@@ -224,6 +246,7 @@ class FlowAnalyzeChannel:
     height: bool
     weight: bool
 
+
 @dataclass
 class FlowAnalyzeNegControls:
     well: Well
@@ -231,11 +254,13 @@ class FlowAnalyzeNegControls:
     channel: str
     captured_events: Optional[int] = None
 
+
 @dataclass
 class FlowAnalyzeSample:
     well: Well
     volume: Union[str, Unit]
     captured_events: int
+
 
 @dataclass
 class FlowAnalyzeColors:
@@ -243,14 +268,16 @@ class FlowAnalyzeColors:
     emission_wavelength: Union[str, Unit]
     excitation_wavelength: Union[str, Unit]
     voltage_range: FlowAnalyzeChannelVoltageRange
-    area: bool = True
-    height: bool = False
-    weight: bool = False
+    area: bool = dataclasses.field(default=True)
+    height: bool = dataclasses.field(default=False)
+    weight: bool = dataclasses.field(default=False)
+
 
 @dataclass
 class FlowAnalyzePosControlsMinimizeBleed:
     from_: FlowAnalyzeColors
     to: FlowAnalyzeColors
+
 
 @dataclass
 class FlowAnalyzePosControls:
@@ -260,12 +287,13 @@ class FlowAnalyzePosControls:
     minimize_bleed: List[FlowAnalyzePosControlsMinimizeBleed]
     captured_events: Optional[int] = None
 
+
 @dataclass
 class SpectrophotometryShakeBefore:
-    duration : Union[str, Unit]
-    frequency : Optional[Union[str, Unit]]=None
-    path : Optional[str]=None
-    amplitude : Optional[Union[str, Unit]]=None
+    duration: Union[str, Unit]
+    frequency: Optional[Union[str, Unit]] = None
+    path: Optional[str] = None
+    amplitude: Optional[Union[str, Unit]] = None
 
 
 class EvaporateModeParamsGas(enum.Enum):
@@ -287,6 +315,7 @@ class EvaporateMode(enum.Enum):
     vortex = enum.auto()
     blowdown = enum.auto()
 
+
 @dataclass
 class SpeElute:
     loading_flowrate: Union[str, Unit]
@@ -297,6 +326,7 @@ class SpeElute:
     destination_well: Well
     processing_time: Union[str, Unit]
 
+
 @dataclass
 class SpeLoadSample:
     volume: Union[str, Unit]
@@ -306,9 +336,10 @@ class SpeLoadSample:
     flow_pressure: Union[str, Unit]
     resource_id: Optional[str] = None
     destination_well: Optional[Well] = None
-    is_elute: bool = False
+    is_elute: bool = dataclasses.field(default=False)
 
-@dataclass()
+
+@dataclass
 class SpeParams:
     volume: Union[str, Unit]
     loading_flowrate: Union[str, Unit]
@@ -316,7 +347,7 @@ class SpeParams:
     processing_time: Union[str, Unit]
     flow_pressure: Union[str, Unit]
     resource_id: Optional[str] = None
-    is_sample: bool = False
+    is_sample: bool = dataclasses.field(default=False)
     destination_well: Optional[Well] = None
 
 
@@ -325,11 +356,12 @@ class ImageMode(enum.Enum):
     bottom = enum.auto()
     side = enum.auto()
 
+
 @dataclass
 class ImageExposure:
-    shutter_speed: Optional[Unit]
-    iso: Optional[float]
-    aperture: Optional[float]
+    shutter_speed: Optional[Unit] = None
+    iso: Optional[float] = None
+    aperture: Optional[float] = None
 
 
 @dataclass
@@ -429,10 +461,10 @@ class Protocol:
               ]
             }
     """
+
     def __post_init__(self):
         if not self.refs:
             self.refs: Dict[str, Ref] = {}
-
 
     def __repr__(self):
         return f"Protocol({self.__dict__})"
@@ -3636,10 +3668,12 @@ class Protocol:
         gain: Optional[float] = None,
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
         detection_mode: Optional[str] = None,
-        position_z: Optional[Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]] = None,
+        position_z: Optional[
+            Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]
+        ] = None,
         settle_time: Optional[Unit] = None,
         lag_time: Optional[Unit] = None,
-        integration_time: Optional[Unit] = None,
+        integration_time: Optional[str] = None,
     ):
         """
         Read the fluoresence for the indicated wavelength for the indicated
@@ -3801,12 +3835,7 @@ class Protocol:
             )
 
         if incubate_before:
-            Fluorescence.builders.incubate_params(
-                duration=incubate_before.duration,
-                shake_amplitude=incubate_before.shake_amplitude,
-                shake_orbital=incubate_before.shake_orbital,
-                shaking=incubate_before.shaking,
-            )
+            Fluorescence.builders.incubate_params(**incubate_before)
 
         valid_detection_modes = ["top", "bottom"]
         if detection_mode and detection_mode not in valid_detection_modes:
@@ -4878,12 +4907,15 @@ class Protocol:
             if not isinstance(remove_coincident_events, bool):
                 raise TypeError("remove_coincident_events must be of type " "bool.")
 
-        lasers = [FlowCytometry.builders.laser(
-            channels=l.channels,
-            excitation=l.excitation,
-            power=l.power,
-            area_scaling_factor=l.area_scaling_factor,
-        ) for l in lasers]
+        lasers = [
+            FlowCytometry.builders.laser(
+                channels=l.channels,
+                excitation=l.excitation,
+                power=l.power,
+                area_scaling_factor=l.area_scaling_factor,
+            )
+            for l in lasers
+        ]
 
         collection_conditions = FlowCytometry.builders.collection_conditions(
             acquisition_volume=collection_conditions.acquisition_volume,
@@ -5337,7 +5369,7 @@ class Protocol:
     def autopick(
         self,
         pick_groups: List[AutopickGroup],
-        criteria: Optional[dict] = None,
+        criteria: Optional[Dict[str, Any]] = None,
         dataref: str = "autopick",
     ):
         """
@@ -5403,7 +5435,9 @@ class Protocol:
 
         return self._append_and_return(Autopick(groups, criteria, dataref))
 
-    def __process_pick_group(self, pick_group: AutopickGroup) -> Dict[str, Union[WellGroup, int]]:
+    def __process_pick_group(
+        self, pick_group: AutopickGroup
+    ) -> Dict[str, Union[WellGroup, int]]:
         if not isinstance(pick_group, AutopickGroup):
             raise TypeError(
                 "Autopick groups must use provided AutopickGroup dataclass."
@@ -6615,46 +6649,13 @@ class Protocol:
         ValueError
             Invalid exposure parameter supplied
         """
-        valid_image_modes = ["top", "bottom", "side"]
-        if not isinstance(ref, Container):
-            raise TypeError(f"image ref: {ref} has to be of type Container")
-        if mode not in valid_image_modes:
-            raise ValueError(
-                f"specified mode: {mode} must be one of " f"{valid_image_modes}"
-            )
-        if not isinstance(dataref, str):
-            raise TypeError("dataref must be of type String.")
-        if not isinstance(num_images, int) or num_images <= 0:
+        allowed_image_modes = [ImageMode.top, ImageMode.bottom, ImageMode.side]
+        if not mode in allowed_image_modes:
+            raise ValueError(f"image mode must be one of: {allowed_image_modes}")
+        if num_images <= 0:
             raise TypeError("num_images must be a positive integer.")
-        if magnification:
-            if not isinstance(magnification, (float, int)) or magnification <= 0:
-                raise TypeError("magnification must be a number.")
-        if backlighting:
-            if not isinstance(backlighting, bool):
-                raise TypeError("backlighting must be a boolean.")
-        if exposure:
-            valid_exposure_params = ["shutter_speed", "iso", "aperture"]
-            if not isinstance(exposure, dict):
-                raise TypeError(
-                    f"exposure must be a dict with optional keys: "
-                    f"{valid_exposure_params}."
-                )
-            if not all(k in valid_exposure_params for k in exposure):
-                raise ValueError(
-                    f"Invalid exposure param.  Valid params: "
-                    f"{valid_exposure_params}."
-                )
-            shutter_speed = exposure.get("shutter_speed")
-            if shutter_speed:
-                shutter_speed = parse_unit(shutter_speed, "millimeter/s")
-            iso = exposure.get("iso")
-            if iso:
-                if not isinstance(iso, (float, int)):
-                    raise TypeError("iso must be a number.")
-            aperture = exposure.get("aperture")
-            if aperture:
-                if not isinstance(aperture, (float, int)):
-                    raise TypeError("aperture must be a number.")
+        if magnification <= 0:
+            raise TypeError("magnification must be a number.")
 
         return self._append_and_return(
             Image(ref, mode, dataref, num_images, backlighting, exposure, magnification)
@@ -6751,7 +6752,21 @@ class Protocol:
             )
 
     # pylint: disable=protected-access
-    def _refify(self, op_data: Union[Dict[str, Any], List[Any], Well, WellGroup, Container, Unit, Instruction, Ref, Compound, Informatics]):
+    def _refify(
+        self,
+        op_data: Union[
+            Dict[str, Any],
+            List[Any],
+            Well,
+            WellGroup,
+            Container,
+            Unit,
+            Instruction,
+            Ref,
+            Compound,
+            Informatics,
+        ],
+    ):
         """
         Unpacks protocol objects into Autoprotocol compliant ones
 
@@ -8028,19 +8043,19 @@ class Protocol:
             # if density is None, it should still be a list of None
             density = [density] * count
 
-        if not isinstance(source_liquid, list):
-            source_liquid = [source_liquid] * count
-        source_liquid = [_validate_as_instance(_, LiquidClass) for _ in source_liquid]
+        # if not isinstance(source_liquid, list):
+        #     source_liquid = [source_liquid] * count
+        source_liquid = [source_liquid] * count
 
         if not isinstance(destination_liquid, list):
             destination_liquid = [destination_liquid] * count
-        destination_liquid = [
-            _validate_as_instance(_, LiquidClass) for _ in destination_liquid
-        ]
+        # destination_liquid = [
+        #     _validate_as_instance(_, LiquidClass) for _ in destination_liquid
+        # ]
 
         if not isinstance(method, list):
             method = [method] * count
-        method = [_validate_as_instance(_, Transfer) for _ in method]
+        # method = [_validate_as_instance(_, Transfer) for _ in method]
 
         # if informatics is provided for multiple wells, split Informatics for each destination well
         # with the specified compounds.
@@ -8084,7 +8099,7 @@ class Protocol:
 
         # apply tip types to transfer methods
         for vol, met in zip(volume, method):
-            if met._has_calibration() and not met.tip_type:
+            if not met.tip_type:
                 try:
                     met.tip_type = met._rec_tip_type(vol)
                 except RuntimeError:
@@ -8555,7 +8570,7 @@ class Protocol:
         return self._append_and_return(LiquidHandle(location))
 
     def _transfer_volume(
-        self, source: Well, destination: Well, volume: Unit, shape: dict
+        self, source: Well, destination: Well, volume: Unit, shape: DispenseShape
     ):
         """
         Transfers volume and properties between aliquots.

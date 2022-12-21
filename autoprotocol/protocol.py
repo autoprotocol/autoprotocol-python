@@ -5028,7 +5028,9 @@ class Protocol:
             instruction created from the specified parameters
 
         """
-        return self._append_and_return(Oligosynthesize(oligos))
+        return self._append_and_return(
+            Oligosynthesize([OligosynthesizeOligo(**o) for o in oligos])
+        )
 
     def autopick(
         self,

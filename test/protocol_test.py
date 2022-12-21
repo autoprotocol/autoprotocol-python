@@ -2984,6 +2984,8 @@ class TestAgitate(object):
     t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
 
     def test_param_checks(self):
+        with pytest.raises(RuntimeError):
+            self.p.ref("t2", id=None, cont_type="micro-2.1", discard=True)
         with pytest.raises(TypeError):
             self.p.agitate(self.pl1, "roll", duration="5:minute", speed="100:rpm")
         with pytest.raises(TypeError):

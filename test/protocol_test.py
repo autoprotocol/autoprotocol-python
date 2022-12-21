@@ -27,11 +27,7 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import ImageExposure, Protocol, Ref
-from autoprotocol.types.protocol import (
-    AgitateModeParams,
-    AutopickGroup,
-    OligosynthesizeOligo,
-)
+from autoprotocol.types.protocol import AgitateModeParams, AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -3736,27 +3732,23 @@ class TestOligoSynthesize:
         with pytest.raises(ValueError):
             self.p.oligosynthesize(
                 [
-                    OligosynthesizeOligo(
-                        **{
-                            "sequence": "CATGGTCCCCTGCACAGG",
-                            "destination": self.oligo_1.well(0),
-                            "scale": "25000nm",
-                            "purification": "standard",
-                        }
-                    )
+                    {
+                        "sequence": "CATGGTCCCCTGCACAGG",
+                        "destination": self.oligo_1.well(0),
+                        "scale": "25000nm",
+                        "purification": "standard",
+                    }
                 ]
             )
 
     def test_good_args(self):
         self.p.oligosynthesize(
             [
-                OligosynthesizeOligo(
-                    **{
-                        "sequence": "CATGGTCCCCTGCACAGG",
-                        "destination": self.oligo_1.well(0),
-                        "scale": "25nm",
-                        "purification": "standard",
-                    }
-                )
+                {
+                    "sequence": "CATGGTCCCCTGCACAGG",
+                    "destination": self.oligo_1.well(0),
+                    "scale": "25nm",
+                    "purification": "standard",
+                }
             ]
         )

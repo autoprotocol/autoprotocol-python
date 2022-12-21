@@ -26,9 +26,9 @@ from .util import _check_container_type_with_shape, _validate_as_instance
 
 @dataclass
 class Protocol:
-    refs: Optional[Dict[str, Ref]] = field(default=None)
+    refs: Optional[Dict[str, Ref]] = None
     instructions: List[Instruction] = field(default_factory=list)
-    propagate_properties: bool = field(default=False)
+    propagate_properties: bool = False
     time_constraints: List[TimeConstraint] = field(default_factory=list)
     """
     A Protocol is a sequence of instructions to be executed, and a set of
@@ -309,7 +309,7 @@ class Protocol:
         less_than: Optional[Union[str, Unit]] = None,
         more_than: Optional[Union[str, Unit]] = None,
         mirror: bool = False,
-        ideal: Optional[Union[str, Unit]] = None,
+        ideal: Optional[TIME] = None,
         optimization_cost: Optional[str] = None,
     ):
         """Constraint the time between two instructions
@@ -928,8 +928,8 @@ class Protocol:
     def liquid_handle_dispense(
         self,
         source: Union[Well, List[Well], List[Tuple[Well, int]]],
-        destination: Union[Well, WellGroup, List[Well], List[WellGroup]],
-        volume: Union[str, Unit, List[str], List[Unit]],
+        destination: Union[WellParam, List[WellGroup]],
+        volume: Union[VOLUME, List[VOLUME]],
         rows: int = 8,
         columns: int = 1,
         method: DispenseMethod = DispenseMethod,
@@ -1426,9 +1426,9 @@ class Protocol:
         self,
         source: WellParam,
         dest: WellParam,
-        volume: Union[str, Unit],
+        volume: VOLUME,
         one_source: bool = False,
-        droplet_size: Union[str, Unit] = "25:nanoliter",
+        droplet_size: VOLUME = "25:nanoliter",
     ):
         """
         Specify source and destination wells for transferring liquid via an
@@ -2030,10 +2030,10 @@ class Protocol:
         reagent: Union[str, Well],
         columns: List[DispenseColumn],
         is_resource_id: bool = False,
-        step_size: Union[str, Unit] = "5:uL",
-        flowrate: Optional[Union[str, Unit]] = None,
+        step_size: VOLUME = "5:uL",
+        flowrate: Optional[FLOW_RATE] = None,
         nozzle_position: Optional[DispenseNozzlePosition] = None,
-        pre_dispense: Optional[Union[str, Unit]] = None,
+        pre_dispense: Optional[VOLUME] = None,
         shape: Optional[DispenseShape] = None,
         shake_after: Optional[DispenseShakeAfter] = None,
     ):
@@ -2307,12 +2307,12 @@ class Protocol:
         self,
         ref: Container,
         reagent: Union[str, Well],
-        volume: Union[Unit, str],
+        volume: VOLUME,
         is_resource_id: bool = False,
-        step_size: Union[str, Unit] = "5:uL",
-        flowrate: Optional[Union[str, Unit]] = None,
-        nozzle_position: Optional[Union[str, Unit]] = None,
-        pre_dispense: Optional[Union[str, Unit]] = None,
+        step_size: VOLUME = "5:uL",
+        flowrate: Optional[FLOW_RATE] = None,
+        nozzle_position: Optional[DispenseNozzlePosition] = None,
+        pre_dispense: Optional[VOLUME] = None,
         shape: Optional[DispenseShape] = None,
         shake_after: Optional[DispenseShakeAfter] = None,
     ):
@@ -2468,7 +2468,7 @@ class Protocol:
         self,
         ref: Container,
         acceleration: str,
-        duration: Union[str, Unit],
+        duration: TIME,
         flow_direction: Optional[str] = None,
         spin_direction: Optional[List[str]] = None,
     ):
@@ -2585,10 +2585,10 @@ class Protocol:
     def agitate(
         self,
         ref: Container,
-        mode: str,
-        speed: Union[str, Unit],
-        duration: Union[str, Unit],
-        temperature: Optional[Union[Unit, str]] = None,
+        mode: AgitateMode,
+        speed: ACCELERATION,
+        duration: TIME,
+        temperature: Optional[TEMPERATURE] = None,
         mode_params: Optional[AgitateModeParams] = None,
     ):
         """
@@ -2673,8 +2673,8 @@ class Protocol:
             If ref cannot be undergo agitate mode `roll` or `invert`
 
         """
-        valid_modes = ["vortex", "invert", "roll", "stir_bar"]
-        valid_bar_shapes = ["bar", "cross"]
+        valid_modes = AgitateMode.__dict__.get("_member_names_")
+        valid_bar_shapes = AgitateModeParamsBarShape.__dict__.get("_member_names_")
         valid_bar_mode_params = ["wells", "bar_shape", "bar_length"]
 
         speed = parse_unit(speed)
@@ -2696,15 +2696,19 @@ class Protocol:
                     "Dictionary `mode_params` must be specified for the "
                     "mode `stir_bar`"
                 )
-            elif not set(mode_params.keys()) == set(valid_bar_mode_params):
-                raise ValueError(
-                    f"Params for `stir_bar` must include " f"{valid_bar_mode_params}"
-                )
+            else:
+                if isinstance(mode_params, dict):
+                    try:
+                        mode_params = AgitateModeParams(**mode_params)
+                    except:
+                        raise ValueError(
+                            f"mode_params {mode_params.keys()} to not match {valid_bar_mode_params}"
+                        )
 
-            wells = WellGroup(mode_params["wells"])
+            wells = WellGroup(mode_params.wells)
             container = set([w.container for w in wells])
-            shape = mode_params["bar_shape"]
-            length = parse_unit(mode_params["bar_length"], "millimeter")
+            shape = mode_params.bar_shape
+            length = parse_unit(mode_params.bar_length, "millimeter")
 
             if len(container) > 1:
                 raise ValueError(
@@ -2729,14 +2733,14 @@ class Protocol:
         self,
         ref: Container,
         groups: List[Union[ThermocycleTemperature, ThermocycleTemperatureGradient]],
-        volume: Optional[Union[str, Unit]] = "10:microliter",
+        volume: Optional[VOLUME] = "10:microliter",
         dataref: Optional[str] = None,
         dyes: Optional[Dict[str, str]] = None,
-        melting_start: Optional[Union[str, Unit]] = None,
-        melting_end: Optional[Union[str, Unit]] = None,
-        melting_increment: Optional[Union[str, Unit]] = None,
-        melting_rate: Optional[Union[str, Unit]] = None,
-        lid_temperature: Optional[Union[str, Unit]] = None,
+        melting_start: Optional[TEMPERATURE] = None,
+        melting_end: Optional[TEMPERATURE] = None,
+        melting_increment: Optional[TEMPERATURE] = None,
+        melting_rate: Optional[TEMPERATURE] = None,
+        lid_temperature: Optional[TEMPERATURE] = None,
     ):
         """
         Append a Thermocycle instruction to the list of instructions, with
@@ -3080,11 +3084,11 @@ class Protocol:
         self,
         ref: Union[Container, str],
         where: str,
-        duration: Union[Unit, str],
+        duration: TIME,
         shaking: bool = False,
         co2: float = 0,
         uncovered: bool = False,
-        target_temperature: Optional[Union[Unit, str]] = None,
+        target_temperature: Optional[TEMPERATURE] = None,
         shaking_params: Optional[IncubateShakingParams] = None,
     ):
         """
@@ -3188,12 +3192,12 @@ class Protocol:
         self,
         ref: Union[str, Container],
         wells: WellParam,
-        wavelength: Union[str, Unit],
+        wavelength: WAVELENGTH,
         dataref: str,
         flashes: int = 25,
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
-        temperature: Optional[Union[str, Unit]] = None,
-        settle_time: Optional[Unit] = None,
+        temperature: Optional[TEMPERATURE] = None,
+        settle_time: Optional[TIME] = None,
     ):
         """
         Read the absorbance for the indicated wavelength for the indicated
@@ -3320,19 +3324,19 @@ class Protocol:
         self,
         ref: Union[str, Container],
         wells: WellParam,
-        excitation: Union[str, Unit],
-        emission: Union[str, Unit],
+        excitation: WAVELENGTH,
+        emission: WAVELENGTH,
         dataref: str,
         flashes: Optional[int] = 25,
-        temperature: Optional[Union[str, Unit]] = None,
+        temperature: Optional[TEMPERATURE] = None,
         gain: Optional[float] = None,
         incubate_before: Optional[PlateReaderIncubateBefore] = None,
         detection_mode: Optional[str] = None,
         position_z: Optional[
             Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]
         ] = None,
-        settle_time: Optional[Unit] = None,
-        lag_time: Optional[Unit] = None,
+        settle_time: Optional[TIME] = None,
+        lag_time: Optional[TIME] = None,
         integration_time: Optional[str] = None,
     ):
         """
@@ -3624,9 +3628,9 @@ class Protocol:
         wells: WellParam,
         dataref: str,
         incubate_before: Union[PlateReaderIncubateBefore] = None,
-        temperature: Optional[Union[str, Unit]] = None,
-        settle_time: Optional[Unit] = None,
-        integration_time: Optional[Unit] = None,
+        temperature: Optional[TEMPERATURE] = None,
+        settle_time: Optional[TIME] = None,
+        integration_time: Optional[TIME] = None,
     ):
         """
         Read luminescence of indicated wells.
@@ -3756,10 +3760,10 @@ class Protocol:
     def gel_separate(
         self,
         wells: WellParam,
-        volume: Union[str, Unit],
+        volume: VOLUME,
         matrix: str,
         ladder: str,
-        duration: Union[str, Unit],
+        duration: TIME,
         dataref: str,
     ):
         """
@@ -3863,7 +3867,7 @@ class Protocol:
     def gel_purify(
         self,
         extracts: List[GelPurifyExtract],
-        volume: Union[str, Unit],
+        volume: VOLUME,
         matrix: str,
         ladder: str,
         dataref: str,
@@ -4086,8 +4090,8 @@ class Protocol:
         ref: Container,
         type: Optional[str] = None,
         mode: Optional[str] = None,
-        temperature: Optional[Union[Unit, str]] = None,
-        duration: Optional[Union[Unit, str]] = None,
+        temperature: Optional[TEMPERATURE] = None,
+        duration: Optional[TEMPERATURE] = None,
     ):
         """
         Seal indicated container using the automated plate sealer.
@@ -5124,7 +5128,7 @@ class Protocol:
         self,
         head: str,
         container: Container,
-        duration: Union[str, Unit],
+        duration: TIME,
         new_tip: bool = False,
         new_instruction: bool = False,
     ):
@@ -5192,10 +5196,10 @@ class Protocol:
         self,
         head: str,
         container: Container,
-        duration: Union[str, Unit],
+        duration: TIME,
         magnetize: bool = False,
         tip_position: float = 1.5,
-        temperature: Optional[Union[str, Unit]] = None,
+        temperature: Optional[TEMPERATURE] = None,
         new_tip: bool = False,
         new_instruction: bool = False,
     ):
@@ -5278,9 +5282,9 @@ class Protocol:
         head: str,
         container: Container,
         cycles: int,
-        pause_duration: Union[str, Unit],
+        pause_duration: TIME,
         bottom_position: float = 0.0,
-        temperature: Union[str, Unit] = None,
+        temperature: TEMPERATURE = None,
         new_tip: bool = False,
         new_instruction: bool = False,
     ):
@@ -5365,11 +5369,11 @@ class Protocol:
         self,
         head: str,
         container: Container,
-        duration: Union[str, Unit],
-        frequency: Union[str, Unit],
+        duration: TIME,
+        frequency: FREQUENCY,
         center: float = 0.5,
         amplitude: float = 0.5,
-        temperature: Optional[Union[str, Unit]] = None,
+        temperature: Optional[TEMPERATURE] = None,
         new_tip: bool = False,
         new_instruction: bool = False,
     ):
@@ -5458,12 +5462,12 @@ class Protocol:
         self,
         head: str,
         container: Container,
-        duration: Union[str, Unit],
-        frequency: Union[str, Unit],
+        duration: TIME,
+        frequency: FREQUENCY,
         center: float = 0.5,
         amplitude: float = 0.5,
         magnetize: bool = False,
-        temperature: Optional[Union[str, Unit]] = None,
+        temperature: Optional[TEMPERATURE] = None,
         new_tip: bool = False,
         new_instruction: bool = False,
     ):
@@ -5633,8 +5637,10 @@ class Protocol:
         self,
         resource_id: str,
         dests: WellParam,
-        amounts: Optional[Union[str, Unit, List[Unit], List[str]]] = None,
-        volumes: Optional[Union[str, Unit, List[Unit], List[str]]] = None,
+        amounts: Optional[
+            Union[AMOUNT_CONCENTRATION, List[AMOUNT_CONCENTRATION]]
+        ] = None,
+        volumes: Optional[Union[VOLUME, List[VOLUME]]] = None,
         informatics: Optional[List[Informatics]] = None,
     ):
         """
@@ -5795,9 +5801,7 @@ class Protocol:
         measurement_mode = unique_measure_modes.pop()
         return measurement_mode
 
-    def flash_freeze(
-        self, container: Union[str, Container], duration: Union[str, Unit]
-    ):
+    def flash_freeze(self, container: Union[str, Container], duration: TIME):
         """
         Flash freeze the contents of the specified container by submerging it
         in liquid nitrogen for the specified amount of time.
@@ -5852,11 +5856,11 @@ class Protocol:
     def sonicate(
         self,
         wells: WellParam,
-        duration: Union[Unit, str],
+        duration: TIME,
         mode: str,
         mode_params: Dict,
-        frequency: Optional[Union[str, Unit]] = None,
-        temperature: Optional[Union[str, Unit]] = None,
+        frequency: Optional[FREQUENCY] = None,
+        temperature: Optional[TEMPERATURE] = None,
     ):
         """
         Sonicate wells using high intensity ultrasonic vibrations.
@@ -6793,7 +6797,7 @@ class Protocol:
     def count_cells(
         self,
         wells: WellParam,
-        volume: Unit,
+        volume: VOLUME,
         dataref: str,
         labels: Optional[List[str]] = None,
     ):
@@ -6894,9 +6898,9 @@ class Protocol:
         dataref: str,
         obj: Union[Container, str],
         groups: List,
-        interval: Optional[Union[Unit, str]] = None,
+        interval: Optional[TIME] = None,
         num_intervals: Optional[int] = None,
-        temperature: Optional[Union[Unit, str]] = None,
+        temperature: Optional[TEMPERATURE] = None,
         shake_before: Optional[SpectrophotometryShakeBefore] = None,
     ):
         """
@@ -7155,14 +7159,14 @@ class Protocol:
         self,
         source: WellParam,
         destination: WellParam,
-        volume: Union[str, Unit, List[str], List[Unit]],
+        volume: Union[VOLUME, List[VOLUME]],
         rows: int = 1,
         columns: int = 1,
         source_liquid: LiquidClass = LiquidClass,
         destination_liquid: LiquidClass = LiquidClass,
         method: Transfer = Transfer,
         one_tip: bool = False,
-        density: Optional[Union[Unit, str]] = None,
+        density: Optional[DENSITY] = None,
         mode: Optional[str] = None,
         informatics: Optional[List[Informatics]] = None,
     ):
@@ -7833,7 +7837,7 @@ class Protocol:
     def mix(
         self,
         well: WellParam,
-        volume: Union[str, Unit, List[str], List[Unit]],
+        volume: Union[VOLUME, List[VOLUME]],
         rows: int = 1,
         columns: int = 1,
         liquid: LiquidClass = LiquidClass,
@@ -8079,8 +8083,8 @@ class Protocol:
         self,
         source: Well,
         dest: Well,
-        volume: Union[str, Unit] = "50:microliter",
-        dispense_speed: Union[str, Unit] = "20:microliter/second",
+        volume: VOLUME = "50:microliter",
+        dispense_speed: ACCELERATION = "20:microliter/second",
     ):
         """
         Spread the specified volume of the source aliquot across the surface of
@@ -8275,8 +8279,8 @@ class Protocol:
         self,
         ref: Container,
         mode: EvaporateMode,
-        duration: Union[Unit, str],
-        evaporator_temperature: Union[Unit, str],
+        duration: TIME,
+        evaporator_temperature: TEMPERATURE,
         mode_params: Optional[EvaporateModeParams] = None,
     ):
         """

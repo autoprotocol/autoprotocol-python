@@ -27,7 +27,7 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import ImageExposure, Protocol, Ref
-from autoprotocol.types.protocol import AutopickGroup
+from autoprotocol.types.protocol import AgitateModeParams, AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -3010,17 +3010,19 @@ class TestAgitate(object):
                     "bar_length": "234:micrometer",
                 },
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.p.agitate(
                 self.t1,
                 mode="stir_bar",
                 duration="3:minute",
                 speed="250:rpm",
-                mode_params={
-                    "not_wells": Well(self.t1, 0),
-                    "not_bar_shape": "cross",
-                    "not_bar_length": "234:micrometer",
-                },
+                mode_params=AgitateModeParams(
+                    **{
+                        "not_wells": Well(self.t1, 0),
+                        "not_bar_shape": "cross",
+                        "not_bar_length": "234:micrometer",
+                    }
+                ),
             )
         with pytest.raises(ValueError):
             self.p.agitate(

@@ -13,6 +13,20 @@ from ..unit import Unit
 
 
 WellParam = Union[Well, List[Well], WellGroup]
+ACCELERATION = Union[str, Unit]
+AMOUNT_CONCENTRATION = Union[str, Unit]
+CONCENTRATION = Union[str, Unit]
+FLOW_RATE = Union[str, Unit]
+FREQUENCY = Union[str, Unit]
+LENGTH = Union[str, Unit]
+MASS = Union[str, Unit]
+MOLES = Union[str, Unit]
+TEMPERATURE = Union[str, Unit]
+TIME = Union[str, Unit]
+VELOCITY = Union[str, Unit]
+VOLUME = Union[str, Unit]
+WAVELENGTH = Union[str, Unit]
+DENSITY = Union[str, Unit]
 
 
 @dataclass
@@ -25,13 +39,13 @@ class AutopickGroup:
 @dataclass
 class DispenseColumn:
     column: int
-    volume: Union[str, Unit]
+    volume: VOLUME
 
 
 @dataclass
 class IncubateShakingParams:
     path: Union[str, Unit]
-    frequency: Union[str, Unit]
+    frequency: FREQUENCY
 
 
 class TimeConstraintOptimizationCost(enum.Enum):
@@ -43,11 +57,11 @@ class TimeConstraintOptimizationCost(enum.Enum):
 @dataclass(frozen=False)
 class TimeConstraint:
     from_: Union[int, Container]
-    to: Union[int, Container] = None
-    less_than: Optional[Unit] = None
-    more_than: Optional[Unit] = None
-    ideal: Optional[Union[str, Unit]] = None
-    optimization_cost: TimeConstraintOptimizationCost = None
+    to: Union[int, Container] = field(default=None)
+    less_than: Optional[TIME] = field(default=None)
+    more_than: Optional[TIME] = field(default=None)
+    ideal: Optional[TIME] = field(default=None)
+    optimization_cost: TimeConstraintOptimizationCost = field(default=None)
 
 
 class TimeConstraintState:
@@ -67,17 +81,34 @@ class OligosynthesizeOligoPurification(enum.Enum):
     hplc = enum.auto()
 
 
+class OligosynthesizeOligoScale(enum.Enum):
+    _25nm = enum.auto()
+    _100nm = enum.auto()
+    _250nm = enum.auto()
+    _1um = enum.auto()
+
+
 @dataclass
 class OligosynthesizeOligo:
     destination: Well
     sequence: str
-    scale: str
+    scale: OligosynthesizeOligoScale
     purification: OligosynthesizeOligoPurification = "standard"
 
     def __post_init__(self):
-        allowable_scales = ["25nm", "100nm", "250nm", "1um"]
+        allowable_scales = [
+            allowable.strip("_")
+            for allowable in OligosynthesizeOligoScale.__dict__.get("_member_names_")
+        ]
         if self.scale not in allowable_scales:
             raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
+        allowable_purification = OligosynthesizeOligoPurification.__dict__.get(
+            "_member_names_"
+        )
+        if self.purification not in allowable_purification:
+            raise ValueError(
+                f"Purification entered {self.purification} not in {allowable_purification}"
+            )
 
 
 @dataclass
@@ -86,50 +117,63 @@ class IlluminaSeqLane:
     library_concentration: float
 
 
+class AgitateMode(enum.Enum):
+    vortex = enum.auto()
+    invert = enum.auto()
+    roll = enum.auto()
+    stir_bar = enum.auto()
+
+
+class AgitateModeParamsBarShape(enum.Enum):
+    bar = enum.auto()
+    cross = enum.auto()
+
+
 @dataclass
 class AgitateModeParams:
     wells: Union[List[Well], WellGroup]
-    bar_shape: str
-    bar_length: Union[str, Unit]
+    bar_shape: AgitateModeParamsBarShape
+    bar_length: LENGTH
+
+    def __post_init__(self):
+        allowable_bar_shape = AgitateModeParamsBarShape.__dict__.get("_member_names_")
+        if self.bar_shape not in allowable_bar_shape:
+            raise ValueError(
+                f"bar_shape entered {self.bar_shape} not in {allowable_bar_shape}"
+            )
 
 
 @dataclass
 class ThermocycleTemperature:
-    duration: Union[str, Unit]
-    temperature: Union[str, Unit]
+    duration: TIME
+    temperature: TEMPERATURE
     read: bool = field(default=False)
 
 
 @dataclass
 class TemperatureGradient:
-    top: Union[str, Unit]
-    bottom: Union[str, Unit]
+    top: TEMPERATURE
+    bottom: TEMPERATURE
 
 
 @dataclass
 class ThermocycleTemperatureGradient:
-    duration: Union[str, Unit]
+    duration: TIME
     gradient: TemperatureGradient
     read: bool = field(default=False)
 
 
 @dataclass
-class PlateReaderIncubateBeforeShaking:
-    amplitude: Union[str, Unit]
-    orbital: Union[str, Unit]
-
-
-@dataclass
 class PlateReaderIncubateBefore:
-    duration: Unit
-    shake_amplitude: Optional[Union[str, Unit]]
-    shake_orbital: Optional[bool]
-    shaking: Optional[IncubateShakingParams] = None
+    duration: TIME
+    shake_amplitude: Optional[LENGTH] = field(default=None)
+    shake_orbital: Optional[bool] = field(default=None)
+    shaking: Optional[IncubateShakingParams] = field(default=None)
 
 
 @dataclass
 class PlateReaderPositionZManual:
-    manual: Unit
+    manual: LENGTH
 
 
 @dataclass
@@ -141,16 +185,16 @@ class PlateReaderPositionZCalculated:
 class GelPurifyExtract:
     source: Well
     band_list: List[GelPurifyBand]
-    lane: Optional[int] = None
-    gel: Optional[int] = None
+    lane: Optional[int] = field(default=None)
+    gel: Optional[int] = field(default=None)
 
 
 @dataclass
 class FlowCytometryLaser:
     channels: List[FlowCytometryChannel]
-    excitation: Union[str, Unit] = None
-    power: Union[str, Unit] = None
-    area_scaling_factor: Optional[int] = None
+    excitation: Union[str, Unit] = field(default=None)
+    power: Union[str, Unit] = field(default=None)
+    area_scaling_factor: Optional[int] = field(default=None)
 
 
 @dataclass
@@ -183,7 +227,7 @@ class FlowAnalyzeNegControls:
     well: Well
     volume: Union[str, Unit]
     channel: str
-    captured_events: Optional[int] = None
+    captured_events: Optional[int] = field(default=None)
 
 
 @dataclass
@@ -204,7 +248,7 @@ class FlowAnalyzeColors:
     weight: bool = field(default=False)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlowAnalyzePosControlsMinimizeBleed:
     from_: FlowAnalyzeColors
     to: FlowAnalyzeColors
@@ -216,15 +260,15 @@ class FlowAnalyzePosControls:
     volume: Union[str, Unit]
     channel: str
     minimize_bleed: List[FlowAnalyzePosControlsMinimizeBleed]
-    captured_events: Optional[int] = None
+    captured_events: Optional[int] = field(default=None)
 
 
 @dataclass
 class SpectrophotometryShakeBefore:
-    duration: Union[str, Unit]
-    frequency: Optional[Union[str, Unit]] = None
-    path: Optional[str] = None
-    amplitude: Optional[Union[str, Unit]] = None
+    duration: TIME
+    frequency: Optional[Union[str, Unit]] = field(default=None)
+    path: Optional[str] = field(default=None)
+    amplitude: Optional[Union[str, Unit]] = field(default=None)
 
 
 class EvaporateModeParamsGas(enum.Enum):
@@ -265,8 +309,8 @@ class SpeLoadSample:
     settle_time: Optional[bool]
     processing_time: Union[str, Unit]
     flow_pressure: Union[str, Unit]
-    resource_id: Optional[str] = None
-    destination_well: Optional[Well] = None
+    resource_id: Optional[str] = field(default=None)
+    destination_well: Optional[Well] = field(default=None)
     is_elute: bool = field(default=False)
 
 
@@ -277,9 +321,9 @@ class SpeParams:
     settle_time: Optional[bool]
     processing_time: Union[str, Unit]
     flow_pressure: Union[str, Unit]
-    resource_id: Optional[str] = None
+    resource_id: Optional[str] = field(default=None)
     is_sample: bool = field(default=False)
-    destination_well: Optional[Well] = None
+    destination_well: Optional[Well] = field(default=None)
 
 
 class ImageMode(enum.Enum):
@@ -290,9 +334,9 @@ class ImageMode(enum.Enum):
 
 @dataclass
 class ImageExposure:
-    shutter_speed: Optional[Unit] = None
-    iso: Optional[float] = None
-    aperture: Optional[float] = None
+    shutter_speed: Optional[Unit] = field(default=None)
+    iso: Optional[float] = field(default=None)
+    aperture: Optional[float] = field(default=None)
 
 
 @dataclass
@@ -311,7 +355,7 @@ class DispenseShape:
 
 @dataclass
 class DispenseShakeAfter:
-    duration: Optional[Union[Unit, str]] = None
-    frequency: Optional[Union[Unit, str]] = None
-    path: Optional[str] = None
-    amplitude: Optional[Union[Unit, str]] = None
+    duration: Optional[Union[Unit, str]] = field(default=None)
+    frequency: Optional[Union[Unit, str]] = field(default=None)
+    path: Optional[str] = field(default=None)
+    amplitude: Optional[Union[Unit, str]] = field(default=None)

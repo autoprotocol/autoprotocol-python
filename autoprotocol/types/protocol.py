@@ -27,6 +27,7 @@ VELOCITY = Union[str, Unit]
 VOLUME = Union[str, Unit]
 WAVELENGTH = Union[str, Unit]
 DENSITY = Union[str, Unit]
+POWER = Union[str, Unit]
 
 
 @dataclass
@@ -359,3 +360,26 @@ class DispenseShakeAfter:
     frequency: Optional[Union[Unit, str]] = field(default=None)
     path: Optional[str] = field(default=None)
     amplitude: Optional[Union[Unit, str]] = field(default=None)
+
+
+class SonicateModeParamsBathSampleHolder(enum.Enum):
+    suspender = enum.auto()
+    perforated_container = enum.auto()
+    solid_container = enum.auto()
+
+
+@dataclass
+class SonicateModeParamsBath:
+    sample_holder: SonicateModeParamsBathSampleHolder
+    power: POWER
+
+
+@dataclass
+class SonicateModeParamsHorn:
+    duty_cycle: float
+    power: LENGTH
+
+
+class SonicateMode(enum.Enum):
+    bath = enum.auto()
+    horn = enum.auto()

@@ -19,7 +19,7 @@ from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
 from .types.protocol import *  # pylint: disable=unused-wildcard-import
-from .types.refs import Ref, RefOpts, StorageLocation
+from .types.ref import Ref, RefOpts, StorageLocation
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
 

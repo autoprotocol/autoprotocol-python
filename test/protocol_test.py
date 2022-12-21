@@ -127,21 +127,22 @@ class TestRef(object):
         p.ref("test", None, "96-flat", discard=True)
         with pytest.raises(RuntimeError):
             p.ref("test", None, "96-flat", storage="cold_20")
-        assert p.refs["test"].opts["discard"]
-        assert "where" not in p.refs["test"].opts
+        assert p.refs["test"].opts.discard
+        assert "where" not in p.refs["test"].opts.as_dict()
 
     # pragma pylint: disable=expression-not-assigned
     def test_storage_condition_change(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_20")
         p.cover(c1)
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_20"
+        assert p.refs["discard_test"].opts.store.where == "cold_20"
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["discard"]
         c1.discard()
         assert p.as_dict()["refs"]["discard_test"]["discard"]
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["store"]
+
         c1.set_storage("cold_4")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4"
 
@@ -166,7 +167,7 @@ class TestRef(object):
     def test_cold_196_storage(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_196")
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_196"
+        assert p.refs["discard_test"].opts.store.where == "cold_196"
         c1.set_storage("warm_35")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "warm_35"
 
@@ -366,7 +367,7 @@ class TestRefify(object):
         assert p._refify(p.instructions[0]) == p._refify(p.instructions[0]._as_AST())
 
         # refify Ref
-        assert p._refify(p.refs["test"]) == p.refs["test"].opts
+        assert p._refify(p.refs["test"]) == p.refs["test"].opts.as_dict()
 
         # refify Compound
         compd = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")

@@ -6,10 +6,11 @@ from functools import reduce
 
 import pytest
 
-from autoprotocol import Container, ContainerType, Protocol, Unit, Well, WellGroup
+from autoprotocol import Container, ContainerType, Protocol, Well, WellGroup
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.liquid_handle.liquid_class import LiquidClass
+from autoprotocol.unit import Unit
 
 
 class ProteinBuffer(LiquidClass):

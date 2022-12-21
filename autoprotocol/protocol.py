@@ -6,11 +6,9 @@ Module containing the main `Protocol` object and associated functions
     :license: BSD, see LICENSE for more details
 
 """
-import dataclasses
 import json
 import warnings
 
-from dataclasses import field
 from typing import Dict, List, Tuple
 
 from .compound import Compound
@@ -20,355 +18,17 @@ from .container_type import _CONTAINER_TYPES, ContainerType
 from .instruction import *  # pylint: disable=unused-wildcard-import
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
-from .types.protocol import AutopickGroup, WellParam
+from .types.protocol import *  # pylint: disable=unused-wildcard-import
+from .types.refs import Ref, RefOpts, StorageLocation
 from .unit import Unit, UnitError
 from .util import _check_container_type_with_shape, _validate_as_instance
 
 
 @dataclass
-class DispenseNozzlePosition:
-    position_x: Unit
-    position_y: Unit
-    position_z: Unit
-
-
-@dataclass
-class DispenseShape:
-    rows: int
-    columns: int
-    format: str
-
-
-@dataclass
-class DispenseShakeAfter:
-    duration: Optional[Union[Unit, str]] = None
-    frequency: Optional[Union[Unit, str]] = None
-    path: Optional[str] = None
-    amplitude: Optional[Union[Unit, str]] = None
-
-
-class Location(enum.Enum):
-    warm_37 = enum.auto()
-    warm_30 = enum.auto()
-    ambient = enum.auto()
-    cold_4 = enum.auto()
-    cold_20 = enum.auto()
-    cold_80 = enum.auto()
-
-
-@dataclass
-class StorageLocation:
-    where: Location
-
-
-@dataclass
-class RefOpts:
-    discard: bool
-    store: StorageLocation
-
-
-@dataclass
-class Ref:
-    name: str
-    opts: RefOpts
-    container: Container
-
-    """
-    Link a ref name (string) to a Container instance.
-
-    """
-
-    def __repr__(self):
-        return f"Ref({self.name}, {self.container}, {self.opts})"
-
-
-# noinspection PyCompatibility
-@dataclass
-class DispenseColumn:
-    column: int
-    volume: Union[str, Unit]
-
-
-@dataclass
-class IncubateShakingParams:
-    path: Union[str, Unit]
-    frequency: Union[str, Unit]
-
-
-class TimeConstraintOptimizationCost(enum.Enum):
-    linear = enum.auto()
-    squared = enum.auto()
-    exponential = enum.auto()
-
-
-class TimeConstraint:
-    from_: Union[int, Container]
-    to: Union[int, Container]
-    less_than: Optional[Unit]
-    more_than: Optional[Unit]
-    ideal: Optional[Union[str, Unit]]
-    optimization_cost: TimeConstraintOptimizationCost
-
-
-class TimeConstraintState:
-    start = enum.auto()
-    end = enum.auto()
-
-
-@dataclass
-class TimeConstraintFromToDict:
-    mark: Union[int, Container]
-    state: TimeConstraintState
-
-
-class OligosynthesizeOligoScale(enum.Enum):
-    _25nm = enum.auto()
-    _100nm = enum.auto()
-    _250nm = enum.auto()
-    _1um = enum.auto()
-
-
-class OligosynthesizeOligoPurification(enum.Enum):
-    standard = enum.auto()
-    page = enum.auto()
-    hplc = enum.auto()
-
-
-@dataclass
-class OligosynthesizeOligo:
-    destination: Well
-    sequence: str
-    scale: str
-    purification: OligosynthesizeOligoPurification = (
-        OligosynthesizeOligoPurification.standard
-    )
-
-    def __post_init__(self):
-        allowable_scales = ["25nm", "100nm", "250nm", "1um"]
-        if self.scale not in allowable_scales:
-            raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
-
-
-@dataclass
-class IlluminaSeqLane:
-    object: Well
-    library_concentration: float
-
-
-@dataclass
-class AgitateModeParams:
-    wells: Union[List[Well], WellGroup]
-    bar_shape: str
-    bar_length: Union[str, Unit]
-
-
-@dataclass
-class ThermocycleTemperature:
-    duration: Union[str, Unit]
-    temperature: Union[str, Unit]
-    read: bool = dataclasses.field(default=False)
-
-
-@dataclass
-class TemperatureGradient:
-    top: Union[str, Unit]
-    bottom: Union[str, Unit]
-
-
-@dataclass
-class ThermocycleTemperatureGradient:
-    duration: Union[str, Unit]
-    gradient: TemperatureGradient
-    read: bool = dataclasses.field(default=False)
-
-
-@dataclass
-class PlateReaderIncubateBeforeShaking:
-    amplitude: Union[str, Unit]
-    orbital: Union[str, Unit]
-
-
-@dataclass
-class PlateReaderIncubateBefore:
-    duration: Unit
-    shake_amplitude: Optional[Union[str, Unit]]
-    shake_orbital: Optional[bool]
-    shaking: Optional[IncubateShakingParams] = None
-
-
-@dataclass
-class PlateReaderPositionZManual:
-    manual: Unit
-
-
-@dataclass
-class PlateReaderPositionZCalculated:
-    calculated_from_wells: List[Well]
-
-
-@dataclass
-class GelPurifyExtract:
-    source: Well
-    band_list: List[GelPurifyBand]
-    lane: Optional[int] = None
-    gel: Optional[int] = None
-
-
-@dataclass
-class FlowCytometryLaser:
-    channels: List[FlowCytometryChannel]
-    excitation: Union[str, Unit] = None
-    power: Union[str, Unit] = None
-    area_scaling_factor: Optional[int] = None
-
-
-@dataclass
-class FlowCytometryCollectionCondition:
-    acquisition_volume: Union[str, Unit]
-    flowrate: Union[str, Unit]
-    wait_time: Union[str, Unit]
-    mix_cycles: int
-    mix_volume: Union[str, Unit]
-    rinse_cycles: int
-    stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria]
-
-
-@dataclass
-class FlowAnalyzeChannelVoltageRange:
-    low: Union[str, Unit]
-    high: Union[str, Unit]
-
-
-@dataclass
-class FlowAnalyzeChannel:
-    voltage_range: FlowAnalyzeChannelVoltageRange
-    area: bool
-    height: bool
-    weight: bool
-
-
-@dataclass
-class FlowAnalyzeNegControls:
-    well: Well
-    volume: Union[str, Unit]
-    channel: str
-    captured_events: Optional[int] = None
-
-
-@dataclass
-class FlowAnalyzeSample:
-    well: Well
-    volume: Union[str, Unit]
-    captured_events: int
-
-
-@dataclass
-class FlowAnalyzeColors:
-    name: str
-    emission_wavelength: Union[str, Unit]
-    excitation_wavelength: Union[str, Unit]
-    voltage_range: FlowAnalyzeChannelVoltageRange
-    area: bool = dataclasses.field(default=True)
-    height: bool = dataclasses.field(default=False)
-    weight: bool = dataclasses.field(default=False)
-
-
-@dataclass
-class FlowAnalyzePosControlsMinimizeBleed:
-    from_: FlowAnalyzeColors
-    to: FlowAnalyzeColors
-
-
-@dataclass
-class FlowAnalyzePosControls:
-    well: Well
-    volume: Union[str, Unit]
-    channel: str
-    minimize_bleed: List[FlowAnalyzePosControlsMinimizeBleed]
-    captured_events: Optional[int] = None
-
-
-@dataclass
-class SpectrophotometryShakeBefore:
-    duration: Union[str, Unit]
-    frequency: Optional[Union[str, Unit]] = None
-    path: Optional[str] = None
-    amplitude: Optional[Union[str, Unit]] = None
-
-
-class EvaporateModeParamsGas(enum.Enum):
-    nitrogen = enum.auto()
-    argon = enum.auto()
-    helium = enum.auto()
-
-
-@dataclass
-class EvaporateModeParams:
-    gas: EvaporateModeParamsGas
-    vortex_speed: Union[str, Unit]
-    blow_rate: Union[str, Unit]
-
-
-class EvaporateMode(enum.Enum):
-    rotary = enum.auto()
-    centrifugal = enum.auto()
-    vortex = enum.auto()
-    blowdown = enum.auto()
-
-
-@dataclass
-class SpeElute:
-    loading_flowrate: Union[str, Unit]
-    resource_id: str
-    settle_time: Union[str, Unit]
-    volume: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
-    destination_well: Well
-    processing_time: Union[str, Unit]
-
-
-@dataclass
-class SpeLoadSample:
-    volume: Union[str, Unit]
-    loading_flowrate: Union[str, Unit]
-    settle_time: Optional[bool]
-    processing_time: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
-    resource_id: Optional[str] = None
-    destination_well: Optional[Well] = None
-    is_elute: bool = dataclasses.field(default=False)
-
-
-@dataclass
-class SpeParams:
-    volume: Union[str, Unit]
-    loading_flowrate: Union[str, Unit]
-    settle_time: Optional[bool]
-    processing_time: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
-    resource_id: Optional[str] = None
-    is_sample: bool = dataclasses.field(default=False)
-    destination_well: Optional[Well] = None
-
-
-class ImageMode(enum.Enum):
-    top = enum.auto()
-    bottom = enum.auto()
-    side = enum.auto()
-
-
-@dataclass
-class ImageExposure:
-    shutter_speed: Optional[Unit] = None
-    iso: Optional[float] = None
-    aperture: Optional[float] = None
-
-
-@dataclass
 class Protocol:
-    refs: Optional[Dict[str, Ref]] = None
+    refs: Optional[Dict[str, Ref]] = field(default=None)
     instructions: List[Instruction] = field(default_factory=list)
-    propagate_properties: bool = False
+    propagate_properties: bool = field(default=False)
     time_constraints: List[TimeConstraint] = field(default_factory=list)
     """
     A Protocol is a sequence of instructions to be executed, and a set of
@@ -601,24 +261,24 @@ class Protocol:
             raise RuntimeError(
                 "Two containers within the same protocol cannot have the same " "name."
             )
-        opts = {}
+        opts: RefOpts = RefOpts()
 
         # Check container type
         try:
             cont_type = self.container_type(cont_type)
             if id and cont_type:
-                opts["id"] = id
+                opts.id = id
             elif cont_type:
-                opts["new"] = cont_type.shortname
+                opts.new = cont_type.shortname
         except ValueError as e:
             raise RuntimeError(
                 f"{cont_type} is not a recognized container type."
             ) from e
 
         if storage:
-            opts["store"] = {"where": storage}
+            opts.store = StorageLocation(**{"where": storage})
         elif discard and not storage:
-            opts["discard"] = discard
+            opts.discard = discard
         else:
             raise RuntimeError(
                 "You must specify either a valid storage condition or set "
@@ -626,11 +286,11 @@ class Protocol:
             )
 
         if cover:
-            opts["cover"] = cover
+            opts.cover = cover
 
         container = Container(
-            id,
-            cont_type,
+            id=id,
+            container_type=cont_type,
             name=name,
             storage=storage if storage else None,
             cover=cover if cover else None,
@@ -1212,14 +872,14 @@ class Protocol:
         # pragma pylint: disable=protected-access
         for n, ref in self.refs.items():
             # assign any storage or discard condition changes to ref
-            if "store" in ref.opts:
-                ref.opts["store"]["where"] = ref.container.storage
-            if ref.container.storage is None and "discard" not in ref.opts:
-                ref.opts["discard"] = True
-                del ref.opts["store"]
-            elif ref.container.storage is not None and "discard" in ref.opts:
-                ref.opts["store"] = {"where": ref.container.storage}
-                del ref.opts["discard"]
+            if ref.opts.store:
+                ref.opts.store.where = ref.container.storage
+            if not ref.container.storage and not ref.opts.discard:
+                ref.opts.discard = True
+                ref.opts.store = None
+            elif ref.container.storage and ref.opts.discard:
+                ref.opts.store = StorageLocation(**{"where": ref.container.storage})
+                ref.opts.discard = None
 
             if ref.container.properties:
                 outs[n]["properties"] = ref.container.properties
@@ -6797,7 +6457,7 @@ class Protocol:
         elif isinstance(op_data, Instruction):
             return self._refify(op_data._as_AST())
         elif isinstance(op_data, Ref):
-            return op_data.opts
+            return op_data.opts.as_dict()
         elif isinstance(op_data, Compound):
             return op_data.as_dict()
         elif isinstance(op_data, Informatics):

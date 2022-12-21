@@ -1,14 +1,15 @@
 import pytest
 
-from autoprotocol import Unit
 from autoprotocol.compound import Compound
 from autoprotocol.container import WellGroup
 from autoprotocol.informatics import AttachCompounds
 from autoprotocol.instruction import Dispense, Instruction
 from autoprotocol.protocol import Protocol
 
-
 # pylint: disable=protected-access
+from autoprotocol.unit import Unit
+
+
 class TestBaseInstruction(object):
     @pytest.fixture
     def test_instruction(self):

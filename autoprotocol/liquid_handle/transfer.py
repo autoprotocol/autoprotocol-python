@@ -23,6 +23,8 @@ class Transfer(LiquidHandleMethod):
     """LiquidHandleMethod for generating transfers between pairs of wells
 
     LiquidHandleMethod for transferring volume from one well to another.
+
+
     Parameters
     ----------
     tip_type : str, optional
@@ -64,12 +66,14 @@ class Transfer(LiquidHandleMethod):
         will track the surface with the defined offset.
         See Also LiquidHandle.builders.position_z
 
+
     Attributes
     ----------
     _source_liquid : LiquidClass
         used to determine calibration, flowrates, and sensing thresholds
     _destination_liquid : LiquidClass
         used to determine calibration, flowrates, and sensing thresholds
+
 
     Notes
     -----

@@ -1383,6 +1383,61 @@ class TestAcousticTransfer(object):
                 "1.31:microliter",
             )
 
+    @pytest.mark.parametrize(
+        "source_container",
+        [
+            "384-echo",
+            "384-echo-ldv",
+            "384-echo-ldv-plus",
+            "1536-echo-ldv-beckman-001-6969",
+        ],
+    )
+    def test_valid_sources(self, dummy_protocol, source_container):
+        src_container_type = _CONTAINER_TYPES[source_container]
+        src_container_name = f"srccntr_{source_container}"
+        test_volume = "25:microliter"
+
+        p = dummy_protocol
+        source = p.ref(src_container_name, None, src_container_type, discard=True)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+        p.acoustic_transfer(source.well(0), dest.wells(1, 3, 5), test_volume)
+        assert len(p.instructions) == 1
+
+    @pytest.mark.parametrize("source_container", ["micro-1.5", "1-flat", "96-pcr"])
+    def test_invalid_sources(self, dummy_protocol, source_container):
+        src_container_type = _CONTAINER_TYPES[source_container]
+        src_container_name = f"srccntr_{source_container}"
+        test_volume = "25:microliter"
+
+        p = dummy_protocol
+        source = p.ref(src_container_name, None, src_container_type, discard=True)
+        src_well = source.well(0)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+
+        with pytest.raises(TypeError) as the_error:
+            p.acoustic_transfer(src_well, dest.wells(1, 3, 5), test_volume)
+        assert the_error is not None
+        error_msg = str(the_error.value)
+        assert "Source does not have 'acoustic_transfer' capability" in error_msg
+        assert src_container_name in error_msg
+        assert str(src_well.index) in error_msg
+        assert source.container_type.shortname in error_msg
+
+    def test_propagate_properties(self, dummy_protocol):
+        p = dummy_protocol
+        p.propagate_properties = True
+        echo = p.ref("echo", None, "384-echo", discard=True)
+        dest = p.ref("dest", None, "384-echo", discard=True)
+        echo.well(0).set_volume("2:microliter")
+        echo.well(0).set_properties({"test_well_property": True})
+        dest.well(0).set_properties({"test_well_property": False})
+        p.acoustic_transfer(echo.well(0), dest.wells(0, 1), "50:nanoliter")
+        echo_prop = echo.well(0).properties["test_well_property"]
+        # Tests property overwrite
+        assert echo_prop == dest.well(0).properties["test_well_property"]
+        # Tests new property
+        assert echo_prop == dest.well(1).properties["test_well_property"]
+
 
 class TestMagneticTransfer(object):
     def test_head_type(self, dummy_protocol):

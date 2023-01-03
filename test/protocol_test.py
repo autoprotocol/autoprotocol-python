@@ -27,7 +27,7 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import ImageExposure, Protocol, Ref
-from autoprotocol.types.protocol import AutopickGroup
+from autoprotocol.types.protocol import AgitateModeParams, AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -127,21 +127,22 @@ class TestRef(object):
         p.ref("test", None, "96-flat", discard=True)
         with pytest.raises(RuntimeError):
             p.ref("test", None, "96-flat", storage="cold_20")
-        assert p.refs["test"].opts["discard"]
-        assert "where" not in p.refs["test"].opts
+        assert p.refs["test"].opts.discard
+        assert "where" not in p.refs["test"].opts.as_dict()
 
     # pragma pylint: disable=expression-not-assigned
     def test_storage_condition_change(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_20")
         p.cover(c1)
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_20"
+        assert p.refs["discard_test"].opts.store.where == "cold_20"
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["discard"]
         c1.discard()
         assert p.as_dict()["refs"]["discard_test"]["discard"]
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["store"]
+
         c1.set_storage("cold_4")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4"
 
@@ -166,7 +167,7 @@ class TestRef(object):
     def test_cold_196_storage(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_196")
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_196"
+        assert p.refs["discard_test"].opts.store.where == "cold_196"
         c1.set_storage("warm_35")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "warm_35"
 
@@ -366,7 +367,7 @@ class TestRefify(object):
         assert p._refify(p.instructions[0]) == p._refify(p.instructions[0]._as_AST())
 
         # refify Ref
-        assert p._refify(p.refs["test"]) == p.refs["test"].opts
+        assert p._refify(p.refs["test"]) == p.refs["test"].opts.as_dict()
 
         # refify Compound
         compd = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
@@ -3038,6 +3039,8 @@ class TestAgitate(object):
     t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
 
     def test_param_checks(self):
+        with pytest.raises(RuntimeError):
+            self.p.ref("t2", id=None, cont_type="micro-2.1", discard=True)
         with pytest.raises(TypeError):
             self.p.agitate(self.pl1, "roll", duration="5:minute", speed="100:rpm")
         with pytest.raises(TypeError):
@@ -3064,17 +3067,19 @@ class TestAgitate(object):
                     "bar_length": "234:micrometer",
                 },
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.p.agitate(
                 self.t1,
                 mode="stir_bar",
                 duration="3:minute",
                 speed="250:rpm",
-                mode_params={
-                    "not_wells": Well(self.t1, 0),
-                    "not_bar_shape": "cross",
-                    "not_bar_length": "234:micrometer",
-                },
+                mode_params=AgitateModeParams(
+                    **{
+                        "not_wells": Well(self.t1, 0),
+                        "not_bar_shape": "cross",
+                        "not_bar_length": "234:micrometer",
+                    }
+                ),
             )
         with pytest.raises(ValueError):
             self.p.agitate(
@@ -3772,3 +3777,33 @@ class TestLiquidHandleDispenseMode(LiquidHandleTester):
         )
         assert len(instruction.data["locations"]) == 15
         assert self.protocol.instructions[-1].op == "liquid_handle"
+
+
+class TestOligoSynthesize:
+    p = Protocol()
+    oligo_1 = p.ref("oligo_1", None, "micro-1.5", discard=True)
+
+    def test_bad_args(self):
+        with pytest.raises(ValueError):
+            self.p.oligosynthesize(
+                [
+                    {
+                        "sequence": "CATGGTCCCCTGCACAGG",
+                        "destination": self.oligo_1.well(0),
+                        "scale": "25000nm",
+                        "purification": "standard",
+                    }
+                ]
+            )
+
+    def test_good_args(self):
+        self.p.oligosynthesize(
+            [
+                {
+                    "sequence": "CATGGTCCCCTGCACAGG",
+                    "destination": self.oligo_1.well(0),
+                    "scale": "25nm",
+                    "purification": "standard",
+                }
+            ]
+        )

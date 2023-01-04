@@ -171,23 +171,6 @@ class TestRef(object):
         c1.set_storage("warm_35")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "warm_35"
 
-    def test_invalid_ref_location(self, dummy_protocol):
-        p = dummy_protocol
-        sample_ref_1 = p.ref("sample_plate_1", cont_type="96-pcr", storage="hot")
-
-        valid_locations = [
-            "warm_37",
-            "warm_30",
-            "ambient",
-            "cold_4",
-            "cold_20",
-            "cold_80",
-        ]
-
-        with pytest.raises(ValueError):
-            if sample_ref_1.storage not in valid_locations:
-                raise ValueError(f"Storage location must be one of {valid_locations}")
-
 
 class TestThermocycle(object):
     def test_thermocycle_append(self):

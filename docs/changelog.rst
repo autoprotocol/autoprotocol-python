@@ -1,7 +1,7 @@
 =========
 Changelog
 =========
-* :release:`9.0.1 <2023-01-04>`
+* :release:`9.1.0 <2023-01-04>`
 * :feature:`375` Move typing dataclasses to own module and create unit data type aliases
 * :feature:`373` Add restriction on container type to echo compatible plates
 * :feature:`369` Update: Autoprotocol python typing

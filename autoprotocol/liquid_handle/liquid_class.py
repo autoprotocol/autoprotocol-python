@@ -9,13 +9,16 @@ intrinsic to specific types of liquids.
 
 """
 from collections import namedtuple
+from dataclasses import dataclass
 from numbers import Number
+from typing import Optional
 
 from ..util import parse_unit
 
 
 # pylint: disable=too-many-instance-attributes,too-few-public-methods
-class LiquidClass(object):
+@dataclass
+class LiquidClass:
     """Contains properties intrinsic to individual LiquidClasses
 
     Attributes
@@ -108,45 +111,37 @@ class LiquidClass(object):
     Protocol.mix : accepts a LiquidClass argument to determine behavior
     """
 
-    def __init__(
-        self,
-        calibrated_volume=None,
-        aspirate_flowrate=None,
-        dispense_flowrate=None,
-        delay_time=None,
-        clld_threshold=None,
-        plld_threshold=None,
-    ):
-        """
-        Parameters
-        ----------
-        calibrated_volume : Unit, optional
-            used to specify a calibrated volume, if not specified then will
-            default to the calibration from `volume_calibration_curve`
-        aspirate_flowrate : dict, optional
-            used to specify an aspirate flowrate, if not specified then will
-            default to the calibration using
-            `aspirate_flowrate_calibration_curve`
-        dispense_flowrate : dict, optional
-            used to specify a dispense flowrate, if not specified then will
-            default to the calibration using
-            `dispense_flowrate_calibration_curve`
-        delay_time : Unit, optional
-            the amount of time to wait after each liquid handling step.
-            this is helpful for cases such as pressure equilibration
-        clld_threshold : Unit, optional
-            the capacitive liquid level detection threshold
-        plld_threshold : Unit, optional
-            the pressure liquid level detection threshold
-        """
+    calibrated_volume: Optional["Unit"] = None
+    aspirate_flowrate: Optional[dict] = None
+    dispense_flowrate: Optional[dict] = None
+    delay_time: Optional["Unit"] = None
+    clld_threshold: Optional["Unit"] = None
+    plld_threshold: Optional["Unit"] = None
 
-        self.calibrated_volume = calibrated_volume
-        self.aspirate_flowrate = aspirate_flowrate
-        self.dispense_flowrate = dispense_flowrate
-        self.delay_time = delay_time
-        self.clld_threshold = clld_threshold
-        self.plld_threshold = plld_threshold
+    """
+    Parameters
+    ----------
+    calibrated_volume : Unit, optional
+        used to specify a calibrated volume, if not specified then will
+        default to the calibration from `volume_calibration_curve`
+    aspirate_flowrate : dict, optional
+        used to specify an aspirate flowrate, if not specified then will
+        default to the calibration using
+        `aspirate_flowrate_calibration_curve`
+    dispense_flowrate : dict, optional
+        used to specify a dispense flowrate, if not specified then will
+        default to the calibration using
+        `dispense_flowrate_calibration_curve`
+    delay_time : Unit, optional
+        the amount of time to wait after each liquid handling step.
+        this is helpful for cases such as pressure equilibration
+    clld_threshold : Unit, optional
+        the capacitive liquid level detection threshold
+    plld_threshold : Unit, optional
+        the pressure liquid level detection threshold
+    """
 
+    def __post_init__(self):
         # Dicts of {tip_type: VolumeCalibration}
         self.volume_calibration_curve = None
         self.aspirate_flowrate_calibration_curve = None

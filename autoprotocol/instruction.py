@@ -12,6 +12,7 @@ from .builders import *  # pylint: disable=unused-wildcard-import
 from .constants import PROVISION_MEASUREMENT_MODES
 from .container import Container
 from .informatics import AttachCompounds, Informatics
+from .types.ref import Location
 
 
 class Instruction(object):
@@ -554,14 +555,7 @@ class Incubate(Instruction):
     """
 
     WHERE = [
-        "ambient",
-        "warm_30",
-        "warm_35",
-        "warm_37",
-        "cold_4",
-        "cold_20",
-        "cold_80",
-        "cold_196",
+        allowable.strip("_") for allowable in Location.__dict__.get("_member_names_")
     ]
 
     def __init__(

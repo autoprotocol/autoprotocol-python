@@ -1,7 +1,7 @@
 import enum
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from ..builders import (
     FlowCytometryChannel,
@@ -17,17 +17,19 @@ ACCELERATION = Union[str, Unit]
 AMOUNT_CONCENTRATION = Union[str, Unit]
 CONCENTRATION = Union[str, Unit]
 FLOW_RATE = Union[str, Unit]
-FREQUENCY = Union[str, Unit]
-LENGTH = Union[str, Unit]
+FREQUENCY = Union[str, Unit]  # hertz, rpm
+LENGTH = Union[str, Unit]  # mm
 MASS = Union[str, Unit]
 MOLES = Union[str, Unit]
 TEMPERATURE = Union[str, Unit]
 TIME = Union[str, Unit]
 VELOCITY = Union[str, Unit]
 VOLUME = Union[str, Unit]
-WAVELENGTH = Union[str, Unit]
+WAVELENGTH = Union[str, Unit]  # nanometer
 DENSITY = Union[str, Unit]
 POWER = Union[str, Unit]
+PRESSURE = Union[str, Unit]  # bar
+VOLTAGE = Union[str, Unit]  # voltage
 
 
 @dataclass
@@ -65,15 +67,18 @@ class TimeConstraint:
     optimization_cost: TimeConstraintOptimizationCost = field(default=None)
 
 
-class TimeConstraintState:
+class TimeConstraintState(enum.Enum):
     start = enum.auto()
     end = enum.auto()
 
 
 @dataclass
 class TimeConstraintFromToDict:
-    mark: Dict[str, Union[Container, str, int]]
+    mark: Union[int, Container]
     state: TimeConstraintState
+
+    def asdict(self):
+        return {"mark": self.mark, "state": self.state}
 
 
 class OligosynthesizeOligoPurification(enum.Enum):
@@ -193,26 +198,26 @@ class GelPurifyExtract:
 @dataclass
 class FlowCytometryLaser:
     channels: List[FlowCytometryChannel]
-    excitation: Union[str, Unit] = field(default=None)
-    power: Union[str, Unit] = field(default=None)
+    excitation: WAVELENGTH = field(default=None)
+    power: POWER = field(default=None)
     area_scaling_factor: Optional[int] = field(default=None)
 
 
 @dataclass
 class FlowCytometryCollectionCondition:
-    acquisition_volume: Union[str, Unit]
-    flowrate: Union[str, Unit]
-    wait_time: Union[str, Unit]
+    acquisition_volume: VOLUME
+    flowrate: FLOW_RATE
+    wait_time: TIME
     mix_cycles: int
-    mix_volume: Union[str, Unit]
+    mix_volume: VOLUME
     rinse_cycles: int
     stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria]
 
 
 @dataclass
 class FlowAnalyzeChannelVoltageRange:
-    low: Union[str, Unit]
-    high: Union[str, Unit]
+    low: VOLTAGE
+    high: VOLTAGE
 
 
 @dataclass
@@ -226,7 +231,7 @@ class FlowAnalyzeChannel:
 @dataclass
 class FlowAnalyzeNegControls:
     well: Well
-    volume: Union[str, Unit]
+    volume: VOLUME
     channel: str
     captured_events: Optional[int] = field(default=None)
 
@@ -234,15 +239,15 @@ class FlowAnalyzeNegControls:
 @dataclass
 class FlowAnalyzeSample:
     well: Well
-    volume: Union[str, Unit]
+    volume: VOLUME
     captured_events: int
 
 
 @dataclass
 class FlowAnalyzeColors:
     name: str
-    emission_wavelength: Union[str, Unit]
-    excitation_wavelength: Union[str, Unit]
+    emission_wavelength: WAVELENGTH
+    excitation_wavelength: WAVELENGTH
     voltage_range: FlowAnalyzeChannelVoltageRange
     area: bool = field(default=True)
     height: bool = field(default=False)
@@ -258,7 +263,7 @@ class FlowAnalyzePosControlsMinimizeBleed:
 @dataclass
 class FlowAnalyzePosControls:
     well: Well
-    volume: Union[str, Unit]
+    volume: VOLUME
     channel: str
     minimize_bleed: List[FlowAnalyzePosControlsMinimizeBleed]
     captured_events: Optional[int] = field(default=None)
@@ -267,9 +272,9 @@ class FlowAnalyzePosControls:
 @dataclass
 class SpectrophotometryShakeBefore:
     duration: TIME
-    frequency: Optional[Union[str, Unit]] = field(default=None)
+    frequency: Optional[FREQUENCY] = field(default=None)
     path: Optional[str] = field(default=None)
-    amplitude: Optional[Union[str, Unit]] = field(default=None)
+    amplitude: Optional[LENGTH] = field(default=None)
 
 
 class EvaporateModeParamsGas(enum.Enum):
@@ -281,8 +286,8 @@ class EvaporateModeParamsGas(enum.Enum):
 @dataclass
 class EvaporateModeParams:
     gas: EvaporateModeParamsGas
-    vortex_speed: Union[str, Unit]
-    blow_rate: Union[str, Unit]
+    vortex_speed: FREQUENCY
+    blow_rate: FLOW_RATE
 
 
 class EvaporateMode(enum.Enum):
@@ -294,22 +299,22 @@ class EvaporateMode(enum.Enum):
 
 @dataclass
 class SpeElute:
-    loading_flowrate: Union[str, Unit]
+    loading_flowrate: FLOW_RATE
     resource_id: str
-    settle_time: Union[str, Unit]
-    volume: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
+    settle_time: TIME
+    volume: VOLUME
+    flow_pressure: PRESSURE
     destination_well: Well
-    processing_time: Union[str, Unit]
+    processing_time: TIME
 
 
 @dataclass
 class SpeLoadSample:
-    volume: Union[str, Unit]
-    loading_flowrate: Union[str, Unit]
-    settle_time: Optional[bool]
-    processing_time: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
+    volume: VOLUME
+    loading_flowrate: FLOW_RATE
+    settle_time: TIME
+    processing_time: TIME
+    flow_pressure: PRESSURE
     resource_id: Optional[str] = field(default=None)
     destination_well: Optional[Well] = field(default=None)
     is_elute: bool = field(default=False)
@@ -317,11 +322,11 @@ class SpeLoadSample:
 
 @dataclass
 class SpeParams:
-    volume: Union[str, Unit]
-    loading_flowrate: Union[str, Unit]
-    settle_time: Optional[bool]
-    processing_time: Union[str, Unit]
-    flow_pressure: Union[str, Unit]
+    volume: VOLUME
+    loading_flowrate: FLOW_RATE
+    settle_time: TIME
+    processing_time: TIME
+    flow_pressure: PRESSURE
     resource_id: Optional[str] = field(default=None)
     is_sample: bool = field(default=False)
     destination_well: Optional[Well] = field(default=None)
@@ -335,16 +340,16 @@ class ImageMode(enum.Enum):
 
 @dataclass
 class ImageExposure:
-    shutter_speed: Optional[Unit] = field(default=None)
+    shutter_speed: Optional[TIME] = field(default=None)
     iso: Optional[float] = field(default=None)
     aperture: Optional[float] = field(default=None)
 
 
 @dataclass
 class DispenseNozzlePosition:
-    position_x: Unit
-    position_y: Unit
-    position_z: Unit
+    position_x: LENGTH
+    position_y: LENGTH
+    position_z: LENGTH
 
 
 @dataclass
@@ -356,10 +361,10 @@ class DispenseShape:
 
 @dataclass
 class DispenseShakeAfter:
-    duration: Optional[Union[Unit, str]] = field(default=None)
-    frequency: Optional[Union[Unit, str]] = field(default=None)
+    duration: Optional[TIME] = field(default=None)
+    frequency: Optional[FREQUENCY] = field(default=None)
     path: Optional[str] = field(default=None)
-    amplitude: Optional[Union[Unit, str]] = field(default=None)
+    amplitude: Optional[LENGTH] = field(default=None)
 
 
 class SonicateModeParamsBathSampleHolder(enum.Enum):

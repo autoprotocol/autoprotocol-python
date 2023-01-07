@@ -379,6 +379,9 @@ class ContainerType(
         """
         return self.well_count // self.col_count
 
+    def __dict__(self):
+        return self.shortname
+
 
 #:
 FLAT384 = ContainerType(

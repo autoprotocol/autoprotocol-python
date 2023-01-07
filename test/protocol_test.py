@@ -27,7 +27,12 @@ from autoprotocol.instruction import (
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
 from autoprotocol.protocol import ImageExposure, Protocol, Ref
-from autoprotocol.types.protocol import AgitateModeParams, AutopickGroup
+from autoprotocol.types.protocol import (
+    AgitateModeParams,
+    AutopickGroup,
+    TimeConstraintFromToDict,
+    TimeConstraintState,
+)
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -443,7 +448,13 @@ class TestRefify(object):
         # time_constraints is not serialized if empty
         assert "time_constraints" not in dummy_protocol.as_dict().keys()
         dummy_protocol.add_time_constraint(
-            {"mark": 0, "state": "end"}, {"mark": 1, "state": "start"}, ideal="5:second"
+            TimeConstraintFromToDict(
+                mark=0, state=TimeConstraintState.end.name
+            ).asdict(),
+            TimeConstraintFromToDict(
+                mark=1, state=TimeConstraintState.start.name
+            ).asdict(),
+            ideal="5:second",
         )
         expected["outs"] = outs
         assert dummy_protocol.as_dict() == expected
@@ -3089,6 +3100,20 @@ class TestAgitate(object):
                 speed="250:rpm",
                 mode_params={"wells": Well(self.t1, 0)},
             )
+        with pytest.raises(TypeError):
+            self.p.agitate(
+                self.t1,
+                mode="stir_bar",
+                duration="3:minute",
+                speed="250:rpm",
+                mode_params=AgitateModeParams(
+                    **{
+                        "not_wells": Well(self.t1, 0),
+                        "not_bar_shape": "somerandomcross",
+                        "not_bar_length": "234:micrometer",
+                    }
+                ),
+            )
 
     # pylint: disable=no-self-use
     def test_roll(self, dummy_protocol):
@@ -3792,6 +3817,17 @@ class TestOligoSynthesize:
                         "destination": self.oligo_1.well(0),
                         "scale": "25000nm",
                         "purification": "standard",
+                    }
+                ]
+            )
+        with pytest.raises(ValueError):
+            self.p.oligosynthesize(
+                [
+                    {
+                        "sequence": "CATGGTCCCCTGCACAGG",
+                        "destination": self.oligo_1.well(0),
+                        "scale": "25000nm",
+                        "purification": "randomandunknown",
                     }
                 ]
             )

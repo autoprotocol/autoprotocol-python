@@ -99,7 +99,9 @@ class OligosynthesizeOligo:
     destination: Well
     sequence: str
     scale: OligosynthesizeOligoScale
-    purification: OligosynthesizeOligoPurification = "standard"
+    purification: OligosynthesizeOligoPurification = (
+        OligosynthesizeOligoPurification.standard.name
+    )
 
     def __post_init__(self):
         allowable_scales = [

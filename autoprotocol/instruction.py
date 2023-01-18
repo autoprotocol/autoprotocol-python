@@ -537,9 +537,8 @@ class Incubate(Instruction):
     object : Ref or str
         The container to be incubated
     where : autoprotocol.types.ref.Location
-        Temperature at which to incubate specified container - Enum({
-            "warm_37", "warm_35", "warm_30", "ambient", "cold_4", "cold_20", "cold_80", "cold_196"
-        })
+        Temperature at which to incubate specified container. Allowable ["warm_37", "warm_35",
+         "warm_30", "ambient", "cold_4", "cold_20", "cold_80", "cold_196"]
     duration : Unit or str
         Length of time to incubate container
     shaking : bool, optional

@@ -9,11 +9,13 @@ from autoprotocol.unit import Unit
 
 class Location(enum.Enum):
     warm_37 = enum.auto()
+    warm_35 = enum.auto()
     warm_30 = enum.auto()
     ambient = enum.auto()
     cold_4 = enum.auto()
     cold_20 = enum.auto()
     cold_80 = enum.auto()
+    cold_196 = enum.auto()
 
 
 @dataclass

@@ -11,6 +11,9 @@ import argparse
 import io
 import json
 
+from dataclasses import dataclass, field
+from typing import Dict
+
 from . import UserError
 from .compound import Compound, CompoundError
 from .container import WellGroup
@@ -435,9 +438,12 @@ def convert_param(protocol, val, type_desc):
         raise ValueError(f"Unknown input type {type!r}")
 
 
-class ProtocolInfo(object):
-    def __init__(self, json_dict):
-        self.input_types = json_dict["inputs"]
+@dataclass
+class ProtocolInfo:
+    json_dict: Dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.input_types = self.json_dict["inputs"]
 
     def parse(self, protocol, inputs):
         refs = inputs["refs"]

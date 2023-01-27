@@ -7787,8 +7787,8 @@ class Protocol:
         for vol, met in zip(volume, method):
             if not met.tip_type:
                 try:
-                    met.tip_type = met._rec_tip_type(vol)
-                    # met._rec_tip_type(vol)
+                    # met.tip_type = met._rec_tip_type(vol)
+                    met._rec_tip_type(vol)
                 except RuntimeError:
                     met.tip_type = met._get_sorted_tip_types()[-1].name
 

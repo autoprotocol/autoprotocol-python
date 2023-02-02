@@ -64,7 +64,7 @@ setup(
     long_description_content_type="text/x-rst",
     license="BSD",
     maintainer_email="support@strateos.com",
-    version=__version__,  # pylint: disable=undefined-variable
+    version=__version__,
     install_requires=["Pint==0.9"],
     python_requires=">=3.7",
     tests_require=test_deps,

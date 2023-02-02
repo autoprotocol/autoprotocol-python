@@ -2,8 +2,8 @@
 # pragma pylint: disable=too-few-public-methods, attribute-defined-outside-init
 import pytest
 
+from autoprotocol import Unit
 from autoprotocol.instruction import LiquidHandle
-from autoprotocol.unit import Unit
 
 
 class TestInstructionBuilders(object):

@@ -3,7 +3,6 @@
 Base LiquidHandleMethod used by Protocol.liquid_handle_dispense to generate a
 series of movements that define a dispense from a source into a destination
 """
-from dataclasses import dataclass
 from typing import List, Optional, Union
 
 from ..instruction import LiquidHandle
@@ -13,7 +12,6 @@ from .liquid_handle_method import LiquidHandleMethod
 
 
 # pylint: disable=protected-access
-@dataclass
 class Dispense(LiquidHandleMethod):
     """LiquidHandleMethod for generating dispense transports
 
@@ -40,14 +38,15 @@ class Dispense(LiquidHandleMethod):
     LiquidHandleMethod : base LiquidHandleMethod with reused functionality
     """
 
-    volume_resolution: Optional[Unit] = None
-    prime: bool = True
-    predispense: bool = True
+    def __init__(self, volume_resolution=None, prime=True, predispense=True):
+        super(Dispense, self).__init__()
 
-    def __post_init__(self):
+        # parameters for required behavior
+        self.volume_resolution = volume_resolution
+
         # parameters for optional behavior
-        self._set_prime(self.prime)
-        self._set_predispense(self.predispense)
+        self._set_prime(prime)
+        self._set_predispense(predispense)
 
         # LiquidHandle parameters that are generated and modified at runtime
         self._liquid = None

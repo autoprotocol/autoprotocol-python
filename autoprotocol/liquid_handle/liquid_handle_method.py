@@ -20,9 +20,6 @@ When creating a vendor-specific library it's likely desirable to monkey patch
 `LiquidHandleMethod._get_tip_types` to reference TipTypes that the vendor
 supports.
 """
-from dataclasses import dataclass
-from typing import Optional
-
 from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
@@ -30,8 +27,7 @@ from .tip_type import TipType
 
 
 # pylint: disable=too-many-public-methods,protected-access
-@dataclass
-class LiquidHandleMethod:
+class LiquidHandleMethod(object):
     """Base LiquidHandleMethod
 
     General framework for liquid handling abstractions and helpers for
@@ -106,22 +102,22 @@ class LiquidHandleMethod:
     Protocol : contains methods that accept LiquidHandleMethods as arguments
     """
 
-    tip_type: Optional[TipType] = None
-    blowout: bool = True
-    """
-    Parameters
-    ----------
-    tip_type : str, optional
-        tip_type to be used for the LiquidHandlingMethod
-    blowout : bool or dict, optional
-        whether to execute a blowout step or the parameters for one.
-        this generates two operations, an initial air aspiration before
-        entering any wells, and a corresponding final air dispense
-        after the last operation that involves liquid
-        See Also LiquidHandle.builders.blowout
-    """
+    def __init__(self, tip_type=None, blowout=True):
+        """
+        Parameters
+        ----------
+        tip_type : str, optional
+            tip_type to be used for the LiquidHandlingMethod
+        blowout : bool or dict, optional
+            whether to execute a blowout step or the parameters for one.
+            this generates two operations, an initial air aspiration before
+            entering any wells, and a corresponding final air dispense
+            after the last operation that involves liquid
+            See Also LiquidHandle.builders.blowout
+        """
+        self.tip_type = tip_type
+        self.blowout = blowout
 
-    def __post_init__(self):
         # LiquidHandle parameters that are generated and modified at runtime
         self._shape = None
         self._transports = []
@@ -179,7 +175,7 @@ class LiquidHandleMethod:
         """
         return sorted(self._get_tip_types(), key=lambda t: t.volume)
 
-    def _rec_tip_type(self, volume: Unit):
+    def _rec_tip_type(self, volume):
         """For a given volume gets the smallest appropriate tip type
 
         Parameters
@@ -252,9 +248,7 @@ class LiquidHandleMethod:
         raise NotImplementedError
 
     @staticmethod
-    def _estimate_calibrated_volume(
-        volume: "Unit", liquid: "LiquidClass", tip_type: Optional[str]
-    ):
+    def _estimate_calibrated_volume(volume, liquid, tip_type):
         """Gives an estimation of calibrated volume
 
         If tip_type is specified then gets the actual calibrated volume,
@@ -293,7 +287,7 @@ class LiquidHandleMethod:
 
         return cal_vol
 
-    def _calculate_overage_volume(self, volume: "Unit"):
+    def _calculate_overage_volume(self, volume):
         """Calculates extra volume held in the tip besides the target volume
 
         Calculates how much extra volume is contained within the tip besides
@@ -323,15 +317,15 @@ class LiquidHandleMethod:
 
     def _aspirate_simple(
         self,
-        volume: "Unit",
-        initial_z: dict,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        calibrated_vol: Optional["Unit"] = None,
-        flowrate: Optional[dict] = None,
-        delay_time: Optional["Unit"] = None,
-        liquid_class: Optional[str] = None,
-        density: Optional["Unit"] = None,
+        volume,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
     ):
         """Helper function for generating aspirate transports
 
@@ -380,17 +374,17 @@ class LiquidHandleMethod:
 
     def _aspirate_with_prime(
         self,
-        volume: "Unit",
-        prime_vol: "Unit",
-        initial_z: dict,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        calibrated_vol: Optional["Unit"] = None,
-        asp_flowrate: Optional[dict] = None,
-        dsp_flowrate: Optional[dict] = None,
-        delay_time: Optional["Unit"] = None,
-        liquid_class: Optional[str] = None,
-        density: Optional["Unit"] = None,
+        volume,
+        prime_vol,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        asp_flowrate=None,
+        dsp_flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
     ):
         """Helper function for generating aspiration with priming
 
@@ -458,15 +452,15 @@ class LiquidHandleMethod:
 
     def _dispense_simple(
         self,
-        volume: "Unit",
-        initial_z: dict,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        calibrated_vol: Optional["Unit"] = None,
-        flowrate: Optional[dict] = None,
-        delay_time: Optional["Unit"] = None,
-        liquid_class: Optional[str] = None,
-        density: Optional["Unit"] = None,
+        volume,
+        initial_z,
+        position_x=None,
+        position_y=None,
+        calibrated_vol=None,
+        flowrate=None,
+        delay_time=None,
+        liquid_class=None,
+        density=None,
     ):
         """Helper function for generating dispense transports
 
@@ -514,15 +508,15 @@ class LiquidHandleMethod:
 
     def _mix(
         self,
-        volume: "Unit",
-        repetitions: int,
-        initial_z: Optional[dict] = None,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        asp_flowrate: Optional[dict] = None,
-        dsp_flowrate: Optional[dict] = None,
-        delay_time: Optional["Unit"] = None,
-        liquid_class: Optional[str] = None,
+        volume,
+        repetitions,
+        position_x=None,
+        position_y=None,
+        initial_z=None,
+        asp_flowrate=None,
+        dsp_flowrate=None,
+        delay_time=None,
+        liquid_class=None,
     ):
         """Helper function for generating mix transports
 
@@ -574,10 +568,7 @@ class LiquidHandleMethod:
         ] * repetitions
 
     def _move_to_initial_position(
-        self,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        position_z: Optional[dict] = None,
+        self, position_x=None, position_y=None, position_z=None
     ):
         """Moves to a given position_z and then returns a followup one
 
@@ -623,7 +614,7 @@ class LiquidHandleMethod:
 
         return followup_z
 
-    def _move_to_well_top_before_lld(self, position_z: dict):
+    def _move_to_well_top_before_lld(self, position_z):
         """If position_z contains any liquid sensing moves to well top
 
         Parameters
@@ -643,7 +634,7 @@ class LiquidHandleMethod:
                     self._transports.append(well_top_z)
 
     @staticmethod
-    def _get_followup_z(position_z: dict):
+    def _get_followup_z(position_z):
         """Generates a position_z that references preceding position/tracked
 
         Generates a position_z to followup after the specified one. If the
@@ -675,7 +666,7 @@ class LiquidHandleMethod:
 
         return followup_z
 
-    def _transport_pre_buffer(self, volume: "Unit"):
+    def _transport_pre_buffer(self, volume):
         """Aspirates a pre buffer of air volume above the source location
 
         Parameters
@@ -698,7 +689,7 @@ class LiquidHandleMethod:
                 liquid_class="air",
             )
 
-    def _calculate_pre_buffer(self, volume: "Unit"):
+    def _calculate_pre_buffer(self, volume):
         """Calculates a recommended pre_buffer volume
 
         Parameters
@@ -723,7 +714,7 @@ class LiquidHandleMethod:
 
         return blowout.get("volume", Unit("0:uL"))
 
-    def _transport_blowout(self, volume: "Unit"):
+    def _transport_blowout(self, volume):
         """Blows out air volume above the destination location
 
         Parameters
@@ -749,7 +740,7 @@ class LiquidHandleMethod:
             self._dispense_simple(liquid_class="air", **blowout_params)
 
     # pylint: disable=missing-param-doc
-    def default_blowout(self, volume: "Unit"):
+    def default_blowout(self, volume: Unit):
         """Default blowout behavior
 
         Parameters
@@ -769,7 +760,7 @@ class LiquidHandleMethod:
         raise NotImplementedError
 
     @staticmethod
-    def default_lld_position_z(liquid: "LiquidClass"):
+    def default_lld_position_z(liquid):
         """Default lld position_z
 
         Returns

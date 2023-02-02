@@ -800,7 +800,7 @@ def seal_on_store(protocol):
 
     """
     for _, ref in protocol.refs.items():
-        if ref.opts.store:
+        if "store" in ref.opts.keys():
             if not (ref.container.is_covered() or ref.container.is_sealed()):
                 default_method = ref.container.container_type.prioritize_seal_or_cover
                 sealable = "seal" in ref.container.container_type.capabilities

@@ -2,14 +2,13 @@ import json
 
 import pytest
 
-from autoprotocol import Container, Protocol, Well, WellGroup
+from autoprotocol import Container, Protocol, Unit, Well, WellGroup
 from autoprotocol.harness import (
     Manifest,
     ProtocolInfo,
     get_protocol_preview,
     seal_on_store,
 )
-from autoprotocol.unit import Unit
 
 
 class TestManifest(object):

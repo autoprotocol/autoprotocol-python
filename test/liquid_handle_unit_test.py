@@ -3,6 +3,7 @@
 # pragma pylint: disable=protected-access
 import pytest
 
+from autoprotocol import Unit
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.liquid_handle import LiquidHandleMethod, Mix, Transfer
 from autoprotocol.liquid_handle.liquid_class import (
@@ -11,7 +12,6 @@ from autoprotocol.liquid_handle.liquid_class import (
     VolumeCalibrationBin,
 )
 from autoprotocol.liquid_handle.tip_type import TipType
-from autoprotocol.unit import Unit
 
 
 class LiquidClassTester(object):

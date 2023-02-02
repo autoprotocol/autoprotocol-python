@@ -1,6 +1,7 @@
 =========
 Changelog
 =========
+
 * :release: `10.0.0 <2023-02-02>`
 * :support: `XXX` Recommit changes to version 10.0.0
 * :support: `380` Reverting braking changes that 9.1.0 introduces in order to semantically adjust changes to a major version bump

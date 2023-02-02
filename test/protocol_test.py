@@ -26,8 +26,8 @@ from autoprotocol.instruction import (
     Thermocycle,
 )
 from autoprotocol.liquid_handle.dispense import Dispense as DispenseMethod
-from autoprotocol.protocol import Protocol, Ref
-from autoprotocol.types.protocol import AutopickGroup
+from autoprotocol.protocol import ImageExposure, Protocol, Ref
+from autoprotocol.types.protocol import AgitateModeParams, AutopickGroup
 from autoprotocol.unit import Unit, UnitError
 
 
@@ -127,21 +127,22 @@ class TestRef(object):
         p.ref("test", None, "96-flat", discard=True)
         with pytest.raises(RuntimeError):
             p.ref("test", None, "96-flat", storage="cold_20")
-        assert p.refs["test"].opts["discard"]
-        assert "where" not in p.refs["test"].opts
+        assert p.refs["test"].opts.discard
+        assert "where" not in p.refs["test"].opts.as_dict()
 
     # pragma pylint: disable=expression-not-assigned
     def test_storage_condition_change(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_20")
         p.cover(c1)
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_20"
+        assert p.refs["discard_test"].opts.store.where == "cold_20"
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["discard"]
         c1.discard()
         assert p.as_dict()["refs"]["discard_test"]["discard"]
         with pytest.raises(KeyError):
             p.as_dict()["refs"]["discard_test"]["store"]
+
         c1.set_storage("cold_4")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "cold_4"
 
@@ -153,14 +154,20 @@ class TestRef(object):
                 for cover in covers:
                     p = Protocol()
                     c = p.ref(name + cover, cont_type=name, cover=cover, discard=True)
-                    p.image(c, "top", "image")
+                    p.image(
+                        c,
+                        mode="top",
+                        dataref="image",
+                        exposure={"iso": "true"},
+                        num_images=2,
+                    )
                     ref = list(p.as_dict()["refs"].values())[0]
                     assert ref["cover"] == cover
 
     def test_cold_196_storage(self, dummy_protocol):
         p = dummy_protocol
         c1 = p.ref("discard_test", None, "96-flat", storage="cold_196")
-        assert p.refs["discard_test"].opts["store"]["where"] == "cold_196"
+        assert p.refs["discard_test"].opts.store.where == "cold_196"
         c1.set_storage("warm_35")
         assert p.as_dict()["refs"]["discard_test"]["store"]["where"] == "warm_35"
 
@@ -360,7 +367,7 @@ class TestRefify(object):
         assert p._refify(p.instructions[0]) == p._refify(p.instructions[0]._as_AST())
 
         # refify Ref
-        assert p._refify(p.refs["test"]) == p.refs["test"].opts
+        assert p._refify(p.refs["test"]) == p.refs["test"].opts.as_dict()
 
         # refify Compound
         compd = Compound("Daylight Canonical SMILES", "C1=CC=CC=C1")
@@ -1376,6 +1383,46 @@ class TestAcousticTransfer(object):
                 dest.wells(0, 1),
                 "1.31:microliter",
             )
+
+    @pytest.mark.parametrize(
+        "source_container",
+        [
+            "384-echo",
+            "384-echo-ldv",
+            "384-echo-ldv-plus",
+            "1536-echo-ldv-beckman-001-6969",
+        ],
+    )
+    def test_valid_sources(self, dummy_protocol, source_container):
+        src_container_type = _CONTAINER_TYPES[source_container]
+        src_container_name = f"srccntr_{source_container}"
+        test_volume = "25:microliter"
+
+        p = dummy_protocol
+        source = p.ref(src_container_name, None, src_container_type, discard=True)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+        p.acoustic_transfer(source.well(0), dest.wells(1, 3, 5), test_volume)
+        assert len(p.instructions) == 1
+
+    @pytest.mark.parametrize("source_container", ["micro-1.5", "1-flat", "96-pcr"])
+    def test_invalid_sources(self, dummy_protocol, source_container):
+        src_container_type = _CONTAINER_TYPES[source_container]
+        src_container_name = f"srccntr_{source_container}"
+        test_volume = "25:microliter"
+
+        p = dummy_protocol
+        source = p.ref(src_container_name, None, src_container_type, discard=True)
+        src_well = source.well(0)
+        dest = p.ref("dest", None, "384-flat", discard=True)
+
+        with pytest.raises(TypeError) as the_error:
+            p.acoustic_transfer(src_well, dest.wells(1, 3, 5), test_volume)
+        assert the_error is not None
+        error_msg = str(the_error.value)
+        assert "Source does not have 'acoustic_transfer' capability" in error_msg
+        assert src_container_name in error_msg
+        assert str(src_well.index) in error_msg
+        assert source.container_type.shortname in error_msg
 
     def test_propagate_properties(self, dummy_protocol):
         p = dummy_protocol
@@ -2992,6 +3039,8 @@ class TestAgitate(object):
     t1 = p.ref("t1", id=None, cont_type="micro-2.0", discard=True)
 
     def test_param_checks(self):
+        with pytest.raises(RuntimeError):
+            self.p.ref("t2", id=None, cont_type="micro-2.1", discard=True)
         with pytest.raises(TypeError):
             self.p.agitate(self.pl1, "roll", duration="5:minute", speed="100:rpm")
         with pytest.raises(TypeError):
@@ -3018,17 +3067,19 @@ class TestAgitate(object):
                     "bar_length": "234:micrometer",
                 },
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             self.p.agitate(
                 self.t1,
                 mode="stir_bar",
                 duration="3:minute",
                 speed="250:rpm",
-                mode_params={
-                    "not_wells": Well(self.t1, 0),
-                    "not_bar_shape": "cross",
-                    "not_bar_length": "234:micrometer",
-                },
+                mode_params=AgitateModeParams(
+                    **{
+                        "not_wells": Well(self.t1, 0),
+                        "not_bar_shape": "cross",
+                        "not_bar_length": "234:micrometer",
+                    }
+                ),
             )
         with pytest.raises(ValueError):
             self.p.agitate(
@@ -3185,37 +3236,58 @@ class TestImage(object):
 
     def test_image(self):
         self.p.image(
-            self.c1,
-            "top",
-            "dataref_1",
+            ref=self.c1,
+            mode="top",
             num_images=3,
+            dataref="dataref_1",
             backlighting=False,
-            exposure={"iso": 4},
+            exposure=ImageExposure(**{"iso": 4}),
             magnification=1.5,
         )
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["magnification"] == 1.5
 
     def test_image_default(self):
-        self.p.image(self.c1, "top", "dataref_1")
+        self.p.image(self.c1, mode="top", num_images=1, dataref="dataref_1")
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["magnification"] == 1.0
         assert self.p.instructions[-1].data["num_images"] == 1
 
     def test_image_params(self):
-        self.p.image(self.c1, "top", "dataref_2", backlighting=True)
+        self.p.image(
+            self.c1,
+            mode="top",
+            num_images=1,
+            dataref="dataref_2",
+            backlighting=True,
+        )
         assert self.p.instructions[-1].op == "image"
         assert self.p.instructions[-1].data["back_lighting"]
 
     def test_bad_inputs(self):
         with pytest.raises(ValueError):
-            self.p.image(self.c1, "bad_mode", "dataref_1")
+            self.p.image(self.c1, mode="bad_mode", num_images=1, dataref="dataref_1")
         with pytest.raises(TypeError):
-            self.p.image(self.c1, "top", "dataref_1", num_images=0)
+            self.p.image(self.c1, mode="top", dataref="dataref_1", num_images=0)
         with pytest.raises(TypeError):
-            self.p.image(self.c1, "top", "dataref_1", num_images=None)
+            self.p.image(self.c1, mode="top", dataref="dataref_1", num_images=None)
         with pytest.raises(TypeError):
-            self.p.image(self.c1, "top", "dataref_1", exposure={"iso": "true"})
+            self.p.image(
+                self.c1,
+                mode="top",
+                dataref="dataref_1",
+                exposure=ImageExposure(iso=True),
+                num_images=0,
+            )
+        with pytest.raises(TypeError):
+            self.p.image(
+                self.c1,
+                mode="top",
+                dataref="dataref_1",
+                exposure={"iso": "true"},
+                num_images=3,
+                magnification=0,
+            )
 
 
 class TestSeal(object):
@@ -3705,3 +3777,33 @@ class TestLiquidHandleDispenseMode(LiquidHandleTester):
         )
         assert len(instruction.data["locations"]) == 15
         assert self.protocol.instructions[-1].op == "liquid_handle"
+
+
+class TestOligoSynthesize:
+    p = Protocol()
+    oligo_1 = p.ref("oligo_1", None, "micro-1.5", discard=True)
+
+    def test_bad_args(self):
+        with pytest.raises(ValueError):
+            self.p.oligosynthesize(
+                [
+                    {
+                        "sequence": "CATGGTCCCCTGCACAGG",
+                        "destination": self.oligo_1.well(0),
+                        "scale": "25000nm",
+                        "purification": "standard",
+                    }
+                ]
+            )
+
+    def test_good_args(self):
+        self.p.oligosynthesize(
+            [
+                {
+                    "sequence": "CATGGTCCCCTGCACAGG",
+                    "destination": self.oligo_1.well(0),
+                    "scale": "25nm",
+                    "purification": "standard",
+                }
+            ]
+        )

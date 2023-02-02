@@ -7,6 +7,10 @@
 Base LiquidHandleMethod used by Protocol.transfer to generate a series of
 movements between pairs of wells.
 """
+import dataclasses
+
+from typing import Optional, Union
+
 from ..instruction import LiquidHandle
 from ..unit import Unit
 from ..util import parse_unit
@@ -14,10 +18,54 @@ from .liquid_handle_method import LiquidHandleMethod
 
 
 # pylint: disable=unused-argument,too-many-instance-attributes,protected-access
+@dataclasses.dataclass
 class Transfer(LiquidHandleMethod):
     """LiquidHandleMethod for generating transfers between pairs of wells
 
     LiquidHandleMethod for transferring volume from one well to another.
+
+
+    Parameters
+    ----------
+    tip_type : str, optional
+        tip_type to be used for the LiquidHandlingMethod
+    blowout : bool or dict, optional
+        whether to execute a blowout step or the parameters for one.
+        this generates a pair of operations: an initial air aspiration
+        before entering any wells and a corresponding air dispense after the
+        last operation that involves liquid
+        See Also LiquidHandle.builders.blowout
+    prime : bool or Unit, optional
+        whether to execute a prime step or the parameters for one.
+        this generates a pair of aspirate/dispense operations around the
+        aspiration step in the sequence:
+        aspirate_prime -> aspirate_target_volume -> dispense_prime
+    transit : bool or Unit, optional
+        whether to execute a transit step or the parameters for one.
+        this generates a pair of operations wherein air is aspirated just
+        before leaving the source location and dispensed immediately
+        after reaching the destination location
+    mix_before : bool or dict, optional
+        whether to execute a mix_before step or the parameters for one.
+        this generates a series of aspirate and dispense steps within the
+        source location before aspirating the target volume
+        See Also LiquidHandle.builders.mix
+    mix_after : bool or dict, optional
+        whether to execute a mix_after step or the parameters for one.
+        this generates a series of aspirate and dispense steps within the
+        destination location after dispensing the target volume
+        See Also LiquidHandle.builders.mix
+    aspirate_z : dict, optional
+        the position that the tip should move to prior to aspirating, if the
+        position references the `liquid_surface` then aspirate movements
+        will track the surface with the defined offset.
+        See Also LiquidHandle.builders.position_z
+    dispense_z : dict, optional
+        the position that the tip should move to prior to dispensing, if the
+        position references the `liquid_surface` then dispense
+        will track the surface with the defined offset.
+        See Also LiquidHandle.builders.position_z
+
 
     Attributes
     ----------
@@ -25,6 +73,7 @@ class Transfer(LiquidHandleMethod):
         used to determine calibration, flowrates, and sensing thresholds
     _destination_liquid : LiquidClass
         used to determine calibration, flowrates, and sensing thresholds
+
 
     Notes
     -----
@@ -39,74 +88,23 @@ class Transfer(LiquidHandleMethod):
     Protocol.transfer : the standard interface for interacting with Transfer
     """
 
-    def __init__(
-        self,
-        tip_type=None,
-        blowout=True,
-        prime=True,
-        transit=True,
-        mix_before=False,
-        mix_after=True,
-        aspirate_z=None,
-        dispense_z=None,
-    ):
-        """
-        Parameters
-        ----------
-        tip_type : str, optional
-            tip_type to be used for the LiquidHandlingMethod
-        blowout : bool or dict, optional
-            whether to execute a blowout step or the parameters for one.
-            this generates a pair of operations: an initial air aspiration
-            before entering any wells and a corresponding air dispense after the
-            last operation that involves liquid
-            See Also LiquidHandle.builders.blowout
-        prime : bool or Unit, optional
-            whether to execute a prime step or the parameters for one.
-            this generates a pair of aspirate/dispense operations around the
-            aspiration step in the sequence:
-            aspirate_prime -> aspirate_target_volume -> dispense_prime
-        transit : bool or Unit, optional
-            whether to execute a transit step or the parameters for one.
-            this generates a pair of operations wherein air is aspirated just
-            before leaving the source location and dispensed immediately
-            after reaching the destination location
-        mix_before : bool or dict, optional
-            whether to execute a mix_before step or the parameters for one.
-            this generates a series of aspirate and dispense steps within the
-            source location before aspirating the target volume
-            See Also LiquidHandle.builders.mix
-        mix_after : bool or dict, optional
-            whether to execute a mix_after step or the parameters for one.
-            this generates a series of aspirate and dispense steps within the
-            destination location after dispensing the target volume
-            See Also LiquidHandle.builders.mix
-        aspirate_z : dict, optional
-            the position that the tip should move to prior to aspirating, if the
-            position references the `liquid_surface` then aspirate movements
-            will track the surface with the defined offset.
-            See Also LiquidHandle.builders.position_z
-        dispense_z : dict, optional
-            the position that the tip should move to prior to dispensing, if the
-            position references the `liquid_surface` then dispense
-            will track the surface with the defined offset.
-            See Also LiquidHandle.builders.position_z
-        """
-        super(Transfer, self).__init__(tip_type=tip_type, blowout=blowout)
+    tip_type: Optional[str] = None
+    blowout: Optional[Union[bool, dict]] = True
+    prime: Optional[Union[bool, Unit]] = True
+    transit: Optional[Union[bool, Unit]] = True
+    mix_before: Optional[Union[bool, dict]] = False
+    mix_after: Optional[Union[bool, dict]] = True
+    aspirate_z: Optional[dict] = None
+    dispense_z: Optional[dict] = None
 
-        # parameters for required behavior
-        self.aspirate_z = aspirate_z
-        self.dispense_z = dispense_z
-
-        # parameters for optional behavior
-        self.prime = prime
-        self.transit = transit
-        self.mix_before = mix_before
-        self.mix_after = mix_after
-
+    def __post_init__(self):
         # LiquidHandle parameters that are generated and modified at runtime
         self._source_liquid = None
         self._destination_liquid = None
+
+    def _rec_tip_type(self, volume: Unit):
+        self.tip_type = super(Transfer, self)._rec_tip_type(volume=volume)
+        return self.tip_type
 
     def _has_calibration(self):
         liquids = [self._source_liquid, self._destination_liquid]

@@ -1,6 +1,13 @@
 =========
 Changelog
 =========
+
+* :release: `10.0.0 <2023-02-02>`
+* :support: `381` Recommit changes to version 10.0.0
+
+* :release:`9.1.1 <2023-02-02>`
+* :support: `380` Reverting braking changes that 9.1.0 introduces in order to semantically adjust changes to a major version bump
+
 * :release:`9.1.0 <2023-01-04>`
 * :feature:`375` Move typing dataclasses to own module and create unit data type aliases
 * :feature:`373` Add restriction on container type to echo compatible plates

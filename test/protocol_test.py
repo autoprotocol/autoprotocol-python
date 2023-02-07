@@ -1,5 +1,6 @@
 # pragma pylint: disable=missing-docstring,protected-access
 # pragma pylint: disable=attribute-defined-outside-init
+# pylint: skip-file
 import warnings
 
 import pytest

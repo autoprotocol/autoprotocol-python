@@ -57,9 +57,11 @@ class Instruction(object):
         """
         # informatics is not serialized if empty.
         if self.informatics:
-            return dict(op=self.op, **self.data, informatics=self.informatics)
+            return_dict = dict(op=self.op, **self.data, informatics=self.informatics)
         else:
-            return dict(op=self.op, **self.data)
+            return_dict = dict(op=self.op, **self.data)
+
+        return return_dict
 
     @staticmethod
     def _remove_empty_fields(data):
@@ -153,7 +155,8 @@ class Instruction(object):
         for well in wells.wells:
             if well not in available_wells:
                 raise ValueError(
-                    f"informatics well: {wells} must be one of the wells used in this instruction."
+                    f"informatics well: {wells} must be one of the wells "
+                    f"used in this instruction."
                 )
 
         info.wells = wells.wells
@@ -177,11 +180,11 @@ class Instruction(object):
         if type(op_data) is dict:
             for k, v in op_data.items():
                 all_wells.append(self.get_wells(v))
-        elif type(op_data) is list:
+        elif isinstance(op_data, list):
             for i in op_data:
                 all_wells.extend([self.get_wells(i)])
         # if container is provided, all wells in the container are included
-        elif type(op_data) is Container:
+        elif isinstance(op_data, Container):
             all_wells.append(op_data.all_wells())
         elif is_valid_well(op_data):
             all_wells.append(WellGroup(op_data))
@@ -252,8 +255,9 @@ class MagneticTransfer(Instruction):
             )
         non_valid_well_volumes = [
             well
-            for container in containers for well in container.all_wells()
-            if well.volume and well.volume > container.container_type.well_volume_ul * 0.6
+            for _ in containers
+            for well in _.all_wells()
+            if well.volume and well.volume > _.container_type.well_volume_ul * 0.6
         ]
         if non_valid_well_volumes:
             non_valid_container_working_vols = [
@@ -261,8 +265,9 @@ class MagneticTransfer(Instruction):
                 for well in non_valid_well_volumes
             ]
             raise ValueError(
-                f"Not all wells: {non_valid_well_volumes} have volume less than MagTransfer "
-                f"working volume for its container_type: {non_valid_container_working_vols}"
+                f"Not all wells: {non_valid_well_volumes} have volume "
+                f"less than MagTransfer working volume for its "
+                f"container_type: {non_valid_container_working_vols}"
             )
         # a new tip is used for each group
         if len(groups) + len(containers) > self.max_objects:
@@ -1501,7 +1506,8 @@ class Provision(Instruction):
     dests : list(dict)
       Destination(s) for specified resource, together with volume information
     measurement_mode : str
-      Measurement mode. Possible values are :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
+      Measurement mode. Possible values are
+      :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
     informatics : list(Informatics)
       List of expected aliquot effects at the completion of this instruction
 

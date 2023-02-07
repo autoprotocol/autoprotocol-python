@@ -250,7 +250,20 @@ class MagneticTransfer(Instruction):
                 f"container_types: {self.heads[magnetic_head]} for head_type: "
                 f"{magnetic_head}"
             )
-
+        non_valid_well_volumes = [
+            well
+            for container in containers for well in container.all_wells()
+            if well.volume and well.volume > container.container_type.well_volume_ul * 0.6
+        ]
+        if non_valid_well_volumes:
+            non_valid_container_working_vols = [
+                well.container.container_type.well_volume_ul * 0.6
+                for well in non_valid_well_volumes
+            ]
+            raise ValueError(
+                f"Not all wells: {non_valid_well_volumes} have volume less than MagTransfer "
+                f"working volume for its container_type: {non_valid_container_working_vols}"
+            )
         # a new tip is used for each group
         if len(groups) + len(containers) > self.max_objects:
             raise RuntimeError(

@@ -8170,7 +8170,7 @@ class Protocol:
 
             x_distance = abs(point_a[0] - point_b[0])
             y_distance = abs(point_a[1] - point_b[1])
-            return sqrt(x_distance ** 2 + y_distance ** 2)
+            return sqrt(x_distance**2 + y_distance**2)
 
         # Check validity of Well inputs
         if not isinstance(source, Well):

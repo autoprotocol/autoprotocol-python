@@ -261,11 +261,11 @@ class MagneticTransfer(Instruction):
             w
             for _ in containers
             for w in _.all_wells()
-            if w.volume and w.volume > working_vols[_.container_type]
+            if w.volume and w.volume > self.working_vols[_.container_type]
         ]
         if non_valid_well_volumes:
             non_valid_container_working_vols = [
-                working_vols[w.container.container_type]
+                self.working_vols[w.container.container_type]
                 for w in non_valid_well_volumes
             ]
             raise ValueError(

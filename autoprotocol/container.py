@@ -101,7 +101,8 @@ class EntityPropertiesMixin:
                 elif silence_warnings:
                     self.properties[key] = new_value
                 else:
-                    message = f"Overwriting existing property {key} for {self}"
+                    message = f"Overwriting existing property {key} for {self}. To silence this warning, set" \
+                              f" silence_warnings=True"
                     warnings.warn(message=message)
                     self.properties[key] = new_value
             else:

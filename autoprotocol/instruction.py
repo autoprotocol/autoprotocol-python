@@ -14,7 +14,7 @@ from .container import Container
 from .informatics import AttachCompounds, Informatics
 
 
-class Instruction(object):
+class Instruction:
     """Base class for an instruction that is to later be encoded as JSON."""
 
     builders = InstructionBuilders()
@@ -177,9 +177,9 @@ class Instruction(object):
             all source and destination wells for instructions such as `liquid_handle`.
         """
         all_wells = []
-        if type(op_data) is dict:
-            for k, v in op_data.items():
-                all_wells.append(self.get_wells(v))
+        if isinstance(op_data, dict):
+            for j, k in op_data.items():
+                all_wells.append(self.get_wells(k))
         elif isinstance(op_data, list):
             for i in op_data:
                 all_wells.extend([self.get_wells(i)])

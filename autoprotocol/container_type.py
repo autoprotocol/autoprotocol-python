@@ -736,7 +736,7 @@ DEEP96KF = ContainerType(
     name="96-well extended capacity King Fisher plate",
     well_count=96,
     well_depth_mm=None,
-    well_volume_ul=Unit(2000.0, "microliter"),
+    well_volume_ul=Unit(1800.0, "microliter"),
     well_coating=None,
     sterile=False,
     cover_types=["standard"],
@@ -759,6 +759,7 @@ DEEP96KF = ContainerType(
     col_count=12,
     dead_volume_ul=Unit(50, "microliter"),
     safe_min_volume_ul=Unit(50, "microliter"),
+    true_max_vol_ul=Unit(2000, "microliter"),
     vendor="Fisher",
     cat_no="22-387-031",
 )

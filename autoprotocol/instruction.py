@@ -233,6 +233,10 @@ class MagneticTransfer(Instruction):
         "96-deep": ["96-v-kf", "96-deep-kf", "96-deep"],
         "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"],
     }
+    working_vols: dict = {
+        "96-v-kf": "200:microliter",
+        "96-deep-kf": "1000:microliter",
+    }
 
     def __init__(self, groups, magnetic_head):
         sub_ops = [subgroup for group in groups for subgroup in group]
@@ -253,10 +257,6 @@ class MagneticTransfer(Instruction):
                 f"container_types: {self.heads[magnetic_head]} for head_type: "
                 f"{magnetic_head}"
             )
-        working_vols: dict = {
-            "96-v-kf": "200:microliter",
-            "96-deep-kf": "1000:microliter"
-        }
         non_valid_well_volumes = [
             w
             for _ in containers

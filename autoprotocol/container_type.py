@@ -704,7 +704,7 @@ V96KF = ContainerType(
     name="96-well v-bottom King Fisher plate",
     well_count=96,
     well_depth_mm=None,
-    well_volume_ul=Unit(200.0, "microliter"),
+    well_volume_ul=Unit(800.0, "microliter"),
     well_coating=None,
     sterile=False,
     cover_types=["standard"],
@@ -727,6 +727,7 @@ V96KF = ContainerType(
     col_count=12,
     dead_volume_ul=Unit(20, "microliter"),
     safe_min_volume_ul=Unit(20, "microliter"),
+    true_max_vol_ul=Unit(1000, "microliter"),
     vendor="Fisher",
     cat_no="22-387-030",
 )

@@ -253,15 +253,19 @@ class MagneticTransfer(Instruction):
                 f"container_types: {self.heads[magnetic_head]} for head_type: "
                 f"{magnetic_head}"
             )
+        kf_working_vols: dict = {
+            "96-v-kf": "200:microliter",
+            "96-deep-kf": "1000:microliter"
+        }
         non_valid_well_volumes = [
             well
             for _ in containers
             for well in _.all_wells()
-            if well.volume and well.volume > _.container_type.well_volume_ul * 0.6
+            if well.volume and well.volume > kf_working_vols[_.container_type]
         ]
         if non_valid_well_volumes:
             non_valid_container_working_vols = [
-                well.container.container_type.well_volume_ul * 0.6
+                kf_working_vols[well.container.container_type]
                 for well in non_valid_well_volumes
             ]
             raise ValueError(

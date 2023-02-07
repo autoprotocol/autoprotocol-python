@@ -258,15 +258,15 @@ class MagneticTransfer(Instruction):
             "96-deep-kf": "1000:microliter"
         }
         non_valid_well_volumes = [
-            well
+            w
             for _ in containers
-            for well in _.all_wells()
-            if well.volume and well.volume > kf_working_vols[_.container_type]
+            for w in _.all_wells()
+            if w.volume and w.volume > kf_working_vols[_.container_type]
         ]
         if non_valid_well_volumes:
             non_valid_container_working_vols = [
-                kf_working_vols[well.container.container_type]
-                for well in non_valid_well_volumes
+                kf_working_vols[w.container.container_type]
+                for w in non_valid_well_volumes
             ]
             raise ValueError(
                 f"Not all wells: {non_valid_well_volumes} have volume "

@@ -14,7 +14,7 @@ from .container import Container
 from .informatics import AttachCompounds, Informatics
 
 
-class Instruction:
+class Instruction(object):
     """Base class for an instruction that is to later be encoded as JSON."""
 
     builders = InstructionBuilders()
@@ -178,8 +178,8 @@ class Instruction:
         """
         all_wells = []
         if isinstance(op_data, dict):
-            for j, k in op_data.items():
-                all_wells.append(self.get_wells(k))
+            for k, v in op_data.items():
+                all_wells.append(self.get_wells(v))
         elif isinstance(op_data, list):
             for i in op_data:
                 all_wells.extend([self.get_wells(i)])
@@ -257,19 +257,19 @@ class MagneticTransfer(Instruction):
                 f"container_types: {self.heads[magnetic_head]} for head_type: "
                 f"{magnetic_head}"
             )
-        non_valid_well_volumes = [
+        wells_with_invalid_volumes = [
             w
-            for _ in containers
-            for w in _.all_wells()
-            if w.volume and w.volume > self.working_vols[_.container_type]
+            for container in containers
+            for w in container.all_wells()
+            if w.volume and w.volume > self.working_vols[container.container_type]
         ]
-        if non_valid_well_volumes:
+        if wells_with_invalid_volumes:
             non_valid_container_working_vols = [
                 self.working_vols[w.container.container_type]
-                for w in non_valid_well_volumes
+                for w in wells_with_invalid_volumes
             ]
             raise ValueError(
-                f"Not all wells: {non_valid_well_volumes} have volume "
+                f"Not all wells: {wells_with_invalid_volumes} have volume "
                 f"less than MagTransfer working volume for its "
                 f"container_type: {non_valid_container_working_vols}"
             )

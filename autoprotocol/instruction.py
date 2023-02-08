@@ -57,11 +57,10 @@ class Instruction(object):
         """
         # informatics is not serialized if empty.
         if self.informatics:
-            return_dict = dict(op=self.op, **self.data, informatics=self.informatics)
+            return dict(op=self.op, **self.data, informatics=self.informatics)
         else:
-            return_dict = dict(op=self.op, **self.data)
+            return dict(op=self.op, **self.data)
 
-        return return_dict
 
     @staticmethod
     def _remove_empty_fields(data):

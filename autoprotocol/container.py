@@ -71,7 +71,7 @@ class EntityPropertiesMixin:
         self.properties = properties.copy()
         return self
 
-    def add_properties(self, properties, silence_warnings=False):
+    def add_properties(self, properties):
         """
         Add properties to the properties attribute of an entity (ie: Container or Well).
 
@@ -83,8 +83,6 @@ class EntityPropertiesMixin:
         ----------
         properties : dict
             Dictionary of properties to add to an entity.
-        silence_warnings : bool
-            Silence warnings when overwriting existing properties
 
         Returns
         -------
@@ -98,12 +96,9 @@ class EntityPropertiesMixin:
             if key in self.properties:
                 if isinstance(current_value, list) and isinstance(new_value, list):
                     current_value.extend(new_value)
-                elif silence_warnings:
-                    self.properties[key] = new_value
                 else:
                     message = (
-                        f"Overwriting existing property {key} for {self}. To silence this warning, set"
-                        f" silence_warnings=True"
+                        f"Overwriting existing property {key} for {self}."
                     )
                     warnings.warn(message=message)
                     self.properties[key] = new_value

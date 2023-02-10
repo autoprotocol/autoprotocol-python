@@ -1,5 +1,3 @@
-# pylint: skip-file
-
 """
 Module containing the main `Protocol` object and associated functions
 

@@ -1,5 +1,3 @@
-# pylint: skip-file
-
 """
 Container, Well, WellGroup objects and associated functions
 

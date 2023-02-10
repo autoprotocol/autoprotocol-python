@@ -97,9 +97,7 @@ class EntityPropertiesMixin:
                 if isinstance(current_value, list) and isinstance(new_value, list):
                     current_value.extend(new_value)
                 else:
-                    message = (
-                        f"Overwriting existing property {key} for {self}."
-                    )
+                    message = f"Overwriting existing property {key} for {self}."
                     warnings.warn(message=message)
                     self.properties[key] = new_value
             else:

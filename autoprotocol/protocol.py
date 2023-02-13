@@ -1677,9 +1677,7 @@ class Protocol:
             if v > Unit(0, "microliter"):
                 transfers.append(xfer)
             if self.propagate_properties:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    d.add_properties(s.properties)
+                d.add_properties(s.properties)
 
         if not transfers:
             raise RuntimeError(

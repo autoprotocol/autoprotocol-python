@@ -82,13 +82,14 @@ class EntityPropertiesMixin:
         Parameters
         ----------
         properties : dict
-            Dictionary of properties to add to a entity.
+            Dictionary of properties to add to an entity.
 
         Returns
         -------
         self
             Container or Well with modified properties
         """
+
         self.validate_properties(properties)
         for key, new_value in properties.items():
             current_value = self.properties.get(key)
@@ -96,7 +97,7 @@ class EntityPropertiesMixin:
                 if isinstance(current_value, list) and isinstance(new_value, list):
                     current_value.extend(new_value)
                 else:
-                    message = f"Overwriting existing property {key} for {self}"
+                    message = f"Overwriting existing property {key} for {self}."
                     warnings.warn(message=message)
                     self.properties[key] = new_value
             else:

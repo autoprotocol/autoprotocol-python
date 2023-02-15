@@ -6,6 +6,9 @@ Changelog
                     added validations in `MagBuilders` class such that plates being put onto KF
                     device do not exceed working vol with comb
 
+* :release: `10.1.0 <2023-02-15>`
+* :feature: `383` Propagating properties now adds instead of sets for acoustic spread
+
 * :release: `10.0.0 <2023-02-02>`
 * :support: `381` Recommit changes to version 10.0.0
 

@@ -2,6 +2,8 @@
 Changelog
 =========
 
+* :feature:`383` Propagating properties now adds instead of sets for acoustic spread
+
 * :release: `10.0.0 <2023-02-02>`
 * :support: `381` Recommit changes to version 10.0.0
 

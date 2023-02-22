@@ -201,7 +201,6 @@ class Unit(_Quantity):
             if isinstance(value, str):
                 try:
                     value, units = value.split(":")
-                    # value, units = Decimal(str(value)), units
                 except ValueError as e:
                     raise UnitStringError(value) from e
             elif isinstance(value, dict):

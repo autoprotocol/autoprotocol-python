@@ -27,13 +27,13 @@ import enum
 
 from collections import defaultdict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
-from dataclasses import dataclass
 from functools import reduce
 from numbers import Number
 from typing import Any, Dict, List, Optional, Union
 
 from .constants import SBS_FORMAT_SHAPES
 from .container import Container, Well, WellGroup
+from .types.protocol import *  # pylint: disable=unused-wildcard-import
 from .unit import Unit
 from .util import is_valid_well, parse_unit
 
@@ -561,7 +561,7 @@ class DispenseBuilders(InstructionBuilders):
     # pragma pylint: enable=unused-argument
     # pragma pylint: disable=missing-param-doc
     @staticmethod
-    def column(column: int, volume: Union[str, Unit]):
+    def column(column: int, volume: Union[str, Unit]) -> DispenseColumn:
         """
         Generates a validated column parameter.
 
@@ -576,10 +576,12 @@ class DispenseBuilders(InstructionBuilders):
             Column parameter of type {"column": int, "volume": Unit}
 
         """
-        return {"column": int(column), "volume": parse_unit(volume, "uL")}
+        return DispenseColumn(
+            **{"column": int(column), "volume": parse_unit(volume, "uL")}
+        )
 
     # pragma pylint: disable=missing-param-doc
-    def columns(self, columns: List[dict]):
+    def columns(self, columns: List[Union[DispenseColumn, dict]]):
         """
         Generates a validated columns parameter.
 
@@ -602,9 +604,12 @@ class DispenseBuilders(InstructionBuilders):
         if not len(columns) > 0:
             raise ValueError("There must be at least one column specified for columns.")
 
-        column_list = [self.column(**_) for _ in columns]
+        column_list: List[DispenseColumn] = [
+            self.column(**asdict(_) if isinstance(_, DispenseColumn) else _)
+            for _ in columns
+        ]
 
-        if len(column_list) != len(set([_["column"] for _ in column_list])):
+        if len(column_list) != len(set([_.column for _ in column_list])):
             raise ValueError(
                 f"Column indices must be unique, but there were duplicates "
                 f"in {column_list}."
@@ -2161,22 +2166,6 @@ class EvaporateBuilders(InstructionBuilders):
         return mode_param_output
 
 
-@dataclass()
-class GelPurifyBandSizeRange:
-    min_bp: int
-    max_bp: int
-
-
-@dataclass
-class GelPurifyBand:
-    elution_buffer: str
-    elution_volume: Union[str, Unit]
-    destination: Well
-    min_bp: Optional[int]
-    max_bp: Optional[int]
-    band_size_range: Optional[GelPurifyBandSizeRange]
-
-
 class GelPurifyBuilders(InstructionBuilders):
     """Helpers for building GelPurify instructions"""
 
@@ -2586,51 +2575,6 @@ class MagneticTransferBuilders(InstructionBuilders):
         }
 
 
-class FlowCytometryChannelTriggerLogicEnum(enum.Enum):
-    and_ = enum.auto()
-    or_ = enum.auto()
-
-
-@dataclass
-class FlowCytometryChannelTriggerLogic:
-    value: FlowCytometryChannelTriggerLogicEnum
-
-    def __post_init__(self):
-        trigger_modes = ("and_", "or_")
-        if self.value is not None and self.value not in trigger_modes:
-            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
-
-
-@dataclass
-class FlowCytometryChannelMeasurments:
-    area: Optional[bool] = None
-    height: Optional[bool] = None
-    width: Optional[bool] = None
-
-
-@dataclass
-class FlowCytometryChannelEmissionFilter:
-    channel_name: str
-    shortpass: Union[str, Unit] = None
-    longpass: Union[str, Unit] = None
-
-
-@dataclass
-class FlowCytometryChannel:
-    emission_filter: FlowCytometryChannelEmissionFilter
-    detector_gain: Union[str, Unit]
-    measurements: Optional[FlowCytometryChannelMeasurments] = None
-    trigger_threshold: Optional[int] = None
-    trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None
-
-
-@dataclass()
-class FlowCytometryCollectionConditionStopCriteria:
-    volume: Optional[Union[str, Unit]] = None
-    events: Optional[int] = None
-    time: Union[str, Unit] = None
-
-
 class FlowCytometryBuilders(InstructionBuilders):
     """
     Builders for FlowCytometry instructions.
@@ -2716,7 +2660,7 @@ class FlowCytometryBuilders(InstructionBuilders):
         self,
         emission_filter: FlowCytometryChannelEmissionFilter,
         detector_gain: Union[str, Unit],
-        measurements: Optional[FlowCytometryChannelMeasurments] = None,
+        measurements: Optional[FlowCytometryChannelMeasurements] = None,
         trigger_threshold: Optional[int] = None,
         trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None,
     ):
@@ -2921,7 +2865,7 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     @staticmethod
     def stop_criteria(
-        volume: Optional[Union[str, Unit]] = None,
+        volume: Optional[VOLUME] = None,
         events: Optional[int] = None,
         time: Union[str, Unit] = None,
     ):

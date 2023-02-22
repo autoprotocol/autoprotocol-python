@@ -1,13 +1,14 @@
+"""
+Other modules like the autoprotocol/protocol.py module import this module with a wildcard (ie: *).
+To avoid circular imports we import dataclasses dependencies from this module. For example,
+dataclasses.asdict is not used here but is used in protocol.py hence the pylint disable flag.
+"""
 import enum
 
+from dataclasses import asdict  # pylint: disable=unused-import
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 
-from ..builders import (
-    FlowCytometryChannel,
-    FlowCytometryCollectionConditionStopCriteria,
-    GelPurifyBand,
-)
 from ..container import Container, Well, WellGroup
 from ..unit import Unit
 
@@ -98,14 +99,13 @@ class OligosynthesizeOligo:
 
     def __post_init__(self):
         allowable_scales = [
-            allowable.strip("_")
-            for allowable in OligosynthesizeOligoScale.__dict__.get("_member_names_")
+            allowable.name.strip("_") for allowable in OligosynthesizeOligoScale
         ]
         if self.scale not in allowable_scales:
             raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
-        allowable_purification = OligosynthesizeOligoPurification.__dict__.get(
-            "_member_names_"
-        )
+        allowable_purification = [
+            option.name for option in OligosynthesizeOligoPurification
+        ]
         if self.purification not in allowable_purification:
             raise ValueError(
                 f"Purification entered {self.purification} not in {allowable_purification}"
@@ -137,7 +137,7 @@ class AgitateModeParams:
     bar_length: LENGTH
 
     def __post_init__(self):
-        allowable_bar_shape = AgitateModeParamsBarShape.__dict__.get("_member_names_")
+        allowable_bar_shape = [option.name for option in AgitateModeParamsBarShape]
         if self.bar_shape not in allowable_bar_shape:
             raise ValueError(
                 f"bar_shape entered {self.bar_shape} not in {allowable_bar_shape}"
@@ -182,12 +182,73 @@ class PlateReaderPositionZCalculated:
     calculated_from_wells: List[Well]
 
 
+@dataclass()
+class GelPurifyBandSizeRange:
+    min_bp: int
+    max_bp: int
+
+
+@dataclass
+class GelPurifyBand:
+    elution_buffer: str
+    elution_volume: Union[str, Unit]
+    destination: Well
+    min_bp: Optional[int]
+    max_bp: Optional[int]
+    band_size_range: Optional[GelPurifyBandSizeRange]
+
+
 @dataclass
 class GelPurifyExtract:
     source: Well
     band_list: List[GelPurifyBand]
     lane: Optional[int] = field(default=None)
     gel: Optional[int] = field(default=None)
+
+
+class FlowCytometryChannelTriggerLogicEnum(enum.Enum):
+    and_ = enum.auto()
+    or_ = enum.auto()
+
+
+@dataclass
+class FlowCytometryChannelTriggerLogic:
+    value: FlowCytometryChannelTriggerLogicEnum
+
+    def __post_init__(self):
+        trigger_modes = ("and_", "or_")
+        if self.value is not None and self.value not in trigger_modes:
+            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
+
+
+@dataclass
+class FlowCytometryChannelMeasurements:
+    area: Optional[bool] = None
+    height: Optional[bool] = None
+    width: Optional[bool] = None
+
+
+@dataclass
+class FlowCytometryChannelEmissionFilter:
+    channel_name: str
+    shortpass: Union[str, Unit] = None
+    longpass: Union[str, Unit] = None
+
+
+@dataclass
+class FlowCytometryChannel:
+    emission_filter: FlowCytometryChannelEmissionFilter
+    detector_gain: Union[str, Unit]
+    measurements: Optional[FlowCytometryChannelMeasurements] = None
+    trigger_threshold: Optional[int] = None
+    trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None
+
+
+@dataclass()
+class FlowCytometryCollectionConditionStopCriteria:
+    volume: Optional[Union[str, Unit]] = None
+    events: Optional[int] = None
+    time: Union[str, Unit] = None
 
 
 @dataclass
@@ -342,9 +403,9 @@ class ImageExposure:
 
 @dataclass
 class DispenseNozzlePosition:
-    position_x: Unit
-    position_y: Unit
-    position_z: Unit
+    position_x: LENGTH
+    position_y: LENGTH
+    position_z: LENGTH
 
 
 @dataclass
@@ -356,10 +417,10 @@ class DispenseShape:
 
 @dataclass
 class DispenseShakeAfter:
-    duration: Optional[Union[Unit, str]] = field(default=None)
-    frequency: Optional[Union[Unit, str]] = field(default=None)
+    duration: Optional[TIME] = field(default=None)
+    frequency: Optional[FREQUENCY] = field(default=None)
     path: Optional[str] = field(default=None)
-    amplitude: Optional[Union[Unit, str]] = field(default=None)
+    amplitude: Optional[LENGTH] = field(default=None)
 
 
 class SonicateModeParamsBathSampleHolder(enum.Enum):

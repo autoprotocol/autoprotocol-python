@@ -1,7 +1,7 @@
 =========
 Changelog
 =========
-* :release: `10.1.0 <2023-02-07>`
+* :release: `10.1.1 <2023-02-23>`
 * :feature: `378` Adjust `96-deep-kf` and `96-v-kf` container types `true_max_vol` to 1.8mL and
                     added validations in `MagBuilders` class such that plates being put onto KF
                     device do not exceed working vol with comb

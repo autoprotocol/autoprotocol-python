@@ -57,9 +57,11 @@ class Instruction(object):
         """
         # informatics is not serialized if empty.
         if self.informatics:
-            return dict(op=self.op, **self.data, informatics=self.informatics)
+            return_dict = dict(op=self.op, **self.data, informatics=self.informatics)
         else:
-            return dict(op=self.op, **self.data)
+            return_dict = dict(op=self.op, **self.data)
+
+        return return_dict
 
     @staticmethod
     def _remove_empty_fields(data):
@@ -153,7 +155,8 @@ class Instruction(object):
         for well in wells.wells:
             if well not in available_wells:
                 raise ValueError(
-                    f"informatics well: {wells} must be one of the wells used in this instruction."
+                    f"informatics well: {wells} must be one of the wells "
+                    f"used in this instruction."
                 )
 
         info.wells = wells.wells
@@ -174,14 +177,14 @@ class Instruction(object):
             all source and destination wells for instructions such as `liquid_handle`.
         """
         all_wells = []
-        if type(op_data) is dict:
+        if isinstance(op_data, dict):
             for k, v in op_data.items():
                 all_wells.append(self.get_wells(v))
-        elif type(op_data) is list:
+        elif isinstance(op_data, list):
             for i in op_data:
                 all_wells.extend([self.get_wells(i)])
         # if container is provided, all wells in the container are included
-        elif type(op_data) is Container:
+        elif isinstance(op_data, Container):
             all_wells.append(op_data.all_wells())
         elif is_valid_well(op_data):
             all_wells.append(WellGroup(op_data))
@@ -230,6 +233,10 @@ class MagneticTransfer(Instruction):
         "96-deep": ["96-v-kf", "96-deep-kf", "96-deep"],
         "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"],
     }
+    working_vols: dict = {
+        "96-v-kf": "200:microliter",
+        "96-deep-kf": "1000:microliter",
+    }
 
     def __init__(self, groups, magnetic_head):
         sub_ops = [subgroup for group in groups for subgroup in group]
@@ -250,7 +257,22 @@ class MagneticTransfer(Instruction):
                 f"container_types: {self.heads[magnetic_head]} for head_type: "
                 f"{magnetic_head}"
             )
-
+        wells_with_invalid_volumes = [
+            w
+            for container in containers
+            for w in container.all_wells()
+            if w.volume and w.volume > self.working_vols[container.container_type]
+        ]
+        if wells_with_invalid_volumes:
+            non_valid_container_working_vols = [
+                self.working_vols[w.container.container_type]
+                for w in wells_with_invalid_volumes
+            ]
+            raise ValueError(
+                f"Not all wells: {wells_with_invalid_volumes} have volume "
+                f"less than MagTransfer working volume for its "
+                f"container_type: {non_valid_container_working_vols}"
+            )
         # a new tip is used for each group
         if len(groups) + len(containers) > self.max_objects:
             raise RuntimeError(
@@ -1488,7 +1510,8 @@ class Provision(Instruction):
     dests : list(dict)
       Destination(s) for specified resource, together with volume information
     measurement_mode : str
-      Measurement mode. Possible values are :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
+      Measurement mode. Possible values are
+      :py:class:`autoprotocol.constants.MEASUREMENT_MODES`
     informatics : list(Informatics)
       List of expected aliquot effects at the completion of this instruction
 

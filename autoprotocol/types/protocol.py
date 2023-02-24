@@ -1,8 +1,3 @@
-"""
-Other modules like the autoprotocol/protocol.py module import this module with a wildcard (ie: *).
-To avoid circular imports we import dataclasses dependencies from this module. For example,
-dataclasses.asdict is not used here but is used in protocol.py hence the pylint disable flag.
-"""
 import enum
 
 from dataclasses import dataclass, field

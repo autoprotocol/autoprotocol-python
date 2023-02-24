@@ -60,7 +60,7 @@ class TimeConstraint:
     optimization_cost: TimeConstraintOptimizationCost = field(default=None)
 
 
-class TimeConstraintState:
+class TimeConstraintState(enum.Enum):
     start = enum.auto()
     end = enum.auto()
 

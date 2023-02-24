@@ -3,11 +3,6 @@ import enum
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 
-from ..builders import (
-    FlowCytometryChannel,
-    FlowCytometryCollectionConditionStopCriteria,
-    GelPurifyBand,
-)
 from ..container import Container, Well, WellGroup
 from ..unit import Unit
 
@@ -28,23 +23,31 @@ VOLUME = Union[str, Unit]
 WAVELENGTH = Union[str, Unit]
 DENSITY = Union[str, Unit]
 POWER = Union[str, Unit]
+VOLTAGE = Union[str, Unit]
+
+
+class HashableMixin:
+    """Allows class to be accessed like a dictionary"""
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 @dataclass
-class AutopickGroup:
+class AutopickGroup(HashableMixin):
     source: WellParam
     destination: WellParam
     min_abort: int = 0
 
 
 @dataclass
-class DispenseColumn:
+class DispenseColumn(HashableMixin):
     column: int
     volume: VOLUME
 
 
 @dataclass
-class IncubateShakingParams:
+class IncubateShakingParams(HashableMixin):
     path: Union[str, Unit]
     frequency: FREQUENCY
 
@@ -55,8 +58,8 @@ class TimeConstraintOptimizationCost(enum.Enum):
     exponential = enum.auto()
 
 
-@dataclass(frozen=False)
-class TimeConstraint:
+@dataclass
+class TimeConstraint(HashableMixin):
     from_: Union[int, Container]
     to: Union[int, Container] = field(default=None)
     less_than: Optional[TIME] = field(default=None)
@@ -65,13 +68,13 @@ class TimeConstraint:
     optimization_cost: TimeConstraintOptimizationCost = field(default=None)
 
 
-class TimeConstraintState:
+class TimeConstraintState(enum.Enum):
     start = enum.auto()
     end = enum.auto()
 
 
 @dataclass
-class TimeConstraintFromToDict:
+class TimeConstraintFromToDict(HashableMixin):
     mark: Dict[str, Union[Container, str, int]]
     state: TimeConstraintState
 
@@ -90,7 +93,7 @@ class OligosynthesizeOligoScale(enum.Enum):
 
 
 @dataclass
-class OligosynthesizeOligo:
+class OligosynthesizeOligo(HashableMixin):
     destination: Well
     sequence: str
     scale: OligosynthesizeOligoScale
@@ -98,14 +101,13 @@ class OligosynthesizeOligo:
 
     def __post_init__(self):
         allowable_scales = [
-            allowable.strip("_")
-            for allowable in OligosynthesizeOligoScale.__dict__.get("_member_names_")
+            allowable.name.strip("_") for allowable in OligosynthesizeOligoScale
         ]
         if self.scale not in allowable_scales:
             raise ValueError(f"Scale entered {self.scale} not in {allowable_scales}")
-        allowable_purification = OligosynthesizeOligoPurification.__dict__.get(
-            "_member_names_"
-        )
+        allowable_purification = [
+            option.name for option in OligosynthesizeOligoPurification
+        ]
         if self.purification not in allowable_purification:
             raise ValueError(
                 f"Purification entered {self.purification} not in {allowable_purification}"
@@ -113,7 +115,7 @@ class OligosynthesizeOligo:
 
 
 @dataclass
-class IlluminaSeqLane:
+class IlluminaSeqLane(HashableMixin):
     object: Well
     library_concentration: float
 
@@ -131,13 +133,13 @@ class AgitateModeParamsBarShape(enum.Enum):
 
 
 @dataclass
-class AgitateModeParams:
+class AgitateModeParams(HashableMixin):
     wells: Union[List[Well], WellGroup]
     bar_shape: AgitateModeParamsBarShape
     bar_length: LENGTH
 
     def __post_init__(self):
-        allowable_bar_shape = AgitateModeParamsBarShape.__dict__.get("_member_names_")
+        allowable_bar_shape = [option.name for option in AgitateModeParamsBarShape]
         if self.bar_shape not in allowable_bar_shape:
             raise ValueError(
                 f"bar_shape entered {self.bar_shape} not in {allowable_bar_shape}"
@@ -145,27 +147,27 @@ class AgitateModeParams:
 
 
 @dataclass
-class ThermocycleTemperature:
+class ThermocycleTemperature(HashableMixin):
     duration: TIME
     temperature: TEMPERATURE
     read: bool = field(default=False)
 
 
 @dataclass
-class TemperatureGradient:
+class TemperatureGradient(HashableMixin):
     top: TEMPERATURE
     bottom: TEMPERATURE
 
 
 @dataclass
-class ThermocycleTemperatureGradient:
+class ThermocycleTemperatureGradient(HashableMixin):
     duration: TIME
     gradient: TemperatureGradient
     read: bool = field(default=False)
 
 
 @dataclass
-class PlateReaderIncubateBefore:
+class PlateReaderIncubateBefore(HashableMixin):
     duration: TIME
     shake_amplitude: Optional[LENGTH] = field(default=None)
     shake_orbital: Optional[bool] = field(default=None)
@@ -173,33 +175,94 @@ class PlateReaderIncubateBefore:
 
 
 @dataclass
-class PlateReaderPositionZManual:
+class PlateReaderPositionZManual(HashableMixin):
     manual: LENGTH
 
 
 @dataclass
-class PlateReaderPositionZCalculated:
+class PlateReaderPositionZCalculated(HashableMixin):
     calculated_from_wells: List[Well]
 
 
 @dataclass
-class GelPurifyExtract:
+class GelPurifyBandSizeRange(HashableMixin):
+    min_bp: int
+    max_bp: int
+
+
+@dataclass
+class GelPurifyBand(HashableMixin):
+    elution_buffer: str
+    elution_volume: Union[str, Unit]
+    destination: Well
+    min_bp: Optional[int]
+    max_bp: Optional[int]
+    band_size_range: Optional[GelPurifyBandSizeRange]
+
+
+@dataclass
+class GelPurifyExtract(HashableMixin):
     source: Well
     band_list: List[GelPurifyBand]
     lane: Optional[int] = field(default=None)
     gel: Optional[int] = field(default=None)
 
 
+class FlowCytometryChannelTriggerLogicEnum(enum.Enum):
+    and_ = enum.auto()
+    or_ = enum.auto()
+
+
 @dataclass
-class FlowCytometryLaser:
+class FlowCytometryChannelTriggerLogic(HashableMixin):
+    value: FlowCytometryChannelTriggerLogicEnum
+
+    def __post_init__(self):
+        trigger_modes = ("and_", "or_")
+        if self.value is not None and self.value not in trigger_modes:
+            raise ValueError(f"trigger_logic must be one of {trigger_modes}.")
+
+
+@dataclass
+class FlowCytometryChannelMeasurements(HashableMixin):
+    area: Optional[bool] = None
+    height: Optional[bool] = None
+    width: Optional[bool] = None
+
+
+@dataclass
+class FlowCytometryChannelEmissionFilter(HashableMixin):
+    channel_name: str
+    shortpass: WAVELENGTH = None
+    longpass: WAVELENGTH = None
+
+
+@dataclass
+class FlowCytometryChannel(HashableMixin):
+    emission_filter: FlowCytometryChannelEmissionFilter
+    detector_gain: VOLTAGE
+    measurements: Optional[FlowCytometryChannelMeasurements] = None
+    trigger_threshold: Optional[int] = None
+    trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None
+
+
+@dataclass()
+class FlowCytometryCollectionConditionStopCriteria(HashableMixin):
+    volume: Optional[VOLUME] = None
+    events: Optional[int] = None
+    time: Optional[TIME] = None
+
+
+@dataclass
+class FlowCytometryLaser(HashableMixin):
     channels: List[FlowCytometryChannel]
-    excitation: Union[str, Unit] = field(default=None)
-    power: Union[str, Unit] = field(default=None)
+    excitation: Optional[WAVELENGTH] = field(default=None)
+    power: Optional[POWER] = field(default=None)
     area_scaling_factor: Optional[int] = field(default=None)
 
 
 @dataclass
-class FlowCytometryCollectionCondition:
+class FlowCytometryCollectionCondition(HashableMixin):
     acquisition_volume: Union[str, Unit]
     flowrate: Union[str, Unit]
     wait_time: Union[str, Unit]
@@ -210,13 +273,13 @@ class FlowCytometryCollectionCondition:
 
 
 @dataclass
-class FlowAnalyzeChannelVoltageRange:
+class FlowAnalyzeChannelVoltageRange(HashableMixin):
     low: Union[str, Unit]
     high: Union[str, Unit]
 
 
 @dataclass
-class FlowAnalyzeChannel:
+class FlowAnalyzeChannel(HashableMixin):
     voltage_range: FlowAnalyzeChannelVoltageRange
     area: bool
     height: bool
@@ -224,7 +287,7 @@ class FlowAnalyzeChannel:
 
 
 @dataclass
-class FlowAnalyzeNegControls:
+class FlowAnalyzeNegControls(HashableMixin):
     well: Well
     volume: Union[str, Unit]
     channel: str
@@ -232,14 +295,14 @@ class FlowAnalyzeNegControls:
 
 
 @dataclass
-class FlowAnalyzeSample:
+class FlowAnalyzeSample(HashableMixin):
     well: Well
     volume: Union[str, Unit]
     captured_events: int
 
 
 @dataclass
-class FlowAnalyzeColors:
+class FlowAnalyzeColors(HashableMixin):
     name: str
     emission_wavelength: Union[str, Unit]
     excitation_wavelength: Union[str, Unit]
@@ -250,13 +313,13 @@ class FlowAnalyzeColors:
 
 
 @dataclass(frozen=True)
-class FlowAnalyzePosControlsMinimizeBleed:
+class FlowAnalyzePosControlsMinimizeBleed(HashableMixin):
     from_: FlowAnalyzeColors
     to: FlowAnalyzeColors
 
 
 @dataclass
-class FlowAnalyzePosControls:
+class FlowAnalyzePosControls(HashableMixin):
     well: Well
     volume: Union[str, Unit]
     channel: str
@@ -265,7 +328,7 @@ class FlowAnalyzePosControls:
 
 
 @dataclass
-class SpectrophotometryShakeBefore:
+class SpectrophotometryShakeBefore(HashableMixin):
     duration: TIME
     frequency: Optional[Union[str, Unit]] = field(default=None)
     path: Optional[str] = field(default=None)
@@ -279,7 +342,7 @@ class EvaporateModeParamsGas(enum.Enum):
 
 
 @dataclass
-class EvaporateModeParams:
+class EvaporateModeParams(HashableMixin):
     gas: EvaporateModeParamsGas
     vortex_speed: Union[str, Unit]
     blow_rate: Union[str, Unit]
@@ -293,7 +356,7 @@ class EvaporateMode(enum.Enum):
 
 
 @dataclass
-class SpeElute:
+class SpeElute(HashableMixin):
     loading_flowrate: Union[str, Unit]
     resource_id: str
     settle_time: Union[str, Unit]
@@ -304,7 +367,7 @@ class SpeElute:
 
 
 @dataclass
-class SpeLoadSample:
+class SpeLoadSample(HashableMixin):
     volume: Union[str, Unit]
     loading_flowrate: Union[str, Unit]
     settle_time: Optional[bool]
@@ -316,7 +379,7 @@ class SpeLoadSample:
 
 
 @dataclass
-class SpeParams:
+class SpeParams(HashableMixin):
     volume: Union[str, Unit]
     loading_flowrate: Union[str, Unit]
     settle_time: Optional[bool]
@@ -334,32 +397,32 @@ class ImageMode(enum.Enum):
 
 
 @dataclass
-class ImageExposure:
+class ImageExposure(HashableMixin):
     shutter_speed: Optional[Unit] = field(default=None)
     iso: Optional[float] = field(default=None)
     aperture: Optional[float] = field(default=None)
 
 
 @dataclass
-class DispenseNozzlePosition:
-    position_x: Unit
-    position_y: Unit
-    position_z: Unit
+class DispenseNozzlePosition(HashableMixin):
+    position_x: LENGTH
+    position_y: LENGTH
+    position_z: LENGTH
 
 
 @dataclass
-class DispenseShape:
+class DispenseShape(HashableMixin):
     rows: int
     columns: int
     format: str
 
 
 @dataclass
-class DispenseShakeAfter:
-    duration: Optional[Union[Unit, str]] = field(default=None)
-    frequency: Optional[Union[Unit, str]] = field(default=None)
+class DispenseShakeAfter(HashableMixin):
+    duration: Optional[TIME] = field(default=None)
+    frequency: Optional[FREQUENCY] = field(default=None)
     path: Optional[str] = field(default=None)
-    amplitude: Optional[Union[Unit, str]] = field(default=None)
+    amplitude: Optional[LENGTH] = field(default=None)
 
 
 class SonicateModeParamsBathSampleHolder(enum.Enum):
@@ -369,13 +432,13 @@ class SonicateModeParamsBathSampleHolder(enum.Enum):
 
 
 @dataclass
-class SonicateModeParamsBath:
+class SonicateModeParamsBath(HashableMixin):
     sample_holder: SonicateModeParamsBathSampleHolder
     power: POWER
 
 
 @dataclass
-class SonicateModeParamsHorn:
+class SonicateModeParamsHorn(HashableMixin):
     duty_cycle: float
     power: LENGTH
 

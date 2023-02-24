@@ -197,11 +197,18 @@ class Unit(_Quantity):
             return value
 
         # Automatically parse String if no units provided
-        if not units and isinstance(value, str):
-            try:
-                value, units = value.split(":")
-            except ValueError as e:
-                raise UnitStringError(value) from e
+        if not units:
+            if isinstance(value, str):
+                try:
+                    value, units = value.split(":")
+                except ValueError as e:
+                    raise UnitStringError(value) from e
+            elif isinstance(value, dict):
+                try:
+                    value, units = value["value"], value["units"]
+                except ValueError as e:
+                    raise UnitUnitsError(value) from e
+
         try:
             return super(Unit, cls).__new__(cls, Decimal(str(value)), units)
         except (ValueError, InvalidOperation) as e:
@@ -211,8 +218,9 @@ class Unit(_Quantity):
 
     def __post_init__(self):
         super(Unit, self).__init__()
-        self.units = self._units.__str__()
+        self.value = float(self.magnitude)
         self.unit = self._units.__str__()
+        self.units = self._units.__str__()
 
     def __str__(self, ndigits=12):
         """

@@ -9,19 +9,114 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from typing import Dict, List, Tuple
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from numbers import Number
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from .builders import LiquidHandleBuilders
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
-from .container import COVER_TYPES, SEAL_TYPES, Container, Well
+from .container import COVER_TYPES, SEAL_TYPES, Container, Well, WellGroup
 from .container_type import _CONTAINER_TYPES, ContainerType
-from .instruction import *  # pylint: disable=unused-wildcard-import
+from .informatics import AttachCompounds, Informatics
+from .instruction import (
+    SPE,
+    Absorbance,
+    AcousticTransfer,
+    Agitate,
+    Autopick,
+    CountCells,
+    Cover,
+    Dispense,
+    Evaporate,
+    FlashFreeze,
+    FlowAnalyze,
+    FlowCytometry,
+    Fluorescence,
+    GelPurify,
+    GelSeparate,
+    IlluminaSeq,
+    Image,
+    ImagePlate,
+    Incubate,
+    Instruction,
+    LiquidHandle,
+    Luminescence,
+    MagneticTransfer,
+    MeasureConcentration,
+    MeasureMass,
+    MeasureVolume,
+    Oligosynthesize,
+    Provision,
+    SangerSeq,
+    Seal,
+    Sonicate,
+    Spectrophotometry,
+    Spin,
+    Thermocycle,
+    Uncover,
+    Unseal,
+)
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
-from .types.protocol import *  # pylint: disable=unused-wildcard-import
+from .types.protocol import (
+    ACCELERATION,
+    AMOUNT_CONCENTRATION,
+    DENSITY,
+    FLOW_RATE,
+    FREQUENCY,
+    TEMPERATURE,
+    TIME,
+    VOLUME,
+    WAVELENGTH,
+    AgitateMode,
+    AgitateModeParams,
+    AgitateModeParamsBarShape,
+    AutopickGroup,
+    DispenseColumn,
+    DispenseNozzlePosition,
+    DispenseShakeAfter,
+    DispenseShape,
+    EvaporateMode,
+    EvaporateModeParams,
+    FlowAnalyzeChannel,
+    FlowAnalyzeColors,
+    FlowAnalyzeNegControls,
+    FlowAnalyzePosControls,
+    FlowAnalyzeSample,
+    FlowCytometryCollectionCondition,
+    FlowCytometryLaser,
+    GelPurifyExtract,
+    IlluminaSeqLane,
+    ImageExposure,
+    ImageMode,
+    IncubateShakingParams,
+    OligosynthesizeOligo,
+    PlateReaderIncubateBefore,
+    PlateReaderPositionZCalculated,
+    PlateReaderPositionZManual,
+    SonicateMode,
+    SonicateModeParamsBath,
+    SonicateModeParamsHorn,
+    SpectrophotometryShakeBefore,
+    SpeElute,
+    SpeLoadSample,
+    SpeParams,
+    ThermocycleTemperature,
+    ThermocycleTemperatureGradient,
+    TimeConstraint,
+    TimeConstraintFromToDict,
+    WellParam,
+)
 from .types.ref import Ref, RefOpts, StorageLocation
 from .unit import Unit, UnitError
-from .util import _check_container_type_with_shape, _validate_as_instance
+from .util import (
+    _check_container_type_with_shape,
+    _validate_as_instance,
+    is_valid_well,
+    parse_unit,
+)
 
 
 @dataclass
@@ -2222,10 +2317,10 @@ class Protocol:
         if not isinstance(ref, Container):
             raise TypeError(f"ref must be a Container but it was {type(ref)}.")
 
-        columns = Dispense.builders.columns(columns)
+        columns: List[DispenseColumn] = Dispense.builders.columns(columns)
 
         ref_cols = list(range(ref.container_type.col_count))
-        if not all(_["column"] in ref_cols for _ in columns):
+        if not all(_.column in ref_cols for _ in columns):
             raise ValueError(
                 f"Specified dispense columns: {columns} contains a column index that is outside of the valid columns: {ref_cols} for ref: {ref}."
             )
@@ -2234,13 +2329,23 @@ class Protocol:
         if flowrate is not None:
             flowrate = parse_unit(flowrate, "uL/s")
         if nozzle_position is not None:
-            nozzle_position = Dispense.builders.nozzle_position(**nozzle_position)
+            nozzle_position = Dispense.builders.nozzle_position(
+                **asdict(nozzle_position)
+                if isinstance(nozzle_position, DispenseNozzlePosition)
+                else nozzle_position
+            )
         if pre_dispense is not None:
             pre_dispense = parse_unit(pre_dispense, "uL")
         if shape is not None:
-            shape = Dispense.builders.shape(**shape)
+            shape = Dispense.builders.shape(
+                **asdict(shape) if isinstance(shape, DispenseShape) else shape
+            )
         if shake_after is not None:
-            shake_after = Dispense.builders.shake_after(**shake_after)
+            shake_after = Dispense.builders.shake_after(
+                **asdict(shake_after)
+                if isinstance(shake_after, DispenseShakeAfter)
+                else shake_after
+            )
 
         nozzle_count = (
             shape["rows"] * shape["columns"] if shape else _DEFAULT_NOZZLE_COUNT
@@ -2255,7 +2360,7 @@ class Protocol:
                 )
 
             for c in columns:
-                if c["volume"] % step_size != Unit("0:uL"):
+                if c.volume % step_size != Unit("0:uL"):
                     raise ValueError(
                         f"Dispense volume must be a multiple of the step size {step_size}, but column {c} does not meet these requirements."
                     )
@@ -2276,7 +2381,7 @@ class Protocol:
             self._remove_cover(reagent.container, "dispense from")
 
             # Volume accounting
-            total_vol_dispensed = sum([Unit(c["volume"]) for c in columns]) * row_count
+            total_vol_dispensed = sum([Unit(c.volume) for c in columns]) * row_count
             if pre_dispense is not None:
                 total_vol_dispensed += nozzle_count * pre_dispense
             if reagent.volume:
@@ -2300,12 +2405,12 @@ class Protocol:
         self._remove_cover(ref, "dispense to")
 
         for c in columns:
-            wells = ref.wells_from(c["column"], row_count, columnwise=True)
+            wells = ref.wells_from(c.column, row_count, columnwise=True)
             for w in wells:
                 if w.volume:
-                    w.volume += c["volume"]
+                    w.volume += c.volume
                 else:
-                    w.volume = c["volume"]
+                    w.volume = c.volume
 
         return self._append_and_return(
             Dispense(
@@ -2693,8 +2798,8 @@ class Protocol:
             If ref cannot be undergo agitate mode `roll` or `invert`
 
         """
-        valid_modes = AgitateMode.__dict__.get("_member_names_")
-        valid_bar_shapes = AgitateModeParamsBarShape.__dict__.get("_member_names_")
+        valid_modes = [option.name for option in AgitateMode]
+        valid_bar_shapes = [option.name for option in AgitateModeParamsBarShape]
         valid_bar_mode_params = ["wells", "bar_shape", "bar_length"]
 
         speed = parse_unit(speed)
@@ -6335,7 +6440,7 @@ class Protocol:
         ValueError
             Invalid exposure parameter supplied
         """
-        allowed_image_modes = ImageMode.__dict__.get("_member_names_")
+        allowed_image_modes = [option.name for option in ImageMode]
         if not mode in allowed_image_modes:
             raise ValueError(f"image mode must be one of: {allowed_image_modes}")
         if num_images <= 0:

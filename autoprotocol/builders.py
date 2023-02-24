@@ -34,7 +34,16 @@ from typing import Any, Dict, List, Optional, Union
 
 from .constants import SBS_FORMAT_SHAPES
 from .container import Container, Well, WellGroup
-from .types.protocol import *  # pylint: disable=unused-wildcard-import
+from .types.protocol import (
+    VOLUME,
+    DispenseColumn,
+    FlowCytometryChannel,
+    FlowCytometryChannelEmissionFilter,
+    FlowCytometryChannelMeasurements,
+    FlowCytometryChannelTriggerLogic,
+    FlowCytometryCollectionConditionStopCriteria,
+    GelPurifyBand,
+)
 from .unit import Unit
 from .util import is_valid_well, parse_unit
 

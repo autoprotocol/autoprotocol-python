@@ -205,7 +205,7 @@ class Unit(_Quantity):
                     raise UnitStringError(value) from e
             elif isinstance(value, dict):
                 try:
-                    value, units = value.values()
+                    value, units = value["value"], value["units"]
                 except ValueError as e:
                     raise UnitUnitsError(value) from e
 

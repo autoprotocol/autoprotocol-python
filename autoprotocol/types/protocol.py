@@ -23,6 +23,7 @@ VOLUME = Union[str, Unit]
 WAVELENGTH = Union[str, Unit]
 DENSITY = Union[str, Unit]
 POWER = Union[str, Unit]
+VOLTAGE = Union[str, Unit]
 
 
 @dataclass
@@ -225,14 +226,14 @@ class FlowCytometryChannelMeasurements:
 @dataclass
 class FlowCytometryChannelEmissionFilter:
     channel_name: str
-    shortpass: Union[str, Unit] = None
-    longpass: Union[str, Unit] = None
+    shortpass: WAVELENGTH = None
+    longpass: WAVELENGTH = None
 
 
 @dataclass
 class FlowCytometryChannel:
     emission_filter: FlowCytometryChannelEmissionFilter
-    detector_gain: Union[str, Unit]
+    detector_gain: VOLTAGE
     measurements: Optional[FlowCytometryChannelMeasurements] = None
     trigger_threshold: Optional[int] = None
     trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None
@@ -240,16 +241,16 @@ class FlowCytometryChannel:
 
 @dataclass()
 class FlowCytometryCollectionConditionStopCriteria:
-    volume: Optional[Union[str, Unit]] = None
+    volume: Optional[VOLUME] = None
     events: Optional[int] = None
-    time: Union[str, Unit] = None
+    time: Optional[TIME] = None
 
 
 @dataclass
 class FlowCytometryLaser:
     channels: List[FlowCytometryChannel]
-    excitation: Union[str, Unit] = field(default=None)
-    power: Union[str, Unit] = field(default=None)
+    excitation: Optional[WAVELENGTH] = field(default=None)
+    power: Optional[POWER] = field(default=None)
     area_scaling_factor: Optional[int] = field(default=None)
 
 

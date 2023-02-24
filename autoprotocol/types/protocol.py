@@ -58,7 +58,7 @@ class TimeConstraintOptimizationCost(enum.Enum):
     exponential = enum.auto()
 
 
-@dataclass(frozen=False)
+@dataclass
 class TimeConstraint(HashableMixin):
     from_: Union[int, Container]
     to: Union[int, Container] = field(default=None)
@@ -184,7 +184,7 @@ class PlateReaderPositionZCalculated(HashableMixin):
     calculated_from_wells: List[Well]
 
 
-@dataclass()
+@dataclass
 class GelPurifyBandSizeRange(HashableMixin):
     min_bp: int
     max_bp: int

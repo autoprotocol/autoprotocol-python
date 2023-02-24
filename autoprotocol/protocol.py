@@ -9,19 +9,114 @@ Module containing the main `Protocol` object and associated functions
 import json
 import warnings
 
-from typing import Dict, List, Tuple
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
+from numbers import Number
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from .builders import LiquidHandleBuilders
 from .compound import Compound
 from .constants import AGAR_CLLD_THRESHOLD, SPREAD_PATH
-from .container import COVER_TYPES, SEAL_TYPES, Container, Well
+from .container import COVER_TYPES, SEAL_TYPES, Container, Well, WellGroup
 from .container_type import _CONTAINER_TYPES, ContainerType
-from .instruction import *  # pylint: disable=unused-wildcard-import
+from .informatics import AttachCompounds, Informatics
+from .instruction import (
+    SPE,
+    Absorbance,
+    AcousticTransfer,
+    Agitate,
+    Autopick,
+    CountCells,
+    Cover,
+    Dispense,
+    Evaporate,
+    FlashFreeze,
+    FlowAnalyze,
+    FlowCytometry,
+    Fluorescence,
+    GelPurify,
+    GelSeparate,
+    IlluminaSeq,
+    Image,
+    ImagePlate,
+    Incubate,
+    Instruction,
+    LiquidHandle,
+    Luminescence,
+    MagneticTransfer,
+    MeasureConcentration,
+    MeasureMass,
+    MeasureVolume,
+    Oligosynthesize,
+    Provision,
+    SangerSeq,
+    Seal,
+    Sonicate,
+    Spectrophotometry,
+    Spin,
+    Thermocycle,
+    Uncover,
+    Unseal,
+)
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
-from .types.protocol import *  # pylint: disable=unused-wildcard-import
+from .types.protocol import (
+    ACCELERATION,
+    AMOUNT_CONCENTRATION,
+    DENSITY,
+    FLOW_RATE,
+    FREQUENCY,
+    TEMPERATURE,
+    TIME,
+    VOLUME,
+    WAVELENGTH,
+    AgitateMode,
+    AgitateModeParams,
+    AgitateModeParamsBarShape,
+    AutopickGroup,
+    DispenseColumn,
+    DispenseNozzlePosition,
+    DispenseShakeAfter,
+    DispenseShape,
+    EvaporateMode,
+    EvaporateModeParams,
+    FlowAnalyzeChannel,
+    FlowAnalyzeColors,
+    FlowAnalyzeNegControls,
+    FlowAnalyzePosControls,
+    FlowAnalyzeSample,
+    FlowCytometryCollectionCondition,
+    FlowCytometryLaser,
+    GelPurifyExtract,
+    IlluminaSeqLane,
+    ImageExposure,
+    ImageMode,
+    IncubateShakingParams,
+    OligosynthesizeOligo,
+    PlateReaderIncubateBefore,
+    PlateReaderPositionZCalculated,
+    PlateReaderPositionZManual,
+    SonicateMode,
+    SonicateModeParamsBath,
+    SonicateModeParamsHorn,
+    SpectrophotometryShakeBefore,
+    SpeElute,
+    SpeLoadSample,
+    SpeParams,
+    ThermocycleTemperature,
+    ThermocycleTemperatureGradient,
+    TimeConstraint,
+    TimeConstraintFromToDict,
+    WellParam,
+)
 from .types.ref import Ref, RefOpts, StorageLocation
 from .unit import Unit, UnitError
-from .util import _check_container_type_with_shape, _validate_as_instance
+from .util import (
+    _check_container_type_with_shape,
+    _validate_as_instance,
+    is_valid_well,
+    parse_unit,
+)
 
 
 @dataclass

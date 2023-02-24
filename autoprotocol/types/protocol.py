@@ -5,7 +5,6 @@ dataclasses.asdict is not used here but is used in protocol.py hence the pylint 
 """
 import enum
 
-from dataclasses import asdict  # pylint: disable=unused-import
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
 

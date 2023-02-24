@@ -27,6 +27,7 @@ import enum
 
 from collections import defaultdict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
+from dataclasses import asdict
 from functools import reduce
 from numbers import Number
 from typing import Any, Dict, List, Optional, Union

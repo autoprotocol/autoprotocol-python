@@ -1,6 +1,10 @@
 =========
 Changelog
 =========
+
+* :release: `10.2.2 <2023-02-27>`
+* :bug:`388` Fix DispenseColumn serialization prior to constructing Dispense Instruction
+
 * :release: `10.2.1 <2023-02-27>`
 * :bug:`387` Fix Instruction::MagneticTransfer invalid volume detection
 

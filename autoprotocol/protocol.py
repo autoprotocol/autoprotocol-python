@@ -2415,7 +2415,7 @@ class Protocol:
         return self._append_and_return(
             Dispense(
                 object=ref,
-                columns=columns,
+                columns=[asdict(c) for c in columns],
                 reagent=reagent,
                 resource_id=resource_id,
                 reagent_source=reagent_source,
@@ -2826,7 +2826,7 @@ class Protocol:
                     try:
                         mode_params = AgitateModeParams(**mode_params)
                     except:
-                        raise ValueError(
+                        raise ValueError(  # pragma pylint: disable=raise-missing-from
                             f"mode_params {mode_params.keys()} to not match {valid_bar_mode_params}"
                         )
 

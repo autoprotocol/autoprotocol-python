@@ -1,6 +1,9 @@
 =========
 Changelog
 =========
+* :release: `10.2.1 <2023-02-27>`
+* :bug:`387` Fix Instruction::MagneticTransfer invalid volume detection
+
 * :release: `10.2.0 <2023-02-24>`
 * :support:`385` Further updates for dataclass compatibility
 

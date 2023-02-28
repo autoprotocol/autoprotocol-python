@@ -234,8 +234,8 @@ class MagneticTransfer(Instruction):
         "96-pcr": ["96-pcr", "96-v-kf", "96-flat", "96-flat-uv"],
     }
     working_vols: dict = {
-        "96-v-kf": "200:microliter",
-        "96-deep-kf": "1000:microliter",
+        "96-v-kf": Unit(200, "microliter"),
+        "96-deep-kf": Unit(1000, "microliter"),
     }
 
     def __init__(self, groups, magnetic_head):
@@ -261,7 +261,8 @@ class MagneticTransfer(Instruction):
             w
             for container in containers
             for w in container.all_wells()
-            if w.volume and w.volume > self.working_vols[container.container_type]
+            if w.volume
+            and w.volume > self.working_vols[container.container_type.shortname]
         ]
         if wells_with_invalid_volumes:
             non_valid_container_working_vols = [

@@ -1,7 +1,8 @@
 =========
 Changelog
 =========
-* :release: `10.2.2 <2023-02-24>`
+
+* :release: `10.2.2 <2023-02-28>`
 * :bug:`389` Adding unit_as_strings_factory to fix Unit serialization expected as str not dict
 * :bug:`389` Fix DispenseColumn serialization prior to constructing Dispense Instruction
 

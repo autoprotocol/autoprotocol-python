@@ -2416,7 +2416,7 @@ class Protocol:
         return self._append_and_return(
             Dispense(
                 object=ref,
-                columns=columns,
+                columns=[asdict(c) for c in columns],
                 reagent=reagent,
                 resource_id=resource_id,
                 reagent_source=reagent_source,

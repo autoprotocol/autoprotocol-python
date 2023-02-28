@@ -13,6 +13,7 @@ from autoprotocol.instruction import (
     Spectrophotometry,
     Thermocycle,
 )
+from autoprotocol.types import asdict
 from autoprotocol.types.protocol import DispenseColumn
 from autoprotocol.unit import Unit, UnitError
 
@@ -58,6 +59,11 @@ class TestDispenseBuilders(object):
     def test_column(self):
         for column in self.columns_reference:
             assert DispenseColumn(**column) == Dispense.builders.column(**column)
+            assert (
+                asdict(DispenseColumn(**column))
+                == asdict(Dispense.builders.column(**column))
+                == {"column": column["column"], "volume": str(column["volume"])}
+            )
 
         with pytest.raises(TypeError):
             Dispense.builders.column(0, 5)

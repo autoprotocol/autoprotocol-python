@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from math import ceil, floor
 from numbers import Number
-from typing import Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 from pint import UnitRegistry
 from pint.errors import UndefinedUnitError
@@ -113,6 +113,8 @@ _UnitRegistry._units["revolutions_per_minute"]._name = "rpm"
 
 """Add support for Molarity Unit"""
 _UnitRegistry.define("molar = mole/liter = M")
+
+
 # pragma pylint: enable=protected-access
 
 
@@ -333,3 +335,17 @@ class Unit(_Quantity):
             rounded unit
         """
         return self.__round__(ndigits)
+
+
+def unit_as_strings_factory(data: List[Tuple[str, Any]]):
+    """
+    Used as a dict_factory parameter in the dataclasses.asdict
+    function, to return a string instead of a dictionary when
+    a Unit object is parsed.
+    """
+    unit_fieldnames = ["value", "units"]
+    if unit_fieldnames == [t[0] for t in data]:
+        unit_str = str(Unit(**{k: v for (k, v) in data}))
+        return unit_str
+    else:
+        return {field: value for field, value in data}

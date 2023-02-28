@@ -1,9 +1,10 @@
 import enum
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Optional
 
 from autoprotocol import Container
+from autoprotocol.types import asdict
 from autoprotocol.unit import Unit
 
 

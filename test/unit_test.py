@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 
+from autoprotocol.types import asdict
 from autoprotocol.unit import Unit, UnitValueError
 
 
@@ -10,6 +11,8 @@ class TestUnitType(object):
         u1 = Unit("20.1:microliter")
         u2 = Unit(20.1, "microliter")
         u3 = Unit(Decimal("20.1"), "microliter")
+        assert asdict(u2) == str(u2) == "20.1:microliter"
+        assert asdict(u1) == asdict(u2) == asdict(u3) == "20.1:microliter"
         assert u1 == u2 == u3
         assert isinstance(u1.magnitude, Decimal)
         with pytest.raises(UnitValueError):

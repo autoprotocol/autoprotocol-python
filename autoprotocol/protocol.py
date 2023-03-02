@@ -10,7 +10,7 @@ import json
 import warnings
 
 from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from numbers import Number
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -60,6 +60,7 @@ from .instruction import (
 )
 from .liquid_handle import Dispense as DispenseMethod
 from .liquid_handle import LiquidClass, Mix, Transfer
+from .types import asdict
 from .types.protocol import (
     ACCELERATION,
     AMOUNT_CONCENTRATION,
@@ -2415,7 +2416,7 @@ class Protocol:
         return self._append_and_return(
             Dispense(
                 object=ref,
-                columns=columns,
+                columns=[asdict(c) for c in columns],
                 reagent=reagent,
                 resource_id=resource_id,
                 reagent_source=reagent_source,

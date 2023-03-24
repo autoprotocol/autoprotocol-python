@@ -1579,7 +1579,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If chip_material is not None or in the allowable list of tempest chip materials
         """
-        if device is not "x_mantis" or "x_tempest_chip":
+        if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
@@ -1619,8 +1619,9 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "material": ["silicone", "pfe"],
             }
         device_mode_params = {}
+        device_dict: dict = {}
         if any([model, material, nozzle, diaphragm, nozzle_size, tubing, z_drop, viscosity]):
-            device_dict = {
+            device_dict.update({
                 "model": model or default_params["model"],
                 "material": material or default_params["material"],
                 "nozzle": nozzle or default_params["nozzle"],
@@ -1629,12 +1630,13 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "tubing": tubing or default_params["tubing"],
                 "z_drop": z_drop or default_params["z_drop"],
                 "viscosity": viscosity or default_params["viscosity"],
-            }
+            })
         error_values: dict = {}
         # Validate params with accepted params dict
         for key, value in device_dict.items():
             if value and value not in accepted_params[key]:
-                error_values.append({key: value})
+                error_values.update({key: value})
+
         if error_values:
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"

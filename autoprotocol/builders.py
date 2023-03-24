@@ -1531,9 +1531,15 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def device_mode_params(
+        device: Optional[str] = "x_tempest_chip",
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
+        diaphragm: Optional[int] = None,
+        nozzle_size: Optional[Unit] = None,
+        tubing: Optional[str] = None,
+        z_drop: Optional[Unit] = None,
+        viscosity: Optional[str] = None
     ):
         """Helper for building device level mode_params
 
@@ -1542,12 +1548,22 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        model : string, optional
-            Tempest chip model.
-        chip_material : string, optional
+        model: string, optional
+            Tempest chip or mantis model.
+        chip_material: string, optional
             Material that the tempest chip is made of.
-        nozzle : string, optional
-            Type of chip nozzle.
+        nozzle: string, optional
+            Type of chip nozzle for tempest.
+        diaphragm: Optional[Integer]
+            any integer between 0 and 100, inclusive
+        nozzle_size: Optional[Unit[Length]]
+            one of "0.1:mm", "0.2:mm", "0.5:mm"
+        tubing: Optional[String]
+            one of "LV", "HV", "P200", "P1000"
+        z_drop: Optional[Unit[Length]]
+            distance of decreased z axis
+        viscosity: Optional[String]
+            one of "1", "2-5", "6-10", "11-20", "21-25"
 
         Returns
         -------
@@ -1563,14 +1579,46 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If chip_material is not None or in the allowable list of tempest chip materials
         """
-        # tempest chip specification
-        if (model != "high_volume") and (model is not None):
-            raise ValueError(f"Tempest chip model is {model}. It must be: high_volume.")
-        if (nozzle != "standard") and (nozzle is not None):
-            raise ValueError(f"Tempest nozzle is {nozzle}. It must be: standard.")
-        if (chip_material not in ["silicone", "pfe"]) and (chip_material is not None):
+        accepted_tempest_params: dict = {
+            "model": "high_volume",
+            "nozzle": "standard",
+            "chip_material": ["silicone", "pfe"]
+        }
+        accepted_mantis_params: dict = {
+            "model": ["high_volume", "low_volume"],
+            "diaphragm": [0,100],
+            "nozzle_size": ["0.1:mm", "0.2:mm", "0.5:mm"],
+            "tubing": ["LV", "HV", "P200", "P1000"],
+            "z_drop": [],
+            "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"]
+        }
+        error_values: dict = {}
+        # Validate params with accepted params dict
+        if device is "x_tempest_chip":
+            if model and model != accepted_tempest_params["model"]:
+                error_values.update({"model": model})
+            if nozzle and nozzle != accepted_tempest_params["nozzle"]:
+                error_values.update({"nozzle": nozzle})
+            if chip_material and chip_material not in accepted_tempest_params["chip_material"]:
+                error_values.update({"chip_material": chip_material})
+        elif device is "x_mantis":
+            if model and model not in accepted_mantis_params["model"]:
+                error_values.update({"model": model})
+            if diaphragm and 0 <= diaphragm <= 100:
+                error_values.update({"diaphragm": diaphragm})
+            if nozzle_size and nozzle_size not in accepted_mantis_params["nozzle_size"]:
+                error_values.update({"nozzle_size": nozzle_size})
+            if tubing and tubing not in accepted_mantis_params["tubing"]:
+                error_values.update({"tubing": tubing})
+            if viscosity and viscosity not in accepted_mantis_params["viscocity"]:
+                error_values.update({"viscosity": viscosity})
+        else:
             raise ValueError(
-                f"Tempest chip material is {chip_material}. It must be either: silicone or pfe."
+                f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
+            )
+        if error_values:
+            raise ValueError(
+                f"Incorrect params: {error_values}. It must be {accepted_tempest_params}"
             )
 
         device_mode_params = {}
@@ -1581,12 +1629,12 @@ class LiquidHandleBuilders(InstructionBuilders):
                 chip_material = "pfe"
             if nozzle is None:
                 nozzle = "standard"
-            x_tempest_chip = {
+            device_dict = {
                 "model": model,
                 "material": chip_material,
                 "nozzle": nozzle,
             }
-            device_mode_params["x_tempest_chip"] = x_tempest_chip
+            device_mode_params[device] = device_dict
 
         return device_mode_params
 

@@ -1647,8 +1647,14 @@ class LiquidHandleBuilders(InstructionBuilders):
         error_values: dict = {}
         # Validate params with accepted params dict
         for key, value in device_dict.items():
-            if value and value not in accepted_params[key]:
-                error_values.update({key: value})
+            if value:
+                if key == "z_drop" or key == "diaphragm":
+                    accepted_range: List = list(accepted_params[key])
+                    if value < accepted_range[0] or value > accepted_range[1]:
+                        error_values.update({key: value})
+                else:
+                    if value not in accepted_params[key]:
+                        error_values.update({key: value})
 
         if error_values:
             raise ValueError(

@@ -1634,8 +1634,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         Helper validation function to validate device liquid handling params
 
-        Params
-        ------
+        Parameters
+        ----------
         device: str
             either x_mantis or x_tempest_chip
         device_dict: dict

@@ -1561,9 +1561,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         tubing: Optional[String]
             one of "LV", "HV", "P200", "P1000"
             TODO: How do we want to handle these tip types? In the future, we're going to have tempest
-                source support this new tip type container type which will get a shortname akin to
-                `pipette-tip-p200` or something. If we align these two values to that shortname, we can
-                just pass it in via `source_container.container_type.shortname`
+            TODO (cont): source support this new tip type container type which will get a shortname akin to
+            TODO (cont): `pipette-tip-p200` or something. If we align these two values to that shortname, we can
+            TODO (cont): just pass it in via `source_container.container_type.shortname`
         z_drop: Optional[Unit[Length]]
             within the range: 0:mm - 100:mm, inclusive
         viscosity: Optional[String]

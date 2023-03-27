@@ -1624,7 +1624,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {device: device_dict}
 
     @staticmethod
-    def validate_device_params(device: str, device_dict: dict) -> dict:
+    def validate_device_params(device: str, device_dict: dict) -> None:
         """Helper validation function to validate device liquid handling params"""
         if device == "x_mantis":
             # If device is mantis, set accepted params
@@ -1655,7 +1655,6 @@ class LiquidHandleBuilders(InstructionBuilders):
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
 
-        return accepted_params
 
     @staticmethod
     def move_rate(

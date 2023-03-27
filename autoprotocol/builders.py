@@ -1583,7 +1583,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
-        if device is "x_mantis":
+        if device == "x_mantis":
+            # If device is mantis, set default params and accepted params
             default_params: dict = {
                 "model": "high_volume",
                 "material": None,
@@ -1603,6 +1604,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
             }
         else:
+            # Otherwise, default to tempest default and accepted params
             default_params: dict = {
                 "model": "high_volume",
                 "material": "pfe",
@@ -1618,7 +1620,6 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "nozzle": ["standard"],
                 "material": ["silicone", "pfe"],
             }
-        device_mode_params = {}
         device_dict: dict = {}
         if any([model, material, nozzle, diaphragm, nozzle_size, tubing, z_drop, viscosity]):
             device_dict.update({
@@ -1641,10 +1642,8 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
-        else:
-            device_mode_params[device] = device_dict
 
-        return device_mode_params
+        return {device: device_dict}
 
     @staticmethod
     def move_rate(

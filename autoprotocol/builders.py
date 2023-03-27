@@ -1573,6 +1573,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         Raises
         ------
         ValueError
+            If device is not of the following: [x_tempest_chip, x_mantis]
+        ValueError
             If model is not None or "high_volume"
         ValueError
             If nozzle is not None or "standard"
@@ -1625,7 +1627,14 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def validate_device_params(device: str, device_dict: dict) -> None:
-        """Helper validation function to validate device liquid handling params"""
+        """
+        Helper validation function to validate device liquid handling params
+
+        Raises
+        ------
+        ValueError
+            If input device_dict values are not of the accepted params for the input device
+        """
         if device == "x_mantis":
             # If device is mantis, set accepted params
             accepted_params: dict = {

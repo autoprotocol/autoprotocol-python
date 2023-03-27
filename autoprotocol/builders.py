@@ -1561,7 +1561,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         tubing: Optional[String]
             one of "LV", "HV", "P200", "P1000"
         z_drop: Optional[Unit[Length]]
-            distance of decreased z axis
+            within the range: 0:mm - 100:mm, inclusive
         viscosity: Optional[String]
             one of "1", "2-5", "6-10", "11-20", "21-25"
 
@@ -1630,8 +1630,17 @@ class LiquidHandleBuilders(InstructionBuilders):
         """
         Helper validation function to validate device liquid handling params
 
+        Params
+        ------
+        device: str
+            either x_mantis or x_tempest_chip
+        device_dict: dict
+            Dictionary of all device params, as seen in function device_mode_params
+
         Raises
         ------
+        ValueError
+            If input device is not either x_mantis or x_tempest_chip
         ValueError
             If input device_dict values are not of the accepted params for the input device
         """
@@ -1645,13 +1654,17 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "z_drop": ["0.0:mm", "100.0:mm"],
                 "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
             }
-        else:
+        elif device == "x_tempest_chip":
             # Otherwise, default to tempest accepted params
             accepted_params: dict = {
                 "model": ["high_volume"],
                 "nozzle": ["standard"],
                 "material": ["silicone", "pfe"],
             }
+        else:
+            raise ValueError(
+                f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
+            )
 
         error_values: dict = {}
         # Validate params with accepted params dict

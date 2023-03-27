@@ -102,8 +102,8 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
             if multiple values are specified for the same parameter
 
         """
-        left = left or dict()
-        right = right or dict()
+        left: dict = left or {}
+        right: dict = right or {}
 
         union = defaultdict(list)
         for params in (left, right):
@@ -111,7 +111,7 @@ class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
                 if value is not None:
                     union[key].append(value)
 
-        unique = dict()
+        unique: dict = {}
         for key, value in union.items():
             if len(value) == 1:
                 unique[key] = value[0]
@@ -402,7 +402,7 @@ class ThermocycleBuilders(InstructionBuilders):
             Duration is not greater than 0 second
 
         """
-        step_dict = dict()
+        step_dict: dict = {}
         if isinstance(temperature, dict):
             if set(temperature.keys()) != {"top", "bottom"}:
                 raise ValueError(
@@ -436,6 +436,9 @@ class SPEBuilders(InstructionBuilders):
     """
 
     def spe_params(self, params, is_elute=False):
+        """
+        parse input params for SPE instruction
+        """
         if not isinstance(params, list):
             raise ValueError(f"SPE mobile phase parameters {params} must be a list.")
         parsed_params = []
@@ -1272,13 +1275,15 @@ class SpectrophotometryBuilders(InstructionBuilders):
             )
 
         if "calculated_from_wells" in position_z:
-            return self.position_z_calculated(**position_z["calculated_from_wells"])
+            z_pos = self.position_z_calculated(**position_z["calculated_from_wells"])
         elif "manual" in position_z:
-            return self.position_z_manual(**position_z["manual"])
+            z_pos = self.position_z_manual(**position_z["manual"])
         else:
             raise ValueError(
                 f"Invalid position_z {position_z} specified. {suggested_msg}"
             )
+
+        return z_pos
 
 
 class LiquidHandleBuilders(InstructionBuilders):
@@ -1476,9 +1481,10 @@ class LiquidHandleBuilders(InstructionBuilders):
             A dict of positions x, y, and z. Should only be specified if none of
             the other tip position parameters have been specified.
         volume_resolution : Unit, optional
-            LiquidHandle dispense mode volume resolution specifies the droplet size to dispense.
-            A specified resolution will exclude machines that are not configured for the given droplet size.
-            By default, None means any droplet size will suffice. Check default droplet size on your machine configuration.
+            LiquidHandle dispense mode volume resolution specifies the droplet size
+            to dispense.A specified resolution will exclude machines that are not
+            configured for the given droplet size. By default, None means any droplet
+            size will suffice. Check default droplet size on your machine configuration.
 
 
         Returns
@@ -1560,10 +1566,12 @@ class LiquidHandleBuilders(InstructionBuilders):
             one of "0.1:mm", "0.2:mm", "0.5:mm"
         tubing: Optional[String]
             one of "LV", "HV", "P200", "P1000"
-            TODO: How do we want to handle these tip types? In the future, we're going to have tempest
-            TODO (cont): source support this new tip type container type which will get a shortname akin to
-            TODO (cont): `pipette-tip-p200` or something. If we align these two values to that shortname, we can
-            TODO (cont): just pass it in via `source_container.container_type.shortname`
+            TODO: How do we want to handle these tip types?
+            In the future, we're going to have tempest source support
+            this new tip type container type which will get a shortname
+            akin to `pipette-tip-p200` or something. If we align these
+            two values to that shortname, we can just pass it in via
+            `source_container.container_type.shortname`
         z_drop: Optional[Unit[Length]]
             within the range: 0:mm - 100:mm, inclusive
         viscosity: Optional[String]
@@ -1583,7 +1591,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If nozzle is not None or "standard"
         ValueError
-            If chip_material is not None or in the allowable list of tempest chip materials
+            If chip_material is not None or in the allowable list of
+            tempest chip materials
         """
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
@@ -1614,7 +1623,16 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "viscosity": None,
             }
         device_dict: dict = {}
-        if any([model, material, nozzle, diaphragm, nozzle_size, tubing, z_drop, viscosity]):
+        if any([
+                model,
+                material,
+                nozzle,
+                diaphragm,
+                nozzle_size,
+                tubing,
+                z_drop,
+                viscosity
+        ]):
             device_dict.update({
                 "model": model or default_params["model"],
                 "material": material or default_params["material"],
@@ -1646,7 +1664,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If input device is not either x_mantis or x_tempest_chip
         ValueError
-            If input device_dict values are not of the accepted params for the input device
+            If input device_dict values are not of the accepted
+            params for the input device
         """
         if device == "x_mantis":
             # If device is mantis, set accepted params
@@ -1686,7 +1705,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
-
 
     @staticmethod
     def move_rate(
@@ -2268,15 +2286,17 @@ class EvaporateBuilders(InstructionBuilders):
             "spin_acceleration": "g",
         }
         mode_param_output = {}
-        speed_param = [(k) for k in mode_params.keys() if k in speed_unit_dict.keys()]
+        speed_param = [
+            key for key in mode_params.keys() if key in speed_unit_dict.keys()
+        ]
         if len(speed_param) > 1:
             raise TypeError(f"There are multiple speed parameters: {speed_param}.")
 
         for s in speed_param:
             if Unit(mode_params[s]).magnitude <= 0:
                 raise ValueError(f"{s} is less than or equal to 0.")
-            else:
-                mode_param_output[s] = parse_unit(mode_params[s], speed_unit_dict[s])
+
+            mode_param_output[s] = parse_unit(mode_params[s], speed_unit_dict[s])
 
         if "vacuum_pressure" in mode_params.keys():
             pressure = mode_params["vacuum_pressure"]
@@ -2284,8 +2304,8 @@ class EvaporateBuilders(InstructionBuilders):
                 pressure = parse_unit(pressure, "torr")
                 if pressure <= Unit("0: torr"):
                     raise ValueError("vacuum_pressure cannot be lower than 0 torr.")
-                else:
-                    mode_param_output["vacuum_pressure"] = pressure
+
+                mode_param_output["vacuum_pressure"] = pressure
 
         if "condenser_temperature" in mode_params.keys():
             temp = mode_params["condenser_temperature"]
@@ -2776,7 +2796,8 @@ class FlowCytometryBuilders(InstructionBuilders):
         TypeError
             If `area_scaling_factor` is not a number.
         ValueError
-            If a gating channel (e.g. SSC) is specified and excitation is also specified.
+            If a gating channel (e.g. SSC) is specified
+            and excitation is also specified.
 
         Returns
         -------
@@ -2811,7 +2832,8 @@ class FlowCytometryBuilders(InstructionBuilders):
         )
         if channel_names.intersection(self.gating_modes) and excitation is not None:
             raise ValueError(
-                f"Cannot specify excitation if channel_name is one of {self.gating_modes}"
+                f"Cannot specify excitation if channel_name "
+                f"is one of {self.gating_modes}"
             )
 
         return {

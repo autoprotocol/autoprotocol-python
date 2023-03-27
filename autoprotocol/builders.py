@@ -1584,7 +1584,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
         if device == "x_mantis":
-            # If device is mantis, set default params and accepted params
+            # If device is mantis, set default params
             default_params: dict = {
                 "model": "high_volume",
                 "material": None,
@@ -1595,16 +1595,8 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "z_drop": "0.0:mm",
                 "viscosity": "1",
             }
-            accepted_params: dict = {
-                "model": ["high_volume", "low_volume"],
-                "diaphragm": [0, 100],
-                "nozzle_size": ["0.1:mm", "0.2:mm", "0.5:mm"],
-                "tubing": ["LV", "HV", "P200", "P1000"],
-                "z_drop": ["0.0:mm", "100.0:mm"],
-                "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
-            }
         else:
-            # Otherwise, default to tempest default and accepted params
+            # Otherwise, default to tempest default params
             default_params: dict = {
                 "model": "high_volume",
                 "material": "pfe",
@@ -1614,11 +1606,6 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "tubing": None,
                 "z_drop": None,
                 "viscosity": None,
-            }
-            accepted_params: dict = {
-                "model": ["high_volume"],
-                "nozzle": ["standard"],
-                "material": ["silicone", "pfe"],
             }
         device_dict: dict = {}
         if any([model, material, nozzle, diaphragm, nozzle_size, tubing, z_drop, viscosity]):
@@ -1632,6 +1619,31 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "z_drop": z_drop or default_params["z_drop"],
                 "viscosity": viscosity or default_params["viscosity"],
             })
+        LiquidHandleBuilders.validate_device_params(device, device_dict)
+
+        return {device: device_dict}
+
+    @staticmethod
+    def validate_device_params(device: str, device_dict: dict) -> dict:
+        """Helper validation function to validate device liquid handling params"""
+        if device == "x_mantis":
+            # If device is mantis, set accepted params
+            accepted_params: dict = {
+                "model": ["high_volume", "low_volume"],
+                "diaphragm": [0, 100],
+                "nozzle_size": ["0.1:mm", "0.2:mm", "0.5:mm"],
+                "tubing": ["LV", "HV", "P200", "P1000"],
+                "z_drop": ["0.0:mm", "100.0:mm"],
+                "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
+            }
+        else:
+            # Otherwise, default to tempest accepted params
+            accepted_params: dict = {
+                "model": ["high_volume"],
+                "nozzle": ["standard"],
+                "material": ["silicone", "pfe"],
+            }
+
         error_values: dict = {}
         # Validate params with accepted params dict
         for key, value in device_dict.items():
@@ -1643,7 +1655,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
 
-        return {device: device_dict}
+        return accepted_params
 
     @staticmethod
     def move_rate(

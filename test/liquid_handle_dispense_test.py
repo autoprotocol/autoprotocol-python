@@ -787,6 +787,30 @@ class TestLiquidHandleDispenseMode:
 
         assert instruction.data["mode_params"] == mode_params
 
+    def test_mantis_high_volume(self):
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            liquid=ProteinBuffer,
+        )
+
+        assert "mode_params" not in instruction.data
+
+        # TODO: Make test here
+        mode_params = {
+            "x_mantis": {
+                "model": "high_volume",
+                "diaphragm": 0,
+                "nozzle_size": "0.1:mm",
+                "tubing": "LV",
+                "z_drop": "0.0:mm",
+                "viscosity": "1",
+            }
+        }
+
+        # assert instruction.data["mode_params"] == mode_params
+
     def test_tempest_chip_pfe(self):
 
         instruction = self.protocol.liquid_handle_dispense(

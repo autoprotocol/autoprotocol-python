@@ -1537,7 +1537,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def device_mode_params(
-        device: Optional[str] = "x_tempest_chip",
+        device: Optional[str] = None,
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
@@ -1594,6 +1594,9 @@ class LiquidHandleBuilders(InstructionBuilders):
             If chip_material is not None or in the allowable list of
             tempest chip materials
         """
+        if not device:
+            device = "x_tempest_chip"
+
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"

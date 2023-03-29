@@ -1539,7 +1539,7 @@ class LiquidHandleBuilders(InstructionBuilders):
     def device_mode_params(
         device: Optional[str] = "x_tempest_chip",
         model: Optional[str] = None,
-        material: Optional[str] = None,
+        chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
         diaphragm: Optional[int] = None,
         nozzle_size: Optional[Unit] = None,
@@ -1625,7 +1625,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         device_dict: dict = {}
         if any([
                 model,
-                material,
+                chip_material,
                 nozzle,
                 diaphragm,
                 nozzle_size,
@@ -1635,7 +1635,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         ]):
             device_dict.update({
                 "model": model or default_params["model"],
-                "material": material or default_params["material"],
+                "material": chip_material or default_params["material"],
                 "nozzle": nozzle or default_params["nozzle"],
                 "diaphragm": diaphragm or default_params["diaphragm"],
                 "nozzle_size": nozzle_size or default_params["nozzle_size"],

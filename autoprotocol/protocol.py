@@ -1469,7 +1469,7 @@ class Protocol:
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
         device_mode_params = LiquidHandleBuilders.device_mode_params(
-            model=model, material=chip_material, nozzle=nozzle
+            model=model, chip_material=chip_material, nozzle=nozzle
         )
         return self._append_and_return(
             LiquidHandle(

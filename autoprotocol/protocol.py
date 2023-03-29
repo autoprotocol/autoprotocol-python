@@ -122,101 +122,101 @@ from .util import (
 
 @dataclass
 class Protocol:
+    """
+        A Protocol is a sequence of instructions to be executed, and a set of
+        containers on which those instructions act.
+
+        Parameters
+        ----------
+        refs : list(Ref)
+            Pre-existing refs that the protocol should be populated with.
+        instructions : list(Instruction)
+            Pre-existing instructions that the protocol should be populated with.
+        propagate_properties : bool, optional
+            Whether liquid handling operations should propagate aliquot properties
+            from source to destination wells.
+        time_constraints : List(time_constraints)
+            Pre-existing time_constraints that the protocol should be populated with.
+
+        Examples
+        --------
+        Initially, a Protocol has an empty sequence of instructions and no
+        referenced containers. To add a reference to a container, use the ref()
+        method, which returns a Container.
+
+            .. code-block:: python
+
+                p = Protocol()
+                my_plate = p.ref("my_plate", id="ct1xae8jabbe6",
+                                        cont_type="96-pcr", storage="cold_4")
+
+        To add instructions to the protocol, use the helper methods in this class
+
+            .. code-block:: python
+
+                p.transfer(source=my_plate.well("A1"),
+                           dest=my_plate.well("B4"),
+                           volume="50:microliter")
+                p.thermocycle(my_plate, groups=[
+                              { "cycles": 1,
+                                "steps": [
+                                  { "temperature": "95:celsius",
+                                    "duration": "1:hour"
+                                  }]
+                              }])
+
+        Autoprotocol Output:
+
+            .. code-block:: json
+
+                {
+                  "refs": {
+                    "my_plate": {
+                      "id": "ct1xae8jabbe6",
+                      "store": {
+                        "where": "cold_4"
+                      }
+                    }
+                  },
+                  "instructions": [
+                    {
+                      "groups": [
+                        {
+                          "transfer": [
+                            {
+                              "volume": "50.0:microliter",
+                              "to": "my_plate/15",
+                              "from": "my_plate/0"
+                            }
+                          ]
+                        }
+                      ],
+                      "op": "pipette"
+                    },
+                    {
+                      "volume": "10:microliter",
+                      "dataref": null,
+                      "object": "my_plate",
+                      "groups": [
+                        {
+                          "cycles": 1,
+                          "steps": [
+                            {
+                              "duration": "1:hour",
+                              "temperature": "95:celsius"
+                            }
+                          ]
+                        }
+                      ],
+                      "op": "thermocycle"
+                    }
+                  ]
+                }
+        """
     refs: Optional[Dict[str, Ref]] = None
     instructions: List[Instruction] = field(default_factory=list)
     propagate_properties: bool = False
     time_constraints: List[TimeConstraint] = field(default_factory=list)
-    """
-    A Protocol is a sequence of instructions to be executed, and a set of
-    containers on which those instructions act.
-
-    Parameters
-    ----------
-    refs : list(Ref)
-        Pre-existing refs that the protocol should be populated with.
-    instructions : list(Instruction)
-        Pre-existing instructions that the protocol should be populated with.
-    propagate_properties : bool, optional
-        Whether liquid handling operations should propagate aliquot properties
-        from source to destination wells.
-    time_constraints : List(time_constraints)
-        Pre-existing time_constraints that the protocol should be populated with.
-
-    Examples
-    --------
-    Initially, a Protocol has an empty sequence of instructions and no
-    referenced containers. To add a reference to a container, use the ref()
-    method, which returns a Container.
-
-        .. code-block:: python
-
-            p = Protocol()
-            my_plate = p.ref("my_plate", id="ct1xae8jabbe6",
-                                    cont_type="96-pcr", storage="cold_4")
-
-    To add instructions to the protocol, use the helper methods in this class
-
-        .. code-block:: python
-
-            p.transfer(source=my_plate.well("A1"),
-                       dest=my_plate.well("B4"),
-                       volume="50:microliter")
-            p.thermocycle(my_plate, groups=[
-                          { "cycles": 1,
-                            "steps": [
-                              { "temperature": "95:celsius",
-                                "duration": "1:hour"
-                              }]
-                          }])
-
-    Autoprotocol Output:
-
-        .. code-block:: json
-
-            {
-              "refs": {
-                "my_plate": {
-                  "id": "ct1xae8jabbe6",
-                  "store": {
-                    "where": "cold_4"
-                  }
-                }
-              },
-              "instructions": [
-                {
-                  "groups": [
-                    {
-                      "transfer": [
-                        {
-                          "volume": "50.0:microliter",
-                          "to": "my_plate/15",
-                          "from": "my_plate/0"
-                        }
-                      ]
-                    }
-                  ],
-                  "op": "pipette"
-                },
-                {
-                  "volume": "10:microliter",
-                  "dataref": null,
-                  "object": "my_plate",
-                  "groups": [
-                    {
-                      "cycles": 1,
-                      "steps": [
-                        {
-                          "duration": "1:hour",
-                          "temperature": "95:celsius"
-                        }
-                      ]
-                    }
-                  ],
-                  "op": "thermocycle"
-                }
-              ]
-            }
-    """
 
     def __post_init__(self):
         if not self.refs:
@@ -248,15 +248,17 @@ class Protocol:
             If an unknown ContainerType shortname is passed as a parameter.
 
         """
+        container_type: str = ""
         if isinstance(shortname, ContainerType):
-            return shortname
+            container_type = shortname
         elif shortname in _CONTAINER_TYPES:
-            return _CONTAINER_TYPES[shortname]
+            container_type = _CONTAINER_TYPES[shortname]
         else:
             raise ValueError(
                 f"Unknown container type {shortname}"
                 f"(known types={str(_CONTAINER_TYPES.keys())})"
             )
+        return container_type
 
     # pragma pylint: disable=redefined-builtin
     def ref(
@@ -353,7 +355,7 @@ class Protocol:
 
         """
 
-        if name in self.refs.keys():
+        if name in self.refs:
             raise RuntimeError(
                 "Two containers within the same protocol cannot have the same " "name."
             )
@@ -366,10 +368,10 @@ class Protocol:
                 opts.id = id
             elif cont_type:
                 opts.new = cont_type.shortname
-        except ValueError as e:
+        except ValueError as err:
             raise RuntimeError(
                 f"{cont_type} is not a recognized container type."
-            ) from e
+            ) from err
 
         if storage:
             opts.store = StorageLocation(**{"where": storage})
@@ -608,7 +610,7 @@ class Protocol:
 
         # Move the 4th param to mirror if the caller used the syntax
         # add_time_constraint(a, b, 1:minute, True)
-        if type(more_than) == bool:
+        if isinstance(more_than, bool):
             mirror = more_than
             more_than = None
 
@@ -658,33 +660,35 @@ class Protocol:
                 f"'ideal': {ideal} cannot be greater than 'less_than': " f"{less_than}"
             )
 
-        for m in [from_dict, to_dict]:
-            if "mark" in m:
-                if isinstance(m["mark"], Container):
-                    k = cont_string
-                elif isinstance(m["mark"], int):
-                    k = inst_string
-                    if m["mark"] < 0:
+        for mark in [from_dict, to_dict]:
+            if "mark" in mark:
+                if isinstance(mark["mark"], Container):
+                    key = cont_string
+                elif isinstance(mark["mark"], int):
+                    key = inst_string
+                    if mark["mark"] < 0:
                         raise ValueError(
-                            f"The instruction 'mark' in {m} must be greater "
+                            f"The instruction 'mark' in {mark} must be greater "
                             f"than and equal to 0"
                         )
                 else:
-                    raise TypeError(f"The 'mark' in {m} must be Container or Integer")
+                    raise TypeError(f"The 'mark' in {mark} must be "
+                                    f"Container or Integer")
             else:
-                raise KeyError(f"The {m} dict must contain `mark`")
+                raise KeyError(f"The {mark} dict must contain `mark`")
 
-            if "state" in m:
-                if m["state"] in state_strings:
-                    k += m["state"]
+            if "state" in mark:
+                if mark["state"] in state_strings:
+                    key += mark["state"]
                 else:
                     raise TypeError(
-                        f"The 'state' in {m} must be in " f"{', '.join(state_strings)}"
+                        f"The 'state' in {mark} must be in "
+                        f"" f"{', '.join(state_strings)}"
                     )
             else:
-                raise KeyError(f"The {m} dict must contain 'state'")
+                raise KeyError(f"The {mark} dict must contain 'state'")
 
-            keys.append(k)
+            keys.append(key)
 
         if from_dict["mark"] == to_dict["mark"]:
             if from_dict["state"] == to_dict["state"]:
@@ -966,7 +970,7 @@ class Protocol:
         """
         outs = defaultdict(lambda: defaultdict(dict))
         # pragma pylint: disable=protected-access
-        for n, ref in self.refs.items():
+        for key, ref in self.refs.items():
             # assign any storage or discard condition changes to ref
             if ref.opts.store:
                 ref.opts.store.where = ref.container.storage
@@ -978,19 +982,19 @@ class Protocol:
                 ref.opts.discard = None
 
             if ref.container.properties:
-                outs[n]["properties"] = ref.container.properties
+                outs[key]["properties"] = ref.container.properties
 
             if ref.container.ctx_properties:
-                outs[n]["contextual_custom_properties"] = ref.container.ctx_properties
+                outs[key]["contextual_custom_properties"] = ref.container.ctx_properties
 
             for well in ref.container._wells:
                 if well.name or len(well.properties) > 0:
                     if well.name:
-                        outs[n][str(well.index)]["name"] = well.name
+                        outs[key][str(well.index)]["name"] = well.name
                     if len(well.properties) > 0:
-                        outs[n][str(well.index)]["properties"] = well.properties
+                        outs[key][str(well.index)]["properties"] = well.properties
                     if well.ctx_properties:
-                        outs[n][str(well.index)][
+                        outs[key][str(well.index)][
                             "contextual_custom_properties"
                         ] = well.ctx_properties
 
@@ -1080,6 +1084,8 @@ class Protocol:
             Integrates with the specified liquid to define a set of physical
             movements. If the number of Dispense classes specified is more than one
             then number specified must match the length of sources.
+        device: str
+            Device used for liquid_handle_dispense execution
         model : str, optional
             Tempest chip model, currently only support "high_volume".
         chip_material : str, optional
@@ -1221,30 +1227,33 @@ class Protocol:
                     f"The specified list of sources contains invalid source "
                     f"types {unallowed_source_types}"
                 )
-            for i, s in enumerate(source):
-                if isinstance(s, Well):
-                    source[i]: Tuple[Well, int] = format_source_well(
-                        s, default_num_dispense_chips_in_source
+            for idx, src in enumerate(source):
+                if isinstance(src, Well):
+                    source[idx]: Tuple[Well, int] = format_source_well(
+                        src, default_num_dispense_chips_in_source
                     )
                     remaining_num_chips_to_specify -= (
                         default_num_dispense_chips_in_source
                     )
-                elif isinstance(s, tuple):
-                    sw, chip_num = s
-                    if not isinstance(sw, Well) or not isinstance(chip_num, int):
+                elif isinstance(src, tuple):
+                    src_w, chip_num = src
+                    if not isinstance(src_w, Well) or not isinstance(chip_num, int):
                         raise ValueError(
-                            f"The specified value {s} in source[{i}] is not a (Well, int)"
+                            f"The specified value {src} in source[{idx}] "
+                            f"is not a (Well, int)"
                         )
                     if chip_num > default_max_num_dispense_chips:
                         raise ValueError(
                             f"The number of chips specified {chip_num}"
-                            f" in source[{i}] is greater than the "
-                            f"max number of chips available {default_max_num_dispense_chips}"
+                            f" in source[{idx}] is greater than the "
+                            f"max number of chips available "
+                            f"{default_max_num_dispense_chips}"
                         )
                     remaining_num_chips_to_specify -= chip_num
                 else:
                     raise ValueError(
-                        f"The specified value {s} in source[{i}] is not a (Well, int) or Well"
+                        f"The specified value {src} in source[{idx}] is "
+                        f"not a (Well, int) or Well"
                     )
         elif isinstance(source, Well):
             source: List[Tuple[Well, int]] = [
@@ -1258,9 +1267,10 @@ class Protocol:
             )
         if remaining_num_chips_to_specify < 0:
             raise ValueError(
-                f"The number of chips configured for the "
-                f"instruction {default_max_num_dispense_chips - remaining_num_chips_to_specify}"
-                f" is greater than the number of chips available {default_max_num_dispense_chips}"
+                f"The number of chips configured for the instruction "
+                f"{default_max_num_dispense_chips - remaining_num_chips_to_specify}"
+                f" is greater than the number of chips available "
+                f"{default_max_num_dispense_chips}"
             )
 
         # Check destinations match the number of sources
@@ -1272,8 +1282,8 @@ class Protocol:
                 final_destinations.append(convert_to_wellgroup(destinations))
             elif isinstance(destinations, list):
                 for dest in destinations:
-                    wg = convert_to_wellgroup(dest)
-                    final_destinations.append(wg)
+                    well_grp = convert_to_wellgroup(dest)
+                    final_destinations.append(well_grp)
                 if len_src == 1:
                     final_destinations = [convert_to_wellgroup(final_destinations)]
                     src_list = []
@@ -1291,12 +1301,17 @@ class Protocol:
                     src_list.append(source[0])
             elif len(final_destinations) != len_src:
                 raise ValueError(
-                    f"If multiple destinations are specified, destinations({len(final_destinations)}) and"
+                    f"If multiple destinations are specified, "
+                    f"destinations({len(final_destinations)}) and"
                     f" sources({len_src}) must be of equal length."
                 )
-            if not all([isinstance(wg, WellGroup) for wg in final_destinations]):
+            if not all(
+                [isinstance(well_grp, WellGroup) for well_grp in final_destinations]
+            ):
                 raise ValueError(
-                    f"not everything in the dest list of wellgroups is a wellgroup... {final_destinations}"
+                    f"not everything in the dest list of "
+                    f"wellgroups is a wellgroup... "
+                    f"{final_destinations}"
                 )
             return final_destinations
 
@@ -1312,7 +1327,8 @@ class Protocol:
                         ret.extend(item)
                     else:
                         raise TypeError(
-                            f"Destination {item}({type(item)}) is not a well or wellgroup."
+                            f"Destination {item}({type(item)}) is not a "
+                            f"well or wellgroup."
                         )
             elif not isinstance(dest, WellGroup):
                 raise TypeError(
@@ -1383,7 +1399,8 @@ class Protocol:
             len_liquid = len(liquid)
             if len_liquid != len_src:
                 raise ValueError(
-                    f"The number of LiquidClass(s) {len_liquid} and sources {len_src} do not match "
+                    f"The number of LiquidClass(s) {len_liquid} and "
+                    f"sources {len_src} do not match "
                 )
             elif not all(_validate_as_instance(lc, LiquidClass) for lc in liquid):
                 raise ValueError(
@@ -1398,11 +1415,13 @@ class Protocol:
             len_method = len(method)
             if len_method != len_src:
                 raise ValueError(
-                    f"The number of DispenseMethod(s) {len_method} and sources {len_src} do not match "
+                    f"The number of DispenseMethod(s) {len_method} "
+                    f"and sources {len_src} do not match "
                 )
             elif not all(_validate_as_instance(dm, DispenseMethod) for dm in method):
                 raise ValueError(
-                    f"method list {method} did not contain all of type DispenseMethod"
+                    f"method list {method} did not contain all of "
+                    f"type DispenseMethod"
                 )
 
         # Set the DispenseMethod's liquid class
@@ -1423,8 +1442,8 @@ class Protocol:
                 sum_dispense_volumes: Unit = (
                     sum(dispense_volumes) if dispense_volumes else Unit("0:microliter")
                 )
-            except TypeError as e:
-                raise TypeError(dispense_volumes) from e
+            except TypeError as err:
+                raise TypeError(dispense_volumes) from err
             total_volume_dispensed: Unit = Unit("0:microliter")
 
             # Aspirate from source
@@ -1481,10 +1500,10 @@ class Protocol:
                     )
                 )
                 # Update destination column volumes with consideration of the num chips specified
-                for w in destination_well.container.wells_from_shape(
+                for well in destination_well.container.wells_from_shape(
                     destination_well.index, shape
                 ):
-                    w.add_volume(vol)
+                    well.add_volume(vol)
 
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
@@ -1533,18 +1552,18 @@ class Protocol:
         if not isinstance(container, Container):
             raise TypeError("Protocol.store() can only be used on a Container object.")
         container.storage = condition
-        r = self.refs.get(container.name)
-        if not r:
+        ref = self.refs.get(container.name)
+        if not ref:
             raise RuntimeError(
                 "That container does not exist in the refs for this protocol."
             )
-        if "discard" in r.opts:
-            r.opts.pop("discard")
+        if "discard" in ref.opts:
+            ref.opts.pop("discard")
         if condition:
-            r.opts["store"] = {"where": str(condition)}
+            ref.opts["store"] = {"where": str(condition)}
         else:
-            r.opts.pop("store")
-            r.opts["discard"] = True
+            ref.opts.pop("store")
+            ref.opts["discard"] = True
 
     def acoustic_transfer(
         self,
@@ -1710,7 +1729,7 @@ class Protocol:
                 )
 
         # Auto-generate list from single volume, check if list length matches
-        if isinstance(volume, str) or isinstance(volume, Unit):
+        if isinstance(volume, (Unit, str)):
             if len_dest == 1 and not one_source:
                 volume = [Unit(volume).to("ul")] * len_source
             else:
@@ -1729,7 +1748,9 @@ class Protocol:
                 vol_errors.append(vol_d)
         if len(vol_errors) > 0:
             raise RuntimeError(
-                f"Transfer volume has to be a multiple of the droplet size ({droplet_size}).This is not true for the following volumes: {vol_errors}"
+                f"Transfer volume has to be a multiple of the droplet size "
+                f"({droplet_size}).This is not true for the following volumes: "
+                f"{vol_errors}"
             )
         # Ensure enough volume in single well to transfer to all dest wells
         if one_source:
@@ -1751,65 +1772,65 @@ class Protocol:
                     source_counter = 0
                     destinations = []
                     volumes = []
-                    s = source.wells[source_counter]
-                    vol = s.available_volume()
+                    src = source.wells[source_counter]
+                    vol = src.available_volume()
 
-                    for idx, d in enumerate(dest.wells):
+                    for idx, dest in enumerate(dest.wells):
                         vol_d = volume[idx]
                         while vol_d > Unit("0:microliter"):
                             if vol > vol_d:
-                                sources.append(s)
-                                destinations.append(d)
+                                sources.append(src)
+                                destinations.append(dest)
                                 volumes.append(vol_d)
                                 vol -= vol_d
                                 vol = round(vol, max_decimal_places)
                                 vol_d -= vol_d
                                 vol_d = round(vol_d, max_decimal_places)
                             else:
-                                sources.append(s)
-                                destinations.append(d)
+                                sources.append(src)
+                                destinations.append(dest)
                                 vol = int(vol / droplet_size) * droplet_size
                                 volumes.append(vol)
                                 vol_d -= vol
                                 vol_d = round(vol_d, max_decimal_places)
                                 source_counter += 1
                                 if source_counter < len_source:
-                                    s = source.wells[source_counter]
-                                    vol = s.available_volume()
+                                    src = source.wells[source_counter]
+                                    vol = src.available_volume()
                 source = WellGroup(sources)
                 dest = WellGroup(destinations)
                 volume = volumes
-            except (ValueError, AttributeError, TypeError) as e:
+            except (ValueError, AttributeError, TypeError) as err:
                 raise RuntimeError(
                     "When transferring liquid from multiple wells containing "
                     "the same substance to multiple other wells, each source "
                     "Well must have a volume attribute (aliquot) associated "
                     "with it."
-                ) from e
+                ) from err
 
-        for s, d, v in list(zip(source.wells, dest.wells, volume)):
-            self._remove_cover(s.container, "acoustic_transfer")
-            self._remove_cover(d.container, "acoustic_transfer")
-            xfer = {"from": s, "to": d, "volume": v}
+        for src, dst, vol in list(zip(source.wells, dest.wells, volume)):
+            self._remove_cover(src.container, "acoustic_transfer")
+            self._remove_cover(dst.container, "acoustic_transfer")
+            xfer = {"from": src, "to": dst, "volume": vol}
             # Volume accounting
-            if d.volume:
-                d.volume += v
+            if dst.volume:
+                dst.volume += vol
             else:
-                d.volume = v
-            if s.volume:
-                s.volume -= v
-            if v > Unit(0, "microliter"):
+                dst.volume = vol
+            if src.volume:
+                src.volume -= vol
+            if vol > Unit(0, "microliter"):
                 transfers.append(xfer)
             if self.propagate_properties:
-                d.add_properties(s.properties)
+                dst.add_properties(src.properties)
 
         if not transfers:
             raise RuntimeError(
                 "At least one transfer must have a nonzero transfer volume."
             )
 
-        for x in transfers:
-            x["volume"] = round(x["volume"].to("nl"), max_decimal_places)
+        for transfer in transfers:
+            transfer["volume"] = round(transfer["volume"].to("nl"), max_decimal_places)
 
         return self._append_and_return(
             AcousticTransfer([{"transfer": transfers}], droplet_size)
@@ -1983,38 +2004,47 @@ class Protocol:
                 f"Illumina sequencing flowcell type must be one "
                 f"of: {', '.join(valid_flowcells)}."
             )
-        if sequencer not in valid_sequencers.keys():
+        if sequencer not in valid_sequencers:
             raise ValueError(
                 f"Illumina sequencer must be one of: "
                 f"{', '.join(valid_sequencers.keys())}."
             )
         if not isinstance(lanes, list):
-            raise TypeError("Illumina sequencing lanes must be a list(dict)")
+            raise TypeError("Illumina sequencing lanes must "
+                            "be a list(dict)")
 
-        for l in lanes:
-            if not isinstance(l, dict):
-                raise TypeError("Illumina sequencing lanes must be a list(dict)")
-            if not all(k in l.keys() for k in ["object", "library_concentration"]):
+        for lane in lanes:
+            if not isinstance(lane, dict):
+                raise TypeError("Illumina sequencing lanes must "
+                                "be a list(dict)")
+            if not all(
+                key in lane.keys() for key in ["object", "library_concentration"]
+            ):
                 raise TypeError(
                     "Each Illumina sequencing lane must contain an "
                     "'object' and a 'library_concentration'"
                 )
-            if not isinstance(l["object"], Well):
+            if not isinstance(lane["object"], Well):
                 raise TypeError(
                     "Each Illumina sequencing object must be of " "type Well"
                 )
-            if not isinstance(l["library_concentration"], (float, int)):
+            if not isinstance(lane["library_concentration"], (float, int)):
                 raise TypeError(
                     "Each Illumina sequencing "
                     "library_concentration must be a number."
                 )
         if len(lanes) > valid_sequencers[sequencer]["max_lanes"]:
             raise ValueError(
-                f"The type of sequencer selected ({sequencer}) only has {valid_sequencers[sequencer]['max_lanes']} lane(s).  You specified {len(lanes)}. Please submit additional Illumina Sequencing instructions."
+                f"The type of sequencer selected ({sequencer}) only "
+                f"has {valid_sequencers[sequencer]['max_lanes']} lane(s).  "
+                f"You specified {len(lanes)}. Please submit additional "
+                f"Illumina Sequencing instructions."
             )
         if mode not in valid_sequencers[sequencer]["modes"]:
             raise ValueError(
-                f"The type of sequencer selected ({sequencer}) has valid modes: {', '.join(valid_sequencers[sequencer]['modes'])}.You specified: {mode}."
+                f"The type of sequencer selected ({sequencer}) "
+                f"has valid modes: {', '.join(valid_sequencers[sequencer]['modes'])}."
+                f" You specified: {mode}."
             )
         if index not in valid_indices:
             raise ValueError(
@@ -2029,7 +2059,7 @@ class Protocol:
         if cycles:
             if not isinstance(cycles, dict):
                 raise TypeError("Cycles must be a dict.")
-            if not all(c in valid_cycles for c in cycles.keys()):
+            if not all(cycle in valid_cycles for cycle in cycles.keys()):
                 raise KeyError(
                     f"Valid cycle parameters are: " f"{', '.join(valid_cycles)}"
                 )
@@ -2043,18 +2073,19 @@ class Protocol:
                 if cycles.get(read):
                     if cycles[read] > valid_sequencers[sequencer]["max_cycles_read"]:
                         raise ValueError(
-                            f"The maximum number of cycles for {read} is {valid_sequencers[sequencer]['max_cycles_read']}."
+                            f"The maximum number of cycles for {read} is "
+                            f"{valid_sequencers[sequencer]['max_cycles_read']}."
                         )
-            for ind in ["index_1", "index_2"]:
-                if cycles.get(ind):
-                    if cycles[ind] > max_cycles_ind:
+            for idx in ["index_1", "index_2"]:
+                if cycles.get(idx):
+                    if cycles[idx] > max_cycles_ind:
                         raise ValueError(
-                            f"The maximum number of cycles for {ind} is "
+                            f"The maximum number of cycles for {idx} is "
                             f"{max_cycles_ind}."
                         )
                 # set index 1 and 2 to default 0 if not otherwise specified
                 else:
-                    cycles[ind] = 0
+                    cycles[idx] = 0
 
         return self._append_and_return(
             IlluminaSeq(
@@ -2155,7 +2186,7 @@ class Protocol:
             wells = WellGroup(wells)
 
         if isinstance(wells, WellGroup):
-            container = set([w.container for w in wells])
+            container = {w.container for w in wells}
             if len(container) > 1:
                 raise ValueError("All wells need to be on one container for SangerSeq")
             wells = [str(w.index) for w in wells]
@@ -2351,7 +2382,9 @@ class Protocol:
         ref_cols = list(range(ref.container_type.col_count))
         if not all(_.column in ref_cols for _ in columns):
             raise ValueError(
-                f"Specified dispense columns: {columns} contains a column index that is outside of the valid columns: {ref_cols} for ref: {ref}."
+                f"Specified dispense columns: {columns} contains a column "
+                f"index that is outside of the valid columns: {ref_cols} "
+                f"for ref: {ref}."
             )
 
         # pre-evaluate all parameters before making any changes to the Protocol
@@ -2388,21 +2421,25 @@ class Protocol:
                     f"{_VALID_STEP_SIZES}"
                 )
 
-            for c in columns:
-                if c.volume % step_size != Unit("0:uL"):
+            for col in columns:
+                if col.volume % step_size != Unit("0:uL"):
                     raise ValueError(
-                        f"Dispense volume must be a multiple of the step size {step_size}, but column {c} does not meet these requirements."
+                        f"Dispense volume must be a multiple of the step size "
+                        f"{step_size}, but column {col} "
+                        f"does not meet these requirements."
                     )
 
             if pre_dispense is not None:
                 invalid_pre_dispense_range = pre_dispense < 2 * step_size
                 if invalid_pre_dispense_range and pre_dispense != Unit(0, "uL"):
                     raise ValueError(
-                        f"Dispense pre_dispense must either be 0:uL or at least 2 * step_size: {step_size} but it was {pre_dispense}."
+                        f"Dispense pre_dispense must either be 0:uL or at least 2 * "
+                        f"step_size: {step_size} but it was {pre_dispense}."
                     )
                 if pre_dispense % step_size != Unit(0, "uL"):
                     raise ValueError(
-                        f"Dispense pre_dispense must be a multiple of step_size: {step_size} but it was {pre_dispense}."
+                        f"Dispense pre_dispense must be a multiple of step_size: "
+                        f"{step_size} but it was {pre_dispense}."
                     )
 
         row_count = ref.container_type.row_count()
@@ -2433,18 +2470,18 @@ class Protocol:
 
         self._remove_cover(ref, "dispense to")
 
-        for c in columns:
-            wells = ref.wells_from(c.column, row_count, columnwise=True)
-            for w in wells:
-                if w.volume:
-                    w.volume += c.volume
+        for col in columns:
+            wells = ref.wells_from(col.column, row_count, columnwise=True)
+            for well in wells:
+                if well.volume:
+                    well.volume += col.volume
                 else:
-                    w.volume = c.volume
+                    well.volume = col.volume
 
         return self._append_and_return(
             Dispense(
                 object=ref,
-                columns=[asdict(c) for c in columns],
+                columns=[asdict(col) for col in columns],
                 reagent=reagent,
                 resource_id=resource_id,
                 reagent_source=reagent_source,
@@ -2721,8 +2758,8 @@ class Protocol:
 
         try:
             duration = Unit(duration)
-        except ValueError as e:
-            raise ValueError(f"Duration must be a unit. {e}") from e
+        except ValueError as err:
+            raise ValueError(f"Duration must be a unit. {err}") from err
 
         if not isinstance(ref, Container):
             raise TypeError("Ref must be of type Container.")
@@ -2850,17 +2887,18 @@ class Protocol:
                     "Dictionary `mode_params` must be specified for the "
                     "mode `stir_bar`"
                 )
-            else:
-                if isinstance(mode_params, dict):
-                    try:
-                        mode_params = AgitateModeParams(**mode_params)
-                    except:
-                        raise ValueError(
-                            f"mode_params {mode_params.keys()} to not match {valid_bar_mode_params}"
-                        )
+
+            if isinstance(mode_params, dict):
+                try:
+                    mode_params = AgitateModeParams(**mode_params)
+                except:
+                    raise ValueError(
+                        f"mode_params {mode_params.keys()} to not "
+                        f"match {valid_bar_mode_params}"
+                    )
 
             wells = WellGroup(mode_params.wells)
-            container = set([w.container for w in wells])
+            container = {well.container for well in wells}
             shape = mode_params.bar_shape
             length = parse_unit(mode_params.bar_length, "millimeter")
 
@@ -3199,7 +3237,8 @@ class Protocol:
             raise TypeError("Ref must be of type Container.")
         if "thermocycle" not in ref.container_type.capabilities:
             raise ValueError(
-                f"Container '{ref.name}' type '{ref.container_type.shortname}', cannot be thermocycled."
+                f"Container '{ref.name}' type '{ref.container_type.shortname}', "
+                f"cannot be thermocycled."
             )
 
         groups = [Thermocycle.builders.group(**_) for _ in groups]
@@ -3215,7 +3254,7 @@ class Protocol:
         _MAX_LID_TEMP = Unit("110:celsius")
         if lid_temperature is not None:
             lid_temperature = parse_unit(lid_temperature)
-            if not (_MIN_LID_TEMP <= lid_temperature <= _MAX_LID_TEMP):
+            if not _MIN_LID_TEMP <= lid_temperature <= _MAX_LID_TEMP:
                 raise ValueError(
                     f"Lid temperature {lid_temperature} has to be within "
                     f"[{_MIN_LID_TEMP}, {_MAX_LID_TEMP}]"
@@ -3441,7 +3480,7 @@ class Protocol:
 
         """
         wells = WellGroup(wells)
-        container = set([w.container for w in wells])
+        container = {w.container for w in wells}
         if len(container) > 1:
             raise ValueError(
                 "All wells need to be on the same container for Absorbance"
@@ -3458,8 +3497,8 @@ class Protocol:
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'settle_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'settle_time' must be of type Unit.") from err
 
         return self._append_and_return(
             Absorbance(
@@ -3639,14 +3678,14 @@ class Protocol:
 
         """
         wells = WellGroup(wells)
-        container = set([w.container for w in wells])
+        container = {w.container for w in wells}
         if len(container) > 1:
             raise ValueError(
                 "All wells need to be on the same container for Fluorescence"
             )
         wells = [str(w.index) for w in wells]
 
-        if gain is not None and not (0 <= gain <= 1):
+        if gain is not None and not 0 <= gain <= 1:
             raise ValueError(
                 f"fluorescence gain set to {gain} must be between 0 and 1, "
                 f"inclusive"
@@ -3672,8 +3711,8 @@ class Protocol:
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'settle_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'settle_time' must be of type Unit.") from err
         if lag_time:
             try:
                 lag_time = Unit(lag_time)
@@ -3681,8 +3720,8 @@ class Protocol:
                     raise ValueError(
                         "'lag_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'lag_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'lag_time' must be of type Unit.") from err
         if integration_time:
             try:
                 integration_time = Unit(integration_time)
@@ -3691,8 +3730,8 @@ class Protocol:
                         "'integration_time' must be a time equal "
                         "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'integration_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'integration_time' must be of type Unit.") from err
         if position_z:
             valid_pos_z = ["manual", "calculated_from_wells"]
             if not isinstance(position_z, dict):
@@ -3705,7 +3744,9 @@ class Protocol:
             for k in position_z.keys():
                 if k not in valid_pos_z:
                     raise KeyError(
-                        f"'position_z' keys can only be 'manual' or 'calculated_from_wells'. '{k}' is not a recognized key."
+                        f"'position_z' keys can only be 'manual' or "
+                        f"'calculated_from_wells'. '{k}' is not a "
+                        f"recognized key."
                     )
             if "manual" in position_z.keys():
                 try:
@@ -3715,8 +3756,8 @@ class Protocol:
                             "'manual' z_position must be a length equal "
                             "to or greater than 0."
                         )
-                except UnitError as e:
-                    raise UnitError("'manual' position_z must be of type Unit.") from e
+                except UnitError as err:
+                    raise UnitError("'manual' position_z must be of type Unit.") from err
             if "calculated_from_wells" in position_z.keys():
                 # blocking calculated_from_wells until fully implemented
                 # remove below RunTimeError to release feature
@@ -3748,13 +3789,13 @@ class Protocol:
                 if isinstance(ref, Container):
                     try:
                         valid_z_ws = ref.wells(z_ws)
-                    except ValueError as e:
+                    except ValueError as err:
                         raise ValueError(
                             "Well indices specified for "
                             "'calculated_from_wells' must "
                             "be valid wells of the ref'd "
                             "container."
-                        ) from e
+                        ) from err
                 # pragma pylint: enable=unreachable, unused-variable
 
         return self._append_and_return(
@@ -3869,7 +3910,7 @@ class Protocol:
 
         """
         wells = WellGroup(wells)
-        container = set([w.container for w in wells])
+        container = {w.container for w in wells}
         if len(container) > 1:
             raise ValueError(
                 "All wells need to be on the same container for Luminescence"
@@ -3886,8 +3927,8 @@ class Protocol:
                     raise ValueError(
                         "'settle_time' must be a time equal " "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'settle_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'settle_time' must be of type Unit.") from err
         if integration_time:
             try:
                 integration_time = Unit(integration_time)
@@ -3896,8 +3937,8 @@ class Protocol:
                         "'integration_time' must be a time equal "
                         "to or greater than 0."
                     )
-            except UnitError as e:
-                raise UnitError("'integration_time' must be of type Unit.") from e
+            except UnitError as err:
+                raise UnitError("'integration_time' must be of type Unit.") from err
 
         return self._append_and_return(
             Luminescence(
@@ -4006,8 +4047,8 @@ class Protocol:
             )
         if isinstance(wells, Well):
             wells = WellGroup(wells)
-        for w in wells:
-            self._remove_cover(w.container, "gel separate")
+        for well in wells:
+            self._remove_cover(well.container, "gel separate")
         max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
         if len(wells) > max_well:
             raise ValueError(
@@ -4144,8 +4185,8 @@ class Protocol:
 
         try:
             max_well = int(matrix.split("(", 1)[1].split(",", 1)[0])
-        except (AttributeError, IndexError) as e:
-            raise RuntimeError("Matrix specified is not properly formatted.") from e
+        except (AttributeError, IndexError) as err:
+            raise RuntimeError("Matrix specified is not properly formatted.") from err
 
         volume = Unit(volume)
         if volume <= Unit("0:microliter"):
@@ -4170,20 +4211,18 @@ class Protocol:
                 raise RuntimeError(
                     "If one extract has gel set, all extracts must have " "gel set"
                 )
+            if None in lane_set:
+                if any(lane_set):
+                    raise RuntimeError(
+                        "If one extract has lane set, all extracts must "
+                        "have lane set"
+                    )
+                for idx, ext in enumerate(extracts):
+                    ext["gel"] = idx // max_well
+                    ext["lane"] = idx % max_well
             else:
-                if None in lane_set:
-                    if any(lane_set):
-                        raise RuntimeError(
-                            "If one extract has lane set, all extracts must "
-                            "have lane set"
-                        )
-                    else:
-                        for i, e in enumerate(extracts):
-                            e["gel"] = i // max_well
-                            e["lane"] = i % max_well
-                else:
-                    for e in extracts:
-                        e["gel"] = 0
+                for ext in extracts:
+                    ext["gel"] = 0
 
         sort_key = itemgetter("gel")
         parsed_extracts = [
@@ -4192,13 +4231,14 @@ class Protocol:
         ]
 
         instructions = []
-        for pe in parsed_extracts:
+        for par_ext in parsed_extracts:
 
-            lane_set = [e["lane"] for e in pe]
+            lane_set = [ext["lane"] for ext in par_ext]
 
             if len(lane_set) > max_well:
                 raise RuntimeError(
-                    f"The gel is not large enough to accomodate all lanes: gel has {max_well} wells, {len(lane_set)} lanes specified"
+                    f"The gel is not large enough to accomodate all lanes: "
+                    f"gel has {max_well} wells, {len(lane_set)} lanes specified"
                 )
 
             if None in lane_set:
@@ -4207,29 +4247,28 @@ class Protocol:
                         "If one extract has lane set, all extracts must have "
                         "lane set"
                     )
-                else:
-                    for i, e in enumerate(pe):
-                        e["lane"] = i % max_well
-                    lane_set = [e["lane"] for e in pe]
+                for idx, ext in enumerate(par_ext):
+                    ext["lane"] = idx % max_well
+                lane_set = [ext["lane"] for ext in par_ext]
 
             if sorted(lane_set) != list(range(0, max(lane_set) + 1)):
                 raise RuntimeError("Lanes must be contiguous, unique, and start from 0")
 
             if len(parsed_extracts) > 1:
-                dataref_gel = f"{dataref}_{pe[0]['gel']}"
+                dataref_gel = f"{dataref}_{par_ext[0]['gel']}"
             else:
                 dataref_gel = dataref
 
-            pe = sorted(pe, key=itemgetter("lane"))
+            par_ext = sorted(par_ext, key=itemgetter("lane"))
 
-            samples = [e["source"] for e in pe]
+            samples = [ext["source"] for ext in par_ext]
 
             pe_unpacked = []
-            for e in pe:
-                for b in e["band_list"]:
-                    ext = b
-                    ext["lane"] = e["lane"]
-                    pe_unpacked.append(ext)
+            for ext in par_ext:
+                for band_list in ext["band_list"]:
+                    extract = band_list
+                    extract["lane"] = ext["lane"]
+                    pe_unpacked.append(extract)
 
             instructions.append(
                 self._append_and_return(
@@ -4326,7 +4365,7 @@ class Protocol:
             If container is already covered with a lid.
 
         """
-        SEALING_MODES = ["thermal", "adhesive"]
+        _SEALING_MODES = ["thermal", "adhesive"]
 
         if not isinstance(ref, Container):
             raise TypeError("Container to seal must be of type Container.")
@@ -4341,7 +4380,7 @@ class Protocol:
             raise RuntimeError(f"{type} is not a valid seal type")
         if ref.is_covered():
             raise RuntimeError("A container cannot be sealed over a lid.")
-        if not (mode is None or mode in SEALING_MODES):
+        if not (mode is None or mode in _SEALING_MODES):
             raise RuntimeError(f"{mode} is not a valid sealing mode")
         if temperature is not None or duration is not None:
             if mode == "adhesive":
@@ -4350,7 +4389,7 @@ class Protocol:
                     "are incompatible with the chosen adhesive sealing mode."
                 )
             mode = "thermal"
-            mode_params = dict()
+            mode_params: dict = {}
 
             if temperature is not None:
                 mode_params["temperature"] = parse_unit(temperature, "celsius")
@@ -4981,91 +5020,87 @@ class Protocol:
             controls.extend(neg_controls)
         if pos_controls and not isinstance(pos_controls, list):
             raise TypeError("Pos_controls must be of type list.")
-        elif pos_controls:
+        if pos_controls:
             sources.extend(pos_controls)
             controls.extend(neg_controls)
 
-        for s in sources:
-            if not isinstance(s.get("well"), Well):
+        for source in sources:
+            if not isinstance(source.get("well"), Well):
                 raise TypeError(
                     "The well for each sample or control must " "be of type Well."
                 )
             try:
-                Unit(s.get("volume"))
-            except (ValueError, TypeError) as e:
+                Unit(source.get("volume"))
+            except (ValueError, TypeError) as err:
                 raise ValueError(
                     f"Each sample or control must indicate a "
-                    f"volume of type unit. {e}"
-                ) from e
-            if s.get("captured_events") and not isinstance(
-                s.get("captured_events"), int
+                    f"volume of type unit. {err}"
+                ) from err
+            if source.get("captured_events") and not isinstance(
+                source.get("captured_events"), int
             ):
                 raise TypeError(
                     "captured_events is optional, if given it"
                     " must be of type integer."
                 )
-        for c in controls:
-            if not isinstance(c.get("channel"), list):
+        for control in controls:
+            if not isinstance(control.get("channel"), list):
                 raise TypeError(
                     "Channel must be a list of strings "
                     "indicating the colors/channels that this"
                     " control is to be used for."
                 )
-            if c.get("minimize_bleed") and not isinstance(
-                c.get("minimize_bleed"), list
+            if control.get("minimize_bleed") and not isinstance(
+                control.get("minimize_bleed"), list
             ):
                 raise TypeError("Minimize_bleed must be of type list.")
-            elif c.get("minimize_bleed"):
-                for b in c["minimize_bleed"]:
-                    if not isinstance(b, dict):
+            if control.get("minimize_bleed"):
+                for bleed in control["minimize_bleed"]:
+                    if not isinstance(bleed, dict):
                         raise TypeError(
                             "Minimize_bleed must be a list of "
                             "dictonaries. Dictonary was not found"
                         )
-                    else:
-                        if not b.get("from"):
-                            raise ValueError(
-                                "Minimize_bleed dictonaries must" " have a key `from`"
+                    if not bleed.get("from"):
+                        raise ValueError(
+                            "Minimize_bleed dictonaries must" " have a key `from`"
+                        )
+                    if not isinstance(bleed["from"], str):
+                        raise TypeError(
+                            "Minimize_bleed `from` must "
+                            "have a string as value"
+                        )
+                    if not bleed.get("to"):
+                        raise ValueError(
+                            "Minimize_bleed dictonaries must" " have a key `to`"
+                        )
+                    if not isinstance(bleed["to"], list):
+                        raise ValueError(
+                            "Minimize_bleed `to` must " "have a list as value"
+                        )
+                    for bleed_to in bleed["to"]:
+                        if not isinstance(bleed_to, str):
+                            raise TypeError(
+                                "Minimize_bleed `to` "
+                                "list must contain "
+                                "strings."
                             )
-                        else:
-                            if not isinstance(b["from"], str):
-                                raise TypeError(
-                                    "Minimize_bleed `from` must "
-                                    "have a string as value"
-                                )
-                        if not b.get("to"):
-                            raise ValueError(
-                                "Minimize_bleed dictonaries must" " have a key `to`"
-                            )
-                        else:
-                            if not isinstance(b["to"], list):
-                                raise ValueError(
-                                    "Minimize_bleed `to` must " "have a list as value"
-                                )
-                            else:
-                                for t in b["to"]:
-                                    if not isinstance(t, str):
-                                        raise TypeError(
-                                            "Minimize_bleed `to` "
-                                            "list must contain "
-                                            "strings."
-                                        )
         assert FSC and SSC, "You must include parameters for FSC and SSC " "channels."
-        channels = {}
-        channels["FSC"] = FSC
-        channels["SSC"] = SSC
-        for c in channels.values():
-            if not isinstance(c, dict):
+        channels: dict = {}
+        channels.update({"FSC": FSC})
+        channels.update({"SSC": SSC})
+        for channel in channels.values():
+            if not isinstance(channel, dict):
                 raise TypeError("Each channel must be of type dict.")
-            assert c["voltage_range"], (
+            assert channel["voltage_range"], (
                 "You must include a voltage_range for" " each channel."
             )
-            assert c["voltage_range"]["high"], (
+            assert channel["voltage_range"]["high"], (
                 "You must include an upper "
                 "limit for the volage range"
                 "in each channel."
             )
-            assert c["voltage_range"]["low"], (
+            assert channel["voltage_range"]["low"], (
                 "You must include a lower "
                 "limit for the volage range "
                 "in each channel."
@@ -5073,43 +5108,43 @@ class Protocol:
         if colors:
             if not isinstance(colors, list):
                 raise TypeError("Colors must be of type list.")
-            else:
-                for c in colors:
-                    if not isinstance(c, dict):
-                        raise TypeError("Colors must contain elements of " "type dict.")
-                    else:
-                        if not c.get("name") or not isinstance(c.get("name"), str):
-                            raise TypeError(
-                                "Each color must have a `name` "
-                                "that is of type string."
-                            )
-                        if c.get("emission_wavelength"):
-                            try:
-                                Unit(c.get("emission_wavelength"))
-                            except (UnitError) as e:
-                                raise UnitError(
-                                    "Each `emission_wavelength` "
-                                    "must be of type unit."
-                                ) from e
-                        else:
-                            raise ValueError(
-                                "Each color must have an " "`emission_wavelength`."
-                            )
-                        if c.get("excitation_wavelength"):
-                            try:
-                                Unit(c.get("excitation_wavelength"))
-                            except (UnitError) as e:
-                                raise UnitError(
-                                    "Each `excitation_wavelength` "
-                                    "must be of type unit."
-                                ) from e
-                        else:
-                            raise ValueError(
-                                "Each color must have an " "`excitation_wavelength`."
-                            )
 
-        for s in sources:
-            self._remove_cover(s["well"].container, "flow_analyze")
+            for color in colors:
+                if not isinstance(color, dict):
+                    raise TypeError("Colors must contain elements of " "type dict.")
+
+                if not color.get("name") or not isinstance(color.get("name"), str):
+                    raise TypeError(
+                        "Each color must have a `name` "
+                        "that is of type string."
+                    )
+                if color.get("emission_wavelength"):
+                    try:
+                        Unit(color.get("emission_wavelength"))
+                    except (UnitError) as err:
+                        raise UnitError(
+                            "Each `emission_wavelength` "
+                            "must be of type unit."
+                        ) from err
+                else:
+                    raise ValueError(
+                        "Each color must have an " "`emission_wavelength`."
+                    )
+                if color.get("excitation_wavelength"):
+                    try:
+                        Unit(color.get("excitation_wavelength"))
+                    except (UnitError) as err:
+                        raise UnitError(
+                            "Each `excitation_wavelength` "
+                            "must be of type unit."
+                        ) from err
+                else:
+                    raise ValueError(
+                        "Each color must have an " "`excitation_wavelength`."
+                    )
+
+        for source in sources:
+            self._remove_cover(source["well"].container, "flow_analyze")
 
         return self._append_and_return(
             FlowAnalyze(dataref, FSC, SSC, neg_controls, samples, colors, pos_controls)
@@ -5240,16 +5275,16 @@ class Protocol:
             groups.append(self.__process_pick_group(group))
 
         # Current device requirement is that all autopick group sources are from the same container
-        if len(set([s.container for pick in groups for s in pick["from"]])) > 1:
+        if len({s.container for pick in groups for s in pick["from"]}) > 1:
             raise ValueError(
                 "All source wells for autopick must exist " "on the same container"
             )
 
         for group in groups:
-            for s in group["from"]:
-                self._remove_cover(s.container, "autopick")
-            for d in group["to"]:
-                self._remove_cover(d.container, "autopick")
+            for source in group["from"]:
+                self._remove_cover(source.container, "autopick")
+            for dest in group["to"]:
+                self._remove_cover(dest.container, "autopick")
 
         criteria = {} if criteria is None else criteria
 
@@ -5888,14 +5923,14 @@ class Protocol:
         measurement_mode = self._identify_provision_mode(provision_amounts)
 
         provision_instructions_to_return: Provision = []
-        for d, amount in zip(dests, provision_amounts):
-            if d.container.is_covered() or d.container.is_sealed():
-                self._remove_cover(d.container, "provision")
+        for dest, amount in zip(dests, provision_amounts):
+            if dest.container.is_covered() or dest.container.is_sealed():
+                self._remove_cover(dest.container, "provision")
 
-            xfer = {"well": d, measurement_mode: amount}
+            xfer = {"well": dest, measurement_mode: amount}
 
             if measurement_mode == "volume":
-                d_max_vol = d.container.container_type.true_max_vol_ul
+                d_max_vol = dest.container.container_type.true_max_vol_ul
                 if amount > d_max_vol:
                     raise ValueError(
                         f"The volume you are trying to provision ({amount}) exceeds the "
@@ -5904,19 +5939,19 @@ class Protocol:
                 if amount > Unit(900, "microliter"):
                     diff = amount - Unit(900, "microliter")
                     provision_instructions_to_return.append(
-                        self.provision(resource_id, d, Unit(900, "microliter"))
+                        self.provision(resource_id, dest, Unit(900, "microliter"))
                     )
                     while diff > Unit(0.0, "microliter"):
                         provision_instructions_to_return.append(
-                            self.provision(resource_id, d, diff)
+                            self.provision(resource_id, dest, diff)
                         )
                         diff -= diff
                     continue
 
-                if d.volume:
-                    d.volume += amount
+                if dest.volume:
+                    dest.volume += amount
                 else:
-                    d.set_volume(amount)
+                    dest.set_volume(amount)
 
             dest_group = [xfer]
 
@@ -5924,7 +5959,7 @@ class Protocol:
                 self.instructions
                 and self.instructions[-1].op == "provision"
                 and self.instructions[-1].resource_id == resource_id
-                and self.instructions[-1].to[-1]["well"].container == d.container
+                and self.instructions[-1].to[-1]["well"].container == dest.container
             ):
                 if informatics is not None:
                     self.instructions[-1].informatics.extend(informatics)
@@ -5939,7 +5974,10 @@ class Protocol:
                 )
         return provision_instructions_to_return
 
-    def _identify_provision_mode(self, provision_amounts: List[Unit]):
+    def _identify_provision_mode(
+        self,
+        provision_amounts: List[Unit]
+    ):
         unique_measure_modes = set()
         for amount in provision_amounts:
             if not isinstance(amount, Unit):
@@ -5950,7 +5988,8 @@ class Protocol:
                 unique_measure_modes.add("mass")
             else:
                 raise ValueError(
-                    f"Provisioning of resources with measurement unit of {amount.unit} is not supported."
+                    f"Provisioning of resources with measurement unit "
+                    f"of {amount.unit} is not supported."
                 )
         if len(unique_measure_modes) != 1:
             raise ValueError("Received amounts with more than one measurement mode")
@@ -6485,10 +6524,9 @@ class Protocol:
         return f"{self._ref_for_container(well.container)}/{well.index}"
 
     def _ref_for_container(self, container: Container):
-        for k in self.refs:
-            v = self.refs[k]
-            if v.container is container:
-                return k
+        for key, value in self.refs.items():
+            if value.container is container:
+                return key
 
     def _remove_cover(self, container: Container, action: str):
         if not container.container_type.is_tube:
@@ -6558,18 +6596,18 @@ class Protocol:
             last_instruction.__dict__ = MagneticTransfer(
                 groups=new_groups, magnetic_head=head
             ).__dict__
-            return last_instruction
         elif maybe_same_instruction and new_tip is False:
             new_groups = last_instruction.data.get("groups")
             new_groups[-1].append({sub_op_name: sub_op})
             last_instruction.__dict__ = MagneticTransfer(
                 groups=new_groups, magnetic_head=head
             ).__dict__
-            return last_instruction
         else:
-            return self._append_and_return(
+            last_instruction = self._append_and_return(
                 MagneticTransfer(groups=[[{sub_op_name: sub_op}]], magnetic_head=head)
             )
+
+        return last_instruction
 
     # pylint: disable=protected-access
     def _refify(
@@ -6602,28 +6640,30 @@ class Protocol:
             Autoprotocol compliant objects
 
         """
-        if type(op_data) is dict:
-            return {k: self._refify(v) for k, v in op_data.items()}
-        elif type(op_data) is list:
-            return [self._refify(i) for i in op_data]
+        if isinstance(op_data, dict):
+            return_obj = {k: self._refify(v) for k, v in op_data.items()}
+        elif isinstance(op_data, list):
+            return_obj = [self._refify(i) for i in op_data]
         elif isinstance(op_data, Well):
-            return self._ref_for_well(op_data)
+            return_obj = self._ref_for_well(op_data)
         elif isinstance(op_data, WellGroup):
-            return [self._ref_for_well(w) for w in op_data.wells]
+            return_obj = [self._ref_for_well(w) for w in op_data.wells]
         elif isinstance(op_data, Container):
-            return self._ref_for_container(op_data)
+            return_obj = self._ref_for_container(op_data)
         elif isinstance(op_data, Unit):
-            return str(op_data)
+            return_obj = str(op_data)
         elif isinstance(op_data, Instruction):
-            return self._refify(op_data._as_AST())
+            return_obj = self._refify(op_data._as_AST())
         elif isinstance(op_data, Ref):
-            return op_data.opts.as_dict()
+            return_obj = op_data.opts.as_dict()
         elif isinstance(op_data, Compound):
-            return op_data.as_dict()
+            return_obj = op_data.as_dict()
         elif isinstance(op_data, Informatics):
-            return self._refify(op_data.as_dict())
+            return_obj = self._refify(op_data.as_dict())
         else:
-            return op_data
+            return_obj = op_data
+
+        return return_obj
 
     def _ref_containers_and_wells(self, params: Dict[Any, Any]):
         """
@@ -6686,16 +6726,16 @@ class Protocol:
         containers = {}
 
         # ref containers
-        for k, v in params.items():
-            if isinstance(v, dict):
-                parameters[str(k)] = self._ref_containers_and_wells(v)
-            if isinstance(v, list) and isinstance(v[0], dict):
-                for cont in v:
+        for key, value in params.items():
+            if isinstance(value, dict):
+                parameters[str(key)] = self._ref_containers_and_wells(value)
+            if isinstance(value, list) and isinstance(value[0], dict):
+                for cont in value:
                     self._ref_containers_and_wells(cont.encode("utf-8"))
-            elif isinstance(v, dict) and "type" in v:
-                if "discard" in v:
-                    discard = v["discard"]
-                    if discard and v.get("storage"):
+            elif isinstance(value, dict) and "type" in value:
+                if "discard" in value:
+                    discard = value["discard"]
+                    if discard and value.get("storage"):
                         raise RuntimeError(
                             "You must either specify a storage "
                             "condition or set discard to true, "
@@ -6703,40 +6743,40 @@ class Protocol:
                         )
                 else:
                     discard = False
-                containers[str(k)] = self.ref(
-                    k, v["id"], v["type"], storage=v.get("storage"), discard=discard
+                containers[str(key)] = self.ref(
+                    key, value["id"], value["type"], storage=value.get("storage"), discard=discard
                 )
             else:
-                parameters[str(k)] = v
+                parameters[str(key)] = value
 
         parameters["refs"] = containers
 
         # ref wells (must be done after reffing containers)
-        for k, v in params.items():
-            if isinstance(v, list) and "/" in str(v[0]):
+        for key, value in params.items():
+            if isinstance(value, list) and "/" in str(value[0]):
                 group = WellGroup([])
 
-                for w in v:
-                    cont, well = w.rsplit("/", 1)
+                for val in value:
+                    cont, well = val.rsplit("/", 1)
                     group.append(self.refs[cont].container.well(well))
 
-                parameters[str(k)] = group
-            elif "/" in str(v):
-                ref_name = v.rsplit("/")[0]
+                parameters[str(key)] = group
+            elif "/" in str(value):
+                ref_name = value.rsplit("/")[0]
 
                 if ref_name not in self.refs:
                     raise RuntimeError(
                         f"Parameters contain well references to a container that isn't referenced in this protocol: '{ref_name}'."
                     )
 
-                if v.rsplit("/")[1] == "all_wells":
-                    parameters[str(k)] = self.refs[ref_name].container.all_wells()
+                if value.rsplit("/")[1] == "all_wells":
+                    parameters[str(key)] = self.refs[ref_name].container.all_wells()
                 else:
-                    parameters[str(k)] = self.refs[ref_name].container.well(
-                        v.rsplit("/")[1]
+                    parameters[str(key)] = self.refs[ref_name].container.well(
+                        value.rsplit("/")[1]
                     )
             else:
-                parameters[str(k)] = v
+                parameters[str(key)] = value
 
         return parameters
 
@@ -7797,20 +7837,20 @@ class Protocol:
                     if isinstance(info, AttachCompounds):
                         wells_count = len(WellGroup(info.wells))
                         compounds = info.compounds * wells_count
-                        for w, c in zip(WellGroup(info.wells).wells, compounds):
-                            if not isinstance(c, list):
-                                c = [c]
+                        for well, cmpd in zip(WellGroup(info.wells).wells, compounds):
+                            if not isinstance(cmpd, list):
+                                cmpd = [cmpd]
                             # if there are multiple Informatics for a well, all the compounds
                             # will be added to a single instance of Informatics for that well.
-                            if w not in wells_compounds_dict.keys():
-                                wells_compounds_dict[w] = c
+                            if well not in wells_compounds_dict:
+                                wells_compounds_dict[well] = cmpd
                             else:
-                                all_compounds = wells_compounds_dict[w]
+                                all_compounds = wells_compounds_dict[well]
                                 if not isinstance(all_compounds, list):
                                     all_compounds = [all_compounds]
-                                all_compounds.extend(c)
+                                all_compounds.extend(cmpd)
                                 compounds_set = set(all_compounds)
-                                wells_compounds_dict[w] = list(compounds_set)
+                                wells_compounds_dict[well] = list(compounds_set)
                     else:
                         raise TypeError(
                             f"Informatics:{informatics} is not available in this protocol."
@@ -7822,8 +7862,8 @@ class Protocol:
                         wells_compounds_dict.items(),
                         key=lambda pair: destination.wells.index(pair[0]),
                     )
-                    for k, v in wells_compounds_dict:
-                        informatics_list.append(AttachCompounds(k, v))
+                    for key, value in wells_compounds_dict:
+                        informatics_list.append(AttachCompounds(key, value))
                 else:
                     raise ValueError(
                         f"the length of provided informatics: {len(wells_compounds_dict.keys())} does "
@@ -7856,9 +7896,9 @@ class Protocol:
                     f"the length of provided density: {len(density)} does not match the number of transports."
                 )
             density = [parse_unit(d, "mg/ml") for d in density]
-            for d in density:
-                if d.magnitude <= 0:
-                    raise ValueError(f"Density: {d} must be a value larger than 0.")
+            for den in density:
+                if den.magnitude <= 0:
+                    raise ValueError(f"Density: {den} must be a value larger than 0.")
         else:
             # if density is None, it should still be a list of None
             density = [density] * count
@@ -8524,7 +8564,7 @@ class Protocol:
 
         if mode_params:
             condenser_temp = mode_params.get("condenser_temperature")
-            if "condenser_temperature" in mode_params.keys():
+            if "condenser_temperature" in mode_params:
                 if condenser_temp >= evaporator_temperature:
                     raise ValueError(
                         f"Param `condenser_temperature`: {condenser_temp} "

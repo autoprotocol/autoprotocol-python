@@ -1556,7 +1556,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         ----------
         model: string, optional
             Tempest chip or mantis model.
-        material: string, optional
+        chip_material: string, optional
             Material that the tempest chip is made of.
         nozzle: string, optional
             Type of chip nozzle for tempest.

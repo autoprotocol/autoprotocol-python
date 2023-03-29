@@ -1030,7 +1030,7 @@ class Protocol:
         columns: int = 1,
         method: DispenseMethod = DispenseMethod,
         liquid: LiquidClass = LiquidClass,
-        device: Optional[str] = "x_tempest_chip",
+        device: Optional[str] = None,
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
@@ -1489,7 +1489,7 @@ class Protocol:
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
         device_mode_params = LiquidHandleBuilders.device_mode_params(
-            device=device,
+            device=device or "x_tempest_chip",
             model=model,
             chip_material=chip_material,
             nozzle=nozzle,

@@ -74,7 +74,7 @@ from .unit import Unit
 from .util import is_valid_well, parse_unit
 
 
-class InstructionBuilders(object):  # pylint: disable=too-few-public-methods
+class InstructionBuilders:  # pylint: disable=too-few-public-methods
     """General builders that apply to multiple instructions"""
 
     def __init__(self):
@@ -556,7 +556,7 @@ class DispenseBuilders(InstructionBuilders):
 
     def __init__(self):
         super(DispenseBuilders, self).__init__()
-        self.SHAKE_PATHS = [option.name for option in DispenseBuildersShakePaths]
+        self._shake_paths = [option.name for option in DispenseBuildersShakePaths]
 
     @staticmethod
     # pragma pylint: disable=unused-argument, missing-param-doc
@@ -639,7 +639,7 @@ class DispenseBuilders(InstructionBuilders):
             for _ in columns
         ]
 
-        if len(column_list) != len(set([_.column for _ in column_list])):
+        if len(column_list) != len({_.column for _ in column_list}):
             raise ValueError(
                 f"Column indices must be unique, but there were duplicates "
                 f"in {column_list}."
@@ -677,10 +677,10 @@ class DispenseBuilders(InstructionBuilders):
             Invalid shake path specified
         """
 
-        if path and path not in self.SHAKE_PATHS:
+        if path and path not in self._shake_paths:
             raise ValueError(
                 f"Invalid shake path {path} specified, must be one of "
-                f"{self.SHAKE_PATHS}"
+                f"{self._shake_paths}"
             )
 
         shake_after = {
@@ -701,23 +701,23 @@ class SpectrophotometryBuilders(InstructionBuilders):
 
     def __init__(self):
         super(SpectrophotometryBuilders, self).__init__()
-        self.MODES = {
+        self._modes = {
             "absorbance": self.absorbance_mode_params,
             "fluorescence": self.fluorescence_mode_params,
             "luminescence": self.luminescence_mode_params,
             "shake": self.shake_mode_params,
         }
 
-        self.READ_POSITIONS = [
+        self._read_positions = [
             option.name for option in SpectrophotometryBuildersReadPositions
         ]
-        self.SHAKE_PATHS = [
+        self._shake_paths = [
             option.name for option in SpectrophotometryBuildersShakePaths
         ]
-        self.Z_REFERENCES = [
+        self._z_references = [
             option.name for option in SpectrophotometryBuildersZReferences
         ]
-        self.Z_HEURISTICS = [
+        self._z_heuristics = [
             option.name for option in SpectrophotometryBuildersZHeuristics
         ]
 
@@ -787,12 +787,12 @@ class SpectrophotometryBuilders(InstructionBuilders):
         ValueError
             Invalid mode specified
         """
-        if mode not in self.MODES.keys():
+        if mode not in self._modes:
             raise ValueError(
-                f"Invalid mode {mode}, must be in valid modes " f"{self.MODES.keys()}."
+                f"Invalid mode {mode}, must be in valid modes " f"{self._modes.keys()}."
             )
 
-        return {"mode": mode, "mode_params": self.MODES[mode](**mode_params)}
+        return {"mode": mode, "mode_params": self._modes[mode](**mode_params)}
 
     def absorbance_mode_params(
         self,
@@ -853,10 +853,10 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if settle_time is not None:
             settle_time = parse_unit(settle_time, "second")
 
-        if read_position is not None and read_position not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self._read_positions:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
-                f"{self.READ_POSITIONS}."
+                f"{self._read_positions}."
             )
 
         if position_z is not None:
@@ -967,10 +967,10 @@ class SpectrophotometryBuilders(InstructionBuilders):
                     f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
-        if read_position is not None and read_position not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self._read_positions:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
-                f"{self.READ_POSITIONS}."
+                f"{self._read_positions}."
             )
 
         if position_z is not None:
@@ -1062,10 +1062,10 @@ class SpectrophotometryBuilders(InstructionBuilders):
                     f"Invalid gain {gain}, must be between 0 and 1 (inclusive)."
                 )
 
-        if read_position is not None and read_position not in self.READ_POSITIONS:
+        if read_position is not None and read_position not in self._read_positions:
             raise ValueError(
                 f"Invalid read_position {read_position}, must be in "
-                f"{self.READ_POSITIONS}."
+                f"{self._read_positions}."
             )
 
         if position_z is not None:
@@ -1162,9 +1162,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if frequency is not None:
             frequency = parse_unit(frequency, "hertz")
 
-        if path and path not in self.SHAKE_PATHS:
+        if path and path not in self._shake_paths:
             raise ValueError(
-                f"Invalid read_position {path}, must be in {self.SHAKE_PATHS}."
+                f"Invalid read_position {path}, must be in {self._shake_paths}."
             )
 
         if amplitude is not None:
@@ -1211,9 +1211,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
         ValueError
             If invalid displacement was provided
         """
-        if reference is not None and reference not in self.Z_REFERENCES:
+        if reference is not None and reference not in self._z_references:
             raise ValueError(
-                f"reference must be one of {self.Z_REFERENCES} but {reference} "
+                f"reference must be one of {self._z_references} but {reference} "
                 f"was specified"
             )
         if displacement is not None:
@@ -1251,9 +1251,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
         if any([not is_valid_well(well) for well in wells]):
             raise ValueError("Only an iterable of wells is allowed")
 
-        if heuristic is not None and heuristic not in self.Z_HEURISTICS:
+        if heuristic is not None and heuristic not in self._z_heuristics:
             raise ValueError(
-                f"heuristic must be one of {self.Z_HEURISTICS} but {heuristic} "
+                f"heuristic must be one of {self._z_heuristics} but {heuristic} "
                 f"was specified"
             )
 
@@ -1295,7 +1295,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             option.name for option in LiquidHandleBuildersLiquidClasses
         ]
         self.xy_max = 1
-        self.z_references = [option.name for option in LiquidHandleBuildersZReferences]
+        self._z_references = [option.name for option in LiquidHandleBuildersZReferences]
         self.z_detection_methods = [
             option.name for option in LiquidHandleBuildersZDetectionMethods
         ]
@@ -1537,7 +1537,7 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def device_mode_params(
-        device: Optional[str] = None,
+        device: str,
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
@@ -1554,6 +1554,8 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
+        device: string
+            x_tempest_chip or x_mantis
         model: string, optional
             Tempest chip or mantis model.
         chip_material: string, optional
@@ -1594,9 +1596,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             If chip_material is not None or in the allowable list of
             tempest chip materials
         """
-        if not device:
-            device = "x_tempest_chip"
-
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
@@ -1833,9 +1832,9 @@ class LiquidHandleBuilders(InstructionBuilders):
             If detection parameters were specified, but the reference
             position doesn't support detection
         """
-        if reference is not None and reference not in self.z_references:
+        if reference is not None and reference not in self._z_references:
             raise ValueError(
-                f"reference must be one of {self.z_references} but "
+                f"reference must be one of {self._z_references} but "
                 f"{reference} was specified"
             )
         if offset is not None:
@@ -2090,9 +2089,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         if all(mode_param is None for mode_param in mode_params):
             liquid_classes = {None}
         else:
-            liquid_classes = set(
-                [mode_param["liquid_class"] for mode_param in mode_params]
-            )
+            liquid_classes = {
+                mode_param["liquid_class"] for mode_param in mode_params
+            }
         # remove automatically added 'air' (e.g. from blowout steps) and None
         # classes.
         other_classes = liquid_classes - {"air", None}
@@ -2109,7 +2108,7 @@ class LiquidHandleBuilders(InstructionBuilders):
                     f"liquid_class: {other_class} must be one of the "
                     f"valid flasses: {self.liquid_classes} "
                 )
-            if other_class not in liquid_class_to_dispense_mode.keys():
+            if other_class not in liquid_class_to_dispense_mode:
                 raise ValueError(
                     f"liquid_class: {other_class} did not resolve accordingly. "
                     f"If there is a new liquid_class, make sure dictionary:"
@@ -2290,7 +2289,7 @@ class EvaporateBuilders(InstructionBuilders):
         }
         mode_param_output = {}
         speed_param = [
-            key for key in mode_params.keys() if key in speed_unit_dict.keys()
+            key for key in mode_params if key in speed_unit_dict
         ]
         if len(speed_param) > 1:
             raise TypeError(f"There are multiple speed parameters: {speed_param}.")
@@ -2830,9 +2829,9 @@ class FlowCytometryBuilders(InstructionBuilders):
         ]
 
         # Gating modes do not allow specification of excitation parameter
-        channel_names = set(
-            [chn["emission_filter"]["channel_name"] for chn in channels]
-        )
+        channel_names = {
+            chn["emission_filter"]["channel_name"] for chn in channels
+        }
         if channel_names.intersection(self.gating_modes) and excitation is not None:
             raise ValueError(
                 f"Cannot specify excitation if channel_name "

@@ -2294,11 +2294,11 @@ class EvaporateBuilders(InstructionBuilders):
         if len(speed_param) > 1:
             raise TypeError(f"There are multiple speed parameters: {speed_param}.")
 
-        for s in speed_param:
-            if Unit(mode_params[s]).magnitude <= 0:
-                raise ValueError(f"{s} is less than or equal to 0.")
+        for spd in speed_param:
+            if Unit(mode_params[spd]).magnitude <= 0:
+                raise ValueError(f"{spd} is less than or equal to 0.")
 
-            mode_param_output[s] = parse_unit(mode_params[s], speed_unit_dict[s])
+            mode_param_output[spd] = parse_unit(mode_params[spd], speed_unit_dict[spd])
 
         if "vacuum_pressure" in mode_params.keys():
             pressure = mode_params["vacuum_pressure"]

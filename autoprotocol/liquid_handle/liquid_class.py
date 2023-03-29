@@ -297,7 +297,7 @@ class VolumeCalibrationBin(namedtuple("VolumeCalibrationBin", ["slope", "interce
 
 
 # pylint: disable=too-few-public-methods
-class VolumeCalibration(object):
+class VolumeCalibration:
     """Wrapper for a volume-binned calibration curve
     A data structure that represents a calibration curve for either volumes
     or flowrates that are binned by upper bounded volume ranges.

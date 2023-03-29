@@ -1402,7 +1402,7 @@ class Protocol:
                     f"The number of LiquidClass(s) {len_liquid} and "
                     f"sources {len_src} do not match "
                 )
-            elif not all(_validate_as_instance(lc, LiquidClass) for lc in liquid):
+            if not all(_validate_as_instance(lc, LiquidClass) for lc in liquid):
                 raise ValueError(
                     f"liquid list {liquid} did not contain all of type LiquidClass"
                 )
@@ -1418,7 +1418,7 @@ class Protocol:
                     f"The number of DispenseMethod(s) {len_method} "
                     f"and sources {len_src} do not match "
                 )
-            elif not all(_validate_as_instance(dm, DispenseMethod) for dm in method):
+            if not all(_validate_as_instance(dm, DispenseMethod) for dm in method):
                 raise ValueError(
                     f"method list {method} did not contain all of "
                     f"type DispenseMethod"
@@ -1490,9 +1490,9 @@ class Protocol:
             # for each destination well in the dest_wg
             # there will always be the same number of wells
             # in the well group as there are volumes in the list
-            for j in range(len(destination_wg)):
-                vol = dispense_volumes[j]
-                destination_well = destination_wg[j]
+            for idx, dest_wg in enumerate(destination_wg):
+                vol = dispense_volumes[idx]
+                destination_well = destination_wg[idx]
                 transport_locations.append(
                     LiquidHandle.builders.location(
                         location=destination_well,
@@ -1756,7 +1756,7 @@ class Protocol:
         if one_source:
             try:
                 source_vol = [s.available_volume() for s in source.wells]
-                if sum([a for a in volume]) > sum([a for a in source_vol]):
+                if sum(list(volume)) > sum(list(source_vol)):
                     raise RuntimeError(
                         "There is not enough volume in the source well(s) "
                         "specified to complete the transfers."
@@ -7798,13 +7798,14 @@ class Protocol:
             else:
                 dest_count = len(dest)
 
-            # When one informatics is provided for a sequence of liquid_handle Instruction,
-            # Informatics is instantiated for each Instruction. Currently, this does not accept
+            # When one informatics is provided for a sequence
+            # of liquid_handle Instruction, Informatics is instantiated
+            # for each Instruction. Currently, this does not accept
             # users to attach Informatics to part of the wells or sequence.
             if len(informatics) == 1:
-                # In the future, if we are to add more Informatics subclasses, we may create
-                # subclass for InformaticsWithWells and InformaicsWithoutWells instead of
-                # specifying each type here.
+                # In the future, if we are to add more Informatics subclasses,
+                # we may create subclass for InformaticsWithWells and
+                # InformaticsWithoutWells instead of specifying each type here.
                 if isinstance(informatics[0], AttachCompounds):
                     compounds = informatics[0].compounds
                     wells = WellGroup(informatics[0].wells)
@@ -7825,13 +7826,15 @@ class Protocol:
                     raise TypeError(
                         f"Informatics:{informatics} is not available in this protocol."
                     )
-                # If liquid_handle has multiple sources and one destination, Informatics should be added
+                # If liquid_handle has multiple sources and one
+                # destination, Informatics should be added
                 # to the last transfer.
                 if multi_src:
                     informatics_list = [None] * (len(dest) - 1) + informatics
             else:
                 wells_compounds_dict = {}
-                # when multiple Informatics are provided, `wells` in all Informatics must
+                # when multiple Informatics are provided,
+                # `wells` in all Informatics must
                 # sum up to include all destination wells.
                 for info in informatics:
                     if isinstance(info, AttachCompounds):
@@ -7840,8 +7843,9 @@ class Protocol:
                         for well, cmpd in zip(WellGroup(info.wells).wells, compounds):
                             if not isinstance(cmpd, list):
                                 cmpd = [cmpd]
-                            # if there are multiple Informatics for a well, all the compounds
-                            # will be added to a single instance of Informatics for that well.
+                            # if there are multiple Informatics for a well,
+                            # all the compounds will be added to a single
+                            # instance of Informatics for that well.
                             if well not in wells_compounds_dict:
                                 wells_compounds_dict[well] = cmpd
                             else:
@@ -7853,7 +7857,8 @@ class Protocol:
                                 wells_compounds_dict[well] = list(compounds_set)
                     else:
                         raise TypeError(
-                            f"Informatics:{informatics} is not available in this protocol."
+                            f"Informatics:{informatics} is not "
+                            f"available in this protocol."
                         )
                 if len(wells_compounds_dict.keys()) == dest_count:
                     informatics_list = []
@@ -7866,7 +7871,8 @@ class Protocol:
                         informatics_list.append(AttachCompounds(key, value))
                 else:
                     raise ValueError(
-                        f"the length of provided informatics: {len(wells_compounds_dict.keys())} does "
+                        f"the length of provided informatics: "
+                        f"{len(wells_compounds_dict.keys())} does "
                         f"not match the number of available wells."
                     )
 
@@ -7893,7 +7899,8 @@ class Protocol:
                 density = [density] * count
             elif len(density) != count:
                 raise ValueError(
-                    f"the length of provided density: {len(density)} does not match the number of transports."
+                    f"the length of provided density: {len(density)} "
+                    f"does not match the number of transports."
                 )
             density = [parse_unit(d, "mg/ml") for d in density]
             for den in density:
@@ -7917,7 +7924,8 @@ class Protocol:
             method = [method] * count
         method = [_validate_as_instance(_, Transfer) for _ in method]
 
-        # if informatics is provided for multiple wells, split Informatics for each destination well
+        # if informatics is provided for multiple wells,
+        # split Informatics for each destination well
         # with the specified compounds.
         if informatics is not None and len(informatics) > 0:
             informatics_list = informatics_helper(
@@ -7940,7 +7948,9 @@ class Protocol:
         correct_parameter_counts = all(len(_) == count for _ in countable_parameters)
         if not correct_parameter_counts:
             raise ValueError(
-                f"Specified parameters {countable_parameters} could not all be interpreted as the same length {correct_parameter_counts}."
+                f"Specified parameters {countable_parameters} could "
+                f"not all be interpreted as the same length "
+                f"{correct_parameter_counts}."
             )
 
         # format shape
@@ -7971,7 +7981,9 @@ class Protocol:
             tip_types = [_.tip_type for _ in method]
             if not all(_ == tip_types[0] for _ in tip_types):
                 raise ValueError(
-                    f"If one_tip is true and any tip_type is set, then all tip types must be the same but {tip_types} was specified."
+                    f"If one_tip is true and any tip_type is set, "
+                    f"then all tip types must be the same but "
+                    f"{tip_types} was specified."
                 )
 
         # generate either a LiquidHandle location or instruction list
@@ -8192,7 +8204,9 @@ class Protocol:
         correct_parameter_counts = all(len(_) == count for _ in countable_parameters)
         if not correct_parameter_counts:
             raise ValueError(
-                f"Specified parameters {countable_parameters} could not all be interpreted as the same length {correct_parameter_counts}."
+                f"Specified parameters {countable_parameters} could not "
+                f"all be interpreted as the same length "
+                f"{correct_parameter_counts}."
             )
 
         # format shape
@@ -8221,7 +8235,9 @@ class Protocol:
             tip_types = [_.tip_type for _ in method]
             if not all(_ == tip_types[0] for _ in tip_types):
                 raise ValueError(
-                    f"If one_tip is true and any tip_type is set, then all tip types must be the same but {tip_types} was specified."
+                    f"If one_tip is true and any tip_type is set, then "
+                    f"all tip types must be the same but {tip_types} "
+                    f"was specified."
                 )
 
         # generate either a LiquidHandle location or instruction list
@@ -8231,7 +8247,8 @@ class Protocol:
 
             if vol > max_tip_capacity:
                 raise ValueError(
-                    f"Attempted mix volume {vol} is larger than the maximum capacity of {max_tip_capacity} for transfer shape {vol.shape}."
+                    f"Attempted mix volume {vol} is larger than the maximum capacity "
+                    f"of {max_tip_capacity} for transfer shape {vol.shape}."
                 )
 
             self._remove_cover(wel.container, "liquid_handle mix")

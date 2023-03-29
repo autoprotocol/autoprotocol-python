@@ -19,11 +19,13 @@ class Location(enum.Enum):
 
 @dataclass
 class StorageLocation:
+    """Storage Location"""
     where: Location
 
 
 @dataclass
 class RefOpts:
+    """ Ref Options """
     id: Optional[str] = None
     new: Optional[str] = None
     discard: Optional[bool] = None
@@ -31,6 +33,9 @@ class RefOpts:
     cover: Optional[str] = None  # TODO: Make enum
 
     def as_dict(self):
+        """
+        Helper function to return as dict w/o empty fields
+        """
         return self._remove_empty_fields(asdict(self))
 
     @staticmethod
@@ -74,14 +79,12 @@ class RefOpts:
 
 @dataclass
 class Ref:
+    """
+        Link a ref name (string) to a Container instance.
+    """
     name: str
     opts: RefOpts
     container: Container
-
-    """
-    Link a ref name (string) to a Container instance.
-
-    """
 
     def __repr__(self):
         return f"Ref({self.name}, {self.container}, {self.opts})"

@@ -262,15 +262,15 @@ class Protocol:
 
     # pragma pylint: disable=redefined-builtin
     def ref(
-        self,
-        name: str,
-        id: Optional[str] = None,
-        cont_type: Optional[Union[str, ContainerType]] = None,
-        storage: Optional[str] = None,
-        discard: Optional[bool] = None,
-        cover: Optional[str] = None,
-        properties: Optional[Dict[str, str]] = None,
-        ctx_properties: Optional[Dict[str, str]] = None,
+            self,
+            name: str,
+            id: Optional[str] = None,
+            cont_type: Optional[Union[str, ContainerType]] = None,
+            storage: Optional[str] = None,
+            discard: Optional[bool] = None,
+            cover: Optional[str] = None,
+            properties: Optional[Dict[str, str]] = None,
+            ctx_properties: Optional[Dict[str, str]] = None,
     ):
         """
         Add a Ref object to the dictionary of Refs associated with this protocol
@@ -401,14 +401,14 @@ class Protocol:
     # pragma pylint: enable=redefined-builtin
 
     def add_time_constraint(
-        self,
-        from_dict: TimeConstraintFromToDict,
-        to_dict: TimeConstraintFromToDict,
-        less_than: Optional[TIME] = None,
-        more_than: Optional[TIME] = None,
-        mirror: bool = False,
-        ideal: Optional[TIME] = None,
-        optimization_cost: Optional[str] = None,
+            self,
+            from_dict: TimeConstraintFromToDict,
+            to_dict: TimeConstraintFromToDict,
+            less_than: Optional[TIME] = None,
+            more_than: Optional[TIME] = None,
+            mirror: bool = False,
+            ideal: Optional[TIME] = None,
+            optimization_cost: Optional[str] = None,
     ):
         """Constraint the time between two instructions
 
@@ -805,10 +805,10 @@ class Protocol:
         return instructions
 
     def batch_containers(
-        self,
-        containers: List[Container],
-        batch_in: bool = True,
-        batch_out: bool = False,
+            self,
+            containers: List[Container],
+            batch_in: bool = True,
+            batch_out: bool = False,
     ):
         """
         Batch containers such that they all enter or exit together.
@@ -1026,23 +1026,23 @@ class Protocol:
     # pylint: disable=protected-access
     # pylint: disable=no-member
     def liquid_handle_dispense(
-        self,
-        source: Union[Well, List[Well], List[Tuple[Well, int]]],
-        destination: Union[WellParam, List[WellGroup]],
-        volume: Union[VOLUME, List[VOLUME]],
-        rows: int = 8,
-        columns: int = 1,
-        method: DispenseMethod = DispenseMethod,
-        liquid: LiquidClass = LiquidClass,
-        device: Optional[str] = None,
-        model: Optional[str] = None,
-        chip_material: Optional[str] = None,
-        nozzle: Optional[str] = None,
-        diaphragm: Optional[int] = None,
-        nozzle_size: Optional[Unit] = None,
-        tubing: Optional[str] = None,
-        z_drop: Optional[Unit] = None,
-        viscosity: Optional[str] = None
+            self,
+            source: Union[Well, List[Well], List[Tuple[Well, int]]],
+            destination: Union[WellParam, List[WellGroup]],
+            volume: Union[VOLUME, List[VOLUME]],
+            rows: int = 8,
+            columns: int = 1,
+            method: DispenseMethod = DispenseMethod,
+            liquid: LiquidClass = LiquidClass,
+            device: Optional[str] = None,
+            model: Optional[str] = None,
+            chip_material: Optional[str] = None,
+            nozzle: Optional[str] = None,
+            diaphragm: Optional[int] = None,
+            nozzle_size: Optional[Unit] = None,
+            tubing: Optional[str] = None,
+            z_drop: Optional[Unit] = None,
+            viscosity: Optional[str] = None
     ):
         """Generates a liquid_handle dispense
 
@@ -1305,9 +1305,9 @@ class Protocol:
                     f"destinations({len(final_destinations)}) and"
                     f" sources({len_src}) must be of equal length."
                 )
-            if not all(
-                [isinstance(well_grp, WellGroup) for well_grp in final_destinations]
-            ):
+            if not all([
+                isinstance(well_grp, WellGroup) for well_grp in final_destinations
+            ]):
                 raise ValueError(
                     f"not everything in the dest list of "
                     f"wellgroups is a wellgroup... "
@@ -1341,7 +1341,8 @@ class Protocol:
         destination = configure_dest(destinations=destination)
 
         def equalize_lengths(
-            vols, dest: Union[List[WellGroup], WellGroup]
+                vols,
+                dest: Union[List[WellGroup], WellGroup]
         ) -> Union[List[Unit], List[List[Unit]]]:
             if isinstance(dest, list):
                 if isinstance(vols, list):
@@ -1492,16 +1493,17 @@ class Protocol:
             # in the well group as there are volumes in the list
             for idx, dest_wg in enumerate(destination_wg):
                 vol = dispense_volumes[idx]
-                destination_well = destination_wg[idx]
+                destination_well = dest_wg
                 transport_locations.append(
                     LiquidHandle.builders.location(
                         location=destination_well,
                         transports=(method[i]._dispense_transports(vol)),
                     )
                 )
-                # Update destination column volumes with consideration of the num chips specified
+                # Update destination column volumes with consideration of
+                # the num chips specified
                 for well in destination_well.container.wells_from_shape(
-                    destination_well.index, shape
+                        destination_well.index, shape
                 ):
                     well.add_volume(vol)
 
@@ -1566,12 +1568,12 @@ class Protocol:
             ref.opts["discard"] = True
 
     def acoustic_transfer(
-        self,
-        source: WellParam,
-        dest: WellParam,
-        volume: VOLUME,
-        one_source: bool = False,
-        droplet_size: VOLUME = "25:nanoliter",
+            self,
+            source: WellParam,
+            dest: WellParam,
+            volume: VOLUME,
+            one_source: bool = False,
+            droplet_size: VOLUME = "25:nanoliter",
     ):
         """
         Specify source and destination wells for transferring liquid via an
@@ -1762,7 +1764,7 @@ class Protocol:
                         "specified to complete the transfers."
                     )
                 if len_source >= len_dest and all(
-                    i > j for i, j in zip(source_vol, volume)
+                        i > j for i, j in zip(source_vol, volume)
                 ):
                     sources = source.wells[:len_dest]
                     destinations = dest.wells
@@ -1775,12 +1777,12 @@ class Protocol:
                     src = source.wells[source_counter]
                     vol = src.available_volume()
 
-                    for idx, dest in enumerate(dest.wells):
+                    for idx, dst in enumerate(dest.wells):
                         vol_d = volume[idx]
                         while vol_d > Unit("0:microliter"):
                             if vol > vol_d:
                                 sources.append(src)
-                                destinations.append(dest)
+                                destinations.append(dst)
                                 volumes.append(vol_d)
                                 vol -= vol_d
                                 vol = round(vol, max_decimal_places)
@@ -1788,7 +1790,7 @@ class Protocol:
                                 vol_d = round(vol_d, max_decimal_places)
                             else:
                                 sources.append(src)
-                                destinations.append(dest)
+                                destinations.append(dst)
                                 vol = int(vol / droplet_size) * droplet_size
                                 volumes.append(vol)
                                 vol_d -= vol
@@ -1837,15 +1839,15 @@ class Protocol:
         )
 
     def illuminaseq(
-        self,
-        flowcell: str,
-        lanes: List[IlluminaSeqLane],
-        sequencer: str,
-        mode: str,
-        index: str,
-        library_size: int,
-        dataref: str,
-        cycles: Optional[str] = None,
+            self,
+            flowcell: str,
+            lanes: List[IlluminaSeqLane],
+            sequencer: str,
+            mode: str,
+            index: str,
+            library_size: int,
+            dataref: str,
+            cycles: Optional[str] = None,
     ):
         """
         Load aliquots into specified lanes for Illumina sequencing.
@@ -2018,7 +2020,7 @@ class Protocol:
                 raise TypeError("Illumina sequencing lanes must "
                                 "be a list(dict)")
             if not all(
-                key in lane.keys() for key in ["object", "library_concentration"]
+                    key in lane.keys() for key in ["object", "library_concentration"]
             ):
                 raise TypeError(
                     "Each Illumina sequencing lane must contain an "
@@ -2095,12 +2097,12 @@ class Protocol:
 
     # pylint: disable=redefined-builtin
     def sangerseq(
-        self,
-        cont: Union[Container, str],
-        wells: WellParam,
-        dataref: str,
-        type: str = "standard",
-        primer: Optional[Container] = None,
+            self,
+            cont: Union[Container, str],
+            wells: WellParam,
+            dataref: str,
+            type: str = "standard",
+            primer: Optional[Container] = None,
     ):
         """
         Send the indicated wells of the container specified for Sanger
@@ -2200,17 +2202,17 @@ class Protocol:
         return self._append_and_return(SangerSeq(cont, wells, dataref, type, primer))
 
     def dispense(
-        self,
-        ref: Container,
-        reagent: Union[str, Well],
-        columns: List[DispenseColumn],
-        is_resource_id: bool = False,
-        step_size: VOLUME = "5:uL",
-        flowrate: Optional[FLOW_RATE] = None,
-        nozzle_position: Optional[DispenseNozzlePosition] = None,
-        pre_dispense: Optional[VOLUME] = None,
-        shape: Optional[DispenseShape] = None,
-        shake_after: Optional[DispenseShakeAfter] = None,
+            self,
+            ref: Container,
+            reagent: Union[str, Well],
+            columns: List[DispenseColumn],
+            is_resource_id: bool = False,
+            step_size: VOLUME = "5:uL",
+            flowrate: Optional[FLOW_RATE] = None,
+            nozzle_position: Optional[DispenseNozzlePosition] = None,
+            pre_dispense: Optional[VOLUME] = None,
+            shape: Optional[DispenseShape] = None,
+            shake_after: Optional[DispenseShakeAfter] = None,
     ):
         """
         Dispense specified reagent to specified columns.
@@ -2495,17 +2497,17 @@ class Protocol:
         )
 
     def dispense_full_plate(
-        self,
-        ref: Container,
-        reagent: Union[str, Well],
-        volume: VOLUME,
-        is_resource_id: bool = False,
-        step_size: VOLUME = "5:uL",
-        flowrate: Optional[FLOW_RATE] = None,
-        nozzle_position: Optional[DispenseNozzlePosition] = None,
-        pre_dispense: Optional[VOLUME] = None,
-        shape: Optional[DispenseShape] = None,
-        shake_after: Optional[DispenseShakeAfter] = None,
+            self,
+            ref: Container,
+            reagent: Union[str, Well],
+            volume: VOLUME,
+            is_resource_id: bool = False,
+            step_size: VOLUME = "5:uL",
+            flowrate: Optional[FLOW_RATE] = None,
+            nozzle_position: Optional[DispenseNozzlePosition] = None,
+            pre_dispense: Optional[VOLUME] = None,
+            shape: Optional[DispenseShape] = None,
+            shake_after: Optional[DispenseShakeAfter] = None,
     ):
         """
         Dispense the specified amount of the specified reagent to every well
@@ -2656,12 +2658,12 @@ class Protocol:
         )
 
     def spin(
-        self,
-        ref: Container,
-        acceleration: str,
-        duration: TIME,
-        flow_direction: Optional[str] = None,
-        spin_direction: Optional[List[str]] = None,
+            self,
+            ref: Container,
+            acceleration: str,
+            duration: TIME,
+            flow_direction: Optional[str] = None,
+            spin_direction: Optional[List[str]] = None,
     ):
         """
         Apply acceleration to a container.
@@ -2774,13 +2776,13 @@ class Protocol:
         )
 
     def agitate(
-        self,
-        ref: Container,
-        mode: AgitateMode,
-        speed: ACCELERATION,
-        duration: TIME,
-        temperature: Optional[TEMPERATURE] = None,
-        mode_params: Optional[AgitateModeParams] = None,
+            self,
+            ref: Container,
+            mode: AgitateMode,
+            speed: ACCELERATION,
+            duration: TIME,
+            temperature: Optional[TEMPERATURE] = None,
+            mode_params: Optional[AgitateModeParams] = None,
     ):
         """
         Agitate a container in a specific condition for a given duration. If
@@ -2922,17 +2924,17 @@ class Protocol:
         )
 
     def thermocycle(
-        self,
-        ref: Container,
-        groups: List[Union[ThermocycleTemperature, ThermocycleTemperatureGradient]],
-        volume: Optional[VOLUME] = "10:microliter",
-        dataref: Optional[str] = None,
-        dyes: Optional[Dict[str, str]] = None,
-        melting_start: Optional[TEMPERATURE] = None,
-        melting_end: Optional[TEMPERATURE] = None,
-        melting_increment: Optional[TEMPERATURE] = None,
-        melting_rate: Optional[TEMPERATURE] = None,
-        lid_temperature: Optional[TEMPERATURE] = None,
+            self,
+            ref: Container,
+            groups: List[Union[ThermocycleTemperature, ThermocycleTemperatureGradient]],
+            volume: Optional[VOLUME] = "10:microliter",
+            dataref: Optional[str] = None,
+            dyes: Optional[Dict[str, str]] = None,
+            melting_start: Optional[TEMPERATURE] = None,
+            melting_end: Optional[TEMPERATURE] = None,
+            melting_increment: Optional[TEMPERATURE] = None,
+            melting_rate: Optional[TEMPERATURE] = None,
+            lid_temperature: Optional[TEMPERATURE] = None,
     ):
         """
         Append a Thermocycle instruction to the list of instructions, with
@@ -3274,15 +3276,15 @@ class Protocol:
         )
 
     def incubate(
-        self,
-        ref: Union[Container, str],
-        where: str,
-        duration: TIME,
-        shaking: bool = False,
-        co2: float = 0,
-        uncovered: bool = False,
-        target_temperature: Optional[TEMPERATURE] = None,
-        shaking_params: Optional[IncubateShakingParams] = None,
+            self,
+            ref: Union[Container, str],
+            where: str,
+            duration: TIME,
+            shaking: bool = False,
+            co2: float = 0,
+            uncovered: bool = False,
+            target_temperature: Optional[TEMPERATURE] = None,
+            shaking_params: Optional[IncubateShakingParams] = None,
     ):
         """
         Move plate to designated thermoisolater or ambient area for incubation
@@ -3382,15 +3384,15 @@ class Protocol:
         )
 
     def absorbance(
-        self,
-        ref: Union[str, Container],
-        wells: WellParam,
-        wavelength: WAVELENGTH,
-        dataref: str,
-        flashes: int = 25,
-        incubate_before: Optional[PlateReaderIncubateBefore] = None,
-        temperature: Optional[TEMPERATURE] = None,
-        settle_time: Optional[TIME] = None,
+            self,
+            ref: Union[str, Container],
+            wells: WellParam,
+            wavelength: WAVELENGTH,
+            dataref: str,
+            flashes: int = 25,
+            incubate_before: Optional[PlateReaderIncubateBefore] = None,
+            temperature: Optional[TEMPERATURE] = None,
+            settle_time: Optional[TIME] = None,
     ):
         """
         Read the absorbance for the indicated wavelength for the indicated
@@ -3514,23 +3516,23 @@ class Protocol:
         )
 
     def fluorescence(
-        self,
-        ref: Union[str, Container],
-        wells: WellParam,
-        excitation: WAVELENGTH,
-        emission: WAVELENGTH,
-        dataref: str,
-        flashes: Optional[int] = 25,
-        temperature: Optional[TEMPERATURE] = None,
-        gain: Optional[float] = None,
-        incubate_before: Optional[PlateReaderIncubateBefore] = None,
-        detection_mode: Optional[str] = None,
-        position_z: Optional[
-            Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]
-        ] = None,
-        settle_time: Optional[TIME] = None,
-        lag_time: Optional[TIME] = None,
-        integration_time: Optional[str] = None,
+            self,
+            ref: Union[str, Container],
+            wells: WellParam,
+            excitation: WAVELENGTH,
+            emission: WAVELENGTH,
+            dataref: str,
+            flashes: Optional[int] = 25,
+            temperature: Optional[TEMPERATURE] = None,
+            gain: Optional[float] = None,
+            incubate_before: Optional[PlateReaderIncubateBefore] = None,
+            detection_mode: Optional[str] = None,
+            position_z: Optional[
+                Union[PlateReaderPositionZCalculated, PlateReaderPositionZManual]
+            ] = None,
+            settle_time: Optional[TIME] = None,
+            lag_time: Optional[TIME] = None,
+            integration_time: Optional[str] = None,
     ):
         """
         Read the fluoresence for the indicated wavelength for the indicated
@@ -3818,14 +3820,14 @@ class Protocol:
         )
 
     def luminescence(
-        self,
-        ref: Union[str, Container],
-        wells: WellParam,
-        dataref: str,
-        incubate_before: Union[PlateReaderIncubateBefore] = None,
-        temperature: Optional[TEMPERATURE] = None,
-        settle_time: Optional[TIME] = None,
-        integration_time: Optional[TIME] = None,
+            self,
+            ref: Union[str, Container],
+            wells: WellParam,
+            dataref: str,
+            incubate_before: Union[PlateReaderIncubateBefore] = None,
+            temperature: Optional[TEMPERATURE] = None,
+            settle_time: Optional[TIME] = None,
+            integration_time: Optional[TIME] = None,
     ):
         """
         Read luminescence of indicated wells.
@@ -3953,13 +3955,13 @@ class Protocol:
         )
 
     def gel_separate(
-        self,
-        wells: WellParam,
-        volume: VOLUME,
-        matrix: str,
-        ladder: str,
-        duration: TIME,
-        dataref: str,
+            self,
+            wells: WellParam,
+            volume: VOLUME,
+            matrix: str,
+            ladder: str,
+            duration: TIME,
+            dataref: str,
     ):
         """
         Separate nucleic acids on an agarose gel.
@@ -4060,12 +4062,12 @@ class Protocol:
         )
 
     def gel_purify(
-        self,
-        extracts: List[GelPurifyExtract],
-        volume: VOLUME,
-        matrix: str,
-        ladder: str,
-        dataref: str,
+            self,
+            extracts: List[GelPurifyExtract],
+            volume: VOLUME,
+            matrix: str,
+            ladder: str,
+            dataref: str,
     ):
         """
         Separate nucleic acids on an agarose gel and purify according to
@@ -4279,12 +4281,12 @@ class Protocol:
         return instructions
 
     def seal(
-        self,
-        ref: Container,
-        type: Optional[str] = None,
-        mode: Optional[str] = None,
-        temperature: Optional[TEMPERATURE] = None,
-        duration: Optional[TEMPERATURE] = None,
+            self,
+            ref: Container,
+            type: Optional[str] = None,
+            mode: Optional[str] = None,
+            temperature: Optional[TEMPERATURE] = None,
+            duration: Optional[TEMPERATURE] = None,
     ):
         """
         Seal indicated container using the automated plate sealer.
@@ -4469,10 +4471,10 @@ class Protocol:
             return self._append_and_return(unseal_inst)
 
     def cover(
-        self,
-        ref: Container,
-        lid: Optional[str] = None,
-        retrieve_lid: Optional[bool] = None,
+            self,
+            ref: Container,
+            lid: Optional[str] = None,
+            retrieve_lid: Optional[bool] = None,
     ):
         """
         Place specified lid type on specified container
@@ -4620,14 +4622,14 @@ class Protocol:
             return self._append_and_return(Uncover(ref, store_lid))
 
     def flow_cytometry(
-        self,
-        dataref: str,
-        samples: WellParam,
-        lasers: List[FlowCytometryLaser],
-        collection_conditions: FlowCytometryCollectionCondition,
-        width_threshold: Optional[Union[int, float]] = None,
-        window_extension: Optional[Union[int, float]] = None,
-        remove_coincident_events: Optional[bool] = None,
+            self,
+            dataref: str,
+            samples: WellParam,
+            lasers: List[FlowCytometryLaser],
+            collection_conditions: FlowCytometryCollectionCondition,
+            width_threshold: Optional[Union[int, float]] = None,
+            window_extension: Optional[Union[int, float]] = None,
+            remove_coincident_events: Optional[bool] = None,
     ):
         """
         A non-ambiguous set of parameters for performing flow cytometry.
@@ -4797,14 +4799,14 @@ class Protocol:
         )
 
     def flow_analyze(
-        self,
-        dataref: str,
-        FSC: FlowAnalyzeChannel,
-        SSC: FlowAnalyzeChannel,
-        neg_controls: List[FlowAnalyzeNegControls],
-        samples: List[FlowAnalyzeSample],
-        colors: Optional[List[FlowAnalyzeColors]] = None,
-        pos_controls: Optional[List[FlowAnalyzePosControls]] = None,
+            self,
+            dataref: str,
+            FSC: FlowAnalyzeChannel,
+            SSC: FlowAnalyzeChannel,
+            neg_controls: List[FlowAnalyzeNegControls],
+            samples: List[FlowAnalyzeSample],
+            colors: Optional[List[FlowAnalyzeColors]] = None,
+            pos_controls: Optional[List[FlowAnalyzePosControls]] = None,
     ):
         """
         Perform flow cytometry. The instruction will be executed within the
@@ -5037,7 +5039,7 @@ class Protocol:
                     f"volume of type unit. {err}"
                 ) from err
             if source.get("captured_events") and not isinstance(
-                source.get("captured_events"), int
+                    source.get("captured_events"), int
             ):
                 raise TypeError(
                     "captured_events is optional, if given it"
@@ -5051,7 +5053,7 @@ class Protocol:
                     " control is to be used for."
                 )
             if control.get("minimize_bleed") and not isinstance(
-                control.get("minimize_bleed"), list
+                    control.get("minimize_bleed"), list
             ):
                 raise TypeError("Minimize_bleed must be of type list.")
             if control.get("minimize_bleed"):
@@ -5222,10 +5224,10 @@ class Protocol:
         )
 
     def autopick(
-        self,
-        pick_groups: List[AutopickGroup],
-        criteria: Optional[Dict[str, Any]] = None,
-        dataref: str = "autopick",
+            self,
+            pick_groups: List[AutopickGroup],
+            criteria: Optional[Dict[str, Any]] = None,
+            dataref: str = "autopick",
     ):
         """
 
@@ -5291,7 +5293,8 @@ class Protocol:
         return self._append_and_return(Autopick(groups, criteria, dataref))
 
     def __process_pick_group(
-        self, pick_group: AutopickGroup
+            self,
+            pick_group: AutopickGroup
     ) -> Dict[str, Union[WellGroup, int]]:
         if not isinstance(pick_group, AutopickGroup):
             raise TypeError(
@@ -5316,12 +5319,12 @@ class Protocol:
         return pick
 
     def mag_dry(
-        self,
-        head: str,
-        container: Container,
-        duration: TIME,
-        new_tip: bool = False,
-        new_instruction: bool = False,
+            self,
+            head: str,
+            container: Container,
+            duration: TIME,
+            new_tip: bool = False,
+            new_instruction: bool = False,
     ):
         """
 
@@ -5384,15 +5387,15 @@ class Protocol:
         return self._add_mag(mag, head, new_tip, new_instruction, "dry")
 
     def mag_incubate(
-        self,
-        head: str,
-        container: Container,
-        duration: TIME,
-        magnetize: bool = False,
-        tip_position: float = 1.5,
-        temperature: Optional[TEMPERATURE] = None,
-        new_tip: bool = False,
-        new_instruction: bool = False,
+            self,
+            head: str,
+            container: Container,
+            duration: TIME,
+            magnetize: bool = False,
+            tip_position: float = 1.5,
+            temperature: Optional[TEMPERATURE] = None,
+            new_tip: bool = False,
+            new_instruction: bool = False,
     ):
         """
 
@@ -5469,15 +5472,15 @@ class Protocol:
         return self._add_mag(mag, head, new_tip, new_instruction, "incubate")
 
     def mag_collect(
-        self,
-        head: str,
-        container: Container,
-        cycles: int,
-        pause_duration: TIME,
-        bottom_position: float = 0.0,
-        temperature: TEMPERATURE = None,
-        new_tip: bool = False,
-        new_instruction: bool = False,
+            self,
+            head: str,
+            container: Container,
+            cycles: int,
+            pause_duration: TIME,
+            bottom_position: float = 0.0,
+            temperature: TEMPERATURE = None,
+            new_tip: bool = False,
+            new_instruction: bool = False,
     ):
         """
 
@@ -5557,16 +5560,16 @@ class Protocol:
         return self._add_mag(mag, head, new_tip, new_instruction, "collect")
 
     def mag_release(
-        self,
-        head: str,
-        container: Container,
-        duration: TIME,
-        frequency: FREQUENCY,
-        center: float = 0.5,
-        amplitude: float = 0.5,
-        temperature: Optional[TEMPERATURE] = None,
-        new_tip: bool = False,
-        new_instruction: bool = False,
+            self,
+            head: str,
+            container: Container,
+            duration: TIME,
+            frequency: FREQUENCY,
+            center: float = 0.5,
+            amplitude: float = 0.5,
+            temperature: Optional[TEMPERATURE] = None,
+            new_tip: bool = False,
+            new_instruction: bool = False,
     ):
         """
 
@@ -5650,17 +5653,17 @@ class Protocol:
         return self._add_mag(mag, head, new_tip, new_instruction, "release")
 
     def mag_mix(
-        self,
-        head: str,
-        container: Container,
-        duration: TIME,
-        frequency: FREQUENCY,
-        center: float = 0.5,
-        amplitude: float = 0.5,
-        magnetize: bool = False,
-        temperature: Optional[TEMPERATURE] = None,
-        new_tip: bool = False,
-        new_instruction: bool = False,
+            self,
+            head: str,
+            container: Container,
+            duration: TIME,
+            frequency: FREQUENCY,
+            center: float = 0.5,
+            amplitude: float = 0.5,
+            magnetize: bool = False,
+            temperature: Optional[TEMPERATURE] = None,
+            new_tip: bool = False,
+            new_instruction: bool = False,
     ):
         """
 
@@ -5825,14 +5828,14 @@ class Protocol:
         return self._append_and_return(ImagePlate(ref, mode, dataref))
 
     def provision(
-        self,
-        resource_id: str,
-        dests: WellParam,
-        amounts: Optional[
-            Union[AMOUNT_CONCENTRATION, List[AMOUNT_CONCENTRATION]]
-        ] = None,
-        volumes: Optional[Union[VOLUME, List[VOLUME]]] = None,
-        informatics: Optional[List[Informatics]] = None,
+            self,
+            resource_id: str,
+            dests: WellParam,
+            amounts: Optional[
+                Union[AMOUNT_CONCENTRATION, List[AMOUNT_CONCENTRATION]]
+            ] = None,
+            volumes: Optional[Union[VOLUME, List[VOLUME]]] = None,
+            informatics: Optional[List[Informatics]] = None,
     ):
         """
         Provision a commercial resource from a catalog into the specified
@@ -5846,21 +5849,24 @@ class Protocol:
         dests : Well or WellGroup or list(Well)
           Destination(s) for specified resource.
         amounts : str or Unit or list(str) or list(Unit)
-          Volume(s) or Mass(es) to transfer of the resource to each destination well.  If
-          one volume or mass is specified, each destination well receive that volume or mass of
-          the resource.  If destinations should receive different volume or mass, each
-          one should be specified explicitly in a list matching the order of the
-          specified destinations.
-          Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
+          Volume(s) or Mass(es) to transfer of the resource to each destination well.
+          If one volume or mass is specified, each destination well receive that
+          volume or mass of the resource.  If destinations should receive different
+          volume or mass, each one should be specified explicitly in a list matching
+          the order of the specified destinations.
+          Note:  Volumes and amounts arguments are mutually exclusive.
+          Only one is required
         volumes : str or Unit or list(str) or list(Unit)
           Volume to transfer of the resource to each destination well.  If
-          one volume is specified, each destination well receive that volume of the resource.
-          If destinations should receive different volumes, each
-          one should be specified explicitly in a list matching the order of the
-          specified destinations.
-          Note:  Volumes and amounts arguments are mutually exclusive. Only one is required
+          one volume is specified, each destination well receive that volume of
+          the resource. If destinations should receive different volumes, each
+          one should be specified explicitly in a list matching the order of
+          the specified destinations.
+          Note:  Volumes and amounts arguments are mutually exclusive.
+          Only one is required
         informatics: list(Informatics)
-          List of Informatics detailing aliquot effects intended from this instruction.
+          List of Informatics detailing aliquot effects intended from this
+          instruction.
 
         Raises
         ------
@@ -5869,19 +5875,22 @@ class Protocol:
         TypeError
             If the unit provided is not supported
         TypeError
-            If volume or mass is not specified as a string or Unit (or a list of either)
+            If volume or mass is not specified as a string or
+            Unit (or a list of either)
         RuntimeError
-            If length of the list of volumes or masses specified does not match the number
-            of destination wells specified.
+            If length of the list of volumes or masses specified does not match the
+            number of destination wells specified.
         ValueError
-            If the resource measurement mode is volume and the provision exceeds max capacity of well.
+            If the resource measurement mode is volume and
+            the provision exceeds max capacity of well.
         ValueError
             If the provisioning of volumes or amounts are not supported.
 
         Returns
         -------
         list(Provision)
-            :py:class:`autoprotocol.instruction.Provision` instruction object(s) to be appended and returned
+            :py:class:`autoprotocol.instruction.Provision`
+            instruction object(s) to be appended and returned
 
         """
 
@@ -5933,8 +5942,9 @@ class Protocol:
                 d_max_vol = dest.container.container_type.true_max_vol_ul
                 if amount > d_max_vol:
                     raise ValueError(
-                        f"The volume you are trying to provision ({amount}) exceeds the "
-                        f"maximum capacity of this well ({d_max_vol})."
+                        f"The volume you are trying to provision "
+                        f"({amount}) exceeds the maximum capacity "
+                        f"of this well ({d_max_vol})."
                     )
                 if amount > Unit(900, "microliter"):
                     diff = amount - Unit(900, "microliter")
@@ -5956,10 +5966,10 @@ class Protocol:
             dest_group = [xfer]
 
             if (
-                self.instructions
-                and self.instructions[-1].op == "provision"
-                and self.instructions[-1].resource_id == resource_id
-                and self.instructions[-1].to[-1]["well"].container == dest.container
+                    self.instructions
+                    and self.instructions[-1].op == "provision"
+                    and self.instructions[-1].resource_id == resource_id
+                    and self.instructions[-1].to[-1]["well"].container == dest.container
             ):
                 if informatics is not None:
                     self.instructions[-1].informatics.extend(informatics)
@@ -5975,8 +5985,8 @@ class Protocol:
         return provision_instructions_to_return
 
     def _identify_provision_mode(
-        self,
-        provision_amounts: List[Unit]
+            self,
+            provision_amounts: List[Unit]
     ):
         unique_measure_modes = set()
         for amount in provision_amounts:
@@ -6049,13 +6059,13 @@ class Protocol:
         return self._append_and_return(FlashFreeze(container, duration))
 
     def sonicate(
-        self,
-        wells: WellParam,
-        duration: TIME,
-        mode: SonicateMode,
-        mode_params: Union[SonicateModeParamsBath, SonicateModeParamsHorn],
-        frequency: Optional[FREQUENCY] = None,
-        temperature: Optional[TEMPERATURE] = None,
+            self,
+            wells: WellParam,
+            duration: TIME,
+            mode: SonicateMode,
+            mode_params: Union[SonicateModeParamsBath, SonicateModeParamsHorn],
+            frequency: Optional[FREQUENCY] = None,
+            temperature: Optional[TEMPERATURE] = None,
     ):
         """
         Sonicate wells using high intensity ultrasonic vibrations.
@@ -6221,15 +6231,15 @@ class Protocol:
         )
 
     def spe(
-        self,
-        well: Well,
-        cartridge: str,
-        pressure_mode: str,
-        load_sample: SpeLoadSample,
-        elute: List[SpeElute],
-        condition: Optional[List[SpeParams]] = None,
-        equilibrate: Optional[List[SpeParams]] = None,
-        rinse: Optional[List[SpeParams]] = None,
+            self,
+            well: Well,
+            cartridge: str,
+            pressure_mode: str,
+            load_sample: SpeLoadSample,
+            elute: List[SpeElute],
+            condition: Optional[List[SpeParams]] = None,
+            equilibrate: Optional[List[SpeParams]] = None,
+            rinse: Optional[List[SpeParams]] = None,
     ):
         """
         Apply a solid phase extraction (spe) technique to a sample.
@@ -6415,14 +6425,14 @@ class Protocol:
         )
 
     def image(
-        self,
-        ref: Container,
-        mode: Union[str, ImageMode],
-        num_images: int,
-        dataref: str,
-        backlighting: Optional[bool] = None,
-        magnification: float = 1.0,
-        exposure: Optional[ImageExposure] = None,
+            self,
+            ref: Container,
+            mode: Union[str, ImageMode],
+            num_images: int,
+            dataref: str,
+            backlighting: Optional[bool] = None,
+            magnification: float = 1.0,
+            exposure: Optional[ImageExposure] = None,
     ):
         """
         Capture an image of the specified container.
@@ -6611,19 +6621,19 @@ class Protocol:
 
     # pylint: disable=protected-access
     def _refify(
-        self,
-        op_data: Union[
-            Dict[str, Any],
-            List[Any],
-            Well,
-            WellGroup,
-            Container,
-            Unit,
-            Instruction,
-            Ref,
-            Compound,
-            Informatics,
-        ],
+            self,
+            op_data: Union[
+                Dict[str, Any],
+                List[Any],
+                Well,
+                WellGroup,
+                Container,
+                Unit,
+                Instruction,
+                Ref,
+                Compound,
+                Informatics,
+            ],
     ):
         """
         Unpacks protocol objects into Autoprotocol compliant ones
@@ -6744,7 +6754,11 @@ class Protocol:
                 else:
                     discard = False
                 containers[str(key)] = self.ref(
-                    key, value["id"], value["type"], storage=value.get("storage"), discard=discard
+                    key,
+                    value["id"],
+                    value["type"],
+                    storage=value.get("storage"),
+                    discard=discard
                 )
             else:
                 parameters[str(key)] = value
@@ -6766,7 +6780,9 @@ class Protocol:
 
                 if ref_name not in self.refs:
                     raise RuntimeError(
-                        f"Parameters contain well references to a container that isn't referenced in this protocol: '{ref_name}'."
+                        f"Parameters contain well references to a "
+                        f"container that isn't referenced in this "
+                        f"protocol: '{ref_name}'."
                     )
 
                 if value.rsplit("/")[1] == "all_wells":
@@ -6781,11 +6797,11 @@ class Protocol:
         return parameters
 
     def measure_concentration(
-        self,
-        wells: WellParam,
-        dataref: str,
-        measurement: str,
-        volume: str = "2:microliter",
+            self,
+            wells: WellParam,
+            dataref: str,
+            measurement: str,
+            volume: str = "2:microliter",
     ):
         """
         Measure the concentration of DNA, ssDNA, RNA or protein in the
@@ -6991,11 +7007,11 @@ class Protocol:
         return self._append_and_return(MeasureVolume(wells, dataref))
 
     def count_cells(
-        self,
-        wells: WellParam,
-        volume: VOLUME,
-        dataref: str,
-        labels: Optional[List[str]] = None,
+            self,
+            wells: WellParam,
+            volume: VOLUME,
+            dataref: str,
+            labels: Optional[List[str]] = None,
     ):
         """
         Count the number of cells in a sample that are positive/negative
@@ -7090,14 +7106,14 @@ class Protocol:
         )
 
     def spectrophotometry(
-        self,
-        dataref: str,
-        obj: Union[Container, str],
-        groups: List,
-        interval: Optional[TIME] = None,
-        num_intervals: Optional[int] = None,
-        temperature: Optional[TEMPERATURE] = None,
-        shake_before: Optional[SpectrophotometryShakeBefore] = None,
+            self,
+            dataref: str,
+            obj: Union[Container, str],
+            groups: List,
+            interval: Optional[TIME] = None,
+            num_intervals: Optional[int] = None,
+            temperature: Optional[TEMPERATURE] = None,
+            shake_before: Optional[SpectrophotometryShakeBefore] = None,
     ):
         """
         Generates an instruction with one or more plate reading steps
@@ -7352,19 +7368,19 @@ class Protocol:
 
     # pylint: disable=protected-access
     def transfer(
-        self,
-        source: WellParam,
-        destination: WellParam,
-        volume: Union[VOLUME, List[VOLUME]],
-        rows: int = 1,
-        columns: int = 1,
-        source_liquid: LiquidClass = LiquidClass,
-        destination_liquid: LiquidClass = LiquidClass,
-        method: Transfer = Transfer,
-        one_tip: bool = False,
-        density: Optional[DENSITY] = None,
-        mode: Optional[str] = None,
-        informatics: Optional[List[Informatics]] = None,
+            self,
+            source: WellParam,
+            destination: WellParam,
+            volume: Union[VOLUME, List[VOLUME]],
+            rows: int = 1,
+            columns: int = 1,
+            source_liquid: LiquidClass = LiquidClass,
+            destination_liquid: LiquidClass = LiquidClass,
+            method: Transfer = Transfer,
+            one_tip: bool = False,
+            density: Optional[DENSITY] = None,
+            mode: Optional[str] = None,
+            informatics: Optional[List[Informatics]] = None,
     ):
         """Generates LiquidHandle instructions between wells
 
@@ -7576,7 +7592,8 @@ class Protocol:
                 compd1 = Compound("CCCC")
                 compd2 = Compound("C1=CC=CC=C1")
 
-                # Single Informatics a destination well in a transfer from a source well to a destination well
+                # Single Informatics a destination well in a transfer
+                from a source well to a destination well
                 p.transfer(
                     resource.well(0).set_volume("40:microliter"),
                     dest_wells[0],
@@ -7584,15 +7601,18 @@ class Protocol:
                     informatics=[AttachCompounds(dest_wells[0], [compd1])],
                 )
 
-                # Single Informatics for a destination well in a transfer from multiple sources to single destination
+                # Single Informatics for a destination well in a transfer
+                from multiple sources to single destination
                 p.transfer(
-                    [resource.well(0).set_volume("40:microliter"),resource.well(1).set_volume("40:microliter")],
+                    [resource.well(0).set_volume("40:microliter"),
+                        resource.well(1).set_volume("40:microliter")],
                     test_wells[0],
                     "5:microliter",
                     informatics=[AttachCompounds(dest_wells[0], [compd1])]
                 )
 
-                # Single Informatics for multiple wells in a transfer from single source to multiple destinations
+                # Single Informatics for multiple wells in a transfer
+                from single source to multiple destinations
                 p.transfer(
                     resource.well(0).set_volume("40:microliter"),
                     dest_wells,
@@ -7600,7 +7620,8 @@ class Protocol:
                     informatics=[AttachCompounds(dest_wells, [compd1])],
                 )
 
-                # Multiple Informatics for a well in a transfer from a source well to a destination well
+                # Multiple Informatics for a well in a transfer
+                from a source well to a destination well
                 self.p.transfer(
                     resource.well(0).set_volume("40:microliter"),
                     dest_wells[0],
@@ -7611,7 +7632,8 @@ class Protocol:
                     ]
                 )
 
-                # Multiple Informatics for multiple wells in transfer from a source to many destination wells
+                # Multiple Informatics for multiple wells in transfer
+                from a source to many destination wells
                 p.transfer(
                     resource.well(0).set_volume("40:microliter"),
                     dest_wells,
@@ -7623,10 +7645,12 @@ class Protocol:
                 )
 
             .. code-block:: json
-                # Only showing details on the informatics attribute for the purpose of demonstrating how informatics
+                # Only showing details on the informatics attribute
+                 for the purpose of demonstrating how informatics
                 # param is being serialized per instruction.
                 [
-                    # a transfer from a source well to a destination well with one Informatics
+                    # a transfer from a source well to a destination
+                    well with one Informatics
                     {
                         "op": "liquid_handle"
                         "locations": [
@@ -7641,7 +7665,8 @@ class Protocol:
                         ]
                     },
 
-                    # a transfer from multiple sources to a destination with one Informatics
+                    # a transfer from multiple sources to a destination
+                    with one Informatics
                     {
                         "op": "liquid_handle"
                         "locations": [
@@ -7665,7 +7690,8 @@ class Protocol:
                         ]
                     },
 
-                    # Single Informatics for multiple wells in a transfer from single source to multiple destinations
+                    # Single Informatics for multiple wells in a transfer
+                    from single source to multiple destinations
                     {
                         "op": "liquid_handle"
                         "locations": [
@@ -7709,7 +7735,8 @@ class Protocol:
                         ]
                     },
 
-                    # Multiple Informatics for a well in a transfer from a source well to a destination well
+                    # Multiple Informatics for a well in a transfer from a
+                    source well to a destination well
                     {
                         "op": "liquid_handle"
                         "locations": [
@@ -7728,7 +7755,8 @@ class Protocol:
                         ]
                     },
 
-                    # Multiple Informatics for multiple wells in transfer from a source to many destination wells
+                    # Multiple Informatics for multiple wells in transfer from a
+                    source to many destination wells
                     {
                         "op": "liquid_handle"
                         "locations": [
@@ -7820,7 +7848,8 @@ class Protocol:
                                 informatics_list.append(AttachCompounds(well, compd))
                     else:
                         raise ValueError(
-                            f"Informatics wells: {wells} do not match wells used in Instruction."
+                            f"Informatics wells: {wells} do not match wells used in "
+                            f"Instruction."
                         )
                 else:
                     raise TypeError(
@@ -7989,7 +8018,7 @@ class Protocol:
         # generate either a LiquidHandle location or instruction list
         locations, instructions = [], []
         for src, des, vol, met, dens, informatics in zip(
-            source, destination, volume, method, density, informatics_list
+                source, destination, volume, method, density, informatics_list
         ):
             max_tip_capacity = met._tip_capacity()
             remaining_vol = vol
@@ -8043,15 +8072,15 @@ class Protocol:
 
     # pylint: disable=protected-access
     def mix(
-        self,
-        well: WellParam,
-        volume: Union[VOLUME, List[VOLUME]],
-        rows: int = 1,
-        columns: int = 1,
-        liquid: LiquidClass = LiquidClass,
-        method: Mix = Mix,
-        one_tip: bool = False,
-        mode: Optional[str] = None,
+            self,
+            well: WellParam,
+            volume: Union[VOLUME, List[VOLUME]],
+            rows: int = 1,
+            columns: int = 1,
+            liquid: LiquidClass = LiquidClass,
+            method: Mix = Mix,
+            one_tip: bool = False,
+            mode: Optional[str] = None,
     ):
         """Generates LiquidHandle instructions within wells
 
@@ -8293,11 +8322,11 @@ class Protocol:
         return self._append_and_return(instructions)
 
     def spread(
-        self,
-        source: Well,
-        dest: Well,
-        volume: VOLUME = "50:microliter",
-        dispense_speed: ACCELERATION = "20:microliter/second",
+            self,
+            source: Well,
+            dest: Well,
+            volume: VOLUME = "50:microliter",
+            dispense_speed: ACCELERATION = "20:microliter/second",
     ):
         """
         Spread the specified volume of the source aliquot across the surface of
@@ -8448,7 +8477,11 @@ class Protocol:
         return self._append_and_return(LiquidHandle(location))
 
     def _transfer_volume(
-        self, source: Well, destination: Well, volume: Unit, shape: DispenseShape
+            self,
+            source: Well,
+            destination: Well,
+            volume: Unit,
+            shape: DispenseShape
     ):
         """
         Transfers volume and properties between aliquots.
@@ -8489,12 +8522,12 @@ class Protocol:
                 dest_well.volume = volume
 
     def evaporate(
-        self,
-        ref: Container,
-        mode: EvaporateMode,
-        duration: TIME,
-        evaporator_temperature: TEMPERATURE,
-        mode_params: Optional[EvaporateModeParams] = None,
+            self,
+            ref: Container,
+            mode: EvaporateMode,
+            duration: TIME,
+            evaporator_temperature: TEMPERATURE,
+            mode_params: Optional[EvaporateModeParams] = None,
     ):
         """
         Removes liquid or moisture from a container using the mode specified.

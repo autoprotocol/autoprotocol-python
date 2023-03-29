@@ -1,4 +1,5 @@
-"""Builders
+"""
+Builders
 Module containing builders, which help build inputs for Instruction parameters
 
     :copyright: 2021 by The Autoprotocol Development Team, see AUTHORS
@@ -261,10 +262,10 @@ class ThermocycleBuilders(InstructionBuilders):
 
     @staticmethod
     def melting(
-        start: Optional[TEMPERATURE] = None,
-        end: Optional[TEMPERATURE] = None,
-        increment: Optional[TEMPERATURE] = None,
-        rate: Optional[TIME] = None,
+            start: Optional[TEMPERATURE] = None,
+            end: Optional[TEMPERATURE] = None,
+            increment: Optional[TEMPERATURE] = None,
+            rate: Optional[TIME] = None,
     ):
         """Helper function for creating melting parameters
 
@@ -447,16 +448,16 @@ class SPEBuilders(InstructionBuilders):
         return parsed_params
 
     def mobile_phase_params(
-        self,
-        volume: Union[str, Unit],
-        loading_flowrate: Union[str, Unit],
-        settle_time: Optional[bool],
-        processing_time: Union[str, Unit],
-        flow_pressure: Union[str, Unit],
-        resource_id: Optional[str] = None,
-        is_sample: bool = False,
-        destination_well: Optional[Well] = None,
-        is_elute: bool = False,
+            self,
+            volume: Union[str, Unit],
+            loading_flowrate: Union[str, Unit],
+            settle_time: Optional[bool],
+            processing_time: Union[str, Unit],
+            flow_pressure: Union[str, Unit],
+            resource_id: Optional[str] = None,
+            is_sample: bool = False,
+            destination_well: Optional[Well] = None,
+            is_elute: bool = False,
     ):
         """
         Create a dictionary with mobile phase parameters which can be
@@ -561,9 +562,9 @@ class DispenseBuilders(InstructionBuilders):
     @staticmethod
     # pragma pylint: disable=unused-argument, missing-param-doc
     def nozzle_position(
-        position_x: Optional[LENGTH] = None,
-        position_y: Optional[LENGTH] = None,
-        position_z: Optional[LENGTH] = None,
+            position_x: Optional[LENGTH] = None,
+            position_y: Optional[LENGTH] = None,
+            position_z: Optional[LENGTH] = None,
     ):
         """
         Generates a validated nozzle_position parameter.
@@ -649,11 +650,11 @@ class DispenseBuilders(InstructionBuilders):
 
     # pragma pylint: disable=missing-param-doc
     def shake_after(
-        self,
-        duration: TIME,
-        frequency: Optional[FREQUENCY] = None,
-        path: Optional[str] = None,
-        amplitude: Optional[LENGTH] = None,
+            self,
+            duration: TIME,
+            frequency: Optional[FREQUENCY] = None,
+            path: Optional[str] = None,
+            amplitude: Optional[LENGTH] = None,
     ):
         """
         Generates a validated shake_after parameter.
@@ -724,9 +725,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
     # pragma pylint: disable=missing-param-doc
     @staticmethod
     def wavelength_selection(
-        shortpass: Optional[WAVELENGTH] = None,
-        longpass: Optional[WAVELENGTH] = None,
-        ideal: Optional[WAVELENGTH] = None,
+            shortpass: Optional[WAVELENGTH] = None,
+            longpass: Optional[WAVELENGTH] = None,
+            ideal: Optional[WAVELENGTH] = None,
     ):
         """
         Generates a representation of a wavelength selection by either
@@ -795,13 +796,13 @@ class SpectrophotometryBuilders(InstructionBuilders):
         return {"mode": mode, "mode_params": self._modes[mode](**mode_params)}
 
     def absorbance_mode_params(
-        self,
-        wells: Union[List[Well], WellGroup],
-        wavelength: WAVELENGTH,
-        num_flashes: Optional[int] = None,
-        settle_time: Optional[TIME] = None,
-        read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
-        position_z: Optional[dict] = None,
+            self,
+            wells: Union[List[Well], WellGroup],
+            wavelength: WAVELENGTH,
+            num_flashes: Optional[int] = None,
+            settle_time: Optional[TIME] = None,
+            read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
+            position_z: Optional[dict] = None,
     ):
         """
         Parameters
@@ -876,17 +877,17 @@ class SpectrophotometryBuilders(InstructionBuilders):
         return mode_params
 
     def fluorescence_mode_params(
-        self,
-        wells: Union[List[Well], WellGroup],
-        excitation: WAVELENGTH,
-        emission: WAVELENGTH,
-        num_flashes: Optional[int] = None,
-        settle_time: Optional[TIME] = None,
-        lag_time: Optional[TIME] = None,
-        integration_time: Optional[TIME] = None,
-        gain: Optional[Union[int, float]] = None,
-        read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
-        position_z: Optional[dict] = None,
+            self,
+            wells: Union[List[Well], WellGroup],
+            excitation: WAVELENGTH,
+            emission: WAVELENGTH,
+            num_flashes: Optional[int] = None,
+            settle_time: Optional[TIME] = None,
+            lag_time: Optional[TIME] = None,
+            integration_time: Optional[TIME] = None,
+            gain: Optional[Union[int, float]] = None,
+            read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
+            position_z: Optional[dict] = None,
     ):
         """
         Parameters
@@ -994,14 +995,14 @@ class SpectrophotometryBuilders(InstructionBuilders):
         return mode_params
 
     def luminescence_mode_params(
-        self,
-        wells: Union[List[Well], WellGroup],
-        num_flashes: Optional[int] = None,
-        settle_time: Optional[TIME] = None,
-        integration_time: Optional[TIME] = None,
-        gain: Optional[int] = None,
-        read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
-        position_z: Optional[dict] = None,
+            self,
+            wells: Union[List[Well], WellGroup],
+            num_flashes: Optional[int] = None,
+            settle_time: Optional[TIME] = None,
+            integration_time: Optional[TIME] = None,
+            gain: Optional[int] = None,
+            read_position: Optional[SpectrophotometryBuildersReadPositions] = None,
+            position_z: Optional[dict] = None,
     ):
         """
         Parameters
@@ -1086,11 +1087,11 @@ class SpectrophotometryBuilders(InstructionBuilders):
         return mode_params
 
     def shake_mode_params(
-        self,
-        duration: Optional[TIME] = None,
-        frequency: Optional[FREQUENCY] = None,
-        path: Optional[SpectrophotometryBuildersShakePaths] = None,
-        amplitude: Optional[LENGTH] = None,
+            self,
+            duration: Optional[TIME] = None,
+            frequency: Optional[FREQUENCY] = None,
+            path: Optional[SpectrophotometryBuildersShakePaths] = None,
+            amplitude: Optional[LENGTH] = None,
     ):
         """
         Parameters
@@ -1116,11 +1117,11 @@ class SpectrophotometryBuilders(InstructionBuilders):
         )
 
     def shake_before(
-        self,
-        duration: TIME,
-        frequency: Optional[FREQUENCY] = None,
-        path: Optional[SpectrophotometryBuildersShakePaths] = None,
-        amplitude: Optional[LENGTH] = None,
+            self,
+            duration: TIME,
+            frequency: Optional[FREQUENCY] = None,
+            path: Optional[SpectrophotometryBuildersShakePaths] = None,
+            amplitude: Optional[LENGTH] = None,
     ):
         """
         Parameters
@@ -1147,11 +1148,11 @@ class SpectrophotometryBuilders(InstructionBuilders):
         )
 
     def _shake(
-        self,
-        duration: Optional[TIME] = None,
-        frequency: Optional[FREQUENCY] = None,
-        path: Optional[SpectrophotometryBuildersShakePaths] = None,
-        amplitude: Optional[LENGTH] = None,
+            self,
+            duration: Optional[TIME] = None,
+            frequency: Optional[FREQUENCY] = None,
+            path: Optional[SpectrophotometryBuildersShakePaths] = None,
+            amplitude: Optional[LENGTH] = None,
     ):
         """
         Helper method for validating shake params.
@@ -1182,9 +1183,9 @@ class SpectrophotometryBuilders(InstructionBuilders):
         return params
 
     def position_z_manual(
-        self,
-        reference: Optional[SpectrophotometryBuildersZReferences] = None,
-        displacement: Optional[LENGTH] = None,
+            self,
+            reference: Optional[SpectrophotometryBuildersZReferences] = None,
+            displacement: Optional[LENGTH] = None,
     ):
         """Helper for building position_z parameters for a manual position_z
         configuration
@@ -1304,9 +1305,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         ]
 
     def location(
-        self,
-        location: Optional[Union[Well, str]] = None,
-        transports: Optional[List[dict]] = None,
+            self,
+            location: Optional[Union[Well, str]] = None,
+            transports: Optional[List[dict]] = None,
     ):
         """Helper for building locations
 
@@ -1347,13 +1348,13 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {"location": location, "transports": transports}
 
     def transport(
-        self,
-        volume: Optional[VOLUME] = None,
-        pump_override_volume: Optional[VOLUME] = None,
-        flowrate: Optional[dict] = None,
-        delay_time: Optional[TIME] = None,
-        mode_params: Optional[dict] = None,
-        density: Optional[DENSITY] = None,
+            self,
+            volume: Optional[VOLUME] = None,
+            pump_override_volume: Optional[VOLUME] = None,
+            flowrate: Optional[dict] = None,
+            delay_time: Optional[TIME] = None,
+            mode_params: Optional[dict] = None,
+            density: Optional[DENSITY] = None,
     ):
         """Helper for building transports
 
@@ -1405,11 +1406,11 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def flowrate(
-        target: FLOW_RATE,
-        initial: Optional[FLOW_RATE] = None,
-        cutoff: Optional[FLOW_RATE] = None,
-        acceleration: Optional[ACCELERATION] = None,
-        deceleration: Optional[ACCELERATION] = None,
+            target: FLOW_RATE,
+            initial: Optional[FLOW_RATE] = None,
+            cutoff: Optional[FLOW_RATE] = None,
+            acceleration: Optional[ACCELERATION] = None,
+            deceleration: Optional[ACCELERATION] = None,
     ):
         """Helper for building flowrates
 
@@ -1450,13 +1451,13 @@ class LiquidHandleBuilders(InstructionBuilders):
         }
 
     def mode_params(
-        self,
-        liquid_class: Optional[str] = None,
-        position_x: Optional[dict] = None,
-        position_y: Optional[dict] = None,
-        position_z: Optional[dict] = None,
-        tip_position: Optional[dict] = None,
-        volume_resolution: Optional[VOLUME] = None,
+            self,
+            liquid_class: Optional[str] = None,
+            position_x: Optional[dict] = None,
+            position_y: Optional[dict] = None,
+            position_z: Optional[dict] = None,
+            tip_position: Optional[dict] = None,
+            volume_resolution: Optional[VOLUME] = None,
     ):
         """Helper for building transport mode_params
 
@@ -1537,15 +1538,15 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def device_mode_params(
-        device: str,
-        model: Optional[str] = None,
-        chip_material: Optional[str] = None,
-        nozzle: Optional[str] = None,
-        diaphragm: Optional[int] = None,
-        nozzle_size: Optional[Unit] = None,
-        tubing: Optional[str] = None,
-        z_drop: Optional[Unit] = None,
-        viscosity: Optional[str] = None
+            device: str,
+            model: Optional[str] = None,
+            chip_material: Optional[str] = None,
+            nozzle: Optional[str] = None,
+            diaphragm: Optional[int] = None,
+            nozzle_size: Optional[Unit] = None,
+            tubing: Optional[str] = None,
+            z_drop: Optional[Unit] = None,
+            viscosity: Optional[str] = None
     ):
         """Helper for building device level mode_params
 
@@ -1710,7 +1711,8 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def move_rate(
-        target: Optional[VELOCITY] = None, acceleration: Optional[ACCELERATION] = None
+            target: Optional[VELOCITY] = None,
+            acceleration: Optional[ACCELERATION] = None
     ):
         """Helper for building move_rates
 
@@ -1734,9 +1736,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {"target": target, "acceleration": acceleration}
 
     def position_xy(
-        self,
-        position: Optional[Union[int, float]] = None,
-        move_rate: Optional[dict] = None,
+            self,
+            position: Optional[Union[int, float]] = None,
+            move_rate: Optional[dict] = None,
     ):
         """Helper for building position_x and position_y parameters
 
@@ -1775,15 +1777,15 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {"position": position, "move_rate": move_rate}
 
     def position_z(
-        self,
-        reference: Optional[str] = None,
-        offset: Optional[LENGTH] = None,
-        move_rate: Optional[dict] = None,
-        detection_method: Optional[str] = None,
-        detection_threshold: Optional[Union[Unit, str]] = None,
-        detection_duration: Optional[TIME] = None,
-        detection_fallback: Optional[dict] = None,
-        detection: Optional[dict] = None,
+            self,
+            reference: Optional[str] = None,
+            offset: Optional[LENGTH] = None,
+            move_rate: Optional[dict] = None,
+            detection_method: Optional[str] = None,
+            detection_threshold: Optional[Union[Unit, str]] = None,
+            detection_duration: Optional[TIME] = None,
+            detection_fallback: Optional[dict] = None,
+            detection: Optional[dict] = None,
     ):
         """Helper for building position_z parameters
 
@@ -1909,12 +1911,12 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {"tip_type": tip_type}
 
     def mix(
-        self,
-        volume: VOLUME,
-        repetitions: int,
-        initial_z: dict,
-        asp_flowrate: Optional[dict] = None,
-        dsp_flowrate: Optional[dict] = None,
+            self,
+            volume: VOLUME,
+            repetitions: int,
+            initial_z: dict,
+            asp_flowrate: Optional[dict] = None,
+            dsp_flowrate: Optional[dict] = None,
     ):
         """Helper for building mix params for Transfer LiquidHandleMethods
 
@@ -1988,7 +1990,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {"volume": volume, "initial_z": initial_z, "flowrate": flowrate}
 
     def desired_mode(
-        self, transports: Optional[dict] = None, mode: Optional[str] = None
+            self,
+            transports: Optional[dict] = None,
+            mode: Optional[str] = None
     ):
         """Helper for selecting dispense mode based on liquid_class name
         For non-viscous, water-like liquid and air, the method will default
@@ -2137,11 +2141,11 @@ class PlateReaderBuilders(InstructionBuilders):
     """Helpers for building parameters for plate reading instructions"""
 
     def incubate_params(
-        self,
-        duration: TIME,
-        shake_amplitude: Optional[LENGTH] = None,
-        shake_orbital: Optional[bool] = None,
-        shaking: Optional[dict] = None,
+            self,
+            duration: TIME,
+            shake_amplitude: Optional[LENGTH] = None,
+            shake_orbital: Optional[bool] = None,
+            shaking: Optional[dict] = None,
     ):
         """
         Create a dictionary with incubation parameters which can be used as
@@ -2227,7 +2231,9 @@ class EvaporateBuilders(InstructionBuilders):
         ]
 
     def get_mode_params(
-        self, mode: Union[EvaporateBuildersValidModes, str], mode_params: Dict[str, Any]
+            self,
+            mode: Union[EvaporateBuildersValidModes, str],
+            mode_params: Dict[str, Any]
     ):
         """
         Checks on the validity of mode and mode_params, and
@@ -2336,11 +2342,11 @@ class GelPurifyBuilders(InstructionBuilders):
     """Helpers for building GelPurify instructions"""
 
     def extract(
-        self,
-        source: Well,
-        band_list: List[GelPurifyBand],
-        lane: Optional[int] = None,
-        gel: Optional[int] = None,
+            self,
+            source: Well,
+            band_list: List[GelPurifyBand],
+            lane: Optional[int] = None,
+            gel: Optional[int] = None,
     ):
         """Helper for building extract params for gel_purify
 
@@ -2380,13 +2386,13 @@ class GelPurifyBuilders(InstructionBuilders):
         return {"source": source, "band_list": band_list, "lane": lane, "gel": gel}
 
     def band(
-        self,
-        elution_buffer: str,
-        elution_volume: VOLUME,
-        destination: Well,
-        min_bp: Optional[int] = None,
-        max_bp: Optional[int] = None,
-        band_size_range: Optional[dict] = None,
+            self,
+            elution_buffer: str,
+            elution_volume: VOLUME,
+            destination: Well,
+            min_bp: Optional[int] = None,
+            max_bp: Optional[int] = None,
+            band_size_range: Optional[dict] = None,
     ):
         """Helper for building band params for gel_purify
 
@@ -2488,11 +2494,11 @@ class MagneticTransferBuilders(InstructionBuilders):
 
     @staticmethod
     def mag_incubate(
-        object: Container,
-        duration: TIME,
-        magnetize: bool,
-        tip_position: float,
-        temperature: Optional[TEMPERATURE] = None,
+            object: Container,
+            duration: TIME,
+            magnetize: bool,
+            tip_position: float,
+            temperature: Optional[TEMPERATURE] = None,
     ):
         """Helper for building mag_incubate sub operations for MagneticTransfer
 
@@ -2548,11 +2554,11 @@ class MagneticTransferBuilders(InstructionBuilders):
 
     @staticmethod
     def mag_collect(
-        object: Container,
-        cycles: int,
-        pause_duration: TIME,
-        bottom_position: Optional[float] = None,
-        temperature: Optional[TEMPERATURE] = None,
+            object: Container,
+            cycles: int,
+            pause_duration: TIME,
+            bottom_position: Optional[float] = None,
+            temperature: Optional[TEMPERATURE] = None,
     ):
         """Helper for building mag_collect sub operations for MagneticTransfer
 
@@ -2608,12 +2614,12 @@ class MagneticTransferBuilders(InstructionBuilders):
 
     @staticmethod
     def mag_release(
-        object: Container,
-        duration: TIME,
-        frequency: FREQUENCY,
-        center: Optional[float] = None,
-        amplitude: Optional[float] = None,
-        temperature: Optional[TEMPERATURE] = None,
+            object: Container,
+            duration: TIME,
+            frequency: FREQUENCY,
+            center: Optional[float] = None,
+            amplitude: Optional[float] = None,
+            temperature: Optional[TEMPERATURE] = None,
     ):
         """Helper for building mag_release sub operations for MagneticTransfer
 
@@ -2679,13 +2685,13 @@ class MagneticTransferBuilders(InstructionBuilders):
 
     @staticmethod
     def mag_mix(
-        object: Container,
-        duration: TIME,
-        frequency: FREQUENCY,
-        center: Optional[float] = None,
-        amplitude: Optional[float] = None,
-        magnetize: Optional[bool] = None,
-        temperature: Optional[TEMPERATURE] = None,
+            object: Container,
+            duration: TIME,
+            frequency: FREQUENCY,
+            center: Optional[float] = None,
+            amplitude: Optional[float] = None,
+            magnetize: Optional[bool] = None,
+            temperature: Optional[TEMPERATURE] = None,
     ):
         """Helper for building mag_mix sub operations for MagneticTransfer
 
@@ -2769,11 +2775,11 @@ class FlowCytometryBuilders(InstructionBuilders):
         self.gating_modes = ("FSC", "SSC")
 
     def laser(
-        self,
-        channels: List[FlowCytometryChannel],
-        excitation: Optional[WAVELENGTH] = None,
-        power: Optional[POWER] = None,
-        area_scaling_factor: Optional[int] = None,
+            self,
+            channels: List[FlowCytometryChannel],
+            excitation: Optional[WAVELENGTH] = None,
+            power: Optional[POWER] = None,
+            area_scaling_factor: Optional[int] = None,
     ):
         """
         Generates a dict of laser parameters.
@@ -2813,7 +2819,7 @@ class FlowCytometryBuilders(InstructionBuilders):
             raise TypeError("channels must be a list of dict.")
 
         if area_scaling_factor is not None and not isinstance(
-            area_scaling_factor, Number
+                area_scaling_factor, Number
         ):
             raise TypeError("area_scaling_factor must be a number.")
 
@@ -2846,12 +2852,12 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     def channel(
-        self,
-        emission_filter: FlowCytometryChannelEmissionFilter,
-        detector_gain: VOLTAGE,
-        measurements: Optional[FlowCytometryChannelMeasurements] = None,
-        trigger_threshold: Optional[int] = None,
-        trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None,
+            self,
+            emission_filter: FlowCytometryChannelEmissionFilter,
+            detector_gain: VOLTAGE,
+            measurements: Optional[FlowCytometryChannelMeasurements] = None,
+            trigger_threshold: Optional[int] = None,
+            trigger_logic: Optional[FlowCytometryChannelTriggerLogic] = None,
     ):
         """
         Generates a dict of channel parameters.
@@ -2910,10 +2916,10 @@ class FlowCytometryBuilders(InstructionBuilders):
         }
 
     def emission_filter(
-        self,
-        channel_name: str,
-        shortpass: Optional[WAVELENGTH] = None,
-        longpass: Optional[WAVELENGTH] = None,
+            self,
+            channel_name: str,
+            shortpass: Optional[WAVELENGTH] = None,
+            longpass: Optional[WAVELENGTH] = None,
     ):
         """
         Generates a dict of emission filter parameters.
@@ -2960,9 +2966,9 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     @staticmethod
     def measurements(
-        area: Optional[bool] = None,
-        height: Optional[bool] = None,
-        width: Optional[bool] = None,
+            area: Optional[bool] = None,
+            height: Optional[bool] = None,
+            width: Optional[bool] = None,
     ):
         """
         Generates a dict of measurements parameters.
@@ -2993,14 +2999,14 @@ class FlowCytometryBuilders(InstructionBuilders):
         return {"area": area, "height": height, "width": width}
 
     def collection_conditions(
-        self,
-        acquisition_volume: VOLUME,
-        flowrate: FLOW_RATE,
-        wait_time: TIME,
-        mix_cycles: int,
-        mix_volume: VOLUME,
-        rinse_cycles: int,
-        stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria] = None,
+            self,
+            acquisition_volume: VOLUME,
+            flowrate: FLOW_RATE,
+            wait_time: TIME,
+            mix_cycles: int,
+            mix_volume: VOLUME,
+            rinse_cycles: int,
+            stop_criteria: Optional[FlowCytometryCollectionConditionStopCriteria] = None,
     ):
         """
         Generates a dict of collection_conditions parameters.
@@ -3068,9 +3074,9 @@ class FlowCytometryBuilders(InstructionBuilders):
 
     @staticmethod
     def stop_criteria(
-        volume: Optional[VOLUME] = None,
-        events: Optional[int] = None,
-        time: Optional[TIME] = None,
+            volume: Optional[VOLUME] = None,
+            events: Optional[int] = None,
+            time: Optional[TIME] = None,
     ):
         """
         Generates a dict of stop_criteria parameters.

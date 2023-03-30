@@ -1030,9 +1030,15 @@ class Protocol:
         columns: int = 1,
         method: DispenseMethod = DispenseMethod,
         liquid: LiquidClass = LiquidClass,
+        device: Optional[str] = None,
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
+        diaphragm: Optional[int] = None,
+        nozzle_size: Optional[Unit] = None,
+        tubing: Optional[str] = None,
+        z_drop: Optional[Unit] = None,
+        viscosity: Optional[str] = None
     ):
         """Generates a liquid_handle dispense
 
@@ -1074,6 +1080,8 @@ class Protocol:
             Integrates with the specified liquid to define a set of physical
             movements. If the number of Dispense classes specified is more than one
             then number specified must match the length of sources.
+        device: str
+            Device used for liquid_handle_dispense execution
         model : str, optional
             Tempest chip model, currently only support "high_volume".
         chip_material : str, optional
@@ -1083,6 +1091,20 @@ class Protocol:
             Tempest nozzle type, currently only support "standard".
             The three chip parameters: model, chip_material, and nozzle will be
             used in liquid handle mode_params to allow tempest chip specification.
+        diaphragm : int, optional
+            any integer between 0 and 100, inclusive
+        nozzle_size : Unit[Length], optional
+            one of "0.1:mm", "0.2:mm", "0.5:mm".
+            Default is "0.1:mm".
+        tubing: Optional[String]
+            one of "LV", "HV", "P200", "P1000".
+            Default is "LV"
+        z_drop: Optional[Unit[Length]]
+            within the range: 0:mm - 100:mm, inclusive.
+            Default is "0:mm"
+        viscosity: Optional[String]
+            one of "1", "2-5", "6-10", "11-20", "21-25".
+            Default is "1".
 
         Returns
         -------
@@ -1469,7 +1491,15 @@ class Protocol:
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
         device_mode_params = LiquidHandleBuilders.device_mode_params(
-            model=model, chip_material=chip_material, nozzle=nozzle
+            device=device or "x_tempest_chip",
+            model=model,
+            chip_material=chip_material,
+            nozzle=nozzle,
+            diaphragm=diaphragm,
+            nozzle_size=nozzle_size,
+            tubing=tubing,
+            z_drop=z_drop,
+            viscosity=viscosity
         )
         return self._append_and_return(
             LiquidHandle(

@@ -1531,9 +1531,15 @@ class LiquidHandleBuilders(InstructionBuilders):
 
     @staticmethod
     def device_mode_params(
+        device: str,
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
+        diaphragm: Optional[int] = None,
+        nozzle_size: Optional[Unit] = None,
+        tubing: Optional[str] = None,
+        z_drop: Optional[Unit] = None,
+        viscosity: Optional[str] = None
     ):
         """Helper for building device level mode_params
 
@@ -1542,12 +1548,30 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        model : string, optional
-            Tempest chip model.
-        chip_material : string, optional
+        device: string
+            x_tempest_chip or x_mantis
+        model: string, optional
+            Tempest chip or mantis model.
+        chip_material: string, optional
             Material that the tempest chip is made of.
-        nozzle : string, optional
-            Type of chip nozzle.
+        nozzle: string, optional
+            Type of chip nozzle for tempest.
+        diaphragm: Optional[Integer]
+            any integer between 0 and 100, inclusive
+        nozzle_size: Optional[Unit[Length]]
+            one of "0.1:mm", "0.2:mm", "0.5:mm"
+        tubing: Optional[String]
+            one of "LV", "HV", "P200", "P1000"
+            TODO: How do we want to handle these tip types?
+            In the future, we're going to have tempest source support
+            this new tip type container type which will get a shortname
+            akin to `pipette-tip-p200` or something. If we align these
+            two values to that shortname, we can just pass it in via
+            `source_container.container_type.shortname`
+        z_drop: Optional[Unit[Length]]
+            within the range: 0:mm - 100:mm, inclusive
+        viscosity: Optional[String]
+            one of "1", "2-5", "6-10", "11-20", "21-25"
 
         Returns
         -------
@@ -1557,38 +1581,122 @@ class LiquidHandleBuilders(InstructionBuilders):
         Raises
         ------
         ValueError
+            If device is not of the following: [x_tempest_chip, x_mantis]
+        ValueError
             If model is not None or "high_volume"
         ValueError
             If nozzle is not None or "standard"
         ValueError
             If chip_material is not None or in the allowable list of tempest chip materials
         """
-        # tempest chip specification
-        if (model != "high_volume") and (model is not None):
-            raise ValueError(f"Tempest chip model is {model}. It must be: high_volume.")
-        if (nozzle != "standard") and (nozzle is not None):
-            raise ValueError(f"Tempest nozzle is {nozzle}. It must be: standard.")
-        if (chip_material not in ["silicone", "pfe"]) and (chip_material is not None):
+        if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
-                f"Tempest chip material is {chip_material}. It must be either: silicone or pfe."
+                f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
-
-        device_mode_params = {}
-        if any([model, chip_material, nozzle]):
-            if model is None:
-                model = "high_volume"
-            if chip_material is None:
-                chip_material = "pfe"
-            if nozzle is None:
-                nozzle = "standard"
-            x_tempest_chip = {
-                "model": model,
-                "material": chip_material,
-                "nozzle": nozzle,
+        if device == "x_mantis":
+            # If device is mantis, set default params
+            default_params: dict = {
+                "model": "high_volume",
+                "material": None,
+                "nozzle": None,
+                "diaphragm": 0,
+                "nozzle_size": "0.1:mm",
+                "tubing": "LV",
+                "z_drop": "0.0:mm",
+                "viscosity": "1",
             }
-            device_mode_params["x_tempest_chip"] = x_tempest_chip
+        else:
+            # Otherwise, default to tempest default params
+            default_params: dict = {
+                "model": "high_volume",
+                "material": "pfe",
+                "nozzle": "standard",
+                "diaphragm": None,
+                "nozzle_size": None,
+                "tubing": None,
+                "z_drop": None,
+                "viscosity": None,
+            }
+        device_dict: dict = {}
+        if any([
+            model,
+            chip_material,
+            nozzle,
+            diaphragm,
+            nozzle_size,
+            tubing,
+            z_drop,
+            viscosity
+        ]):
+            device_dict.update({
+                "model": model or default_params["model"],
+                "material": chip_material or default_params["material"],
+                "nozzle": nozzle or default_params["nozzle"],
+                "diaphragm": diaphragm or default_params["diaphragm"],
+                "nozzle_size": nozzle_size or default_params["nozzle_size"],
+                "tubing": tubing or default_params["tubing"],
+                "z_drop": z_drop or default_params["z_drop"],
+                "viscosity": viscosity or default_params["viscosity"],
+            })
+        LiquidHandleBuilders.validate_device_params(device, device_dict)
 
-        return device_mode_params
+        return {device: device_dict}
+
+    @staticmethod
+    def validate_device_params(device: str, device_dict: dict) -> None:
+        """
+        Helper validation function to validate device liquid handling params
+        Parameters
+        ----------
+        device: str
+            either x_mantis or x_tempest_chip
+        device_dict: dict
+            Dictionary of all device params, as seen in function device_mode_params
+        Raises
+        ------
+        ValueError
+            If input device is not either x_mantis or x_tempest_chip
+        ValueError
+            If input device_dict values are not of the accepted
+            params for the input device
+        """
+        if device == "x_mantis":
+            # If device is mantis, set accepted params
+            accepted_params: dict = {
+                "model": ["high_volume", "low_volume"],
+                "diaphragm": [0, 100],
+                "nozzle_size": ["0.1:mm", "0.2:mm", "0.5:mm"],
+                "tubing": ["LV", "HV", "P200", "P1000"],
+                "z_drop": ["0.0:mm", "100.0:mm"],
+                "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
+            }
+        elif device == "x_tempest_chip":
+            # Otherwise, default to tempest accepted params
+            accepted_params: dict = {
+                "model": ["high_volume"],
+                "nozzle": ["standard"],
+                "material": ["silicone", "pfe"],
+            }
+        else:
+            raise ValueError(
+                f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
+            )
+        error_values: dict = {}
+        # Validate params with accepted params dict
+        for key, value in device_dict.items():
+            if value:
+                if key == "z_drop" or key == "diaphragm":
+                    accepted_range: List = list(accepted_params[key])
+                    if value < accepted_range[0] or value > accepted_range[1]:
+                        error_values.update({key: value})
+                else:
+                    if value not in accepted_params[key]:
+                        error_values.update({key: value})
+
+        if error_values:
+            raise ValueError(
+                f"Incorrect params: {error_values}. It must be {accepted_params}"
+            )
 
     @staticmethod
     def move_rate(

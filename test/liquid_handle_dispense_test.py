@@ -856,6 +856,166 @@ class TestLiquidHandleDispenseMode:
                 nozzle="abc",
             )
 
+    def test_mantis_default_params(self):
+        """ Tests mantis default params """
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            liquid=ProteinBuffer,
+        )
+
+        assert "mode_params" not in instruction.data
+
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            liquid=ProteinBuffer,
+            device="x_mantis",
+            model="high_volume",
+            diaphragm=0,
+            nozzle_size="0.1:mm",
+            tubing="LV",
+            z_drop="0.0:mm",
+            viscosity="1"
+        )
+
+        mode_params = {
+            "x_mantis": {
+                "model": "high_volume",
+                "diaphragm": 0,
+                "nozzle_size": "0.1:mm",
+                "tubing": "LV",
+                "z_drop": "0.0:mm",
+                "viscosity": "1",
+            }
+        }
+
+        assert instruction.data["mode_params"] == mode_params
+
+    def test_mantis_other_params(self):
+        """ Tests mantis low_volume params """
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            liquid=ProteinBuffer,
+            device="x_mantis",
+            model="low_volume",
+            diaphragm=25,
+            nozzle_size="0.1:mm",
+            tubing="LV",
+            z_drop="0.2:mm",
+            viscosity="1"
+        )
+
+        mode_params = {
+            "x_mantis": {
+                "model": "low_volume",
+                "diaphragm": 25,
+                "nozzle_size": "0.1:mm",
+                "tubing": "LV",
+                "z_drop": "0.2:mm",
+                "viscosity": "1",
+            }
+        }
+
+        assert instruction.data["mode_params"] == mode_params
+
+    def test_mantis_bad_params(self):
+        """ Tests mantis bad params """
+        # Incorrect model param
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                model="mid_volume",
+                diaphragm=0,
+                nozzle_size="0.1:mm",
+                tubing="LV",
+                z_drop="0.0:mm",
+                viscosity="1"
+            )
+        # Incorrect diaphragm value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                model="high_volume",
+                diaphragm=101,
+                nozzle_size="0.1:mm",
+                tubing="LV",
+                z_drop="0.0:mm",
+                viscosity="1"
+            )
+            # Incorrect nozzle_size value
+            with pytest.raises(ValueError):
+                self.protocol.liquid_handle_dispense(
+                    source=self.tube.well(0),
+                    destination=self.flat.well(0),
+                    volume="5:uL",
+                    liquid=ProteinBuffer,
+                    device="x_mantis",
+                    model="high_volume",
+                    diaphragm=101,
+                    nozzle_size="0.3:mm",
+                    tubing="LV",
+                    z_drop="0.0:mm",
+                    viscosity="1"
+                )
+            # Incorrect tubing value
+            with pytest.raises(ValueError):
+                self.protocol.liquid_handle_dispense(
+                    source=self.tube.well(0),
+                    destination=self.flat.well(0),
+                    volume="5:uL",
+                    liquid=ProteinBuffer,
+                    device="x_mantis",
+                    model="high_volume",
+                    diaphragm=101,
+                    nozzle_size="0.3:mm",
+                    tubing="MV",
+                    z_drop="0.0:mm",
+                    viscosity="1"
+                )
+            # Incorrect z_drop value
+            with pytest.raises(ValueError):
+                self.protocol.liquid_handle_dispense(
+                    source=self.tube.well(0),
+                    destination=self.flat.well(0),
+                    volume="5:uL",
+                    liquid=ProteinBuffer,
+                    device="x_mantis",
+                    model="high_volume",
+                    diaphragm=101,
+                    nozzle_size="0.3:mm",
+                    tubing="MV",
+                    z_drop="200.0:mm",
+                    viscosity="1"
+                )
+            # Incorrect viscosity value
+            with pytest.raises(ValueError):
+                self.protocol.liquid_handle_dispense(
+                    source=self.tube.well(0),
+                    destination=self.flat.well(0),
+                    volume="5:uL",
+                    liquid=ProteinBuffer,
+                    device="x_mantis",
+                    model="high_volume",
+                    diaphragm=101,
+                    nozzle_size="0.3:mm",
+                    tubing="MV",
+                    z_drop="0.0:mm",
+                    viscosity="100"
+                )
+
     def test_liquid_handle_volume_tracking(self):
         self.tube.well(0).set_volume("0:microliter")
 

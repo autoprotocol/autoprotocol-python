@@ -1582,12 +1582,6 @@ class LiquidHandleBuilders(InstructionBuilders):
         ------
         ValueError
             If device is not of the following: [x_tempest_chip, x_mantis]
-        ValueError
-            If model is not None or "high_volume"
-        ValueError
-            If nozzle is not None or "standard"
-        ValueError
-            If chip_material is not None or in the allowable list of tempest chip materials
         """
         params: dict = {
             "model": model,
@@ -1673,6 +1667,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             )
 
         default_dict: dict = {}
+        # Default to the first value in the accepted params dict
         for key, value in accepted_params.items():
             default_dict.update({key: value[0]})
 

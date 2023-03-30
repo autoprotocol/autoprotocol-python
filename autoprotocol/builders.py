@@ -1603,41 +1603,21 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
-        if device == "x_mantis":
-            # If device is mantis, set default params
-            default_params: dict = {
-                "model": "high_volume",
-                "material": None,
-                "nozzle": None,
-                "diaphragm": 0,
-                "nozzle_size": "0.1:mm",
-                "tubing": "LV",
-                "z_drop": "0.0:mm",
-                "viscosity": "1",
-            }
-        else:
-            # Otherwise, default to tempest default params
-            default_params: dict = {
-                "model": "high_volume",
-                "material": "pfe",
-                "nozzle": "standard",
-                "diaphragm": None,
-                "nozzle_size": None,
-                "tubing": None,
-                "z_drop": None,
-                "viscosity": None,
-            }
+
+        default_params = LiquidHandleBuilders.validate_device_params(device, params)
+
         device_dict: dict = {}
         if any(params.values()):
             for key, value in params.items():
-                device_dict.update({key: value or default_params[key]})
-
-        LiquidHandleBuilders.validate_device_params(device, device_dict)
+                if key not in default_params:
+                    device_dict.update({key: value or None})
+                else:
+                    device_dict.update({key: value or default_params[key]})
 
         return {device: device_dict}
 
     @staticmethod
-    def validate_device_params(device: str, device_dict: dict) -> None:
+    def validate_device_params(device: str, device_dict: dict) -> dict:
         """
         Helper validation function to validate device liquid handling params
         Parameters
@@ -1669,7 +1649,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             accepted_params: dict = {
                 "model": ["high_volume"],
                 "nozzle": ["standard"],
-                "material": ["silicone", "pfe"],
+                "material": ["pfe", "silicone"],
             }
         else:
             raise ValueError(
@@ -1691,6 +1671,12 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
+
+        default_dict: dict = {}
+        for key, value in accepted_params.items():
+            default_dict.update({key: value[0]})
+
+        return default_dict
 
     @staticmethod
     def move_rate(

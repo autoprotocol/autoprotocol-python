@@ -895,7 +895,7 @@ class TestLiquidHandleDispenseMode:
         assert instruction.data["mode_params"] == mode_params
 
     def test_mantis_other_params(self):
-        """ Tests mantis low_volume params """
+        """ Tests mantis low_volume params, still accepted"""
         instruction = self.protocol.liquid_handle_dispense(
             source=self.tube.well(0),
             destination=self.flat.well(0),

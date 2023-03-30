@@ -1539,7 +1539,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         nozzle_size: Optional[Unit] = None,
         tubing: Optional[str] = None,
         z_drop: Optional[Unit] = None,
-        viscosity: Optional[str] = None
+        viscosity: Optional[str] = None,
     ):
         """Helper for building device level mode_params
 
@@ -1590,14 +1590,14 @@ class LiquidHandleBuilders(InstructionBuilders):
             If chip_material is not None or in the allowable list of tempest chip materials
         """
         params: dict = {
-           "model": model,
-           "material": chip_material,
-           "nozzle": nozzle,
-           "diaphragm": diaphragm,
-           "nozzle_size": nozzle_size,
-           "tubing": tubing,
-           "z_drop": z_drop,
-           "viscosity": viscosity
+            "model": model,
+            "material": chip_material,
+            "nozzle": nozzle,
+            "diaphragm": diaphragm,
+            "nozzle_size": nozzle_size,
+            "tubing": tubing,
+            "z_drop": z_drop,
+            "viscosity": viscosity,
         }
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(

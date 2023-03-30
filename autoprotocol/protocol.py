@@ -1038,7 +1038,7 @@ class Protocol:
         nozzle_size: Optional[Unit] = None,
         tubing: Optional[str] = None,
         z_drop: Optional[Unit] = None,
-        viscosity: Optional[str] = None
+        viscosity: Optional[str] = None,
     ):
         """Generates a liquid_handle dispense
 
@@ -1499,7 +1499,7 @@ class Protocol:
             nozzle_size=nozzle_size,
             tubing=tubing,
             z_drop=z_drop,
-            viscosity=viscosity
+            viscosity=viscosity,
         )
         return self._append_and_return(
             LiquidHandle(

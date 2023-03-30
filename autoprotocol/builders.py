@@ -1618,6 +1618,12 @@ class LiquidHandleBuilders(InstructionBuilders):
             either x_mantis or x_tempest_chip
         device_dict: dict
             Dictionary of all device params, as seen in function device_mode_params
+
+        Returns
+        -------
+        dict
+            default_dict for the specified device
+
         Raises
         ------
         ValueError

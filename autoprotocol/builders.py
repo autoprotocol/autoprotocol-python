@@ -1589,6 +1589,16 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If chip_material is not None or in the allowable list of tempest chip materials
         """
+        params: dict = {
+           "model": model,
+           "material": chip_material,
+           "nozzle": nozzle,
+           "diaphragm": diaphragm,
+           "nozzle_size": nozzle_size,
+           "tubing": tubing,
+           "z_drop": z_drop,
+           "viscosity": viscosity
+        }
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
@@ -1618,26 +1628,10 @@ class LiquidHandleBuilders(InstructionBuilders):
                 "viscosity": None,
             }
         device_dict: dict = {}
-        if any([
-            model,
-            chip_material,
-            nozzle,
-            diaphragm,
-            nozzle_size,
-            tubing,
-            z_drop,
-            viscosity
-        ]):
-            device_dict.update({
-                "model": model or default_params["model"],
-                "material": chip_material or default_params["material"],
-                "nozzle": nozzle or default_params["nozzle"],
-                "diaphragm": diaphragm or default_params["diaphragm"],
-                "nozzle_size": nozzle_size or default_params["nozzle_size"],
-                "tubing": tubing or default_params["tubing"],
-                "z_drop": z_drop or default_params["z_drop"],
-                "viscosity": viscosity or default_params["viscosity"],
-            })
+        if any(params.values()):
+            for key, value in params.items():
+                device_dict.update({key: value or default_params[key]})
+
         LiquidHandleBuilders.validate_device_params(device, device_dict)
 
         return {device: device_dict}

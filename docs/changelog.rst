@@ -3,7 +3,7 @@ Changelog
 =========
 * :release: `10.3.0 <2023-03-24>`
 * :feature: `390` Support for Mantis `liquid_handle` dispense in `device_mode_params`
-* :feature: `392` Support for Mantis in `liquid_handle_dispense` method
+* :feature: `393` Support for Mantis in `liquid_handle_dispense` method
 
 * :release: `10.2.2 <2023-02-28>`
 * :bug:`389` Adding unit_as_strings_factory to fix Unit serialization expected as str not dict

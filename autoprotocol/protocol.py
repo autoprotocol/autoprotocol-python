@@ -1080,6 +1080,8 @@ class Protocol:
             Integrates with the specified liquid to define a set of physical
             movements. If the number of Dispense classes specified is more than one
             then number specified must match the length of sources.
+        device: str, optional
+            Device used for liquid handle dispense. Tempest or Mantis
         model : str, optional
             Tempest chip model, currently only support "high_volume".
         chip_material : str, optional

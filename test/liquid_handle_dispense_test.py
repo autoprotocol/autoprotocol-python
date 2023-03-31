@@ -766,6 +766,8 @@ class TestLiquidHandleDispenseMode:
             }
         }
 
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 8 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
         instruction = self.protocol.liquid_handle_dispense(
@@ -804,6 +806,9 @@ class TestLiquidHandleDispenseMode:
                 "model": "high_volume",
             }
         }
+
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 8 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
     def test_tempest_bad_chip_param(self):
@@ -892,6 +897,8 @@ class TestLiquidHandleDispenseMode:
             }
         }
 
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
     def test_mantis_other_params(self):
@@ -921,6 +928,8 @@ class TestLiquidHandleDispenseMode:
             }
         }
 
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
     def test_mantis_bad_params(self):

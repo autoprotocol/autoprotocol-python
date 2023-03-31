@@ -1030,7 +1030,7 @@ class Protocol:
         columns: int = 1,
         method: DispenseMethod = DispenseMethod,
         liquid: LiquidClass = LiquidClass,
-        device: Optional[str] = None,
+        device: Optional[str] = "x_tempest_chip",
         model: Optional[str] = None,
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
@@ -1207,6 +1207,8 @@ class Protocol:
         default_num_dispense_chips_in_source: int = 1
         default_max_num_dispense_chips: int = 12
         remaining_num_chips_to_specify = default_max_num_dispense_chips
+        if device == "x_mantis":
+            rows = 1
 
         def format_source_well(well: Well, num_chips: int) -> Tuple[Well, int]:
             return (well, num_chips)
@@ -1491,7 +1493,7 @@ class Protocol:
             # Update source volume
             source_location.add_volume(-total_volume_dispensed)
         device_mode_params = LiquidHandleBuilders.device_mode_params(
-            device=device or "x_tempest_chip",
+            device=device,
             model=model,
             chip_material=chip_material,
             nozzle=nozzle,

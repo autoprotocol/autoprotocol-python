@@ -1602,9 +1602,9 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         device_dict: dict = {}
         if any(params.values()):
-            for key, value in params.items():
+            for key, value in default_params.items():
                 if key in default_params:
-                    device_dict.update({key: value or default_params[key]})
+                    device_dict.update({key: params[key] or value})
 
         return {device: device_dict}
 

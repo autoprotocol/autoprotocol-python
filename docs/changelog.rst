@@ -1,7 +1,7 @@
 =========
 Changelog
 =========
-* :release: `10.3.0 <2023-03-24>`
+* :release: `Unreleased <2023-03-24>`
 * :feature: `390` Support for Mantis `liquid_handle` dispense
 
 * :release: `10.2.2 <2023-02-28>`

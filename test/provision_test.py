@@ -5,6 +5,8 @@ from test.test_util import TestUtils
 import pytest
 
 from autoprotocol.protocol import Protocol
+from test.test_provision_mixture_informatics import TestProvisionMixture
+from autoprotocol.unit import Unit
 
 
 class TestProvision(object):
@@ -215,3 +217,18 @@ class TestProvision(object):
     def test_provision_well_with_neither_mass_nor_volume(self):
         with pytest.raises(ValueError):
             self.p.provision("rs17gmh5wafm5p", self.w1)
+
+    def test_missing_informatics_for_provision_volume_greater_than_900_microliter(self):
+        w2 = (
+            self.p.ref("w2", None, cont_type="96-deep", discard=True)
+            .well(0)
+            .set_volume("1010:microliter")
+        )
+        self.p.provision("rs17gmh5wafm5p", w2, "1000:microliter", informatics=[TestProvisionMixture("mix123", Unit("1000:microliter"), Unit("2000:microliter"))])
+        actual_instruction_as_json = json.dumps(
+            self.p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision_with_informatics.json"
+        )
+        assert expected_instruction_as_json == actual_instruction_as_json

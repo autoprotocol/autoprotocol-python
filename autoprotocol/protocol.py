@@ -5876,7 +5876,7 @@ class Protocol:
                 if amount > Unit(900, "microliter"):
                     diff = amount - Unit(900, "microliter")
                     provision_instructions_to_return.append(
-                        self.provision(resource_id, d, Unit(900, "microliter"))
+                        self.provision(resource_id, d, Unit(900, "microliter"), informatics=informatics)
                     )
                     while diff > Unit(0.0, "microliter"):
                         provision_instructions_to_return.append(

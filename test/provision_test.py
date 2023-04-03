@@ -229,6 +229,16 @@ class TestProvision(object):
             self.p.as_dict()["instructions"], indent=2, sort_keys=True
         )
         expected_instruction_as_json = TestUtils.read_json_file(
-            "provision_with_informatics.json"
+            "provision_with_informatics_greater_than_900_microliter.json"
+        )
+        assert expected_instruction_as_json == actual_instruction_as_json
+
+    def test_informatics_for_provision_volume_less_than_900_microliter(self):
+        self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter", informatics=[TestProvisionMixture("mix123", Unit("50:microliter"), Unit("2000:microliter"))])
+        actual_instruction_as_json = json.dumps(
+            self.p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision_with_informatics_less_than_900_microliter.json"
         )
         assert expected_instruction_as_json == actual_instruction_as_json

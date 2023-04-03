@@ -102,10 +102,6 @@ class Transfer(LiquidHandleMethod):
         self._source_liquid = None
         self._destination_liquid = None
 
-    def _rec_tip_type(self, volume: Unit):
-        self.tip_type = super(Transfer, self)._rec_tip_type(volume=volume)
-        return self.tip_type
-
     def _has_calibration(self):
         liquids = [self._source_liquid, self._destination_liquid]
         return any(_ and _._has_calibration() for _ in liquids)

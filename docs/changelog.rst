@@ -2,6 +2,9 @@
 Changelog
 =========
 
+* :release: `10.2.3 <2023-04-03>`
+* :bug:`391` Revert rec_tip_type implementation
+
 * :release: `10.2.2 <2023-02-28>`
 * :bug:`389` Adding unit_as_strings_factory to fix Unit serialization expected as str not dict
 * :bug:`389` Fix DispenseColumn serialization prior to constructing Dispense Instruction

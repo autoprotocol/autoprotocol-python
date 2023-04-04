@@ -23,7 +23,7 @@ See Also
 Instruction
     Instructions corresponding to each of the builders
 """
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
 from functools import reduce
 from numbers import Number
@@ -1578,7 +1578,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If device is not of the following: [x_tempest_chip, x_mantis]
         """
-        params: dict = {
+        params: OrderedDict = {
             "model": model,
             "material": chip_material,
             "nozzle": nozzle,
@@ -1593,18 +1593,17 @@ class LiquidHandleBuilders(InstructionBuilders):
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
 
-        default_params = LiquidHandleBuilders.validate_device_params(device, params)
+        LiquidHandleBuilders.validate_device_params(device, params)
 
         device_dict: dict = {}
-        if any(params.values()):
-            for key, value in default_params.items():
-                if key in default_params:
-                    device_dict.update({key: params[key] or value})
+        for key, value in params.items():
+            if value or isinstance(value, int):
+                device_dict.update({key: value})
 
         return {device: device_dict}
 
     @staticmethod
-    def validate_device_params(device: str, device_dict: dict) -> dict:
+    def validate_device_params(device: str, device_dict: dict):
         """
         Helper validation function to validate device liquid handling params
         Parameters
@@ -1672,13 +1671,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"
             )
-
-        default_dict: dict = {}
-        # Default to the first value in the accepted params dict
-        for key, value in accepted_params.items():
-            default_dict.update({key: value[0]})
-
-        return default_dict
 
     @staticmethod
     def move_rate(

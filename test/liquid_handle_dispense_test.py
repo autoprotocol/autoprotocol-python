@@ -761,8 +761,6 @@ class TestLiquidHandleDispenseMode:
         mode_params = {
             "x_tempest_chip": {
                 "material": "silicone",
-                "nozzle": "standard",
-                "model": "high_volume",
             }
         }
 
@@ -775,15 +773,16 @@ class TestLiquidHandleDispenseMode:
             destination=self.flat.well(0),
             volume="5:uL",
             liquid=ProteinBuffer,
+            model="high_volume",
             chip_material="silicone",
             nozzle="standard",
         )
 
         mode_params = {
             "x_tempest_chip": {
+                "model": "high_volume",
                 "material": "silicone",
                 "nozzle": "standard",
-                "model": "high_volume",
             }
         }
 
@@ -802,8 +801,6 @@ class TestLiquidHandleDispenseMode:
         mode_params = {
             "x_tempest_chip": {
                 "material": "pfe",
-                "nozzle": "standard",
-                "model": "high_volume",
             }
         }
 

@@ -16,11 +16,11 @@
      "to": [
        {
          "volume": "900:microliter",
-         "well": "w2/0"
+         "well": "w4/0"
        },
        {
          "volume": "100:microliter",
-         "well": "w2/0"
+         "well": "w4/0"
        }
      ]
    }

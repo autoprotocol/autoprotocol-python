@@ -23,7 +23,7 @@ See Also
 Instruction
     Instructions corresponding to each of the builders
 """
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from collections.abc import Iterable  # pylint: disable=no-name-in-module
 from functools import reduce
 from numbers import Number

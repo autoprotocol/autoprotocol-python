@@ -876,6 +876,8 @@ class TestLiquidHandleDispenseMode:
             source=self.tube.well(0),
             destination=self.flat.well(0),
             volume="5:uL",
+            rows=1,
+            columns=1,
             liquid=ProteinBuffer,
             device="x_mantis",
             model="high_volume",
@@ -907,6 +909,8 @@ class TestLiquidHandleDispenseMode:
             source=self.tube.well(0),
             destination=self.flat.well(0),
             volume="5:uL",
+            rows=1,
+            columns=1,
             liquid=ProteinBuffer,
             device="x_mantis",
             model="low_volume",
@@ -934,7 +938,7 @@ class TestLiquidHandleDispenseMode:
 
     def test_mantis_bad_params(self):
         """Tests mantis bad params"""
-        # Incorrect model param
+        # Incorrect model param and incorrect liha shape
         with pytest.raises(ValueError):
             self.protocol.liquid_handle_dispense(
                 source=self.tube.well(0),
@@ -955,6 +959,8 @@ class TestLiquidHandleDispenseMode:
                 source=self.tube.well(0),
                 destination=self.flat.well(0),
                 volume="5:uL",
+                rows=1,
+                columns=1,
                 liquid=ProteinBuffer,
                 device="x_mantis",
                 model="high_volume",
@@ -970,6 +976,8 @@ class TestLiquidHandleDispenseMode:
                     source=self.tube.well(0),
                     destination=self.flat.well(0),
                     volume="5:uL",
+                    rows=1,
+                    columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
                     model="high_volume",
@@ -985,6 +993,8 @@ class TestLiquidHandleDispenseMode:
                     source=self.tube.well(0),
                     destination=self.flat.well(0),
                     volume="5:uL",
+                    rows=1,
+                    columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
                     model="high_volume",
@@ -1000,6 +1010,8 @@ class TestLiquidHandleDispenseMode:
                     source=self.tube.well(0),
                     destination=self.flat.well(0),
                     volume="5:uL",
+                    rows=1,
+                    columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
                     model="high_volume",
@@ -1015,6 +1027,8 @@ class TestLiquidHandleDispenseMode:
                     source=self.tube.well(0),
                     destination=self.flat.well(0),
                     volume="5:uL",
+                    rows=1,
+                    columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
                     model="high_volume",

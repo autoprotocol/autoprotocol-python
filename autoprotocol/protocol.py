@@ -115,9 +115,9 @@ from .unit import Unit, UnitError
 from .util import (
     _check_container_type_with_shape,
     _validate_as_instance,
+    _validate_liha_shape,
     is_valid_well,
     parse_unit,
-    _validate_liha_shape,
 )
 
 

@@ -1562,6 +1562,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             one of "0.1:mm", "0.2:mm", "0.5:mm"
         tubing: Optional[String]
             one of "LV", "HV", "P200", "P1000"
+            TODO: support that source is pipette-tip type
         z_drop: Optional[Unit[Length]]
             within the range: 0:mm - 100:mm, inclusive
         viscosity: Optional[String]

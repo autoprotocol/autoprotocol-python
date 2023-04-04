@@ -936,6 +936,39 @@ class TestLiquidHandleDispenseMode:
         assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
+    def test_p200_shortname_params(self):
+        """Tests that pipette-tip-p200 is still accepted"""
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            rows=1,
+            columns=1,
+            liquid=ProteinBuffer,
+            device="x_mantis",
+            model="low_volume",
+            diaphragm=25,
+            nozzle_size="0.1:mm",
+            tubing="pipette-tip-p200",
+            z_drop="0.2:mm",
+            viscosity="1",
+        )
+
+        mode_params = {
+            "x_mantis": {
+                "model": "low_volume",
+                "diaphragm": 25,
+                "nozzle_size": "0.1:mm",
+                "tubing": "pipette-tip-p200",
+                "z_drop": "0.2:mm",
+                "viscosity": "1",
+            }
+        }
+
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
+        assert instruction.data["mode_params"] == mode_params
+
     def test_mantis_bad_params(self):
         """Tests mantis bad params"""
         # Incorrect model param and incorrect liha shape

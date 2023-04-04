@@ -1568,11 +1568,6 @@ class LiquidHandleBuilders(InstructionBuilders):
         viscosity: Optional[String]
             one of "1", "2-5", "6-10", "11-20", "21-25"
 
-        Returns
-        -------
-        dict
-            device_mode_params for a LiquidHandle instruction
-
         Raises
         ------
         ValueError

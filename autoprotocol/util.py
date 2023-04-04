@@ -213,3 +213,22 @@ def _check_container_type_with_shape(container_type, shape):
             f"a full row consists of {format_columns} columns and a full "
             f"column consists of {format_rows} rows, but {shape} was specified."
         )
+
+
+def _validate_liha_shape(device: str, shape: dict) -> None:
+    """Validates LiHa shape for liquid handle dispense"""
+    accepted_shape = {}
+    if device == "x_mantis":
+        accepted_shape.update({"rows": 1, "columns": 1})
+    elif device == "x_tempest_chip":
+        accepted_shape.update({"rows": 8, "columns": 1})
+    else:
+        raise ValueError(
+            f"Device {device} is not in list of accepted devices "
+            f"[x_mantis, x_tempest_chip]"
+        )
+    if shape != accepted_shape:
+        raise ValueError(
+            f"Input LiHa shape: {shape}. "
+            f"Should be {accepted_shape} for device {device}."
+        )

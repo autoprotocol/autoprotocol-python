@@ -117,6 +117,7 @@ from .util import (
     _validate_as_instance,
     is_valid_well,
     parse_unit,
+    _validate_liha_shape,
 )
 
 
@@ -1207,8 +1208,7 @@ class Protocol:
         default_num_dispense_chips_in_source: int = 1
         default_max_num_dispense_chips: int = 12
         remaining_num_chips_to_specify = default_max_num_dispense_chips
-        if device == "x_mantis":
-            rows = 1
+        _validate_liha_shape(device, {"rows": rows, "columns": columns})
 
         def format_source_well(well: Well, num_chips: int) -> Tuple[Well, int]:
             return (well, num_chips)

@@ -1548,13 +1548,13 @@ class LiquidHandleBuilders(InstructionBuilders):
 
         Parameters
         ----------
-        device: string
+        device: str
             x_tempest_chip or x_mantis
-        model: string, optional
+        model: Optional[str]
             Tempest chip or mantis model.
-        chip_material: string, optional
+        chip_material: Optional[str]
             Material that the tempest chip is made of.
-        nozzle: string, optional
+        nozzle: Optional[str]
             Type of chip nozzle for tempest.
         diaphragm: Optional[Integer]
             any integer between 0 and 100, inclusive

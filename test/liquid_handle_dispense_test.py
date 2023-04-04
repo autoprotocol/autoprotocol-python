@@ -912,20 +912,14 @@ class TestLiquidHandleDispenseMode:
             device="x_mantis",
             model="low_volume",
             diaphragm=25,
-            nozzle_size="0.1:mm",
-            tubing="P200",
             z_drop="0.2:mm",
-            viscosity="1",
         )
 
         mode_params = {
             "x_mantis": {
                 "model": "low_volume",
                 "diaphragm": 25,
-                "nozzle_size": "0.1:mm",
-                "tubing": "P200",
                 "z_drop": "0.2:mm",
-                "viscosity": "1",
             }
         }
 
@@ -943,22 +937,12 @@ class TestLiquidHandleDispenseMode:
             columns=1,
             liquid=ProteinBuffer,
             device="x_mantis",
-            model="low_volume",
-            diaphragm=25,
-            nozzle_size="0.1:mm",
             tubing="pipette-tip-p200",
-            z_drop="0.2:mm",
-            viscosity="1",
         )
 
         mode_params = {
             "x_mantis": {
-                "model": "low_volume",
-                "diaphragm": 25,
-                "nozzle_size": "0.1:mm",
                 "tubing": "pipette-tip-p200",
-                "z_drop": "0.2:mm",
-                "viscosity": "1",
             }
         }
 
@@ -976,12 +960,6 @@ class TestLiquidHandleDispenseMode:
                 volume="5:uL",
                 liquid=ProteinBuffer,
                 device="x_mantis",
-                model="mid_volume",
-                diaphragm=0,
-                nozzle_size="0.1:mm",
-                tubing="LV",
-                z_drop="0.0:mm",
-                viscosity="1",
             )
         # Incorrect diaphragm value
         with pytest.raises(ValueError):
@@ -993,12 +971,7 @@ class TestLiquidHandleDispenseMode:
                 columns=1,
                 liquid=ProteinBuffer,
                 device="x_mantis",
-                model="high_volume",
                 diaphragm=101,
-                nozzle_size="0.1:mm",
-                tubing="LV",
-                z_drop="0.0:mm",
-                viscosity="1",
             )
             # Incorrect nozzle_size value
             with pytest.raises(ValueError):
@@ -1010,12 +983,7 @@ class TestLiquidHandleDispenseMode:
                     columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
-                    model="high_volume",
-                    diaphragm=101,
                     nozzle_size="0.3:mm",
-                    tubing="LV",
-                    z_drop="0.0:mm",
-                    viscosity="1",
                 )
             # Incorrect tubing value
             with pytest.raises(ValueError):
@@ -1027,12 +995,7 @@ class TestLiquidHandleDispenseMode:
                     columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
-                    model="high_volume",
-                    diaphragm=101,
-                    nozzle_size="0.3:mm",
                     tubing="MV",
-                    z_drop="0.0:mm",
-                    viscosity="1",
                 )
             # Incorrect z_drop value
             with pytest.raises(ValueError):
@@ -1044,12 +1007,7 @@ class TestLiquidHandleDispenseMode:
                     columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
-                    model="high_volume",
-                    diaphragm=101,
-                    nozzle_size="0.3:mm",
-                    tubing="LV",
                     z_drop="200.0:mm",
-                    viscosity="1",
                 )
             # Incorrect viscosity value
             with pytest.raises(ValueError):
@@ -1061,11 +1019,6 @@ class TestLiquidHandleDispenseMode:
                     columns=1,
                     liquid=ProteinBuffer,
                     device="x_mantis",
-                    model="high_volume",
-                    diaphragm=101,
-                    nozzle_size="0.3:mm",
-                    tubing="LV",
-                    z_drop="0.0:mm",
                     viscosity="100",
                 )
 

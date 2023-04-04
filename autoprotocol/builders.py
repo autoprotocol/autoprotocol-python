@@ -1568,6 +1568,11 @@ class LiquidHandleBuilders(InstructionBuilders):
         viscosity: Optional[String]
             one of "1", "2-5", "6-10", "11-20", "21-25"
 
+        Returns
+        -------
+        dict
+            device_mode_params for a LiquidHandle instruction
+
         Raises
         ------
         ValueError
@@ -1598,7 +1603,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         return {device: device_dict}
 
     @staticmethod
-    def validate_device_params(device: str, device_dict: dict):
+    def validate_device_params(device: str, device_dict: dict) -> None:
         """
         Helper validation function to validate device liquid handling params
         Parameters
@@ -1607,11 +1612,6 @@ class LiquidHandleBuilders(InstructionBuilders):
             either x_mantis or x_tempest_chip
         device_dict: dict
             Dictionary of all device params, as seen in function device_mode_params
-
-        Returns
-        -------
-        dict
-            default_dict for the specified device
 
         Raises
         ------

@@ -1536,7 +1536,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
         diaphragm: Optional[int] = None,
-        nozzle_size: Optional[Unit] or Optional[str] = None,
+        nozzle_size: Optional[Union[Unit, str]] = None,
         tubing: Optional[str] = None,
         z_drop: Optional[Unit] or Optional[str] = None,
         viscosity: Optional[str] = None,

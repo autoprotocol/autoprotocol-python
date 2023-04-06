@@ -952,7 +952,7 @@ class TestLiquidHandleDispenseMode:
 
     def test_mantis_bad_params(self):
         """Tests mantis bad params"""
-        # Incorrect model param and incorrect liha shape
+        # Incorrect model param and incorrect liha shape for mantis
         with pytest.raises(ValueError):
             self.protocol.liquid_handle_dispense(
                 source=self.tube.well(0),

@@ -1036,7 +1036,7 @@ class Protocol:
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
         diaphragm: Optional[int] = None,
-        nozzle_size: Optional[Unit] = None,
+        nozzle_size: Optional[Union[Unit, str]] = None,
         tubing: Optional[str] = None,
         z_drop: Optional[Union[Unit, str]] = None,
         viscosity: Optional[str] = None,

@@ -952,6 +952,18 @@ class TestLiquidHandleDispenseMode:
 
     def test_mantis_bad_params(self):
         """Tests mantis bad params"""
+        # Passing in tempest-specific param
+        with pytest.raises(KeyError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                nozzle="standard",
+            )
         # Incorrect model param and incorrect liha shape for mantis
         with pytest.raises(ValueError):
             self.protocol.liquid_handle_dispense(
@@ -973,54 +985,54 @@ class TestLiquidHandleDispenseMode:
                 device="x_mantis",
                 diaphragm=101,
             )
-            # Incorrect nozzle_size value
-            with pytest.raises(ValueError):
-                self.protocol.liquid_handle_dispense(
-                    source=self.tube.well(0),
-                    destination=self.flat.well(0),
-                    volume="5:uL",
-                    rows=1,
-                    columns=1,
-                    liquid=ProteinBuffer,
-                    device="x_mantis",
-                    nozzle_size="0.3:mm",
-                )
-            # Incorrect tubing value
-            with pytest.raises(ValueError):
-                self.protocol.liquid_handle_dispense(
-                    source=self.tube.well(0),
-                    destination=self.flat.well(0),
-                    volume="5:uL",
-                    rows=1,
-                    columns=1,
-                    liquid=ProteinBuffer,
-                    device="x_mantis",
-                    tubing="MV",
-                )
-            # Incorrect z_drop value
-            with pytest.raises(ValueError):
-                self.protocol.liquid_handle_dispense(
-                    source=self.tube.well(0),
-                    destination=self.flat.well(0),
-                    volume="5:uL",
-                    rows=1,
-                    columns=1,
-                    liquid=ProteinBuffer,
-                    device="x_mantis",
-                    z_drop="200.0:mm",
-                )
-            # Incorrect viscosity value
-            with pytest.raises(ValueError):
-                self.protocol.liquid_handle_dispense(
-                    source=self.tube.well(0),
-                    destination=self.flat.well(0),
-                    volume="5:uL",
-                    rows=1,
-                    columns=1,
-                    liquid=ProteinBuffer,
-                    device="x_mantis",
-                    viscosity="100",
-                )
+        # Incorrect nozzle_size value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                nozzle_size="0.3:mm",
+            )
+        # Incorrect tubing value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                tubing="MV",
+            )
+        # Incorrect z_drop value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                z_drop="200.0:mm",
+            )
+        # Incorrect viscosity value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                viscosity="100",
+            )
 
     def test_liquid_handle_volume_tracking(self):
         self.tube.well(0).set_volume("0:microliter")

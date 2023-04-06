@@ -219,14 +219,14 @@ def _validate_liha_shape(device: str, shape: dict) -> None:
     """Validates LiHa shape for liquid handle dispense.
 
     Args:
-        device (str): The LiHa device name. Currently supported devices are 
+        device (str): The LiHa device name. Currently supported devices are
                       "x_mantis" and "x_tempest_chip".
         shape (dict): A dictionary containing the number of rows and columns
                       for the LiHa shape. For example, {"rows": 8, "columns": 1}.
 
     Raises:
-        ValueError: If the provided device name is not one of the supported 
-                    devices or if the provided shape is not valid for the 
+        ValueError: If the provided device name is not one of the supported
+                    devices or if the provided shape is not valid for the
                     specified device.
 
     Returns:

@@ -1578,22 +1578,24 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If device is not of the following: [x_tempest_chip, x_mantis]
         """
-        params: OrderedDict = OrderedDict({
-            "model": model,
-            "material": chip_material,
-            "nozzle": nozzle,
-            "diaphragm": diaphragm,
-            "nozzle_size": nozzle_size,
-            "tubing": tubing,
-            "z_drop": z_drop,
-            "viscosity": viscosity,
-        })
+        params: OrderedDict = OrderedDict(
+            {
+                "model": model,
+                "material": chip_material,
+                "nozzle": nozzle,
+                "diaphragm": diaphragm,
+                "nozzle_size": nozzle_size,
+                "tubing": tubing,
+                "z_drop": z_drop,
+                "viscosity": viscosity,
+            }
+        )
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
-
-        LiquidHandleBuilders.validate_device_params(device, params)
+        if any(params.values()):
+            LiquidHandleBuilders.validate_device_params(device, params)
 
         device_dict: dict = {}
         for key, value in params.items():
@@ -1646,10 +1648,13 @@ class LiquidHandleBuilders(InstructionBuilders):
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
             )
         error_values: dict = {}
+        error_keys: dict = {}
         # Validate params with accepted params dict
         for key, value in device_dict.items():
             if value:
-                if key == "diaphragm":
+                if key not in accepted_params:
+                    error_keys.update({key: value})
+                elif key == "diaphragm":
                     accepted_range: List = list(accepted_params[key])
                     if value < accepted_range[0] or value > accepted_range[1]:
                         error_values.update({key: value})
@@ -1659,7 +1664,10 @@ class LiquidHandleBuilders(InstructionBuilders):
                         compare_val = Unit(value)
                     else:
                         compare_val = value
-                    if compare_val < accepted_range[0] or compare_val > accepted_range[1]:
+                    if (
+                        compare_val < accepted_range[0]
+                        or compare_val > accepted_range[1]
+                    ):
                         error_values.update({key: value})
                 # The following logic should be able to support container_type.shortname
                 elif key == "tubing":
@@ -1670,12 +1678,19 @@ class LiquidHandleBuilders(InstructionBuilders):
                     if not accepted_val:
                         error_values.update({key: value})
                 elif key == "nozzle_size":
-                    if isinstance(value, Unit) and Unit(value) not in accepted_params[key]:
+                    if (
+                        isinstance(value, str)
+                        and Unit(value) not in accepted_params[key]
+                    ):
                         error_values.update({key: value})
                 else:
                     if value not in accepted_params[key]:
                         error_values.update({key: value})
 
+        if error_keys:
+            raise KeyError(
+                f"Incorrect key values: {error_keys}. Accepted keys are: {accepted_params.keys()}"
+            )
         if error_values:
             raise ValueError(
                 f"Incorrect params: {error_values}. It must be {accepted_params}"

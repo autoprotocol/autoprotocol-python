@@ -40,7 +40,7 @@ class TestUtil(object):
         # Otherwise, raises ValueError
         try:
             _validate_liha_shape("x_mantis", {"rows": 1, "columns": 1})
-        except Exception as exc: # pylint: disable=W0703
+        except Exception as exc:  # pylint: disable=W0703
             assert False, f"{exc}"
         with pytest.raises(ValueError):
             _validate_liha_shape("x_mantis", {"rows": 2, "columns": 1})

@@ -2,6 +2,7 @@ import json
 from autoprotocol.informatics import Informatics
 from autoprotocol.util import parse_unit
 
+
 class TestUtils:
     @staticmethod
     def read_json_file(file_path: str):
@@ -9,8 +10,8 @@ class TestUtils:
         data = json.load(file)
         return json.dumps(data, indent=2, sort_keys=True)
 
-class TestProvisionMixture(Informatics):
 
+class TestProvisionMixture(Informatics):
     def __init__(self, mixture_id, volume_to_provision, total_volume):
         self.mixture_id = mixture_id
         self.volume_to_provision = parse_unit(volume_to_provision, "uL")

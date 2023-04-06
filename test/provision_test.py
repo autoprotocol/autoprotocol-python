@@ -1,6 +1,6 @@
 import json
 
-from test.test_util import TestUtils, TestProvisionMixture
+from test.test_util import TestProvisionMixture, TestUtils
 
 import pytest
 
@@ -223,7 +223,16 @@ class TestProvision(object):
             self.p.provision("rs17gmh5wafm5p", self.w1)
 
     def test_missing_informatics_for_provision_volume_greater_than_900_microliter(self):
-        self.p.provision("rs17gmh5wafm5p", self.w4, "1000:microliter", informatics=[ TestProvisionMixture("mix123", Unit("1000:microliter"), Unit("2000:microliter")) ])
+        self.p.provision(
+            "rs17gmh5wafm5p",
+            self.w4,
+            "1000:microliter",
+            informatics=[
+                TestProvisionMixture(
+                    "mix123", Unit("1000:microliter"), Unit("2000:microliter")
+                )
+            ],
+        )
         actual_instruction_as_json = json.dumps(
             self.p.as_dict()["instructions"], indent=2, sort_keys=True
         )
@@ -233,7 +242,16 @@ class TestProvision(object):
         assert expected_instruction_as_json == actual_instruction_as_json
 
     def test_informatics_for_provision_volume_less_than_900_microliter(self):
-        self.p.provision("rs17gmh5wafm5p", self.w1, "50:microliter", informatics=[ TestProvisionMixture("mix123", Unit("50:microliter"), Unit("2000:microliter")) ])
+        self.p.provision(
+            "rs17gmh5wafm5p",
+            self.w1,
+            "50:microliter",
+            informatics=[
+                TestProvisionMixture(
+                    "mix123", Unit("50:microliter"), Unit("2000:microliter")
+                )
+            ],
+        )
         actual_instruction_as_json = json.dumps(
             self.p.as_dict()["instructions"], indent=2, sort_keys=True
         )

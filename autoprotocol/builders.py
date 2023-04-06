@@ -1666,7 +1666,10 @@ class LiquidHandleBuilders(InstructionBuilders):
                         compare_val = Unit(value)
                     else:
                         compare_val = value
-                    if accepted_range[0] > compare_val > accepted_range[1]:
+                    if (
+                        compare_val < accepted_range[0]
+                        or compare_val > accepted_range[1]
+                    ):
                         error_values.update({key: value})
                 # The following logic should be able to support container_type.shortname
                 elif key == "tubing":

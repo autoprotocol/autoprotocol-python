@@ -1038,7 +1038,7 @@ class Protocol:
         diaphragm: Optional[int] = None,
         nozzle_size: Optional[Unit] = None,
         tubing: Optional[str] = None,
-        z_drop: Optional[Unit] = None,
+        z_drop: Optional[Union[Unit, str]] = None,
         viscosity: Optional[str] = None,
     ):
         """Generates a liquid_handle dispense

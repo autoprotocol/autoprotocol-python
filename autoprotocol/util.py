@@ -216,7 +216,26 @@ def _check_container_type_with_shape(container_type, shape):
 
 
 def _validate_liha_shape(device: str, shape: dict) -> None:
-    """Validates LiHa shape for liquid handle dispense"""
+    """Validates LiHa shape for liquid handle dispense.
+
+    Args:
+        device (str): The LiHa device name. Currently supported devices are 
+                      "x_mantis" and "x_tempest_chip".
+        shape (dict): A dictionary containing the number of rows and columns
+                      for the LiHa shape. For example, {"rows": 8, "columns": 1}.
+
+    Raises:
+        ValueError: If the provided device name is not one of the supported 
+                    devices or if the provided shape is not valid for the 
+                    specified device.
+
+    Returns:
+        None
+
+    Example:
+        >>> _validate_liha_shape("x_mantis", {"rows": 1, "columns": 1})
+        None
+    """
     accepted_shape = {}
     if device == "x_mantis":
         accepted_shape.update({"rows": 1, "columns": 1})

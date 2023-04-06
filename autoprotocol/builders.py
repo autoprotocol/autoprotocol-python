@@ -1536,9 +1536,9 @@ class LiquidHandleBuilders(InstructionBuilders):
         chip_material: Optional[str] = None,
         nozzle: Optional[str] = None,
         diaphragm: Optional[int] = None,
-        nozzle_size: Optional[Unit] = None,
+        nozzle_size: Optional[Unit] or Optional[str] = None,
         tubing: Optional[str] = None,
-        z_drop: Optional[Unit] = None,
+        z_drop: Optional[Unit] or Optional[str] = None,
         viscosity: Optional[str] = None,
     ):
         """Helper for building device level mode_params
@@ -1578,7 +1578,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If device is not of the following: [x_tempest_chip, x_mantis]
         """
-        params: OrderedDict = {
+        params: OrderedDict = OrderedDict({
             "model": model,
             "material": chip_material,
             "nozzle": nozzle,
@@ -1587,7 +1587,7 @@ class LiquidHandleBuilders(InstructionBuilders):
             "tubing": tubing,
             "z_drop": z_drop,
             "viscosity": viscosity,
-        }
+        })
         if device not in ["x_mantis", "x_tempest_chip"]:
             raise ValueError(
                 f"Device is {device}. It must be: [x_tempest_chip, x_mantis]"
@@ -1598,7 +1598,10 @@ class LiquidHandleBuilders(InstructionBuilders):
         device_dict: dict = {}
         for key, value in params.items():
             if value or isinstance(value, int):
-                device_dict.update({key: value})
+                if key == "nozzle_size" or key == "z_drop":
+                    device_dict.update({key: Unit(value)})
+                else:
+                    device_dict.update({key: value})
 
         return {device: device_dict}
 
@@ -1626,9 +1629,9 @@ class LiquidHandleBuilders(InstructionBuilders):
             accepted_params: dict = {
                 "model": ["high_volume", "low_volume"],
                 "diaphragm": [0, 100],
-                "nozzle_size": ["0.1:mm", "0.2:mm", "0.5:mm"],
+                "nozzle_size": [Unit("0.1:mm"), Unit("0.2:mm"), Unit("0.5:mm")],
                 "tubing": ["LV", "HV", "P200", "P1000"],
-                "z_drop": ["0.0:mm", "100.0:mm"],
+                "z_drop": [Unit("0.0:mm"), Unit("100.0:mm")],
                 "viscosity": ["1", "2-5", "6-10", "11-20", "21-25"],
             }
         elif device == "x_tempest_chip":
@@ -1646,9 +1649,17 @@ class LiquidHandleBuilders(InstructionBuilders):
         # Validate params with accepted params dict
         for key, value in device_dict.items():
             if value:
-                if key == "z_drop" or key == "diaphragm":
+                if key == "diaphragm":
                     accepted_range: List = list(accepted_params[key])
                     if value < accepted_range[0] or value > accepted_range[1]:
+                        error_values.update({key: value})
+                elif key == "z_drop":
+                    accepted_range: List = list(accepted_params[key])
+                    if isinstance(value, str):
+                        compare_val = Unit(value)
+                    else:
+                        compare_val = value
+                    if compare_val < accepted_range[0] or compare_val > accepted_range[1]:
                         error_values.update({key: value})
                 # The following logic should be able to support container_type.shortname
                 elif key == "tubing":
@@ -1657,6 +1668,9 @@ class LiquidHandleBuilders(InstructionBuilders):
                         if tubing_val in value.upper():
                             accepted_val = True
                     if not accepted_val:
+                        error_values.update({key: value})
+                elif key == "nozzle_size":
+                    if isinstance(value, Unit) and Unit(value) not in accepted_params[key]:
                         error_values.update({key: value})
                 else:
                     if value not in accepted_params[key]:

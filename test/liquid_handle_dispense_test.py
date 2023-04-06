@@ -879,7 +879,7 @@ class TestLiquidHandleDispenseMode:
             device="x_mantis",
             model="high_volume",
             diaphragm=0,
-            nozzle_size="0.1:mm",
+            nozzle_size=Unit("0.1:mm"),
             tubing="LV",
             z_drop="0.0:mm",
             viscosity="1",
@@ -889,9 +889,9 @@ class TestLiquidHandleDispenseMode:
             "x_mantis": {
                 "model": "high_volume",
                 "diaphragm": 0,
-                "nozzle_size": "0.1:mm",
+                "nozzle_size": Unit("0.1:mm"),
                 "tubing": "LV",
-                "z_drop": "0.0:mm",
+                "z_drop": Unit("0.0:mm"),
                 "viscosity": "1",
             }
         }
@@ -919,7 +919,7 @@ class TestLiquidHandleDispenseMode:
             "x_mantis": {
                 "model": "low_volume",
                 "diaphragm": 25,
-                "z_drop": "0.2:mm",
+                "z_drop": Unit("0.2:mm"),
             }
         }
 

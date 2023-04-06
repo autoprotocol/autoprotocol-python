@@ -1092,7 +1092,7 @@ class Protocol:
             Tempest nozzle type, currently only support "standard".
             The three chip parameters: model, chip_material, and nozzle will be
             used in liquid handle mode_params to allow tempest chip specification.
-        diaphragm : int, optional
+        diaphragm : Optional[int]
             any integer between 0 and 100, inclusive
         nozzle_size : Unit[Length], optional
             one of "0.1:mm", "0.2:mm", "0.5:mm".

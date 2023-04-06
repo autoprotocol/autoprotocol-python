@@ -1,10 +1,11 @@
 import json
 
-from test.test_util import TestUtils
+from test.test_util import TestProvisionMixture, TestUtils
 
 import pytest
 
 from autoprotocol.protocol import Protocol
+from autoprotocol.unit import Unit
 
 
 class TestProvision(object):
@@ -17,6 +18,11 @@ class TestProvision(object):
             self.p.ref("w1", None, cont_type="96-pcr", discard=True)
             .well(0)
             .set_volume("2:microliter")
+        )
+        self.w4 = (
+            self.p.ref("w4", None, cont_type="96-deep", discard=True)
+            .well(0)
+            .set_volume("1010:microliter")
         )
 
     def test_provision_well_capacity(self):
@@ -215,3 +221,41 @@ class TestProvision(object):
     def test_provision_well_with_neither_mass_nor_volume(self):
         with pytest.raises(ValueError):
             self.p.provision("rs17gmh5wafm5p", self.w1)
+
+    def test_missing_informatics_for_provision_volume_greater_than_900_microliter(self):
+        self.p.provision(
+            "rs17gmh5wafm5p",
+            self.w4,
+            "1000:microliter",
+            informatics=[
+                TestProvisionMixture(
+                    "mix123", Unit("1000:microliter"), Unit("2000:microliter")
+                )
+            ],
+        )
+        actual_instruction_as_json = json.dumps(
+            self.p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision/provision_with_informatics_greater_than_900_microliter.json"
+        )
+        assert expected_instruction_as_json == actual_instruction_as_json
+
+    def test_informatics_for_provision_volume_less_than_900_microliter(self):
+        self.p.provision(
+            "rs17gmh5wafm5p",
+            self.w1,
+            "50:microliter",
+            informatics=[
+                TestProvisionMixture(
+                    "mix123", Unit("50:microliter"), Unit("2000:microliter")
+                )
+            ],
+        )
+        actual_instruction_as_json = json.dumps(
+            self.p.as_dict()["instructions"], indent=2, sort_keys=True
+        )
+        expected_instruction_as_json = TestUtils.read_json_file(
+            "provision/provision_with_informatics_less_than_900_microliter.json"
+        )
+        assert expected_instruction_as_json == actual_instruction_as_json

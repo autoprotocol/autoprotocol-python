@@ -1,0 +1,27 @@
+[
+   {
+     "informatics": [
+       {
+         "data": {
+           "mixture_id": "mix123",
+           "total_volume": "2000:microliter",
+           "volume_to_provision": "1000:microliter"
+         },
+         "type": "provision_mixture"
+       }
+     ],
+     "measurement_mode": "volume",
+     "op": "provision",
+     "resource_id": "rs17gmh5wafm5p",
+     "to": [
+       {
+         "volume": "900:microliter",
+         "well": "w4/0"
+       },
+       {
+         "volume": "100:microliter",
+         "well": "w4/0"
+       }
+     ]
+   }
+ ]

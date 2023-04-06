@@ -4,7 +4,11 @@ from autoprotocol.container_type import _CONTAINER_TYPES
 from autoprotocol.instruction import LiquidHandle
 from autoprotocol.protocol import Protocol
 from autoprotocol.unit import Unit
-from autoprotocol.util import _check_container_type_with_shape, parse_unit
+from autoprotocol.util import (
+    _check_container_type_with_shape,
+    parse_unit,
+    _validate_liha_shape,
+)
 
 
 class TestParseUnit(object):
@@ -31,6 +35,16 @@ class TestParseUnit(object):
 
 
 class TestUtil(object):
+    def test_liha_validation(self):
+        # asserts that no exception is raised if liha params are valid.
+        # Otherwise, raises ValueError
+        try:
+            _validate_liha_shape("x_mantis", {"rows": 1, "columns": 1})
+        except Exception as exc:
+            assert False, f"{exc}"
+        with pytest.raises(ValueError):
+            _validate_liha_shape("x_mantis", {"rows": 2, "columns": 1})
+
     def test_compatible_reservoir_container(self):
         # asserts that no exception is raised. If it raises an exception, we catch it, display it, and assert False.
         try:

@@ -6,8 +6,8 @@ from autoprotocol.protocol import Protocol
 from autoprotocol.unit import Unit
 from autoprotocol.util import (
     _check_container_type_with_shape,
-    parse_unit,
     _validate_liha_shape,
+    parse_unit,
 )
 
 

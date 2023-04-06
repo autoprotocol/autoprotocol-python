@@ -1538,7 +1538,7 @@ class LiquidHandleBuilders(InstructionBuilders):
         diaphragm: Optional[int] = None,
         nozzle_size: Optional[Union[Unit, str]] = None,
         tubing: Optional[str] = None,
-        z_drop: Optional[Unit] or Optional[str] = None,
+        z_drop: Optional[Union[Unit, str]] = None,
         viscosity: Optional[str] = None,
     ):
         """Helper for building device level mode_params

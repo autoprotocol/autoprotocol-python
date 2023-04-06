@@ -739,6 +739,37 @@ class TestLiquidHandleDispenseMode:
         for transport in [item for sublist in transports for item in sublist]:
             assert transport["mode_params"]["liquid_class"] == liquid_class
 
+    def test_liquid_handle_volume_tracking(self):
+        self.tube.well(0).set_volume("0:microliter")
+
+        full_row_96_well_plate_shape = {"rows": 1, "columns": 12, "format": "SBS96"}
+        full_plate_destinations = self.flat.wells_from_shape(
+            0, full_row_96_well_plate_shape
+        )
+        self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=full_plate_destinations,
+            volume="300:microliter",
+            liquid=ProteinBuffer,
+            method=DispenseMethod(predispense="10:microliter"),
+            rows=8,
+            columns=1,
+        )
+        # 300 microliters into 96 wells = 28.8 mL, plus predispense 10 uLx 8 tips
+        # negative final source volume does not cause an error, as expected
+        assert self.tube.well(0).volume == Unit(-28.88, "milliliter")
+        for well in self.flat.all_wells():
+            assert well.volume == Unit(300, "microliter")
+
+
+class TestTempestDispenseMode:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
+        self.tube.well(0).set_volume("50:microliter")
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+
     def test_tempest_chip_defaults(self):
 
         instruction = self.protocol.liquid_handle_dispense(
@@ -857,6 +888,15 @@ class TestLiquidHandleDispenseMode:
                 chip_material="xyz",
                 nozzle="abc",
             )
+
+
+class TestMantisDispenseMode:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
+        self.tube.well(0).set_volume("50:microliter")
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
 
     def test_mantis_default_params(self):
         """Tests mantis default params"""
@@ -1033,25 +1073,3 @@ class TestLiquidHandleDispenseMode:
                 device="x_mantis",
                 viscosity="100",
             )
-
-    def test_liquid_handle_volume_tracking(self):
-        self.tube.well(0).set_volume("0:microliter")
-
-        full_row_96_well_plate_shape = {"rows": 1, "columns": 12, "format": "SBS96"}
-        full_plate_destinations = self.flat.wells_from_shape(
-            0, full_row_96_well_plate_shape
-        )
-        self.protocol.liquid_handle_dispense(
-            source=self.tube.well(0),
-            destination=full_plate_destinations,
-            volume="300:microliter",
-            liquid=ProteinBuffer,
-            method=DispenseMethod(predispense="10:microliter"),
-            rows=8,
-            columns=1,
-        )
-        # 300 microliters into 96 wells = 28.8 mL, plus predispense 10 uLx 8 tips
-        # negative final source volume does not cause an error, as expected
-        assert self.tube.well(0).volume == Unit(-28.88, "milliliter")
-        for well in self.flat.all_wells():
-            assert well.volume == Unit(300, "microliter")

@@ -229,9 +229,6 @@ def _validate_liha_shape(device: str, shape: dict) -> None:
                     devices or if the provided shape is not valid for the
                     specified device.
 
-    Returns:
-        None
-
     Example:
         >>> _validate_liha_shape("x_mantis", {"rows": 1, "columns": 1})
         None

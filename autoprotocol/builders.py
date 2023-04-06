@@ -1625,6 +1625,8 @@ class LiquidHandleBuilders(InstructionBuilders):
         ValueError
             If input device_dict values are not of the accepted
             params for the input device
+        KeyError
+            If input device_dict key is not in accepted_params keys
         """
         if device == "x_mantis":
             # If device is mantis, set accepted params

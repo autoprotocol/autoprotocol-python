@@ -1026,17 +1026,17 @@ class TestMantisDispenseMode:
                 diaphragm=101,
             )
         # Incorrect nozzle_size value
-        # with pytest.raises(ValueError):
-        #     self.protocol.liquid_handle_dispense(
-        #         source=self.tube.well(0),
-        #         destination=self.flat.well(0),
-        #         volume="5:uL",
-        #         rows=1,
-        #         columns=1,
-        #         liquid=ProteinBuffer,
-        #         device="x_mantis",
-        #         nozzle_size="0.3:mm",
-        #     )
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                nozzle_size="0.3:mm",
+            )
         # Incorrect tubing value
         with pytest.raises(ValueError):
             self.protocol.liquid_handle_dispense(

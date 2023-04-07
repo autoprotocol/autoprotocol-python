@@ -1671,14 +1671,6 @@ class LiquidHandleBuilders(InstructionBuilders):
                         or compare_val > accepted_range[1]
                     ):
                         error_values.update({key: value})
-                # The following logic should be able to support container_type.shortname
-                elif key == "tubing":
-                    accepted_val: bool = False
-                    for tubing_val in accepted_params[key]:
-                        if tubing_val in value.upper():
-                            accepted_val = True
-                    if not accepted_val:
-                        error_values.update({key: value})
                 elif key == "nozzle_size":
                     if (
                         isinstance(value, str)

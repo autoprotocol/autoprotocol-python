@@ -7928,7 +7928,7 @@ class Protocol:
 
         # apply tip types to transfer methods
         for vol, met in zip(volume, method):
-            if not met.tip_type:
+            if met._has_calibration() and not met.tip_type:
                 try:
                     # met.tip_type = met._rec_tip_type(vol)
                     met._rec_tip_type(vol)

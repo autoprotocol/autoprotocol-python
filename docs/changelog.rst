@@ -1,6 +1,9 @@
 =========
 Changelog
 =========
+* :release: `10.2.4 <2023-04-18>`
+* :bug:`395` Refactor tip types to transfer methods
+
 
 * :release: `10.2.3 <2023-04-03>`
 * :bug:`391` Revert rec_tip_type implementation

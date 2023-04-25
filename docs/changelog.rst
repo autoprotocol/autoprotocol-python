@@ -1,6 +1,11 @@
 =========
 Changelog
 =========
+
+* :release: `10.3.0 <2023-03-24>`
+* :feature: `390` Support for Mantis `liquid_handle` dispense in `device_mode_params`
+* :feature: `393` Support for Mantis in `liquid_handle_dispense` method
+
 * :release: `10.2.4 <2023-04-18>`
 * :bug:`395` Refactor tip types to transfer methods
 

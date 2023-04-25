@@ -739,6 +739,37 @@ class TestLiquidHandleDispenseMode:
         for transport in [item for sublist in transports for item in sublist]:
             assert transport["mode_params"]["liquid_class"] == liquid_class
 
+    def test_liquid_handle_volume_tracking(self):
+        self.tube.well(0).set_volume("0:microliter")
+
+        full_row_96_well_plate_shape = {"rows": 1, "columns": 12, "format": "SBS96"}
+        full_plate_destinations = self.flat.wells_from_shape(
+            0, full_row_96_well_plate_shape
+        )
+        self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=full_plate_destinations,
+            volume="300:microliter",
+            liquid=ProteinBuffer,
+            method=DispenseMethod(predispense="10:microliter"),
+            rows=8,
+            columns=1,
+        )
+        # 300 microliters into 96 wells = 28.8 mL, plus predispense 10 uLx 8 tips
+        # negative final source volume does not cause an error, as expected
+        assert self.tube.well(0).volume == Unit(-28.88, "milliliter")
+        for well in self.flat.all_wells():
+            assert well.volume == Unit(300, "microliter")
+
+
+class TestTempestDispenseMode:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
+        self.tube.well(0).set_volume("50:microliter")
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+
     def test_tempest_chip_defaults(self):
 
         instruction = self.protocol.liquid_handle_dispense(
@@ -761,11 +792,11 @@ class TestLiquidHandleDispenseMode:
         mode_params = {
             "x_tempest_chip": {
                 "material": "silicone",
-                "nozzle": "standard",
-                "model": "high_volume",
             }
         }
 
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 8 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
         instruction = self.protocol.liquid_handle_dispense(
@@ -773,15 +804,16 @@ class TestLiquidHandleDispenseMode:
             destination=self.flat.well(0),
             volume="5:uL",
             liquid=ProteinBuffer,
+            model="high_volume",
             chip_material="silicone",
             nozzle="standard",
         )
 
         mode_params = {
             "x_tempest_chip": {
+                "model": "high_volume",
                 "material": "silicone",
                 "nozzle": "standard",
-                "model": "high_volume",
             }
         }
 
@@ -800,10 +832,11 @@ class TestLiquidHandleDispenseMode:
         mode_params = {
             "x_tempest_chip": {
                 "material": "pfe",
-                "nozzle": "standard",
-                "model": "high_volume",
             }
         }
+
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 8 and liha_shape["columns"] == 1
         assert instruction.data["mode_params"] == mode_params
 
     def test_tempest_bad_chip_param(self):
@@ -856,24 +889,164 @@ class TestLiquidHandleDispenseMode:
                 nozzle="abc",
             )
 
-    def test_liquid_handle_volume_tracking(self):
-        self.tube.well(0).set_volume("0:microliter")
 
-        full_row_96_well_plate_shape = {"rows": 1, "columns": 12, "format": "SBS96"}
-        full_plate_destinations = self.flat.wells_from_shape(
-            0, full_row_96_well_plate_shape
-        )
-        self.protocol.liquid_handle_dispense(
+class TestMantisDispenseMode:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.protocol = Protocol()
+        self.tube = self.protocol.ref("tube", cont_type="micro-2.0", discard=True)
+        self.tube.well(0).set_volume("50:microliter")
+        self.flat = self.protocol.ref("flat", cont_type="96-flat", discard=True)
+
+    def test_mantis_default_params(self):
+        """Tests mantis default params"""
+        instruction = self.protocol.liquid_handle_dispense(
             source=self.tube.well(0),
-            destination=full_plate_destinations,
-            volume="300:microliter",
+            destination=self.flat.well(0),
+            volume="5:uL",
             liquid=ProteinBuffer,
-            method=DispenseMethod(predispense="10:microliter"),
-            rows=8,
-            columns=1,
         )
-        # 300 microliters into 96 wells = 28.8 mL, plus predispense 10 uLx 8 tips
-        # negative final source volume does not cause an error, as expected
-        assert self.tube.well(0).volume == Unit(-28.88, "milliliter")
-        for well in self.flat.all_wells():
-            assert well.volume == Unit(300, "microliter")
+
+        assert "mode_params" not in instruction.data
+
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            rows=1,
+            columns=1,
+            liquid=ProteinBuffer,
+            device="x_mantis",
+            model="high_volume",
+            diaphragm=0,
+            nozzle_size=Unit("0.1:mm"),
+            tubing="LV",
+            z_drop="0.0:mm",
+            viscosity="1",
+        )
+
+        mode_params = {
+            "x_mantis": {
+                "model": "high_volume",
+                "diaphragm": 0,
+                "nozzle_size": Unit("0.1:mm"),
+                "tubing": "LV",
+                "z_drop": Unit("0.0:mm"),
+                "viscosity": "1",
+            }
+        }
+
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
+        assert instruction.data["mode_params"] == mode_params
+
+    def test_mantis_other_params(self):
+        """Tests mantis low_volume params, still accepted"""
+        instruction = self.protocol.liquid_handle_dispense(
+            source=self.tube.well(0),
+            destination=self.flat.well(0),
+            volume="5:uL",
+            rows=1,
+            columns=1,
+            liquid=ProteinBuffer,
+            device="x_mantis",
+            model="low_volume",
+            diaphragm=25,
+            z_drop="0.2:mm",
+        )
+
+        mode_params = {
+            "x_mantis": {
+                "model": "low_volume",
+                "diaphragm": 25,
+                "z_drop": Unit("0.2:mm"),
+            }
+        }
+
+        liha_shape = instruction.data["shape"]
+        assert liha_shape["rows"] == 1 and liha_shape["columns"] == 1
+        assert instruction.data["mode_params"] == mode_params
+
+    def test_mantis_bad_params(self):
+        """Tests mantis bad params"""
+        # Passing in tempest-specific param
+        with pytest.raises(KeyError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                nozzle="standard",
+            )
+        # Incorrect model param and incorrect liha shape for mantis
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                liquid=ProteinBuffer,
+                device="x_mantis",
+            )
+        # Incorrect diaphragm value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                diaphragm=101,
+            )
+        # Incorrect nozzle_size value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                nozzle_size="0.3:mm",
+            )
+        # Incorrect tubing value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                tubing="MV",
+            )
+        # Incorrect z_drop value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                z_drop="200.0:mm",
+            )
+        # Incorrect viscosity value
+        with pytest.raises(ValueError):
+            self.protocol.liquid_handle_dispense(
+                source=self.tube.well(0),
+                destination=self.flat.well(0),
+                volume="5:uL",
+                rows=1,
+                columns=1,
+                liquid=ProteinBuffer,
+                device="x_mantis",
+                viscosity="100",
+            )

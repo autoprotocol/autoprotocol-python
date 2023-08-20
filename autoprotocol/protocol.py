@@ -10,7 +10,7 @@ import json
 import warnings
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from numbers import Number
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -4197,7 +4197,6 @@ class Protocol:
 
         instructions = []
         for pe in parsed_extracts:
-
             lane_set = [e["lane"] for e in pe]
 
             if len(lane_set) > max_well:
@@ -5090,7 +5089,7 @@ class Protocol:
                         if c.get("emission_wavelength"):
                             try:
                                 Unit(c.get("emission_wavelength"))
-                            except (UnitError) as e:
+                            except UnitError as e:
                                 raise UnitError(
                                     "Each `emission_wavelength` "
                                     "must be of type unit."
@@ -5102,7 +5101,7 @@ class Protocol:
                         if c.get("excitation_wavelength"):
                             try:
                                 Unit(c.get("excitation_wavelength"))
-                            except (UnitError) as e:
+                            except UnitError as e:
                                 raise UnitError(
                                     "Each `excitation_wavelength` "
                                     "must be of type unit."
@@ -5717,7 +5716,6 @@ class Protocol:
         return self._add_mag(mag, head, new_tip, new_instruction, "mix")
 
     def image_plate(self, ref: Union[str, Container], mode: str, dataref: str):
-
         """
         Capture an image of the specified container.
 
@@ -6594,6 +6592,7 @@ class Protocol:
             Ref,
             Compound,
             Informatics,
+            OligosynthesizeOligo,
         ],
     ):
         """
@@ -6631,6 +6630,10 @@ class Protocol:
             return op_data.as_dict()
         elif isinstance(op_data, Informatics):
             return self._refify(op_data.as_dict())
+        elif isinstance(op_data, OligosynthesizeOligo):
+            return self._refify(
+                {field.name: getattr(op_data, field.name) for field in fields(op_data)}
+            )
         else:
             return op_data
 

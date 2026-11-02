@@ -36,7 +36,7 @@ class PyTest(TestCommand):
 test_deps = [
     "coverage>=6, <7",
     "pre-commit>=2.4, <3",
-    "pylint==2.5.2",  # should be consistent with .pre-commit-config.yaml
+    "pylint==4.0.9",  # should be consistent with .pre-commit-config.yaml
     "pytest>=6.2.5, <7",
     "pytest-cov>=3.0.0, <4",
     "tox>=3.15, <4",
